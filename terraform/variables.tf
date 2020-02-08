@@ -1,3 +1,15 @@
+variable devops_org {}
+variable devops_pat {}
+
+variable pipeline_agent_name {
+  # Defaults to VM nme
+  default                      = ""
+}
+
+variable pipeline_agent_pool {
+  default                      = "Ubuntu"
+}
+
 variable pipeline_resource_group {
   default                      = "PipelineAgents"
 }

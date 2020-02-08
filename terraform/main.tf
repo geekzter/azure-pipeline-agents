@@ -24,11 +24,12 @@ resource random_string suffix {
 }
 
 locals {
-  vm_name                      = "${var.vm_name_prefix}-${local.suffix}"
+  pipeline_agent_name          = var.pipeline_agent_name != "" ? lower(var.pipeline_agent_name) : local.vm_name
   suffix                       = random_string.suffix.result
   tags                         = map(
       "environment",             "pieplines",
   )
+  vm_name                      = "${var.vm_name_prefix}-${local.suffix}"
 }
 
 resource azurerm_public_ip pip {
@@ -92,9 +93,16 @@ resource azurerm_virtual_machine vm {
     }
   }
   tags                         = local.tags
+
+
 }
 
 resource null_resource bootstrap_os {
+  # Always run this
+  triggers = {
+    always_run                 = "${timestamp()}"
+  }
+
   provisioner remote-exec {
     inline                     = [
       "curl -sk https://raw.githubusercontent.com/geekzter/bootstrap-os/master/linux/bootstrap_linux.sh | bash"
@@ -109,4 +117,40 @@ resource null_resource bootstrap_os {
   }
 
   depends_on                   = [azurerm_virtual_machine.vm]
+}
+
+resource null_resource pipeline_agent {
+  # Always run this
+  triggers = {
+    always_run                 = "${timestamp()}"
+  }
+
+  provisioner "file" {
+    source      = "../scripts/install_agent.sh"
+    destination = "~/install_agent.sh"
+
+    connection {
+      type                     = "ssh"
+      user                     = var.user_name
+      private_key              = file(var.ssh_private_key)
+      host                     = azurerm_public_ip.pip.ip_address
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+    # "sudo apt-get -y install jq sed wget",
+      "chmod +x ~/install_agent.sh",
+      "~/install_agent.sh --agent-name ${local.pipeline_agent_name} --agent-pool ${var.pipeline_agent_pool} --org ${var.devops_org} --pat ${var.devops_pat}"
+    ]
+
+    connection {
+      type                     = "ssh"
+      user                     = var.user_name
+      private_key              = file(var.ssh_private_key)
+      host                     = azurerm_public_ip.pip.ip_address
+    }
+  }
+
+  depends_on                   = [azurerm_virtual_machine.vm,null_resource.bootstrap_os]
 }

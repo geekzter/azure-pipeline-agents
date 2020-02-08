@@ -1,0 +1,11 @@
+# See https://www.terraform.io/docs/backends/types/azurerm.html
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "automation"
+    # Use partial configuration, as we do not want to expose these details
+    #storage_account_name = "tfbackend"
+    container_name       = "pipelineagents" 
+    key                  = "terraform.tfstate"
+  }
+}

@@ -70,7 +70,9 @@ else
     pushd $HOME/pipeline-agent
     echo "Retrieving agent from ${AGENT_URL}..."
     wget $AGENT_URL
-    tar zxvf $AGENT_PACKAGE
+    echo "Extracting ${AGENT_PACKAGE} in $(pwd)..."
+    tar zxf $AGENT_PACKAGE
+    echo "Extracted ${AGENT_PACKAGE}"
 
     # Unattended config
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops#unattended-config
@@ -84,8 +86,10 @@ else
                 --acceptTeeEula
 
     # Run as systemd service
+    echo "Setting up agent to run as systemd service..."
     sudo ./svc.sh install
 fi
 
+echo "Starting agent service..."
 sudo ./svc.sh start
 popd

@@ -24,11 +24,13 @@ resource random_string suffix {
 }
 
 locals {
-  vm_name                      = "${var.vm_name_prefix}-${local.suffix}"
+  pipeline_agent_name          = var.pipeline_agent_name != "" ? lower(var.pipeline_agent_name) : local.vm_name
   suffix                       = random_string.suffix.result
   tags                         = map(
-      "environment",             "pieplines",
+      "environment",             "pipelines",
+      "workspace",               terraform.workspace
   )
+  vm_name                      = "${var.vm_name_prefix}-${local.suffix}"
 }
 
 resource azurerm_public_ip pip {
@@ -46,8 +48,8 @@ resource azurerm_network_interface nic {
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
 
   ip_configuration {
-    name                          = "ipconfig"
-    subnet_id                     = data.azurerm_subnet.pipeline_subnet.id
+    name                       = "ipconfig"
+    subnet_id                  = data.azurerm_subnet.pipeline_subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id       = azurerm_public_ip.pip.id
   }
@@ -64,15 +66,14 @@ resource azurerm_virtual_machine vm {
   # Uncomment this line to delete the OS disk automatically when deleting the VM
   delete_os_disk_on_termination = true
 
-
   # Uncomment this line to delete the data disks automatically when deleting the VM
   delete_data_disks_on_termination = true
 
   storage_image_reference {
-    publisher                   = "Canonical"
-    offer                       = "UbuntuServer"
-    sku                         = "18.04-LTS"
-    version                     = "latest"
+    publisher                  = "Canonical"
+    offer                      = "UbuntuServer"
+    sku                        = "18.04-LTS"
+    version                    = "latest"
   }
   storage_os_disk {
     name                       = "${local.vm_name}-osdisk"
@@ -95,6 +96,16 @@ resource azurerm_virtual_machine vm {
 }
 
 resource null_resource bootstrap_os {
+  # Always run this
+  triggers                     = {
+    always_run                 = "${timestamp()}"
+  }
+
+  provisioner local-exec {
+    # Start VM, so we can execute script through SSH
+    command                    = "az vm start --ids ${azurerm_virtual_machine.vm.id}"
+  }
+
   provisioner remote-exec {
     inline                     = [
       "curl -sk https://raw.githubusercontent.com/geekzter/bootstrap-os/master/linux/bootstrap_linux.sh | bash"
@@ -109,4 +120,40 @@ resource null_resource bootstrap_os {
   }
 
   depends_on                   = [azurerm_virtual_machine.vm]
+}
+
+resource null_resource pipeline_agent {
+  # Always run this
+  triggers                     = {
+    always_run                 = "${timestamp()}"
+  }
+
+  provisioner "file" {
+    source      = "../scripts/install_agent.sh"
+    destination = "~/install_agent.sh"
+
+    connection {
+      type                     = "ssh"
+      user                     = var.user_name
+      private_key              = file(var.ssh_private_key)
+      host                     = azurerm_public_ip.pip.ip_address
+    }
+  }
+
+  provisioner remote-exec {
+    inline                     = [
+    # "sudo apt-get -y install jq sed wget",
+      "chmod +x ~/install_agent.sh",
+      "~/install_agent.sh --agent-name ${local.pipeline_agent_name} --agent-pool ${var.pipeline_agent_pool} --org ${var.devops_org} --pat ${var.devops_pat}"
+    ]
+
+    connection {
+      type                     = "ssh"
+      user                     = var.user_name
+      private_key              = file(var.ssh_private_key)
+      host                     = azurerm_public_ip.pip.ip_address
+    }
+  }
+
+  depends_on                   = [azurerm_virtual_machine.vm,null_resource.bootstrap_os]
 }

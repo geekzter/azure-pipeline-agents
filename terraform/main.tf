@@ -143,6 +143,7 @@ resource null_resource pipeline_agent {
   provisioner remote-exec {
     inline                     = [
     # "sudo apt-get -y install jq sed wget",
+      "dos2unix ~/install_agent.sh",
       "chmod +x ~/install_agent.sh",
       "~/install_agent.sh --agent-name ${local.pipeline_agent_name} --agent-pool ${var.pipeline_agent_pool} --org ${var.devops_org} --pat ${var.devops_pat}"
     ]

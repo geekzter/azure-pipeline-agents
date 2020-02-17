@@ -49,7 +49,7 @@ steps:
      }
      # List environment variables
      Get-ChildItem -Path Env: -Recurse -Include ARM_*,TF_VAR_* | Sort-Object -Property Name
-     terraform apply -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)"
+     #terraform apply -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)"
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: terraform

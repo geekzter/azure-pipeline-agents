@@ -22,17 +22,17 @@ steps:
    }
   displayName: 'Copy Secure Files'
 
-# - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-cli.TerraformCLI@0
-#   displayName: 'terraform init'
-#   inputs:
-#     command: init
-#     workingDirectory: terraform
-#     backendType: azurerm
-#     backendServiceArm: '$(subscriptionConnection)'
-#     backendAzureRmResourceGroupName: Automation
-#     backendAzureRmStorageAccountName: ewterraformstate
-#     backendAzureRmContainerName: pipelineagents
-#     backendAzureRmKey: '$(ARM_ACCESS_KEY)'
+- task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-cli.TerraformCLI@0
+  displayName: 'terraform init'
+  inputs:
+    command: init
+    workingDirectory: terraform
+    backendType: azurerm
+    backendServiceArm: '$(subscriptionConnection)'
+    backendAzureRmResourceGroupName: Automation
+    backendAzureRmStorageAccountName: ewterraformstate
+    backendAzureRmContainerName: pipelineagents
+    backendAzureRmKey: '$(ARM_ACCESS_KEY)'
 
 # - task: AzureCLI@2
 #   displayName: 'terraform apply'

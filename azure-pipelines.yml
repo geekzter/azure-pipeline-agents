@@ -22,40 +22,40 @@ steps:
    }
   displayName: 'Copy Secure Files'
 
-- task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-cli.TerraformCLI@0
-  displayName: 'terraform init'
-  inputs:
-    command: init
-    workingDirectory: terraform
-    backendType: azurerm
-    backendServiceArm: '$(subscriptionConnection)'
-    backendAzureRmResourceGroupName: Automation
-    backendAzureRmStorageAccountName: ewterraformstate
-    backendAzureRmContainerName: pipelineagents
-    backendAzureRmKey: '$(ARM_ACCESS_KEY)'
+# - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-cli.TerraformCLI@0
+#   displayName: 'terraform init'
+#   inputs:
+#     command: init
+#     workingDirectory: terraform
+#     backendType: azurerm
+#     backendServiceArm: '$(subscriptionConnection)'
+#     backendAzureRmResourceGroupName: Automation
+#     backendAzureRmStorageAccountName: ewterraformstate
+#     backendAzureRmContainerName: pipelineagents
+#     backendAzureRmKey: '$(ARM_ACCESS_KEY)'
 
-- task: AzureCLI@2
-  displayName: 'terraform apply'
-  inputs:
-    azureSubscription: '$(subscriptionConnection)'
-    scriptType: pscore
-    scriptLocation: inlineScript
-    inlineScript: |
-     # Fix case of environment variables mangkled by Azure Pipeline Agent
-     foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
-         $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
-         Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
-     }
-     # List environment variables
-     Get-ChildItem -Path Env: -Recurse -Include ARM_*,TF_VAR_* | Sort-Object -Property Name
-     terraform apply -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)"
-    addSpnToEnvironment: true
-    useGlobalConfig: true
-    workingDirectory: terraform
-    failOnStandardError: true
-  env:
-    # Use Pipeline tokens to access Azure & Azure DevOps
-    ARM_CLIENT_ID: $(servicePrincipalId)
-    ARM_CLIENT_SECRET: $(servicePrincipalKey)
-    ARM_TENANT_ID: $(tenantId)
-    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+# - task: AzureCLI@2
+#   displayName: 'terraform apply'
+#   inputs:
+#     azureSubscription: '$(subscriptionConnection)'
+#     scriptType: pscore
+#     scriptLocation: inlineScript
+#     inlineScript: |
+#      # Fix case of environment variables mangkled by Azure Pipeline Agent
+#      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
+#          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
+#          Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
+#      }
+#      # List environment variables
+#      Get-ChildItem -Path Env: -Recurse -Include ARM_*,TF_VAR_* | Sort-Object -Property Name
+#      terraform apply -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)"
+#     addSpnToEnvironment: true
+#     useGlobalConfig: true
+#     workingDirectory: terraform
+#     failOnStandardError: true
+#   env:
+#     # Use Pipeline tokens to access Azure & Azure DevOps
+#     ARM_CLIENT_ID: $(servicePrincipalId)
+#     ARM_CLIENT_SECRET: $(servicePrincipalKey)
+#     ARM_TENANT_ID: $(tenantId)
+#     AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)

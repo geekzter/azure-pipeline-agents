@@ -23,7 +23,7 @@ function validate {
     fi
     if [[ "$PAT" == "" ]] 
     then
-        echo "No Personal Access Token. Use --pat to specify a No Personal Access Token"
+        echo "No Personal Access Token. Use --pat to specify a Personal Access Token"
         valid=0
     fi
     if (( valid == 0)) 
@@ -54,10 +54,11 @@ done
 
 validate
 
-if [ -f /etc/systemd/system/vsts.agent.${ORG}.* ]; then
-    echo "Agent ${AGENT_NAME} already installed, skipping setup"
-    pushd $HOME/pipeline-agent
-else
+# Allways re-install agent, if it exists
+#if [ -f /etc/systemd/system/vsts.agent.${ORG}.* ]; then
+#    echo "Agent ${AGENT_NAME} already installed, skipping setup"
+#    pushd $HOME/pipeline-agent
+#else
     # Get latest released version from GitHub
     # https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest
     AGENT_VERSION=$(curl https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest | jq ".name" | sed -E 's/.*"v([^"]+)".*/\1/')
@@ -88,7 +89,7 @@ else
     # Run as systemd service
     echo "Setting up agent to run as systemd service..."
     sudo ./svc.sh install
-fi
+#fi
 
 echo "Starting agent service..."
 sudo ./svc.sh start

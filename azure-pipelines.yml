@@ -41,7 +41,7 @@ steps:
     scriptType: pscore
     scriptLocation: inlineScript
     inlineScript: |
-     $env:ARM_SUBSCRIPTION_ID=$(Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id)
+     $env:ARM_SUBSCRIPTION_ID=$(az account show --query id)
      # Fix case of environment variables mangled by Azure Pipeline Agent
      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()

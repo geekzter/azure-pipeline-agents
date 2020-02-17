@@ -23,7 +23,19 @@ resource random_string suffix {
   special                      = false
 }
 
+# Random password generator
+resource random_string password {
+  length                       = 12
+  upper                        = true
+  lower                        = true
+  number                       = true
+  special                      = true
+# override_special             = "!@#$%&*()-_=+[]{}<>:?" # default
+# Avoid characters that may cause shell scripts to break
+  override_special             = "." 
+}
 locals {
+  password                     = ".Az9${random_string.password.result}"
   pipeline_agent_name          = var.pipeline_agent_name != "" ? lower(var.pipeline_agent_name) : local.vm_name
   suffix                       = random_string.suffix.result
   tags                         = map(
@@ -84,9 +96,11 @@ resource azurerm_virtual_machine vm {
   os_profile {
     computer_name              = local.vm_name
     admin_username             = var.user_name
+    # The password is only used here in Terraform but not exported. 
+    admin_password             = local.password
   }
   os_profile_linux_config {
-    disable_password_authentication = true
+    disable_password_authentication = false
     ssh_keys {
       key_data                 = file(var.ssh_public_key)
       path                     = "/home/${var.user_name}/.ssh/authorized_keys"
@@ -98,7 +112,7 @@ resource azurerm_virtual_machine vm {
 resource null_resource bootstrap_os {
   # Always run this
   triggers                     = {
-    always_run                 = "${timestamp()}"
+    always_run                 = timestamp()
   }
 
   provisioner local-exec {
@@ -106,6 +120,7 @@ resource null_resource bootstrap_os {
     command                    = "az vm start --ids ${azurerm_virtual_machine.vm.id}"
   }
 
+  # Bootstrap using https://github.com/geekzter/bootstrap-os/tree/master/linux
   provisioner remote-exec {
     inline                     = [
       "curl -sk https://raw.githubusercontent.com/geekzter/bootstrap-os/master/linux/bootstrap_linux.sh | bash"
@@ -114,7 +129,7 @@ resource null_resource bootstrap_os {
     connection {
       type                     = "ssh"
       user                     = var.user_name
-      private_key              = file(var.ssh_private_key)
+      password                 = local.password
       host                     = azurerm_public_ip.pip.ip_address
     }
   }
@@ -125,7 +140,7 @@ resource null_resource bootstrap_os {
 resource null_resource pipeline_agent {
   # Always run this
   triggers                     = {
-    always_run                 = "${timestamp()}"
+    always_run                 = timestamp()
   }
 
   provisioner "file" {
@@ -135,7 +150,7 @@ resource null_resource pipeline_agent {
     connection {
       type                     = "ssh"
       user                     = var.user_name
-      private_key              = file(var.ssh_private_key)
+      password                 = local.password
       host                     = azurerm_public_ip.pip.ip_address
     }
   }
@@ -151,7 +166,7 @@ resource null_resource pipeline_agent {
     connection {
       type                     = "ssh"
       user                     = var.user_name
-      private_key              = file(var.ssh_private_key)
+      password                 = local.password
       host                     = azurerm_public_ip.pip.ip_address
     }
   }

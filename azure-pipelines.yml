@@ -34,28 +34,29 @@ steps:
   # backendAzureRmKey: '$(ARM_ACCESS_KEY)'
     backendAzureRmKey: 'mickeymouse'
 
-# - task: AzureCLI@2
-#   displayName: 'terraform apply'
-#   inputs:
-#     azureSubscription: '$(subscriptionConnection)'
-#     scriptType: pscore
-#     scriptLocation: inlineScript
-#     inlineScript: |
-#      # Fix case of environment variables mangkled by Azure Pipeline Agent
-#      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
-#          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
-#          Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
-#      }
-#      # List environment variables
-#      Get-ChildItem -Path Env: -Recurse -Include ARM_*,TF_VAR_* | Sort-Object -Property Name
-#      terraform apply -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)"
-#     addSpnToEnvironment: true
-#     useGlobalConfig: true
-#     workingDirectory: terraform
-#     failOnStandardError: true
-#   env:
-#     # Use Pipeline tokens to access Azure & Azure DevOps
-#     ARM_CLIENT_ID: $(servicePrincipalId)
-#     ARM_CLIENT_SECRET: $(servicePrincipalKey)
-#     ARM_TENANT_ID: $(tenantId)
-#     AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+- task: AzureCLI@2
+  displayName: 'terraform apply'
+  inputs:
+    azureSubscription: '$(subscriptionConnection)'
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: |
+     $env:ARM_SUBSCRIPTION_ID=$(Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id)
+     # Fix case of environment variables mangled by Azure Pipeline Agent
+     foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
+         $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
+         Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
+     }
+     # List environment variables
+     Get-ChildItem -Path Env: -Recurse -Include ARM_*,TF_VAR_* | Sort-Object -Property Name
+     terraform apply -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)"
+    addSpnToEnvironment: true
+    useGlobalConfig: true
+    workingDirectory: terraform
+    failOnStandardError: true
+  env:
+    # Use Pipeline tokens to access Azure & Azure DevOps
+    ARM_CLIENT_ID: $(servicePrincipalId)
+    ARM_CLIENT_SECRET: $(servicePrincipalKey)
+    ARM_TENANT_ID: $(tenantId)
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)

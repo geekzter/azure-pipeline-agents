@@ -22,11 +22,10 @@ steps:
    }
   displayName: 'Copy Secure Files'
 
-- task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-cli.TerraformCLI@0
+- task: TerraformCLI@0
   displayName: 'terraform init'
   inputs:
     command: 'init'
-    workingDirectory: 'terraform'
     backendType: 'azurerm'
     backendServiceArm: '$(subscriptionConnection)'
     backendAzureRmResourceGroupName: 'Automation'

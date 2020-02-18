@@ -24,18 +24,6 @@ steps:
    }
   displayName: 'Copy Secure Files'
 
-# - task: TerraformCLI@0
-#   displayName: 'terraform init'
-#   inputs:
-#     command: 'init'
-#     workingDirectory: '$(terraformDirectory)'
-#     backendType: 'azurerm'
-#     backendServiceArm: '$(subscriptionConnection)'
-#     backendAzureRmResourceGroupName: '$(terraformBackendResourceGroup)'
-#     backendAzureRmStorageAccountName: '$(terraformBackendStorageAccount)'
-#     backendAzureRmContainerName: '$(terraformBackendContainer)'
-#     backendAzureRmKey: '$(terraformBackendBlob)'
-
 - task: AzureCLI@2
   displayName: 'terraform init, plan, apply'
   inputs:
@@ -65,5 +53,5 @@ steps:
     failOnStandardError: true
   env:
     # Use Pipeline tokens to access Azure & Azure DevOps
-    ARM_ACCESS_KEY: '$(ARM_ACCESS_KEY)'
+  # ARM_ACCESS_KEY: '$(ARM_ACCESS_KEY)'
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'

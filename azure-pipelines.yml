@@ -1,14 +1,15 @@
-# This pipeline uses Terraform to create a Self-Hosted Pipeline Agent
+# This pipeline uses Terraform to create/update a Self-Hosted Pipeline Agent
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
-  sshPublicKeyFile: 'f98bb1f9-7e4c-41f8-8714-a20e2af9f62f'
+# sshPublicKeyFile: 'f98bb1f9-7e4c-41f8-8714-a20e2af9f62f'
+  sshPublicKeyFile: 'id_rsa.pub'
   # Terraform backend variables
-  terraformBackendResourceGroup: 'Automation'
-  terraformBackendStorageAccount: 'ewterraformstate'
+  # terraformBackendResourceGroup: # Defined as secret variable
+  # terraformBackendStorageAccount: # Defined as secret variable
   terraformBackendContainer: 'pipelineagents'
   terraformBackendBlob: 'terraform.tfstate'
   # Terraform project variables

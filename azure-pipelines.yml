@@ -64,3 +64,5 @@ steps:
   env:
     # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
+    TF_IN_AUTOMATION: 'true' # No prompts please
+    

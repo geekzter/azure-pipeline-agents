@@ -33,7 +33,7 @@ steps:
   displayName: 'Copy Secure Files'
 
 - task: AzureCLI@2
-  displayName: 'terraform init, plan, apply'
+  displayName: 'Terraforming'
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: pscore

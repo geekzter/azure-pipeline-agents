@@ -54,19 +54,16 @@ done
 
 validate
 
-# Allways re-install agent, if it exists
+# Allways re-install agent, so remove it if it exists
 if [ -f $HOME/pipeline-agent/.agent ]; then
     echo "Agent ${AGENT_NAME} already installed, removing first..."
     pushd $HOME/pipeline-agent
     sudo ./svc.sh stop
     sudo ./svc.sh uninstall
-    ./config.sh remove \
-              --unattended \
-              --auth pat --token $PAT
+    ./config.sh remove --unattended --auth pat --token $PAT
 fi
 
 # Get latest released version from GitHub
-# https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest
 AGENT_VERSION=$(curl https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest | jq ".name" | sed -E 's/.*"v([^"]+)".*/\1/')
 AGENT_PACKAGE="vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz"
 AGENT_URL="https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/${AGENT_PACKAGE}"

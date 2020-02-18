@@ -6,10 +6,14 @@ pool:
 variables:
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'f98bb1f9-7e4c-41f8-8714-a20e2af9f62f'
+  # Terraform backend variables
   terraformBackendResourceGroup: 'Automation'
   terraformBackendStorageAccount: 'ewterraformstate'
   terraformBackendContainer: 'pipelineagents'
   terraformBackendBlob: 'terraform.tfstate'
+  # Terraform project variables
+  TF_VAR_ssh_public_key: 'id_rsa.pub'
+  TF_VAR_pipeline_resource_group: 'PipelineAgents'
 
 steps:
 - task: DownloadSecureFile@1

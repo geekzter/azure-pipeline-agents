@@ -1,24 +1,22 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-#trigger:
-#- master
+# This pipeline uses Terraform to create a Self-Hosted Pipeline Agent
 
 pool:
   vmImage: 'ubuntu-latest'
+
+variables:
+  terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+  sshPublicKeyFile: 'f98bb1f9-7e4c-41f8-8714-a20e2af9f62f'
 
 steps:
 - task: DownloadSecureFile@1
   displayName: 'Download SSH Public Key'
   inputs:
-    secureFile: 'f98bb1f9-7e4c-41f8-8714-a20e2af9f62f'
+    secureFile: '$(sshPublicKeyFile)'
 
 - pwsh: |
    foreach ($file in $(Get-ChildItem Env:*SECUREFILEPATH))
    {
-       Copy-Item $file.Value terraform
+       Copy-Item $file.Value '$(terraformDirectory)'
    }
   displayName: 'Copy Secure Files'
 
@@ -26,7 +24,7 @@ steps:
   displayName: 'terraform init'
   inputs:
     command: 'init'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+    workingDirectory: '$(terraformDirectory)'
     backendType: 'azurerm'
     backendServiceArm: '$(subscriptionConnection)'
     backendAzureRmResourceGroupName: 'Automation'
@@ -41,6 +39,7 @@ steps:
     scriptType: pscore
     scriptLocation: inlineScript
     inlineScript: |
+     # Use Pipeline Service Principal and Service Connection to configure Terraform azurerm provider
      $env:ARM_CLIENT_ID=$env:servicePrincipalId
      $env:ARM_CLIENT_SECRET=$env:servicePrincipalKey
      $env:ARM_SUBSCRIPTION_ID=$(az account show --query id | tr -d '\"')
@@ -50,13 +49,13 @@ steps:
          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
          Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
      }
-     # List environment variables
+     # List environment variables (debug)
      Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
      terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
-     terraform apply -auto-approve 'agent.plan' #-var="devops_pat=$(TF_VAR_devops_pat)"
+     terraform apply -auto-approve 'agent.plan'
     addSpnToEnvironment: true
     useGlobalConfig: true
-    workingDirectory: terraform
+    workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
   env:
     # Use Pipeline tokens to access Azure & Azure DevOps

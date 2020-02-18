@@ -26,13 +26,14 @@ steps:
   displayName: 'terraform init'
   inputs:
     command: 'init'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
     backendType: 'azurerm'
     backendServiceArm: '$(subscriptionConnection)'
     backendAzureRmResourceGroupName: 'Automation'
     backendAzureRmStorageAccountName: 'ewterraformstate'
     backendAzureRmContainerName: 'pipelineagents'
-  # backendAzureRmKey: '$(ARM_ACCESS_KEY)'
-    backendAzureRmKey: 'mickeymouse'
+    backendAzureRmKey: '$(ARM_ACCESS_KEY)'
+  # backendAzureRmKey: 'mickeymouse'
 
 - task: AzureCLI@2
   displayName: 'terraform apply'

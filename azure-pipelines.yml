@@ -33,7 +33,6 @@ steps:
     backendAzureRmStorageAccountName: 'ewterraformstate'
     backendAzureRmContainerName: 'pipelineagents'
     backendAzureRmKey: '$(ARM_ACCESS_KEY)'
-  # backendAzureRmKey: 'mickeymouse'
 
 - task: AzureCLI@2
   displayName: 'terraform apply'
@@ -42,7 +41,7 @@ steps:
     scriptType: pscore
     scriptLocation: inlineScript
     inlineScript: |
-     $env:ARM_SUBSCRIPTION_ID=$(az account show --query id)
+     $env:ARM_SUBSCRIPTION_ID=$(az account show --query id | tr -d '\"')
      # Fix case of environment variables mangled by Azure Pipeline Agent
      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
@@ -57,7 +56,8 @@ steps:
     failOnStandardError: true
   env:
     # Use Pipeline tokens to access Azure & Azure DevOps
-    ARM_CLIENT_ID: $(servicePrincipalId)
-    ARM_CLIENT_SECRET: $(servicePrincipalKey)
-    ARM_TENANT_ID: $(tenantId)
-    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+    ARM_ACCESS_KEY: '$(ARM_ACCESS_KEY)'
+    ARM_CLIENT_ID: '$(servicePrincipalId)'
+    ARM_CLIENT_SECRET: '$(servicePrincipalKey)'
+    ARM_TENANT_ID: '$(tenantId)'
+    AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'

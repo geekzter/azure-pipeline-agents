@@ -40,6 +40,7 @@ locals {
   suffix                       = random_string.suffix.result
   tags                         = map(
       "environment",             "pipelines",
+      "suffix",                  local.suffix,
       "workspace",               terraform.workspace
   )
   vm_name                      = "${var.vm_name_prefix}-${local.suffix}"

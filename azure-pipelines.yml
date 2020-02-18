@@ -55,7 +55,7 @@ steps:
      }
      # List environment variables (debug)
      Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
-     terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=$(terraformBackendBlob) -backend-config=resource_group_name=$(terraformBackendResourceGroup)
+     terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key=$(terraformBackendBlob) -backend-config=resource_group_name=$(terraformBackendResourceGroup)
      terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
      terraform apply -auto-approve 'agent.plan'
     addSpnToEnvironment: true

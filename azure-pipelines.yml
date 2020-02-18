@@ -6,6 +6,10 @@ pool:
 variables:
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'f98bb1f9-7e4c-41f8-8714-a20e2af9f62f'
+  terraformBackendResourceGroup: 'Automation'
+  terraformBackendStorageAccount: 'ewterraformstate'
+  terraformBackendContainer: 'pipelineagents'
+  terraformBackendBlob: 'terraform.tfstate'
 
 steps:
 - task: DownloadSecureFile@1
@@ -20,8 +24,20 @@ steps:
    }
   displayName: 'Copy Secure Files'
 
+- task: TerraformCLI@0
+  displayName: 'terraform init'
+  inputs:
+    command: 'init'
+    workingDirectory: '$(terraformDirectory)'
+    backendType: 'azurerm'
+    backendServiceArm: '$(subscriptionConnection)'
+    backendAzureRmResourceGroupName: '$(terraformBackendResourceGroup)'
+    backendAzureRmStorageAccountName: '$(terraformBackendStorageAccount)'
+    backendAzureRmContainerName: '$(terraformBackendContainer)'
+    backendAzureRmKey: '$(terraformBackendBlob)'
+
 - task: AzureCLI@2
-  displayName: 'Prepare environment'
+  displayName: 'terraform apply'
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: pscore
@@ -32,33 +48,6 @@ steps:
      $env:ARM_CLIENT_SECRET=$env:servicePrincipalKey
      $env:ARM_SUBSCRIPTION_ID=$(az account show --query id | tr -d '\"')
      $env:ARM_TENANT_ID=$env:tenantId
-    addSpnToEnvironment: true
-    useGlobalConfig: true
-    workingDirectory: '$(terraformDirectory)'
-    failOnStandardError: true
-  env:
-    # Use Pipeline tokens to access Azure & Azure DevOps
-    AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
-
-- task: TerraformCLI@0
-  displayName: 'terraform init'
-  inputs:
-    command: 'init'
-    workingDirectory: '$(terraformDirectory)'
-    backendType: 'azurerm'
-    backendServiceArm: '$(subscriptionConnection)'
-    backendAzureRmResourceGroupName: 'Automation'
-    backendAzureRmStorageAccountName: 'ewterraformstate'
-    backendAzureRmContainerName: 'pipelineagents'
-    backendAzureRmKey: 'terraform.tfstate'
-
-- task: AzureCLI@2
-  displayName: 'terraform apply'
-  inputs:
-    azureSubscription: '$(subscriptionConnection)'
-    scriptType: pscore
-    scriptLocation: inlineScript
-    inlineScript: |
      # Fix case of environment variables mangled by Azure Pipeline Agent
      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()

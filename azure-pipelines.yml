@@ -32,13 +32,6 @@ steps:
      $env:ARM_CLIENT_SECRET=$env:servicePrincipalKey
      $env:ARM_SUBSCRIPTION_ID=$(az account show --query id | tr -d '\"')
      $env:ARM_TENANT_ID=$env:tenantId
-     # Fix case of environment variables mangled by Azure Pipeline Agent
-     foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
-         $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
-         Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
-     }
-     # List environment variables (debug)
-     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(terraformDirectory)'
@@ -66,6 +59,13 @@ steps:
     scriptType: pscore
     scriptLocation: inlineScript
     inlineScript: |
+     # Fix case of environment variables mangled by Azure Pipeline Agent
+     foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
+         $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
+         Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
+     }
+     # List environment variables (debug)
+     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
      terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
      terraform apply -auto-approve 'agent.plan'
     addSpnToEnvironment: true

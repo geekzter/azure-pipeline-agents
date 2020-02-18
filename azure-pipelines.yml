@@ -15,7 +15,7 @@ variables:
   terraformBackendBlob: 'terraform.tfstate'
 
   # Terraform project variables
-  TF_VAR_ssh_public_key: 'id_rsa.pub'
+  TF_VAR_ssh_public_key: 'id_rsa.pub' # Key will be downloaded in terraform directory
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
 
 

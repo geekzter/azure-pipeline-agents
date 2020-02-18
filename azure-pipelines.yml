@@ -32,7 +32,7 @@ steps:
     backendAzureRmResourceGroupName: 'Automation'
     backendAzureRmStorageAccountName: 'ewterraformstate'
     backendAzureRmContainerName: 'pipelineagents'
-    backendAzureRmKey: '$(ARM_ACCESS_KEY)'
+    backendAzureRmKey: 'terraform.tfstate'
 
 - task: AzureCLI@2
   displayName: 'terraform apply'

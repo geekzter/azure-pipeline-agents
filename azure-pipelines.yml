@@ -52,8 +52,8 @@ steps:
      }
      # List environment variables
      Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
-     terraform plan
-     terraform apply -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)"
+     terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
+     terraform apply -auto-approve 'agent.plan' #-var="devops_pat=$(TF_VAR_devops_pat)"
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: terraform

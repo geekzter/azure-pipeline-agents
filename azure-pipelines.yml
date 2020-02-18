@@ -3,18 +3,21 @@
 pool:
   vmImage: 'ubuntu-latest'
 
+
 variables:
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
-# sshPublicKeyFile: 'f98bb1f9-7e4c-41f8-8714-a20e2af9f62f'
   sshPublicKeyFile: 'id_rsa.pub'
+
   # Terraform backend variables
   # terraformBackendResourceGroup: # Defined as secret variable
   # terraformBackendStorageAccount: # Defined as secret variable
   terraformBackendContainer: 'pipelineagents'
   terraformBackendBlob: 'terraform.tfstate'
+
   # Terraform project variables
   TF_VAR_ssh_public_key: 'id_rsa.pub'
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
+
 
 steps:
 - task: DownloadSecureFile@1
@@ -41,6 +44,7 @@ steps:
      $env:ARM_CLIENT_SECRET=$env:servicePrincipalKey
      $env:ARM_SUBSCRIPTION_ID=$(az account show --query id | tr -d '\"')
      $env:ARM_TENANT_ID=$env:tenantId
+
      # Fix case of environment variables mangled by Azure Pipeline Agent
      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
@@ -48,7 +52,8 @@ steps:
      }
      # List environment variables (debug)
      Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
-     echo "terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key=$(terraformBackendBlob) -backend-config=resource_group_name=$(terraformBackendResourceGroup)"
+
+     # Terraforming
      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key='$(terraformBackendBlob)' -backend-config=resource_group_name=$(terraformBackendResourceGroup)
      terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
      terraform apply -auto-approve 'agent.plan'
@@ -57,6 +62,5 @@ steps:
     workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
   env:
-    # Use Pipeline tokens to access Azure & Azure DevOps
-  # ARM_ACCESS_KEY: '$(ARM_ACCESS_KEY)'
+    # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'

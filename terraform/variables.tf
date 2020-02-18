@@ -31,7 +31,7 @@ variable user_name {
 }
 
 variable vm_name_prefix {
-  default                      = "ew-ubuntu1804-agent"
+  default                      = "ubuntu1804-agent"
 }
 
 variable vm_size {

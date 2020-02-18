@@ -3,7 +3,7 @@ variable devops_pat {}
 
 variable pipeline_agent_name {
   # Defaults to VM name if empty string
-  default                      = ""
+  default                      = "ubuntu1804-agent"
 }
 
 variable pipeline_agent_pool {

@@ -3,8 +3,6 @@
 pool:
   vmImage: 'ubuntu-latest'
 
-
-
 variables:
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'id_rsa.pub'
@@ -17,6 +15,8 @@ variables:
 
   # Terraform project variables
   TF_VAR_ssh_public_key: 'id_rsa.pub' # Key will be downloaded in terraform directory
+  TF_VAR_pipeline_agent_name: 'ubuntu1804-agent'
+  TF_VAR_pipeline_agent_pool: 'Ubuntu'
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
 
 

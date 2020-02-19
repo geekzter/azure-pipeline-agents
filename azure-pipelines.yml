@@ -55,6 +55,8 @@ steps:
      # Capture some variables
      $agentName = '$(TF_VAR_pipeline_agent_name)'
      $agentPool = '$(TF_VAR_pipeline_agent_pool)'
+     Write-Host "Agent pool is '$(TF_VAR_pipeline_agent_pool)'"
+     Write-Host "Agent pool is '$agentPool'"
 
      # Find agent poo
      $agentPoolId = $(az pipelines pool list --query="[?name=='$agentPool'].id | [0]")

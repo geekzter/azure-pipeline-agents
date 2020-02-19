@@ -18,6 +18,7 @@ variables:
   TF_VAR_pipeline_agent_name: 'ubuntu1804-agent'
   TF_VAR_pipeline_agent_pool: 'Ubuntu'
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
+  devOpsOrgUrl: 'https://dev.azure.com/$(TF_VAR_devops_org)'
 
 
 steps:
@@ -32,6 +33,34 @@ steps:
        Copy-Item $file.Value '$(terraformDirectory)'
    }
   displayName: 'Copy Secure Files'
+
+
+# Once 'az pipelines agent' supports managent of the agent, take it offline
+- task: AzureCLI@2
+# displayName: 'Take agent offline'
+  displayName: 'Query agent status'
+  name: 'agentConfig'
+  inputs:
+    azureSubscription: '$(subscriptionConnection)'
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: |
+     # List environment variables (debug)
+     Get-ChildItem -Path Env:AZURE_* | Sort-Object -Property Name
+     az devops configure --defaults organization='$(devOpsOrgUrl)'
+     $agentName = '$(TF_VAR_pipeline_agent_name)'
+     $agentPool = '$(TF_VAR_pipeline_agent_pool)'
+     $agentPoolId = $(az pipelines pool list --query="[?name=='$agentPool'].id | [0]")
+     az pipelines agent list --agent-name $agentName --pool-id $agentPoolId 
+     $enabled = $(az pipelines agent list --agent-name $agentName --pool-id $agentPoolId --query="[0].enabled")
+     echo "Agent $agentName enabled status is '$enabled'"
+     Write-Host "##vso[task.setvariable variable=agentEnabled;isOutput=true]$enabled"
+    addSpnToEnvironment: true
+    useGlobalConfig: true
+    failOnStandardError: true
+  env:
+    # Use Pipeline token to access Azure DevOps
+    AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
 - task: AzureCLI@2
   displayName: 'Terraforming'
@@ -52,7 +81,7 @@ steps:
          Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
      }
      # List environment variables (debug)
-     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
+     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_* | Sort-Object -Property Name
 
      # Terraforming
      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key='$(terraformBackendBlob)' -backend-config=resource_group_name=$(terraformBackendResourceGroup)
@@ -63,7 +92,5 @@ steps:
     workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
   env:
-    # Use Pipeline token to access Azure DevOps
-    AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
-    TF_IN_AUTOMATION: 'true' # No prompts please
+    TF_IN_AUTOMATION: 'true' # No prompts
     

@@ -4,6 +4,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 
+
 variables:
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'id_rsa.pub'

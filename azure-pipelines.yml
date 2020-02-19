@@ -35,7 +35,7 @@ steps:
   displayName: 'Copy Secure Files'
 
 
-# Once 'az pipelines agent' supports managent of the agent, take it offline
+# Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@2
 # displayName: 'Take agent offline'
   displayName: 'Query agent status'

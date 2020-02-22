@@ -5,6 +5,7 @@ pool:
 
 
 variables:
+  scriptDirectory: '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'id_rsa.pub'
 
@@ -42,12 +43,12 @@ steps:
   name: 'agentConfig'
   inputs:
     azureSubscription: '$(subscriptionConnection)'
-    scriptType: pscore
-    scriptLocation: inlineScript
-    inlineScript: |
-     ../scripts/update_agent_status.ps1 -Enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Organization $(TF_VAR_devops_org) -Token $(System.AccessToken)
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: './update_agent_status.ps1 -Enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Organization $(TF_VAR_devops_org) -Token $(System.AccessToken)'
     addSpnToEnvironment: true
     useGlobalConfig: true
+    workingDirectory: '$(scriptDirectory)'
     failOnStandardError: true
   env:
     # Use Pipeline token to access Azure DevOps

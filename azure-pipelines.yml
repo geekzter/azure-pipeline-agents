@@ -35,12 +35,26 @@ steps:
    }
   displayName: 'Copy Secure Files'
 
+- task: PowerShell@2
+  displayName: 'Take agent offline'
+  name: 'agentConfig'
+  enabled: true
+  inputs:
+    targetType: 'inline'
+    script: |
+     $global:DebugPreference="Continue"
+     ./update_agent_status.ps1 -Enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Organization $(TF_VAR_devops_org) -Token $(System.AccessToken)
+    pwsh: true
+    workingDirectory: '$(scriptDirectory)'
+  env:
+    # Use Pipeline token to access Azure DevOps
+    AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
 # Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@1
-# displayName: 'Take agent offline'
-  displayName: 'Query agent status'
+  displayName: 'Take agent offline'
   name: 'agentConfig'
+  enabled: false
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     #scriptType: 'pscore'

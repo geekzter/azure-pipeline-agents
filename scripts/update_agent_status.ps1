@@ -42,6 +42,7 @@ if ($DebugPreference -ine "SilentlyContinue") {
 }
 
 # az devops cli does not (yet) allow updates, so using the REST API
+$OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
 $apiUrl = "$OrganizationUrl/_apis/distributedtask/pools/$agentPoolId/agents/$agentId"
 Write-Debug "REST API Url: $apiUrl"
 

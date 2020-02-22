@@ -53,6 +53,7 @@ steps:
 
 - task: AzureCLI@2
   displayName: 'Terraforming'
+  enabled: false
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: pscore

@@ -3,7 +3,7 @@ param (
     [parameter(Mandatory=$false)][switch]$Enabled,
     [parameter(Mandatory=$false)][string]$AgentName,
     [parameter(Mandatory=$false)][string]$AgentPoolName,
-    [parameter(Mandatory=$false)][string]$Organization,
+    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI,
     #[parameter(Mandatory=$false)][string]$Project,
     [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
 ) 
@@ -12,12 +12,12 @@ Write-Host "DebugPreference: $DebugPreference"
 
 # List environment variables (debug)
 if ($DebugPreference -ine "SilentlyContinue") {
-    Get-ChildItem -Path Env:AZURE_* | Sort-Object -Property Name | Write-Host -ForegroundColor Yellow 
+    Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_*,SYSTEM_* | Sort-Object -Property Name | Write-Host -ForegroundColor Yellow 
 }
 
 # Configure az cli for devops
 az extension add --name azure-devops 
-az devops configure --defaults organization="https://dev.azure.com/$Organization" #project="$Project"
+az devops configure --defaults organization="$OrganizationUrl"
 
 # Get identifiers using az devops cli
 Write-Debug "Agent pool is '$AgentPoolName'"
@@ -35,7 +35,7 @@ if ($DebugPreference -ine "SilentlyContinue") {
 }
 
 # az devops cli does not (yet) allow updates, so using the REST API
-$apiUrl = "https://dev.azure.com/$Organization/_apis/distributedtask/pools/$agentPoolId/agents/$agentId"
+$apiUrl = "$OrganizationUrl/_apis/distributedtask/pools/$agentPoolId/agents/$agentId"
 Write-Debug "REST API Url: $apiUrl"
 
 # Prepare REST request

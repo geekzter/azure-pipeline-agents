@@ -85,4 +85,6 @@ steps:
     workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
   env:
-    TF_IN_AUTOMATION: 'true' # No prompts
+    # No prompts
+    TF_IN_AUTOMATION: 'true' 
+    TF_INPUT: 0

@@ -12,7 +12,7 @@ Write-Host "DebugPreference: $DebugPreference"
 
 # List environment variables (debug)
 if ($DebugPreference -ine "SilentlyContinue") {
-    Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_*,SYSTEM_* | Sort-Object -Property Name | Write-Host -ForegroundColor Yellow 
+    Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_*,SYSTEM_* | Sort-Object -Property Name | Format-Table | Write-Host -ForegroundColor Yellow 
 }
 
 # Configure az cli for devops

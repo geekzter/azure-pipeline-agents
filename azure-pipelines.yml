@@ -55,6 +55,7 @@ steps:
   env:
     # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
+    SYSTEM_ACCESSTOKEN: '$(System.AccessToken)'
 
 - task: AzureCLI@2
   displayName: 'Terraforming'

@@ -1,11 +1,13 @@
 #!/usr/bin/env pwsh
+<#
+    Requires 'Project Collection Build Service (org)' to be added to Agent Pool ACL
+#>
 param ( 
     [parameter(Mandatory=$false)][string]$AgentName,
     [parameter(Mandatory=$false)][string]$AgentPoolName,
     [parameter(Mandatory=$false)][switch]$Enabled,
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI,
-    #[parameter(Mandatory=$false)][string]$Project,
-    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
+    [parameter(Mandatory=$false)][string]$Token=$env:SYSTEM_ACCESSTOKEN
 ) 
 
 Write-Host "DebugPreference: $DebugPreference"

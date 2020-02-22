@@ -35,7 +35,7 @@ $agentId = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoo
 Write-Debug "Agent id is '$agentId'"
 if ($DebugPreference -ine "SilentlyContinue") {
     Write-Debug "Pool information:"
-    az pipelines pool list --query="[?name=='$AgentPoolName'].id"
+    az pipelines pool list --query="[?name=='$AgentPoolName']"
     # Show agent details
     Write-Debug "Agent information:"
     az pipelines agent list --agent-name $agentName --pool-id $agentPoolId | Write-Host -ForegroundColor Yellow 
@@ -46,15 +46,17 @@ $apiUrl = "$OrganizationUrl/_apis/distributedtask/pools/$agentPoolId/agents/$age
 Write-Debug "REST API Url: $apiUrl"
 
 # Prepare REST request
+$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$Token"))
+$authHeader = "Basic $base64AuthInfo"
+Write-Debug "Authorization: $authHeader"
 $requestHeaders = @{
-    Authorization = "Bearer $Token"
+    Authorization = $authHeader
 }
 $requestBody = @{
     enabled = $Enabled.ToString().ToLowerInvariant()
 }
 
 Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
-#Invoke-WebRequest -Uri $apiUrl -Body $requestBody -Method Patch -Token $PAT
 
 # Get agent status
 $enabledStatus = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].enabled")

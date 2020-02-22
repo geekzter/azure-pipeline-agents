@@ -8,13 +8,12 @@ param (
     [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
 ) 
 
-
+Write-Host "DebugPreference: $DebugPreference"
 
 # List environment variables (debug)
 if ($DebugPreference -ine "SilentlyContinue") {
     Get-ChildItem -Path Env:AZURE_* | Sort-Object -Property Name | Write-Host -ForegroundColor Yellow 
 }
-
 
 # Configure az cli for devops
 az extension add --name azure-devops 

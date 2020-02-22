@@ -145,7 +145,7 @@ resource null_resource pipeline_agent {
   }
 
   provisioner "file" {
-    source      = "../scripts/install_agent.sh"
+    source      = "../scripts/agent/install_agent.sh"
     destination = "~/install_agent.sh"
 
     connection {

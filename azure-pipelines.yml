@@ -1,8 +1,8 @@
-  
 # This pipeline uses Terraform to create/update a Self-Hosted Pipeline Agent
 
 pool:
   vmImage: 'ubuntu-latest'
+
 
 variables:
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
@@ -16,10 +16,7 @@ variables:
 
   # Terraform project variables
   TF_VAR_ssh_public_key: 'id_rsa.pub' # Key will be downloaded in terraform directory
-  TF_VAR_pipeline_agent_name: 'ubuntu1804-agent'
-  TF_VAR_pipeline_agent_pool: 'Ubuntu'
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
-  devOpsOrgUrl: 'https://dev.azure.com/$(TF_VAR_devops_org)'
 
 
 steps:
@@ -56,6 +53,7 @@ steps:
 
 - task: AzureCLI@2
   displayName: 'Terraforming'
+  enabled: false
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: pscore

@@ -46,7 +46,7 @@ steps:
     scriptType: pscore
     scriptLocation: inlineScript
     inlineScript: |
-     Write-Host "Token: $(System.AccessToken)"
+     ../scripts/update_agent_status.ps1 -Enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Organization $(TF_VAR_devops_org) -Token $(System.AccessToken)
     addSpnToEnvironment: true
     useGlobalConfig: true
     failOnStandardError: true

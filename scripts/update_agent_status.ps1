@@ -1,14 +1,20 @@
 #!/usr/bin/env pwsh
 param ( 
-    [parameter(Mandatory=$false)][switch]$Enabled,
     [parameter(Mandatory=$false)][string]$AgentName,
     [parameter(Mandatory=$false)][string]$AgentPoolName,
-    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI,
+    [parameter(Mandatory=$false)][switch]$Enabled,
+    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI,
     #[parameter(Mandatory=$false)][string]$Project,
     [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
 ) 
 
 Write-Host "DebugPreference: $DebugPreference"
+Write-Debug "AgentName: '$AgentName'"
+Write-Debug "AgentPoolName: '$AgentPoolName'"
+Write-Debug "Enabled: '$AgentPoolName'"
+Write-Debug "OrganizationUrl: '$OrganizationUrl'"
+Write-Debug "Token: '$Token'"
+
 
 # List environment variables (debug)
 if ($DebugPreference -ine "SilentlyContinue") {
@@ -20,7 +26,6 @@ az extension add --name azure-devops
 az devops configure --defaults organization="$OrganizationUrl"
 
 # Get identifiers using az devops cli
-Write-Debug "Agent pool is '$AgentPoolName'"
 # Find agent pool
 $agentPoolId = $(az pipelines pool list --query="[?name=='$AgentPoolName'].id | [0]")
 Write-Debug "Agent pool id is '$agentPoolId'"

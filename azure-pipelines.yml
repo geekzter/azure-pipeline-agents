@@ -46,25 +46,7 @@ steps:
     scriptType: pscore
     scriptLocation: inlineScript
     inlineScript: |
-     # List environment variables (debug)
-     Get-ChildItem -Path Env:AZURE_* | Sort-Object -Property Name
-     # Configure az cli for devops
-     az extension add --name azure-devops 
-     az devops configure --defaults organization='$(devOpsOrgUrl)'
-     # Capture some variables
-     $agentName = '$(TF_VAR_pipeline_agent_name)'
-     $agentPool = '$(TF_VAR_pipeline_agent_pool)'
-     Write-Host "Agent pool is '$agentPool'"
-     # Find agent poo
-     $agentPoolId = $(az pipelines pool list --query="[?name=='$agentPool'].id | [0]")
-     Write-Host "Agent pool id is '$agentPoolId'"
-     # Show agent details
-     az pipelines agent list --agent-name $agentName --pool-id $agentPoolId 
-     # Get agent status
-     $enabled = $(az pipelines agent list --agent-name $agentName --pool-id $agentPoolId --query="[0].enabled")
-     echo "Agent $agentName enabled status is '$enabled'"
-     
-     Write-Host "##vso[task.setvariable variable=agentEnabled;isOutput=true]$enabled"
+     Write-Host "Token: $(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true
     failOnStandardError: true

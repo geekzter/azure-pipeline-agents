@@ -36,13 +36,13 @@ steps:
   displayName: 'Copy Secure Files'
 
 # Once 'az pipelines agent' supports management of the agent, take it offline
-- task: AzureCLI@1
+- task: AzureCLI@2
   displayName: 'Take agent offline'
   name: 'agentConfig'
   enabled: true
   inputs:
     azureSubscription: '$(subscriptionConnection)'
-    #scriptType: 'pscore'
+    scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
      $global:DebugPreference="Continue"

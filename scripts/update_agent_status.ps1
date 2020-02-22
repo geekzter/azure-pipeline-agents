@@ -11,7 +11,7 @@ param (
 Write-Host "DebugPreference: $DebugPreference"
 Write-Debug "AgentName: '$AgentName'"
 Write-Debug "AgentPoolName: '$AgentPoolName'"
-Write-Debug "Enabled: '$AgentPoolName'"
+Write-Debug "Enabled: '$Enabled'"
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
 Write-Debug "Token: '$Token'"
 

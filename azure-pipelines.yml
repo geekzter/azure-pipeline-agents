@@ -37,13 +37,13 @@ steps:
 
 
 # Once 'az pipelines agent' supports management of the agent, take it offline
-- task: AzureCLI@2
+- task: AzureCLI@1
 # displayName: 'Take agent offline'
   displayName: 'Query agent status'
   name: 'agentConfig'
   inputs:
     azureSubscription: '$(subscriptionConnection)'
-    scriptType: 'pscore'
+    #scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
      $global:DebugPreference="Continue"

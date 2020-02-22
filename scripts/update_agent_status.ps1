@@ -28,6 +28,8 @@ Write-Debug "Agent pool id is '$agentPoolId'"
 $agentId = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].id")
 Write-Debug "Agent id is '$agentId'"
 if ($DebugPreference -ine "SilentlyContinue") {
+    Write-Debug "Pool information:"
+    az pipelines pool list --query="[?name=='$AgentPoolName'].id"
     # Show agent details
     Write-Debug "Agent information:"
     az pipelines agent list --agent-name $agentName --pool-id $agentPoolId | Write-Host -ForegroundColor Yellow 

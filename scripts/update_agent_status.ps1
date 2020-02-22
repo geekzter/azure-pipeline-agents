@@ -43,19 +43,22 @@ if ($DebugPreference -ine "SilentlyContinue") {
 
 # az devops cli does not (yet) allow updates, so using the REST API
 $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
-$apiUrl = "$OrganizationUrl/_apis/distributedtask/pools/$agentPoolId/agents/$agentId"
+$apiVersion="5.1"
+$apiUrl = "${OrganizationUrl}/_apis/distributedtask/pools/${agentPoolId}/agents/${agentId}?api-version=${apiVersion}"
 Write-Debug "REST API Url: $apiUrl"
 
 # Prepare REST request
-$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$Token"))
+$base64AuthInfo = [Convert]::ToBase64String([System.Text.ASCIIEncoding]::ASCII.GetBytes(":${Token}"))
 $authHeader = "Basic $base64AuthInfo"
 Write-Debug "Authorization: $authHeader"
 $requestHeaders = @{
+    Accept = "application/json"
     Authorization = $authHeader
+    "Content-Type" = "application/json"
 }
 $requestBody = @{
     enabled = $Enabled.ToString().ToLowerInvariant()
-}
+} | ConvertTo-Json
 
 Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
 

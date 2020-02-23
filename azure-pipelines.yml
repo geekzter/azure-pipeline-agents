@@ -90,6 +90,14 @@ steps:
     TF_IN_AUTOMATION: 'true' 
     TF_INPUT: 0
 
+- task: PowerShell@2
+  displayName: 'Debug'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Agent was enabled: '$(agentConfig.agentInitiallyEnabled)'"
+    pwsh: true
+
 # Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@2
   displayName: 'Bring agent online'

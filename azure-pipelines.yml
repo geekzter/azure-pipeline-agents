@@ -48,6 +48,7 @@ steps:
     inlineScript: |
       $global:DebugPreference="Continue"
       $DebugPreference="Continue"
+      $InformationPreference="Continue"
       ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true

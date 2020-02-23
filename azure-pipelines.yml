@@ -5,6 +5,8 @@ pool:
 
 
 variables:
+  #destroyAgentIfExists: false # defined as hidden variable
+  scriptDirectory: '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'id_rsa.pub'
 
@@ -15,8 +17,10 @@ variables:
   terraformBackendBlob: 'terraform.tfstate'
 
   # Terraform project variables
-  TF_VAR_ssh_public_key: 'id_rsa.pub' # Key will be downloaded in terraform directory
+  TF_VAR_pipeline_agent_name: 'ubuntu1804-agent'
+  TF_VAR_pipeline_agent_pool: 'Ubuntu'
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
+  TF_VAR_ssh_public_key: 'id_rsa.pub' # Key will be downloaded in terraform directory
 
 
 steps:
@@ -33,7 +37,42 @@ steps:
   displayName: 'Copy Secure Files'
 
 - task: AzureCLI@2
+  displayName: 'Disable agent'
+  name: 'agentConfig'
+  enabled: true
+  inputs:
+    azureSubscription: '$(subscriptionConnection)'
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      #$DebugPreference="Continue"
+      $InformationPreference="Continue"
+      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
+    addSpnToEnvironment: true
+    useGlobalConfig: true
+    workingDirectory: '$(scriptDirectory)'
+  env:
+    # Use Pipeline token to access Azure DevOps
+    AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
+
+- task: PowerShell@2
+  displayName: 'Determine Terraform version to use'
+  name: terraformConfig
+  inputs:
+    targetType: 'inline'
+    script: |
+      $terraformVersion = Get-Content "$(terraformDirectory)/.terraform-version"
+      Write-Host "##vso[task.setvariable variable=version;isOutput=true]$terraformVersion"
+    pwsh: true
+
+- task: TerraformInstaller@0
+  displayName: 'Download desired Terraform version'
+  inputs:
+    terraformVersion: '$(terraformConfig.version)'
+
+- task: AzureCLI@2
   displayName: 'Terraforming'
+  enabled: true
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: pscore
@@ -44,17 +83,18 @@ steps:
      $env:ARM_CLIENT_SECRET=$env:servicePrincipalKey
      $env:ARM_SUBSCRIPTION_ID=$(az account show --query id | tr -d '\"')
      $env:ARM_TENANT_ID=$env:tenantId
-
      # Fix case of environment variables mangled by Azure Pipeline Agent
      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
          Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
      }
      # List environment variables (debug)
-     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_VAR_* | Sort-Object -Property Name
-
+     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_* | Sort-Object -Property Name
      # Terraforming
      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key='$(terraformBackendBlob)' -backend-config=resource_group_name=$(terraformBackendResourceGroup)
+     if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
+       terraform destroy -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)" 
+     }
      terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
      terraform apply -auto-approve 'agent.plan'
     addSpnToEnvironment: true
@@ -62,7 +102,26 @@ steps:
     workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
   env:
+    # No prompts
+    TF_IN_AUTOMATION: 'true' 
+    TF_INPUT: 0
+
+- task: AzureCLI@2
+  displayName: 'Enable agent'
+  # Only enable if it was in the first place
+  condition: and(succeeded(), eq(variables['agentConfig.agentInitiallyEnabled'], 'true'))
+  inputs:
+    azureSubscription: '$(subscriptionConnection)'
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      #$DebugPreference="Continue"
+      $InformationPreference="Continue"
+      $enabled = [System.Convert]::ToBoolean("$(agentConfig.agentInitiallyEnabled)")   
+      ./update_agent_status.ps1 -Enabled:$enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
+    addSpnToEnvironment: true
+    useGlobalConfig: true
+    workingDirectory: '$(scriptDirectory)'
+  env:
     # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
-    TF_IN_AUTOMATION: 'true' # No prompts please
-    

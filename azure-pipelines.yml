@@ -8,10 +8,8 @@ schedules:
     - master
   always: true
 
-  
 pool:
   vmImage: 'ubuntu-latest'
-
 
 variables:
   #destroyAgentIfExists: false # defined as hidden variable

@@ -36,6 +36,7 @@ steps:
        Copy-Item $file.Value '$(terraformDirectory)'
    }
   displayName: 'Copy Secure Files'
+  
 
 - task: AzureCLI@2
   displayName: 'Disable agent(s)'

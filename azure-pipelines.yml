@@ -113,7 +113,7 @@ steps:
 - task: AzureCLI@2
   displayName: 'Enable agent'
   # Only enable if it was in the first place
-  condition: and(succeeded(), eq(variables['agentConfig.agentInitiallyEnabled'], 'true'))
+  condition: succeeded()
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: 'pscore'

@@ -3,7 +3,7 @@
     Requires 'Project Collection Build Service (org)' to be added to Agent Pool ACL
 #>
 param ( 
-    [parameter(Mandatory=$true)][string]$AgentName,
+    [parameter(Mandatory=$true)][string]$AgentNamePrefix,
     [parameter(Mandatory=$true)][string]$AgentPoolName,
     [parameter(Mandatory=$false)][switch]$Enabled,
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI,
@@ -47,12 +47,11 @@ function UpdateAgent(
 }
 
 Write-Host "DebugPreference: $DebugPreference"
-Write-Debug "AgentName: '$AgentName'"
+Write-Debug "AgentNamePrefix: '$AgentNamePrefix'"
 Write-Debug "AgentPoolName: '$AgentPoolName'"
 Write-Debug "Enabled: '$Enabled'"
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
 Write-Debug "Token: '$Token'"
-
 
 # List environment variables (debug)
 if ($DebugPreference -ine "SilentlyContinue") {
@@ -64,37 +63,40 @@ az extension add --name azure-devops
 az devops configure --defaults organization="$OrganizationUrl"
 
 # Get identifiers using az devops cli
-# Find agent pool
 $agentPoolId = $(az pipelines pool list --query="[?name=='$AgentPoolName'].id | [0]")
 Write-Debug "Agent pool id is '$agentPoolId'"
-$agentId = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].id")
-Write-Debug "Agent id is '$agentId'"
+$agentIds = $(az pipelines agent list --pool-id $agentPoolId --query="[?starts_with(name,'$AgentNamePrefix')].id" | ConvertFrom-Json)
+Write-Debug "Agent ids: $agentIds"
 if ($DebugPreference -ine "SilentlyContinue") {
     Write-Debug "Pool information:"
     az pipelines pool list --query="[?name=='$AgentPoolName']" | Write-Host -ForegroundColor Yellow 
-    Write-Debug "Agent information:"
-    az pipelines agent list --agent-name $agentName --pool-id $agentPoolId | Write-Host -ForegroundColor Yellow 
 }
 
-# Get agent status prior to update
-$initialEnabledStatus = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].enabled")
-Write-Information "Agent $AgentName enabled status before update is '$initialEnabledStatus'"
-
-# Check whether current and desired status is different, otherwise skip update
-if ([System.Convert]::ToBoolean($initialEnabledStatus) -ne $Enabled) {
-    # az devops cli does not (yet) allow agent updates, so use the REST API
-    $settings = @{
-        enabled = $Enabled.ToString().ToLowerInvariant()
+foreach ($agentId in $agentIds) {
+    Write-Information "Processing agent with id '$agentId'..."
+    # Get agent status prior to update
+    $agent = az pipelines agent show --agent-id $agentId --pool-id $agentPoolId | ConvertFrom-Json
+    if ($DebugPreference -ine "SilentlyContinue") {
+        Write-Debug "Agent information (raw):"
+        az pipelines agent show --agent-id $agentId --pool-id $agentPoolId | Write-Host -ForegroundColor Yellow 
+        Write-Debug "Agent information:`n$($agent | Out-String)"
     }
-    $null = UpdateAgent -AgentId $agentId -AgentPoolId $agentPoolId -Settings $settings
+    
+    $initialEnabledStatus = $($agent.enabled)
+    Write-Information "Agent $($agent.name) ($agentId) enabled status before update is '$initialEnabledStatus'"
 
-    # Get agent status
-    $enabledStatus = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].enabled")
-} else {
-    Write-Debug "Skipping update"
-    $enabledStatus = $initialEnabledStatus
+    # Check whether current and desired status is different, otherwise skip update
+    if ([System.Convert]::ToBoolean($initialEnabledStatus) -ne $Enabled) {
+        # az devops cli does not (yet) allow agent updates, so use the REST API
+        $settings = @{
+            enabled = $Enabled.ToString().ToLowerInvariant()
+        }
+        $null = UpdateAgent -AgentId $agentId -AgentPoolId $agentPoolId -Settings $settings
+
+        # Get agent status
+        $enabledStatus = $(az pipelines agent show --agent-id $agentId --pool-id $agentPoolId --query="enabled")
+    } else {
+        $enabledStatus = $initialEnabledStatus
+    }
+    Write-Information "Agent $($agent.name) ($agentId) enabled status after update is '$enabledStatus'"
 }
-Write-Information "Agent $AgentName enabled status after update is '$enabledStatus'"
-
-Write-Host "##vso[task.setvariable variable=agentInitiallyEnabled;isOutput=true]$initialEnabledStatus"
-Write-Host "##vso[task.setvariable variable=agentEnabled;isOutput=true]$enabledStatus"

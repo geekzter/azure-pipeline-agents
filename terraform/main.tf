@@ -36,27 +36,29 @@ resource random_string password {
 }
 locals {
   password                     = ".Az9${random_string.password.result}"
-  pipeline_agent_name          = var.pipeline_agent_name != "" ? lower(var.pipeline_agent_name) : local.vm_name
+  pipeline_agent_name          = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
   suffix                       = random_string.suffix.result
   tags                         = map(
       "environment",             "pipelines",
       "suffix",                  local.suffix,
       "workspace",               terraform.workspace
   )
-  vm_name                      = "${var.vm_name_prefix}-${local.suffix}"
+  vm_name                      = "${var.vm_name_prefix}-${terraform.workspace}-${local.suffix}"
 }
 
 resource azurerm_public_ip pip {
-  name                         = "${local.vm_name}-pip"
+  name                         = "${local.vm_name}${count.index+1}-pip"
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
   allocation_method            = "Static"
 
   tags                         = local.tags
+
+  count                        = var.agent_count
 }
 
 resource azurerm_network_interface nic {
-  name                         = "${local.vm_name}-nic"
+  name                         = "${local.vm_name}${count.index+1}-nic"
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
 
@@ -64,16 +66,18 @@ resource azurerm_network_interface nic {
     name                       = "ipconfig"
     subnet_id                  = data.azurerm_subnet.pipeline_subnet.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id       = azurerm_public_ip.pip.id
+    public_ip_address_id       = azurerm_public_ip.pip[count.index].id
   }
   tags                         = local.tags
+
+  count                        = var.agent_count
 }
 
 resource azurerm_virtual_machine vm {
-  name                         = local.vm_name
+  name                         = "${local.vm_name}${count.index+1}"
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
-  network_interface_ids        = ["${azurerm_network_interface.nic.id}"]
+  network_interface_ids        = [azurerm_network_interface.nic[count.index].id]
   vm_size                      = var.vm_size
 
   # Uncomment this line to delete the OS disk automatically when deleting the VM
@@ -89,13 +93,13 @@ resource azurerm_virtual_machine vm {
     version                    = "latest"
   }
   storage_os_disk {
-    name                       = "${local.vm_name}-osdisk"
+    name                       = "${local.vm_name}${count.index+1}-osdisk"
     caching                    = "ReadWrite"
     create_option              = "FromImage"
     managed_disk_type          = "Premium_LRS"
   }
   os_profile {
-    computer_name              = local.vm_name
+    computer_name              = "${local.vm_name}${count.index+1}"
     admin_username             = var.user_name
     # The password is only used here in Terraform but not exported. 
     admin_password             = local.password
@@ -107,7 +111,10 @@ resource azurerm_virtual_machine vm {
       path                     = "/home/${var.user_name}/.ssh/authorized_keys"
     }
   }
+
   tags                         = local.tags
+
+  count                        = var.agent_count
 }
 
 resource null_resource bootstrap_os {
@@ -118,7 +125,7 @@ resource null_resource bootstrap_os {
 
   provisioner local-exec {
     # Start VM, so we can execute script through SSH
-    command                    = "az vm start --ids ${azurerm_virtual_machine.vm.id}"
+    command                    = "az vm start --ids ${azurerm_virtual_machine.vm[count.index].id}"
   }
 
   # Bootstrap using https://github.com/geekzter/bootstrap-os/tree/master/linux
@@ -131,10 +138,11 @@ resource null_resource bootstrap_os {
       type                     = "ssh"
       user                     = var.user_name
       password                 = local.password
-      host                     = azurerm_public_ip.pip.ip_address
+      host                     = azurerm_public_ip.pip[count.index].ip_address
     }
   }
 
+  count                        = var.agent_count
   depends_on                   = [azurerm_virtual_machine.vm]
 }
 
@@ -152,7 +160,7 @@ resource null_resource pipeline_agent {
       type                     = "ssh"
       user                     = var.user_name
       password                 = local.password
-      host                     = azurerm_public_ip.pip.ip_address
+      host                     = azurerm_public_ip.pip[count.index].ip_address
     }
   }
 
@@ -161,16 +169,17 @@ resource null_resource pipeline_agent {
     # "sudo apt-get -y install jq sed wget",
       "dos2unix ~/install_agent.sh",
       "chmod +x ~/install_agent.sh",
-      "~/install_agent.sh --agent-name ${local.pipeline_agent_name} --agent-pool ${var.pipeline_agent_pool} --org ${var.devops_org} --pat ${var.devops_pat}"
+      "~/install_agent.sh --agent-name ${local.pipeline_agent_name}${count.index+1} --agent-pool ${var.pipeline_agent_pool} --org ${var.devops_org} --pat ${var.devops_pat}"
     ]
 
     connection {
       type                     = "ssh"
       user                     = var.user_name
       password                 = local.password
-      host                     = azurerm_public_ip.pip.ip_address
+      host                     = azurerm_public_ip.pip[count.index].ip_address
     }
   }
 
+  count                        = var.agent_count
   depends_on                   = [azurerm_virtual_machine.vm,null_resource.bootstrap_os]
 }

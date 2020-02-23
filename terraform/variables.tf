@@ -1,3 +1,6 @@
+variable agent_count {
+  default                      = 1
+}
 variable devops_org {}
 variable devops_pat {}
 

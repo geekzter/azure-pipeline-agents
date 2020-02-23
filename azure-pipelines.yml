@@ -5,6 +5,7 @@ pool:
 
 
 variables:
+  bringAgentOnline: false
   scriptDirectory: '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'id_rsa.pub'
@@ -92,7 +93,7 @@ steps:
 - task: AzureCLI@2
   displayName: 'Bring agent online'
   # Only bring online it it was in the first place
-  condition: and(succeeded(), eq('$(agentConfig.agentInitiallyEnabled)', 'true'))
+  condition: and(succeeded(), or(eq('$(agentConfig.agentInitiallyEnabled)', 'true'),$(bringAgentOnline)))
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: 'pscore'
@@ -101,7 +102,7 @@ steps:
       $global:DebugPreference="Continue"
       $DebugPreference="Continue"
       $enabled = [System.Convert]::ToBoolean("$(agentConfig.agentInitiallyEnabled)")   
-      ./update_agent_status.ps1 -Enabled:$enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name)
+      ./update_agent_status.ps1 -Enabled:$enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(scriptDirectory)'

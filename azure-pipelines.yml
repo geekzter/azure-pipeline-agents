@@ -1,8 +1,15 @@
 # This pipeline uses Terraform to create/update a Self-Hosted Pipeline Agent
 
+schedules:
+- cron: "0 2 * * 6"
+  displayName: Weekly Saturday upgrade
+  branches:
+    include:
+    - master
+  always: true
+
 pool:
   vmImage: 'ubuntu-latest'
-
 
 variables:
   #destroyAgentIfExists: false # defined as hidden variable

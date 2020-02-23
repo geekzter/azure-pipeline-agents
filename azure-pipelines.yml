@@ -36,7 +36,6 @@ steps:
        Copy-Item $file.Value '$(terraformDirectory)'
    }
   displayName: 'Copy Secure Files'
-  
 
 - task: AzureCLI@2
   displayName: 'Disable agent(s)'
@@ -57,15 +56,11 @@ steps:
     # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
-- task: PowerShell@2
+- pwsh: |
+   $terraformVersion = Get-Content "$(terraformDirectory)/.terraform-version"
+   Write-Host "##vso[task.setvariable variable=version;isOutput=true]$terraformVersion"
   displayName: 'Determine Terraform version to use'
   name: terraformConfig
-  inputs:
-    targetType: 'inline'
-    script: |
-      $terraformVersion = Get-Content "$(terraformDirectory)/.terraform-version"
-      Write-Host "##vso[task.setvariable variable=version;isOutput=true]$terraformVersion"
-    pwsh: true
 
 - task: TerraformInstaller@0
   displayName: 'Download desired Terraform version'

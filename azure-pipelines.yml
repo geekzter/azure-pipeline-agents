@@ -110,7 +110,7 @@ steps:
 # Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@2
   displayName: 'Bring agent online'
-  # Only bring online it it was in the first place
+  # Only bring online if it was in the first place
   condition: and(succeeded(), eq(variables['agentConfig.agentInitiallyEnabled'], 'true'))
   inputs:
     azureSubscription: '$(subscriptionConnection)'

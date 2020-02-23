@@ -47,7 +47,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       #$DebugPreference="Continue"
-      $InformationPreference="Continue"
+      #$InformationPreference="Continue"
       ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true
@@ -95,13 +95,12 @@ steps:
 
      # Terraforming
      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key='$(terraformBackendBlob)' -backend-config=resource_group_name=$(terraformBackendResourceGroup)
-     Write-Host "Changing to terraform workspace '$(terraformWorkspace)'..."
      Invoke-Command -ScriptBlock {
        $Private:ErrorActionPreference = "Continue"
        terraform workspace new $(terraformWorkspace) 2>$null
      }
      terraform workspace select $(terraformWorkspace)
-     Write-Host "terraform workspace is now '$(terraform workspace show)'"
+     Write-Host "terraform workspace is '$(terraform workspace show)'"
      if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
        terraform destroy -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)" 
      }
@@ -126,7 +125,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       #$DebugPreference="Continue"
-      $InformationPreference="Continue"
+      #$InformationPreference="Continue"
       ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true

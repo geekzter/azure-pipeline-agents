@@ -47,8 +47,7 @@ steps:
     inlineScript: |
      $global:DebugPreference="Continue"
      $DebugPreference="Continue"
-     Set-PSDebug -Trace 2
-     ./update_agent_status.ps1 -Enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) 
+     ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) 
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(scriptDirectory)'
@@ -89,3 +88,24 @@ steps:
     # No prompts
     TF_IN_AUTOMATION: 'true' 
     TF_INPUT: 0
+
+# Once 'az pipelines agent' supports management of the agent, take it offline
+- task: AzureCLI@2
+  displayName: 'Bring agent online'
+  #enabled: $(agentConfig.agentInitiallyEnabled)
+  inputs:
+    azureSubscription: '$(subscriptionConnection)'
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+     $global:DebugPreference="Continue"
+     $DebugPreference="Continue"
+     $enabled = [System.Convert]::ToBoolean("$(agentConfig.agentInitiallyEnabled)")   
+     ./update_agent_status.ps1 -Enabled:$enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) 
+    addSpnToEnvironment: true
+    useGlobalConfig: true
+    workingDirectory: '$(scriptDirectory)'
+    failOnStandardError: true
+  env:
+    # Use Pipeline token to access Azure DevOps
+    AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'

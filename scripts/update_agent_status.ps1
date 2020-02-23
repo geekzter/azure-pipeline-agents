@@ -3,12 +3,48 @@
     Requires 'Project Collection Build Service (org)' to be added to Agent Pool ACL
 #>
 param ( 
-    [parameter(Mandatory=$false)][string]$AgentName,
-    [parameter(Mandatory=$false)][string]$AgentPoolName,
+    [parameter(Mandatory=$true)][string]$AgentName,
+    [parameter(Mandatory=$true)][string]$AgentPoolName,
     [parameter(Mandatory=$false)][switch]$Enabled,
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI,
     [parameter(Mandatory=$false)][string]$Token=$env:SYSTEM_ACCESSTOKEN
 ) 
+
+function UpdateAgent(
+    [parameter(Mandatory=$true)][int]$AgentId,
+    [parameter(Mandatory=$true)][int]$AgentPoolId,
+    [parameter(Mandatory=$true)][hashtable]$Settings
+)
+{
+    # az devops cli does not (yet) allow updates, so using the REST API
+    $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
+    $apiVersion="5.1"
+    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/pools/${AgentPoolId}/agents/${AgentId}?api-version=${apiVersion}"
+    Write-Debug "REST API Url: $apiUrl"
+
+    # Prepare REST request
+    $base64AuthInfo = [Convert]::ToBase64String([System.Text.ASCIIEncoding]::ASCII.GetBytes(":${Token}"))
+    $authHeader = "Basic $base64AuthInfo"
+    Write-Debug "Authorization: $authHeader"
+    $requestHeaders = @{
+        Accept = "application/json"
+        Authorization = $authHeader
+        "Content-Type" = "application/json"
+    }
+    $Settings["id"] = $AgentId
+    $requestBody = $Settings | ConvertTo-Json
+    if ($DebugPreference -ine "SilentlyContinue") {
+        Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Get | Write-Host -ForegroundColor Yellow 
+    }
+    #Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
+    $updateResponse = Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
+    Write-Information "Response status: $($updateResponse.StatusDescription)"
+    Write-Debug $updateResponse | Out-String
+    $updateResponseContent = $updateResponse.Content | ConvertFrom-Json
+    Write-Debug $updateResponseContent | Out-String
+
+    return $updateResponseContent
+}
 
 Write-Host "DebugPreference: $DebugPreference"
 Write-Debug "AgentName: '$AgentName'"
@@ -35,36 +71,30 @@ $agentId = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoo
 Write-Debug "Agent id is '$agentId'"
 if ($DebugPreference -ine "SilentlyContinue") {
     Write-Debug "Pool information:"
-    az pipelines pool list --query="[?name=='$AgentPoolName']"
-    # Show agent details
+    az pipelines pool list --query="[?name=='$AgentPoolName']" | Write-Host -ForegroundColor Yellow 
     Write-Debug "Agent information:"
     az pipelines agent list --agent-name $agentName --pool-id $agentPoolId | Write-Host -ForegroundColor Yellow 
 }
 
-# az devops cli does not (yet) allow updates, so using the REST API
-$OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
-$apiVersion="5.1"
-$apiUrl = "${OrganizationUrl}/_apis/distributedtask/pools/${agentPoolId}/agents/${agentId}?api-version=${apiVersion}"
-Write-Debug "REST API Url: $apiUrl"
+# Get agent status prior to update
+$initialEnabledStatus = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].enabled")
+Write-Information "Agent $AgentName enabled status before update is '$initialEnabledStatus'"
 
-# Prepare REST request
-$base64AuthInfo = [Convert]::ToBase64String([System.Text.ASCIIEncoding]::ASCII.GetBytes(":${Token}"))
-$authHeader = "Basic $base64AuthInfo"
-Write-Debug "Authorization: $authHeader"
-$requestHeaders = @{
-    Accept = "application/json"
-    Authorization = $authHeader
-    "Content-Type" = "application/json"
+# Check whether current and desired status is different, otherwise skip update
+if ([System.Convert]::ToBoolean($initialEnabledStatus) -ne $Enabled) {
+    # az devops cli does not (yet) allow agent updates, so use the REST API
+    $settings = @{
+        enabled = $Enabled.ToString().ToLowerInvariant()
+    }
+    $null = UpdateAgent -AgentId $agentId -AgentPoolId $agentPoolId -Settings $settings
+
+    # Get agent status
+    $enabledStatus = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].enabled")
+} else {
+    Write-Debug "Skipping update"
+    $enabledStatus = $initialEnabledStatus
 }
-$requestBody = @{
-    enabled = $Enabled.ToString().ToLowerInvariant()
-} | ConvertTo-Json
+Write-Information "Agent $AgentName enabled status after update is '$enabledStatus'"
 
-Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
-
-# Get agent status
-$enabledStatus = $(az pipelines agent list --agent-name $AgentName --pool-id $agentPoolId --query="[0].enabled")
-Write-Information "Agent $AgentName enabled status is '$enabledStatus'"
-
-
+Write-Host "##vso[task.setvariable variable=agentInitiallyEnabled;isOutput=true]$initialEnabledStatus"
 Write-Host "##vso[task.setvariable variable=agentEnabled;isOutput=true]$enabledStatus"

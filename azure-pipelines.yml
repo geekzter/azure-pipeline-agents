@@ -5,7 +5,7 @@ pool:
 
 
 variables:
-  destroyAgentIfExists: false
+  #destroyAgentIfExists: false # defined as hidden variable
   scriptDirectory: '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'id_rsa.pub'

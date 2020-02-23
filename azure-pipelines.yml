@@ -56,6 +56,21 @@ steps:
     # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
+- task: PowerShell@2
+  displayName: 'Determine Terraform version to use'
+  name: terraformConfig
+  inputs:
+    targetType: 'inline'
+    script: |
+      $terraformVersion = Get-Content "$(terraformDirectory)/.terraform-version"
+      Write-Host "##vso[task.setvariable variable=version;isOutput=true]$terraformVersion"
+    pwsh: true
+
+- task: TerraformInstaller@0
+  displayName: 'Download desired Terraform version'
+  inputs:
+    terraformVersion: '$(terraformConfig.version)'
+
 - task: AzureCLI@2
   displayName: 'Terraforming'
   enabled: true
@@ -91,14 +106,6 @@ steps:
     # No prompts
     TF_IN_AUTOMATION: 'true' 
     TF_INPUT: 0
-
-- task: PowerShell@2
-  displayName: 'Debug'
-  inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "Agent was enabled: '$(agentConfig.agentInitiallyEnabled)'"
-    pwsh: true
 
 # Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@2

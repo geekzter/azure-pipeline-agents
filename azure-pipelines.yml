@@ -95,7 +95,10 @@ steps:
 
      # Terraforming
      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key='$(terraformBackendBlob)' -backend-config=resource_group_name=$(terraformBackendResourceGroup)
-     terraform workspace new $(terraformWorkspace) 2>$null
+     Invoke-Command -ScriptBlock {
+       $Private:ErrorActionPreference = "Continue"
+       terraform workspace new $(terraformWorkspace) 2>$null
+     }
      if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
        terraform destroy -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)" 
      }

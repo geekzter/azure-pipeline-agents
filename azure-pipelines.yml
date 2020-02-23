@@ -45,8 +45,8 @@ steps:
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-     $global:DebugPreference="Continue"
-     $DebugPreference="Continue"
+     #$global:DebugPreference="Continue"
+     #$DebugPreference="Continue"
      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) 
     addSpnToEnvironment: true
     useGlobalConfig: true

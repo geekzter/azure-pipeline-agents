@@ -5,7 +5,7 @@ pool:
 
 
 variables:
-  bringAgentOnline: false
+  destroyAgentIfExists: false
   scriptDirectory: '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile: 'id_rsa.pub'
@@ -93,7 +93,7 @@ steps:
 - task: AzureCLI@2
   displayName: 'Bring agent online'
   # Only bring online it it was in the first place
-  condition: and(succeeded(), or(eq('$(agentConfig.agentInitiallyEnabled)', 'true'),$(bringAgentOnline)))
+  condition: and(succeeded(), eq('$(agentConfig.agentInitiallyEnabled)', 'true'))
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: 'pscore'

@@ -102,7 +102,8 @@ steps:
 - task: AzureCLI@2
   displayName: 'Bring agent online'
   # Only bring online it it was in the first place
-  condition: and(succeeded(), eq('$(agentConfig.agentInitiallyEnabled)', 'true'))
+# condition: and(succeeded(), eq('$(agentConfig.agentInitiallyEnabled)', 'true'))
+  condition: eq('$(agentConfig.agentInitiallyEnabled)', 'true')
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: 'pscore'

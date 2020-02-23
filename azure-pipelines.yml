@@ -94,7 +94,7 @@ steps:
      # Terraforming
      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key='$(terraformBackendBlob)' -backend-config=resource_group_name=$(terraformBackendResourceGroup)
      if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
-       terraform destroy -auto-approve
+       terraform destroy -auto-approve -var="devops_pat=$(TF_VAR_devops_pat)" 
      }
      terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
      terraform apply -auto-approve 'agent.plan'

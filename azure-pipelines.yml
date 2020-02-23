@@ -36,9 +36,8 @@ steps:
    }
   displayName: 'Copy Secure Files'
 
-# Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@2
-  displayName: 'Take agent offline'
+  displayName: 'Disable agent'
   name: 'agentConfig'
   enabled: true
   inputs:
@@ -107,10 +106,9 @@ steps:
     TF_IN_AUTOMATION: 'true' 
     TF_INPUT: 0
 
-# Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@2
-  displayName: 'Bring agent online'
-  # Only bring online if it was in the first place
+  displayName: 'Enable agent'
+  # Only enable if it was in the first place
   condition: and(succeeded(), eq(variables['agentConfig.agentInitiallyEnabled'], 'true'))
   inputs:
     azureSubscription: '$(subscriptionConnection)'

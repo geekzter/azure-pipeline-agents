@@ -45,13 +45,12 @@ steps:
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-     #$global:DebugPreference="Continue"
-     #$DebugPreference="Continue"
-     ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) 
+      #$global:DebugPreference="Continue"
+      #$DebugPreference="Continue"
+      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name)
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(scriptDirectory)'
-    failOnStandardError: true
   env:
     # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
@@ -92,20 +91,20 @@ steps:
 # Once 'az pipelines agent' supports management of the agent, take it offline
 - task: AzureCLI@2
   displayName: 'Bring agent online'
-  #enabled: $(agentConfig.agentInitiallyEnabled)
+  # Only bring online it it was in the first place
+  condition: eq('$(agentConfig.agentInitiallyEnabled)', 'true')
   inputs:
     azureSubscription: '$(subscriptionConnection)'
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-     $global:DebugPreference="Continue"
-     $DebugPreference="Continue"
-     $enabled = [System.Convert]::ToBoolean("$(agentConfig.agentInitiallyEnabled)")   
-     ./update_agent_status.ps1 -Enabled:$enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name) 
+      $global:DebugPreference="Continue"
+      $DebugPreference="Continue"
+      $enabled = [System.Convert]::ToBoolean("$(agentConfig.agentInitiallyEnabled)")   
+      ./update_agent_status.ps1 -Enabled:$enabled -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentName $(TF_VAR_pipeline_agent_name)
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(scriptDirectory)'
-    failOnStandardError: true
   env:
     # Use Pipeline token to access Azure DevOps
     AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'

@@ -78,6 +78,9 @@ echo "Extracting ${AGENT_PACKAGE} in $(pwd)..."
 tar zxf $AGENT_PACKAGE
 echo "Extracted ${AGENT_PACKAGE}"
 
+echo "Installing dependencies..."
+sudo ./bin/installdependencies.sh
+
 # Unattended config
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops#unattended-config
 echo "Creating agent ${AGENT_NAME} and adding it to pool ${AGENT_POOL} in organization ${ORG}..."

@@ -131,6 +131,8 @@ resource null_resource bootstrap_os {
   # Bootstrap using https://github.com/geekzter/bootstrap-os/tree/master/linux
   provisioner remote-exec {
     inline                     = [
+      "sudo apt-get update -y",
+      "sudo apt-get -y install curl", 
       "curl -sk https://raw.githubusercontent.com/geekzter/bootstrap-os/master/linux/bootstrap_linux.sh | bash"
     ]
 
@@ -166,7 +168,9 @@ resource null_resource pipeline_agent {
 
   provisioner remote-exec {
     inline                     = [
-    # "sudo apt-get -y install jq sed wget",
+      "sudo apt-get update -y",
+      # We need dos2unix (depending on where we're uploading from) before we run the script, so install script pre-requisites inline here
+      "sudo apt-get -y install curl dos2unix jq sed", 
       "dos2unix ~/install_agent.sh",
       "chmod +x ~/install_agent.sh",
       "~/install_agent.sh --agent-name ${local.pipeline_agent_name}${count.index+1} --agent-pool ${var.pipeline_agent_pool} --org ${var.devops_org} --pat ${var.devops_pat}"
@@ -181,5 +185,5 @@ resource null_resource pipeline_agent {
   }
 
   count                        = var.agent_count
-  depends_on                   = [azurerm_virtual_machine.vm,null_resource.bootstrap_os]
+  depends_on                   = [null_resource.bootstrap_os]
 }

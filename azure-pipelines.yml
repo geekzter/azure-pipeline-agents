@@ -24,7 +24,6 @@ variables:
   # Terraform execution variables
   TF_CLI_ARGS_init   : '-backend-config=container_name=pipelineagents -backend-config=key="terraform.tfstate"'
   TF_CLI_ARGS_apply  : '-auto-approve'
-  TF_CLI_ARGS_destroy: '-auto-approve'
   TF_IN_AUTOMATION   : 'true' 
   TF_INPUT           : 0
   TF_WORKSPACE       : 'cd'
@@ -107,7 +106,7 @@ steps:
       terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=resource_group_name=$(terraformBackendResourceGroup)
       Write-Host "terraform workspace is '$(terraform workspace show)'"
       if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
-        terraform destroy
+        terraform destroy -auto-approve
       }
       terraform plan -out='agent.plan'
       terraform apply agent.plan

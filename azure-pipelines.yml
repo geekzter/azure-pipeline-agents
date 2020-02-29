@@ -25,15 +25,15 @@ variables:
   TF_CLI_ARGS_init   : '-backend-config=container_name=pipelineagents -backend-config=key="terraform.tfstate"'
   TF_CLI_ARGS_apply  : '-auto-approve'
   TF_CLI_ARGS_destroy: '-auto-approve'
-  TF_IN_AUTOMATION: 'true' 
-  TF_INPUT: 0
-  TF_WORKSPACE: 'cd'
+  TF_IN_AUTOMATION.  : 'true' 
+  TF_INPUT           : 0
+  TF_WORKSPACE       : 'cd'
 
   # Terraform project variables
-  TF_VAR_pipeline_agent_name: 'ubuntu1804-agent'
-  TF_VAR_pipeline_agent_pool: 'Ubuntu'
+  TF_VAR_pipeline_agent_name    : 'ubuntu1804-agent'
+  TF_VAR_pipeline_agent_pool.   : 'Ubuntu'
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
-  TF_VAR_ssh_public_key: 'id_rsa.pub' # Key will be downloaded in terraform directory
+  TF_VAR_ssh_public_key         : 'id_rsa.pub' # Key will be downloaded in terraform directory
 
 
 steps:

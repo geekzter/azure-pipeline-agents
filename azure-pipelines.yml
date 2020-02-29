@@ -15,7 +15,6 @@ variables:
   #destroyAgentIfExists: false # defined as hidden variable
   scriptDirectory: '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
-  terraformWorkspace: 'cd'
   sshPublicKeyFile: 'id_rsa.pub'
 
   # Terraform backend variables
@@ -23,6 +22,12 @@ variables:
   # terraformBackendStorageAccount: # Defined as secret variable
   terraformBackendContainer: 'pipelineagents'
   terraformBackendBlob: 'terraform.tfstate'
+
+  # Terraform execution variables
+  TF_CLI_ARGS: '-auto-approve'
+  TF_IN_AUTOMATION: 'true' 
+  TF_INPUT: 0
+  TF_WORKSPACE: 'cd'
 
   # Terraform project variables
   TF_VAR_pipeline_agent_name: 'ubuntu1804-agent'
@@ -108,12 +113,7 @@ steps:
     useGlobalConfig: true
     workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
-  env:
-    # No prompts
-    TF_CLI_ARGS: '-auto-approve'
-    TF_IN_AUTOMATION: 'true' 
-    TF_INPUT: 0
-    TF_WORKSPACE: $(terraformWorkspace)
+
 
 - task: AzureCLI@2
   displayName: 'Enable agent(s)'

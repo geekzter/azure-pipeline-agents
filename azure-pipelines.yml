@@ -24,8 +24,8 @@ variables:
   terraformBackendBlob: 'terraform.tfstate'
 
   # Terraform execution variables
-  TF_CLI_ARGS_destroy: '-auto-approve'
-  TF_CLI_ARGS_plan: '-auto-approve'
+  TF_CLI_ARGS_destroy: '-auto-approve -var="devops_pat=$(TF_VAR_devops_pat)'
+  TF_CLI_ARGS_plan: '-auto-approve -var="devops_pat=$(TF_VAR_devops_pat)'
   TF_IN_AUTOMATION: 'true' 
   TF_INPUT: 0
   TF_WORKSPACE: 'cd'
@@ -106,9 +106,9 @@ steps:
       terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=container_name=$(terraformBackendContainer) -backend-config=key='$(terraformBackendBlob)' -backend-config=resource_group_name=$(terraformBackendResourceGroup)
       Write-Host "terraform workspace is '$(terraform workspace show)'"
       if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
-        terraform destroy -var="devops_pat=$(TF_VAR_devops_pat)" 
+        terraform destroy
       }
-      terraform plan -var="devops_pat=$(TF_VAR_devops_pat)" -out='agent.plan'
+      terraform plan -out='agent.plan'
       terraform apply 'agent.plan'
     addSpnToEnvironment: true
     useGlobalConfig: true

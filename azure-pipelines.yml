@@ -28,7 +28,7 @@ variables:
   TF_CLI_ARGS_plan: '-auto-approve'
   TF_IN_AUTOMATION: 'true' 
   TF_INPUT: 0
-  TF_WORKSPACE: 'cd2'
+  TF_WORKSPACE: 'cd'
 
   # Terraform project variables
   TF_VAR_pipeline_agent_name: 'ubuntu1804-agent'

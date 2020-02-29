@@ -22,8 +22,7 @@ variables:
   # terraformBackendStorageAccount: # Defined as secret variable
 
   # Terraform execution variables
-# TF_CLI_ARGS_init   : '-backend-config=container_name=pipelineagents -backend-config=key="terraform.tfstate"'
-  TF_CLI_ARGS_init   : '-backend-config=container_name=pipelineagents -backend-config=key="terraform.tfstate" -backend-config=storage_account_name=$[variables.terraformBackendStorageAccount] -backend-config=resource_group_name=$[variables.terraformBackendResourceGroup]'
+  TF_CLI_ARGS_init   : '-backend-config=container_name=pipelineagents -backend-config=key="terraform.tfstate"'
   TF_CLI_ARGS_apply  : '-auto-approve'
   TF_CLI_ARGS_destroy: '-auto-approve'
   TF_IN_AUTOMATION   : 'true' 
@@ -105,8 +104,7 @@ steps:
       Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_* | Sort-Object -Property Name
 
       # Terraforming
-      #terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=resource_group_name=$(terraformBackendResourceGroup)
-      terraform init
+      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=resource_group_name=$(terraformBackendResourceGroup)
       Write-Host "terraform workspace is '$(terraform workspace show)'"
       if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
         terraform destroy
@@ -117,9 +115,6 @@ steps:
     useGlobalConfig: true
     workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
-  env:
-    # Explicitely pass secrect variables
-    TF_VAR_devops_pat: $(TF_VAR_devops_pat)
 
 - task: AzureCLI@2
   displayName: 'Enable agent(s)'

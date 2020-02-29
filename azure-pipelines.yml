@@ -113,6 +113,8 @@ steps:
     useGlobalConfig: true
     workingDirectory: '$(terraformDirectory)'
     failOnStandardError: true
+  env:
+    TF_VAR_devops_pat: $(TF_VAR_devops_pat)
 
 
 - task: AzureCLI@2

@@ -37,6 +37,10 @@ variable vm_name_prefix {
   default                      = "ubuntu1804-agent"
 }
 
+variable vm_accelerated_networking {
+  default                      = false
+}
+
 variable vm_size {
   default                      = "Standard_D2s_v3"
 }

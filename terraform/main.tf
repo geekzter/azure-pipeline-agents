@@ -51,6 +51,7 @@ resource azurerm_public_ip pip {
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
   allocation_method            = "Static"
+  sku                          = "Standard"
 
   tags                         = local.tags
 
@@ -68,7 +69,36 @@ resource azurerm_network_interface nic {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id       = azurerm_public_ip.pip[count.index].id
   }
+  enable_accelerated_networking = var.vm_accelerated_networking
+
   tags                         = local.tags
+
+  count                        = var.agent_count
+}
+
+resource azurerm_network_security_group nsg {
+  name                         = "${local.vm_name}-nsg"
+  location                     = data.azurerm_resource_group.pipeline_resource_group.location
+  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+
+  security_rule {
+    name                       = "InboundSSH"
+    priority                   = 201
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags                         = local.tags
+}
+
+resource azurerm_network_interface_security_group_association nic_nsg {
+  network_interface_id         = azurerm_network_interface.nic[count.index].id
+  network_security_group_id    = azurerm_network_security_group.nsg.id
 
   count                        = var.agent_count
 }

@@ -1,0 +1,17 @@
+<FirstLogonCommands>
+    <SynchronousCommand>
+        <CommandLine>PowerShell.exe -ExecutionPolicy Bypass -Command "&amp; {Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/geekzter/bootstrap-os/master/windows/bootstrap_windows.ps1'))}"</CommandLine>
+        <Description>Bootstrap packages and PowerShell</Description>
+        <Order>1</Order>
+    </SynchronousCommand>
+    <SynchronousCommand>
+        <CommandLine>cmd.exe /c start PowerShell.exe -NoExit -Command "&amp; C:\Users\${username}\Source\Public\bootstrap-os\windows\bootstrap_windows.ps1 -PowerShell $true"</CommandLine>
+        <Description>Configure PowerShell, including modules</Description>
+        <Order>2</Order>
+    </SynchronousCommand>
+    <SynchronousCommand>
+        <CommandLine>cmd.exe /c start pwsh.exe -ExecutionPolicy Bypass -Noexit -Command "&amp; {Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('${scripturl}'))}"</CommandLine>
+        <Description>Install Pipeline Agent</Description>
+        <Order>3</Order>
+    </SynchronousCommand>
+</FirstLogonCommands>

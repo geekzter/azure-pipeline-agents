@@ -34,56 +34,37 @@ resource random_string password {
 # Avoid characters that may cause shell scripts to break
   override_special             = "." 
 }
+
 locals {
   password                     = ".Az9${random_string.password.result}"
-  pipeline_agent_name          = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
   suffix                       = random_string.suffix.result
   tags                         = map(
       "environment",             "pipelines",
       "suffix",                  local.suffix,
       "workspace",               terraform.workspace
   )
-  vm_name                      = "${var.vm_name_prefix}-${terraform.workspace}-${local.suffix}"
-}
-
-resource azurerm_public_ip pip {
-  name                         = "${local.vm_name}${count.index+1}-pip"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
-  allocation_method            = "Static"
-  sku                          = "Standard"
-
-  tags                         = local.tags
-
-  count                        = var.agent_count
-}
-
-resource azurerm_network_interface nic {
-  name                         = "${local.vm_name}${count.index+1}-nic"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
-
-  ip_configuration {
-    name                       = "ipconfig"
-    subnet_id                  = data.azurerm_subnet.pipeline_subnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id       = azurerm_public_ip.pip[count.index].id
-  }
-  enable_accelerated_networking = var.vm_accelerated_networking
-
-  tags                         = local.tags
-
-  count                        = var.agent_count
 }
 
 resource azurerm_network_security_group nsg {
-  name                         = "${local.vm_name}-nsg"
+  name                         = "${local.linux_vm_name}-nsg"
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
 
   security_rule {
-    name                       = "InboundSSH"
+    name                       = "InboundRDP"
     priority                   = 201
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "InboundSSH"
+    priority                   = 202
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
@@ -92,128 +73,23 @@ resource azurerm_network_security_group nsg {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-
   tags                         = local.tags
 }
 
-resource azurerm_network_interface_security_group_association nic_nsg {
-  network_interface_id         = azurerm_network_interface.nic[count.index].id
-  network_security_group_id    = azurerm_network_security_group.nsg.id
-
-  count                        = var.agent_count
-}
-
-resource azurerm_virtual_machine vm {
-  name                         = "${local.vm_name}${count.index+1}"
+resource azurerm_storage_account automation_storage {
+  name                         = "${lower(replace(data.azurerm_resource_group.pipeline_resource_group.name,"-",""))}autstor"
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
-  network_interface_ids        = [azurerm_network_interface.nic[count.index].id]
-  vm_size                      = var.vm_size
-
-  # Uncomment this line to delete the OS disk automatically when deleting the VM
-  delete_os_disk_on_termination = true
-
-  # Uncomment this line to delete the data disks automatically when deleting the VM
-  delete_data_disks_on_termination = true
-
-  storage_image_reference {
-    publisher                  = "Canonical"
-    offer                      = "UbuntuServer"
-    sku                        = "18.04-LTS"
-    version                    = "latest"
-  }
-  storage_os_disk {
-    name                       = "${local.vm_name}${count.index+1}-osdisk"
-    caching                    = "ReadWrite"
-    create_option              = "FromImage"
-    managed_disk_type          = "Premium_LRS"
-  }
-  os_profile {
-    computer_name              = "${local.vm_name}${count.index+1}"
-    admin_username             = var.user_name
-    # The password is only used here in Terraform but not exported. 
-    admin_password             = local.password
-  }
-  os_profile_linux_config {
-    disable_password_authentication = false
-    ssh_keys {
-      key_data                 = file(var.ssh_public_key)
-      path                     = "/home/${var.user_name}/.ssh/authorized_keys"
-    }
-  }
+  account_kind                 = "StorageV2"
+  account_tier                 = "Standard"
+  account_replication_type     = "LRS"
+  enable_https_traffic_only    = true
 
   tags                         = local.tags
-
-  count                        = var.agent_count
 }
 
-resource null_resource bootstrap_os {
-  # Always run this
-  triggers                     = {
-    always_run                 = timestamp()
-  }
-
-  provisioner local-exec {
-    # Start VM, so we can execute script through SSH
-    command                    = "az vm start --ids ${azurerm_virtual_machine.vm[count.index].id}"
-  }
-
-  # Bootstrap using https://github.com/geekzter/bootstrap-os/tree/master/linux
-  provisioner remote-exec {
-    inline                     = [
-      "sudo apt-get update -y",
-      "sudo apt-get -y install curl", 
-      "curl -sk https://raw.githubusercontent.com/geekzter/bootstrap-os/master/linux/bootstrap_linux.sh | bash"
-    ]
-
-    connection {
-      type                     = "ssh"
-      user                     = var.user_name
-      password                 = local.password
-      host                     = azurerm_public_ip.pip[count.index].ip_address
-    }
-  }
-
-  count                        = var.agent_count
-  depends_on                   = [azurerm_virtual_machine.vm]
-}
-
-resource null_resource pipeline_agent {
-  # Always run this
-  triggers                     = {
-    always_run                 = timestamp()
-  }
-
-  provisioner "file" {
-    source      = "../scripts/agent/install_agent.sh"
-    destination = "~/install_agent.sh"
-
-    connection {
-      type                     = "ssh"
-      user                     = var.user_name
-      password                 = local.password
-      host                     = azurerm_public_ip.pip[count.index].ip_address
-    }
-  }
-
-  provisioner remote-exec {
-    inline                     = [
-      "sudo apt-get update -y",
-      # We need dos2unix (depending on where we're uploading from) before we run the script, so install script pre-requisites inline here
-      "sudo apt-get -y install curl dos2unix jq sed", 
-      "dos2unix ~/install_agent.sh",
-      "chmod +x ~/install_agent.sh",
-      "~/install_agent.sh --agent-name ${local.pipeline_agent_name}${count.index+1} --agent-pool ${var.pipeline_agent_pool} --org ${var.devops_org} --pat ${var.devops_pat}"
-    ]
-
-    connection {
-      type                     = "ssh"
-      user                     = var.user_name
-      password                 = local.password
-      host                     = azurerm_public_ip.pip[count.index].ip_address
-    }
-  }
-
-  count                        = var.agent_count
-  depends_on                   = [null_resource.bootstrap_os]
+resource azurerm_storage_container scripts {
+  name                         = "scripts"
+  storage_account_name         = azurerm_storage_account.automation_storage.name
+  container_access_type        = "container"
 }

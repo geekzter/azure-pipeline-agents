@@ -76,7 +76,7 @@ variable windows_pipeline_agent_name {
   # Defaults to VM name if empty string
   default                      = "windows-agent"
 }
-variable windowspipeline_agent_pool {
+variable windows_pipeline_agent_pool {
   default                      = "Windows"
 }
 variable windows_vm_name_prefix {

@@ -77,7 +77,7 @@ resource azurerm_network_security_group nsg {
 }
 
 resource azurerm_storage_account automation_storage {
-  name                         = "${lower(replace(data.azurerm_resource_group.pipeline_resource_group.name,"-",""))}autstor"
+  name                         = "${lower(replace(data.azurerm_resource_group.pipeline_resource_group.name,"-",""))}${local.suffix}stor"
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
   account_kind                 = "StorageV2"

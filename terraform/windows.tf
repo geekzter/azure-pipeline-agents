@@ -38,8 +38,19 @@ resource azurerm_network_interface_security_group_association windows_nic_nsg {
   count                        = var.provision_windows ? var.windows_agent_count : 0
 }
 
-resource azurerm_storage_blob windows_pipeline_agent {
-  name                         = "prepare_bastion.ps1"
+resource azurerm_storage_blob bootstrap_agent {
+  name                         = "bootstrap_agent.ps1"
+  storage_account_name         = azurerm_storage_account.automation_storage.name
+  storage_container_name       = azurerm_storage_container.scripts.name
+
+  type                         = "Block"
+  source                       = "../scripts/agent/bootstrap_agent.ps1"
+
+  count                        = var.provision_windows ? 1 : 0
+}
+
+resource azurerm_storage_blob install_agent {
+  name                         = "install_agent.ps1"
   storage_account_name         = azurerm_storage_account.automation_storage.name
   storage_container_name       = azurerm_storage_container.scripts.name
 
@@ -82,10 +93,19 @@ resource azurerm_windows_virtual_machine windows_agent {
   additional_unattend_content {
     setting                    = "FirstLogonCommands"
     content                    = templatefile("../scripts/agent/FirstLogonCommands.xml", { 
-      scripturl                = azurerm_storage_blob.windows_pipeline_agent.0.url,
-      username                 = var.user_name
+      scripturl                = azurerm_storage_blob.bootstrap_agent.0.url
     })
   }
+
+  # This is deserialized on the host by bootstrap_agent.ps1
+  custom_data                  = base64encode(jsonencode(map(
+    "agentname"                , "var.windows_pipeline_agent_name${count.index+1}",
+    "agentscripturl"           , azurerm_storage_blob.install_agent.0.url,
+    "agentpool"                , var.windows_pipeline_agent_pool,
+    "organization"             , var.devops_org,
+    "pat"                      , var.devops_pat,
+    "username"                 , var.user_name
+  )))
 
   # Required for AAD Login
   identity {
@@ -94,4 +114,6 @@ resource azurerm_windows_virtual_machine windows_agent {
 
   tags                         = local.tags
   count                        = var.provision_windows ? var.windows_agent_count : 0
+
+  depends_on                   = [azurerm_storage_blob.install_agent]
 }

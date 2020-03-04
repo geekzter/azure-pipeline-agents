@@ -11,7 +11,7 @@ resource azurerm_public_ip linux_pip {
   sku                          = "Standard"
 
   tags                         = local.tags
-  count                        = var.provision_linux ? var.linux_agent_count : 0
+  count                        = var.linux_agent_count
 }
 
 resource azurerm_network_interface linux_nic {
@@ -28,14 +28,14 @@ resource azurerm_network_interface linux_nic {
   enable_accelerated_networking = var.vm_accelerated_networking
 
   tags                         = local.tags
-  count                        = var.provision_linux ? var.linux_agent_count : 0
+  count                        = var.linux_agent_count
 }
 
 resource azurerm_network_interface_security_group_association linux_nic_nsg {
   network_interface_id         = azurerm_network_interface.linux_nic[count.index].id
   network_security_group_id    = azurerm_network_security_group.nsg.id
 
-  count                        = var.provision_linux ? var.linux_agent_count : 0
+  count                        = var.linux_agent_count
 }
 
 resource azurerm_virtual_machine linux_agent {
@@ -78,7 +78,7 @@ resource azurerm_virtual_machine linux_agent {
   }
 
   tags                         = local.tags
-  count                        = var.provision_linux ? var.linux_agent_count : 0
+  count                        = var.linux_agent_count
   depends_on                   = [azurerm_network_interface_security_group_association.linux_nic_nsg]
 }
 
@@ -109,7 +109,7 @@ resource null_resource linux_bootstrap {
     }
   }
 
-  count                        = var.provision_linux ? var.linux_agent_count : 0
+  count                        = var.linux_agent_count
   depends_on                   = [azurerm_virtual_machine.linux_agent,azurerm_network_interface_security_group_association.linux_nic_nsg]
 }
 
@@ -149,6 +149,6 @@ resource null_resource linux_pipeline_agent {
     }
   }
 
-  count                        = var.provision_linux ? var.linux_agent_count : 0
+  count                        = var.linux_agent_count
   depends_on                   = [null_resource.linux_bootstrap,azurerm_network_interface_security_group_association.linux_nic_nsg]
 }

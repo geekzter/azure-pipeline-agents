@@ -11,7 +11,7 @@ resource azurerm_public_ip windows_pip {
   sku                          = "Standard"
 
   tags                         = local.tags
-  count                        = var.provision_windows ? var.windows_agent_count : 0
+  count                        = var.windows_agent_count
 }
 
 resource azurerm_network_interface windows_nic {
@@ -28,14 +28,14 @@ resource azurerm_network_interface windows_nic {
   enable_accelerated_networking = var.vm_accelerated_networking
 
   tags                         = local.tags
-  count                        = var.provision_windows ? var.windows_agent_count : 0
+  count                        = var.windows_agent_count
 }
 
 resource azurerm_network_interface_security_group_association windows_nic_nsg {
   network_interface_id         = azurerm_network_interface.windows_nic[count.index].id
   network_security_group_id    = azurerm_network_security_group.nsg.id
 
-  count                        = var.provision_windows ? var.windows_agent_count : 0
+  count                        = var.windows_agent_count
 }
 
 resource azurerm_storage_blob bootstrap_agent {
@@ -46,7 +46,7 @@ resource azurerm_storage_blob bootstrap_agent {
   type                         = "Block"
   source                       = "../scripts/agent/bootstrap_agent.ps1"
 
-  count                        = var.provision_windows ? 1 : 0
+  count                        = var.windows_agent_count > 0 ? 1 : 0
 }
 
 resource azurerm_storage_blob install_agent {
@@ -57,7 +57,7 @@ resource azurerm_storage_blob install_agent {
   type                         = "Block"
   source                       = "../scripts/agent/install_agent.ps1"
 
-  count                        = var.provision_windows ? 1 : 0
+  count                        = var.windows_agent_count > 0 ? 1 : 0
 }
 
 resource azurerm_windows_virtual_machine windows_agent {
@@ -99,7 +99,7 @@ resource azurerm_windows_virtual_machine windows_agent {
 
   # This is deserialized on the host by bootstrap_agent.ps1
   custom_data                  = base64encode(jsonencode(map(
-    "agentname"                , "var.windows_pipeline_agent_name${count.index+1}",
+    "agentname"                , "${local.windows_pipeline_agent_name}${count.index+1}",
     "agentscripturl"           , azurerm_storage_blob.install_agent.0.url,
     "agentpool"                , var.windows_pipeline_agent_pool,
     "organization"             , var.devops_org,
@@ -113,7 +113,7 @@ resource azurerm_windows_virtual_machine windows_agent {
   }
 
   tags                         = local.tags
-  count                        = var.provision_windows ? var.windows_agent_count : 0
+  count                        = var.windows_agent_count
 
   depends_on                   = [azurerm_storage_blob.install_agent]
 }

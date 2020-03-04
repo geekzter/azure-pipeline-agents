@@ -3,7 +3,7 @@ variable devops_org {}
 variable devops_pat {}
 
 variable linux_agent_count {
-  default                      = 1
+  default                      = 2
 }
 variable linux_os_offer {
   default                      = "UbuntuServer"
@@ -19,7 +19,7 @@ variable linux_pipeline_agent_name {
   default                      = "ubuntu1804-agent"
 }
 variable linux_pipeline_agent_pool {
-  default                      = "Ubuntu"
+  default                      = "Default"
 }
 variable linux_vm_name_prefix {
   default                      = "ubuntu1804-agent"
@@ -39,15 +39,6 @@ variable pipeline_subnet {
   default                      = "default"
 }
 
-variable provision_linux {
-  type                         = bool
-  default                      = false
-}
-variable provision_windows {
-  type                         = bool
-  default                      = true
-}
-
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }
@@ -61,7 +52,7 @@ variable vm_accelerated_networking {
 }
 
 variable windows_agent_count {
-  default                      = 1
+  default                      = 2
 }
 variable windows_os_offer {
   default                      = "WindowsServer"
@@ -77,7 +68,7 @@ variable windows_pipeline_agent_name {
   default                      = "windows-agent"
 }
 variable windows_pipeline_agent_pool {
-  default                      = "Windows"
+  default                      = "Default"
 }
 variable windows_vm_name_prefix {
   default                      = "win"

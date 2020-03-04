@@ -40,6 +40,10 @@ Write-Host "Extracting ${agentPackage} in ${pipelineDirectory}..."
 Expand-Archive -Path $agentPackage -DestinationPath $pipelineDirectory
 Write-Host "Extracted ${agentPackage}"
 
+# Use work directory that does not contain spaces, and is located at the designated OS location for data
+$pipelineWorkDirectory = "$($env:ProgramData)\pipeline-agent\_work"
+$null = New-Item -ItemType Directory -Path $pipelineWorkDirectory -Force
+
 # Unattended config
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#unattended-config
 Write-Host "Creating agent ${AgentName} and adding it to pool ${AgentPool} in organization ${Organization}..."
@@ -50,7 +54,8 @@ Write-Host "Creating agent ${AgentName} and adding it to pool ${AgentPool} in or
              --agent $AgentName --replace `
              --acceptTeeEula `
              --runAsService `
-             --windowsLogonAccount "NT AUTHORITY\NETWORK SERVICE" 
+             --windowsLogonAccount "NT AUTHORITY\NETWORK SERVICE" `
+             --work $pipelineWorkDirectory
 
 # Start Service
 Start-Service $agentService

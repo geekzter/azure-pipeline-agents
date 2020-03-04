@@ -29,8 +29,10 @@ variables:
   TF_WORKSPACE       : 'cd'
 
   # Terraform project variables
-  TF_VAR_pipeline_agent_name    : 'ubuntu1804-agent'
-  TF_VAR_pipeline_agent_pool    : 'Ubuntu'
+  TF_VAR_linux-pipeline_agent_name    : 'ubuntu1804-agent'
+  TF_VAR_linux_pipeline_agent_pool    : 'Default'
+  TF_VAR_windows_pipeline_agent_name  : 'windows-agent'
+  TF_VAR_windows_pipeline_agent_pool  : 'Default'
   TF_VAR_pipeline_resource_group: 'PipelineAgents'
   TF_VAR_ssh_public_key         : 'id_rsa.pub' # Key will be downloaded in terraform directory
 
@@ -49,7 +51,7 @@ steps:
   displayName: 'Copy Secure Files'
 
 - task: AzureCLI@2
-  displayName: 'Disable Linux agent(s)'
+  displayName: 'Disable agent(s)'
   name: 'agentConfig'
   enabled: true
   inputs:
@@ -57,7 +59,8 @@ steps:
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name) -Token "$(System.AccessToken)"
+      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
+      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(scriptDirectory)'

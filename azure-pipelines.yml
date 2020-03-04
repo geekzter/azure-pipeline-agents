@@ -13,26 +13,28 @@ pool:
 
 variables:
   #destroyAgentIfExists: false # defined as hidden variable
-  scriptDirectory   : '$(System.DefaultWorkingDirectory)/scripts'
-  terraformDirectory: '$(System.DefaultWorkingDirectory)/terraform'
-  sshPublicKeyFile  : 'id_rsa.pub'
+  scriptDirectory                     : '$(System.DefaultWorkingDirectory)/scripts'
+  terraformDirectory                  : '$(System.DefaultWorkingDirectory)/terraform'
+  sshPublicKeyFile                    : 'id_rsa.pub'
 
   # Terraform backend variables
   # terraformBackendResourceGroup: # Defined as secret variable
   # terraformBackendStorageAccount: # Defined as secret variable
 
   # Terraform execution variables
-  TF_CLI_ARGS_init   : '-backend-config=container_name=pipelineagents -backend-config=key="terraform.tfstate"'
-  TF_CLI_ARGS_apply  : '-auto-approve'
-  TF_IN_AUTOMATION   : 'true' 
-  TF_INPUT           : 0
-  TF_WORKSPACE       : 'cd'
+  TF_CLI_ARGS_init                    : '-backend-config=container_name=pipelineagents -backend-config=key="terraform.tfstate"'
+  TF_CLI_ARGS_apply                   : '-auto-approve'
+  TF_IN_AUTOMATION                    : 'true' 
+  TF_INPUT                            : 0
+  TF_WORKSPACE                        : 'cd'
 
   # Terraform project variables
-  TF_VAR_pipeline_agent_name    : 'ubuntu1804-agent'
-  TF_VAR_pipeline_agent_pool    : 'Ubuntu'
-  TF_VAR_pipeline_resource_group: 'PipelineAgents'
-  TF_VAR_ssh_public_key         : 'id_rsa.pub' # Key will be downloaded in terraform directory
+  TF_VAR_linux_pipeline_agent_name    : 'ubuntu1804-agent'
+  TF_VAR_linux_pipeline_agent_pool    : 'Default'
+  TF_VAR_windows_pipeline_agent_name  : 'windows-agent'
+  TF_VAR_windows_pipeline_agent_pool  : 'Default'
+  TF_VAR_pipeline_resource_group.     : 'PipelineAgents'
+  TF_VAR_ssh_public_key               : 'id_rsa.pub' # Key will be downloaded in terraform directory
 
 
 steps:
@@ -57,7 +59,8 @@ steps:
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
+      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
+      ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(scriptDirectory)'
@@ -115,7 +118,7 @@ steps:
     TF_VAR_devops_pat: $(TF_VAR_devops_pat)
 
 - task: AzureCLI@2
-  displayName: 'Enable agent(s)'
+  displayName: 'Enable Linux agent(s)'
   # Only enable if it was in the first place
   condition: succeeded()
   inputs:
@@ -123,7 +126,7 @@ steps:
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_pipeline_agent_name) -Token "$(System.AccessToken)"
+      ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name) -Token "$(System.AccessToken)"
     addSpnToEnvironment: true
     useGlobalConfig: true
     workingDirectory: '$(scriptDirectory)'

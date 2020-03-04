@@ -1,0 +1,9 @@
+<AutoLogon>
+    <Password>
+        <Value>${password}</Value>
+    </Password>
+    <Enabled>true</Enabled>
+    <LogonCount>${count}</LogonCount>
+    <Username>${username}</Username>
+</AutoLogon>
+   

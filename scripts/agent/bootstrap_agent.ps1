@@ -18,6 +18,6 @@ Write-Host "Executing Windows bootstrap script..."
 & $env:TEMP\bootstrap_windows.ps1 -PowerShell $true
 
 Write-Host "Downloading Windows agent install script..."
-Invoke-Webrequest $config.agentscripturl-OutFile $env:TEMP\install_agent.ps1 -UseBasicParsing
+Invoke-Webrequest $config.agentscripturl -OutFile $env:TEMP\install_agent.ps1 -UseBasicParsing
 Write-Host "Executing Windows agent install script..."
 & $env:TEMP\install_agent.ps1 -AgentName $config.agentname -AgentPool $config.agentpool -Organization $config.organization -PAT $config.pat

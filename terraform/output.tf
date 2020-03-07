@@ -17,5 +17,6 @@ output username {
   value                        = var.user_name
 }
 output password {
+  sensitive                    = true
   value                        = local.password
 }

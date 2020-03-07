@@ -96,7 +96,7 @@ resource null_resource linux_bootstrap {
   # Bootstrap using https://github.com/geekzter/bootstrap-os/tree/master/linux
   provisioner remote-exec {
     inline                     = [
-      "sudo apt-get update -y",
+      "echo ${local.password} | sudo -S apt-get update -y",
       "sudo apt-get -y install curl", 
       "curl -sk https://raw.githubusercontent.com/geekzter/bootstrap-os/master/linux/bootstrap_linux.sh | bash"
     ]
@@ -133,7 +133,7 @@ resource null_resource linux_pipeline_agent {
 
   provisioner remote-exec {
     inline                     = [
-      "sudo apt-get update -y",
+      "echo ${local.password} | sudo -S apt-get update -y",
       # We need dos2unix (depending on where we're uploading from) before we run the script, so install script pre-requisites inline here
       "sudo apt-get -y install curl dos2unix jq sed", 
       "dos2unix ~/install_agent.sh",

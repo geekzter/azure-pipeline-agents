@@ -33,7 +33,7 @@ variables:
   TF_VAR_linux_pipeline_agent_pool    : 'Default'
   TF_VAR_windows_pipeline_agent_name  : 'windows-agent'
   TF_VAR_windows_pipeline_agent_pool  : 'Default'
-  TF_VAR_pipeline_resource_group.     : 'PipelineAgents'
+  TF_VAR_pipeline_resource_group      : 'PipelineAgents'
   TF_VAR_ssh_public_key               : 'id_rsa.pub' # Key will be downloaded in terraform directory
 
 

@@ -13,7 +13,7 @@ pr:
     include:
     - '*'
     exclude:
-    - 'Pipeline/*'
+    - '*.yml'
 
 pool:
   vmImage: 'ubuntu-latest'

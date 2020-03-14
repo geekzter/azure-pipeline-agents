@@ -118,7 +118,7 @@ steps:
     TF_VAR_devops_pat: $(TF_VAR_devops_pat)
 
 - task: AzureCLI@2
-  displayName: 'Enable Linux agent(s)'
+  displayName: 'Enable agent(s)'
   # Only enable if it was in the first place
   condition: succeeded()
   inputs:

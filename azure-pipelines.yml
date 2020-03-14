@@ -8,6 +8,13 @@ schedules:
     - master
   always: true
 
+pr:
+  branches:
+    include:
+    - '*'
+    exclude:
+    - 'Pipeline/*'
+
 pool:
   vmImage: 'ubuntu-latest'
 

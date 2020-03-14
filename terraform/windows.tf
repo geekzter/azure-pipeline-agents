@@ -38,17 +38,6 @@ resource azurerm_network_interface_security_group_association windows_nic_nsg {
   count                        = var.windows_agent_count
 }
 
-resource azurerm_storage_blob bootstrap_agent {
-  name                         = "bootstrap_agent.ps1"
-  storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.scripts.name
-
-  type                         = "Block"
-  source                       = "../scripts/agent/bootstrap_agent.ps1"
-
-  count                        = var.windows_agent_count > 0 ? 1 : 0
-}
-
 resource azurerm_storage_blob install_agent {
   name                         = "install_agent.ps1"
   storage_account_name         = azurerm_storage_account.automation_storage.name
@@ -82,31 +71,6 @@ resource azurerm_windows_virtual_machine windows_agent {
     version                    = "latest"
   }
 
-  additional_unattend_content {
-    setting                    = "AutoLogon"
-    content                    = templatefile("../scripts/agent/AutoLogon.xml", { 
-      count                    = 1, 
-      username                 = var.user_name, 
-      password                 = local.password
-    })
-  }
-  additional_unattend_content {
-    setting                    = "FirstLogonCommands"
-    content                    = templatefile("../scripts/agent/FirstLogonCommands.xml", { 
-      scripturl                = azurerm_storage_blob.bootstrap_agent.0.url
-    })
-  }
-
-  # This is deserialized on the host by bootstrap_agent.ps1
-  custom_data                  = base64encode(jsonencode(map(
-    "agentname"                , "${local.windows_pipeline_agent_name}${count.index+1}",
-    "agentscripturl"           , azurerm_storage_blob.install_agent.0.url,
-    "agentpool"                , var.windows_pipeline_agent_pool,
-    "organization"             , var.devops_org,
-    "pat"                      , var.devops_pat,
-    "username"                 , var.user_name
-  )))
-
   # Required for AAD Login
   identity {
     type                       = "SystemAssigned"
@@ -114,6 +78,28 @@ resource azurerm_windows_virtual_machine windows_agent {
 
   tags                         = local.tags
   count                        = var.windows_agent_count
+}
 
-  depends_on                   = [azurerm_storage_blob.install_agent]
+resource azurerm_virtual_machine_extension pipeline_agent {
+  name                         = "PipelineAgentCustomScript"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
+  publisher                    = "Microsoft.Compute"
+  type                         = "CustomScriptExtension"
+  type_handler_version         = "1.10"
+  auto_upgrade_minor_version   = true
+  settings                     = <<EOF
+    {
+      "fileUris": [
+                                 "${azurerm_storage_blob.install_agent.0.url}"
+      ]
+    }
+  EOF
+
+  protected_settings           = <<EOF
+    { 
+      "commandToExecute"       : "powershell.exe -ExecutionPolicy Unrestricted -Command \"./install_agent.ps1 -AgentName ${local.windows_pipeline_agent_name}${count.index+1} -AgentPool ${var.windows_pipeline_agent_pool} -Organization ${var.devops_org} -PAT ${var.devops_pat}\""
+    } 
+  EOF
+
+  count                        = var.windows_agent_count
 }

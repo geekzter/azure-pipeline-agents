@@ -1,7 +1,0 @@
-<FirstLogonCommands>
-    <SynchronousCommand>
-        <CommandLine>PowerShell.exe -ExecutionPolicy Bypass -Noexit -Command "&amp; {Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('${scripturl}'))}"</CommandLine>       
-        <Description>Bootstrap OS and Install Pipeline Agent</Description>
-        <Order>1</Order>
-    </SynchronousCommand>
-</FirstLogonCommands>

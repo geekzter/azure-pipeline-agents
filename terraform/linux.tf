@@ -38,43 +38,31 @@ resource azurerm_network_interface_security_group_association linux_nic_nsg {
   count                        = var.linux_agent_count
 }
 
-resource azurerm_virtual_machine linux_agent {
+resource azurerm_linux_virtual_machine linux_agent {
   name                         = "${local.linux_vm_name}${count.index+1}"
   location                     = data.azurerm_resource_group.pipeline_resource_group.location
   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+  size                         = var.linux_vm_size
+  admin_username               = var.user_name
+  admin_password               = local.password
+  disable_password_authentication = false
   network_interface_ids        = [azurerm_network_interface.linux_nic[count.index].id]
-  vm_size                      = var.linux_vm_size
 
-  # Uncomment this line to delete the OS disk automatically when deleting the VM
-  delete_os_disk_on_termination = true
+  admin_ssh_key {
+    username                   = var.user_name
+    public_key                 = file(var.ssh_public_key)
+  }
 
-  # Uncomment this line to delete the data disks automatically when deleting the VM
-  delete_data_disks_on_termination = true
+  os_disk {
+    caching                    = "ReadWrite"
+    storage_account_type       = "Premium_LRS"
+  }
 
-  storage_image_reference {
+  source_image_reference {
     publisher                  = var.linux_os_publisher
     offer                      = var.linux_os_offer
     sku                        = var.linux_os_sku
     version                    = "latest"
-  }
-  storage_os_disk {
-    name                       = "${local.linux_vm_name}${count.index+1}-osdisk"
-    caching                    = "ReadWrite"
-    create_option              = "FromImage"
-    managed_disk_type          = "Premium_LRS"
-  }
-  os_profile {
-    computer_name              = "${local.linux_vm_name}${count.index+1}"
-    admin_username             = var.user_name
-    # The password is only used here in Terraform but not exported. 
-    admin_password             = local.password
-  }
-  os_profile_linux_config {
-    disable_password_authentication = false
-    ssh_keys {
-      key_data                 = file(var.ssh_public_key)
-      path                     = "/home/${var.user_name}/.ssh/authorized_keys"
-    }
   }
 
   tags                         = local.tags
@@ -90,7 +78,7 @@ resource null_resource linux_bootstrap {
 
   provisioner local-exec {
     # Start VM, so we can execute script through SSH
-    command                    = "az vm start --ids ${azurerm_virtual_machine.linux_agent[count.index].id}"
+    command                    = "az vm start --ids ${azurerm_linux_virtual_machine.linux_agent[count.index].id}"
   }
 
   # Bootstrap using https://github.com/geekzter/bootstrap-os/tree/master/linux
@@ -110,7 +98,7 @@ resource null_resource linux_bootstrap {
   }
 
   count                        = var.linux_agent_count
-  depends_on                   = [azurerm_virtual_machine.linux_agent,azurerm_network_interface_security_group_association.linux_nic_nsg]
+  depends_on                   = [azurerm_linux_virtual_machine.linux_agent,azurerm_network_interface_security_group_association.linux_nic_nsg]
 }
 
 resource null_resource linux_pipeline_agent {

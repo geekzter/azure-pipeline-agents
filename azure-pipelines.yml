@@ -1,5 +1,14 @@
 # This pipeline uses Terraform to create/update a Self-Hosted Pipeline Agent
 
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+      - '*.yml'
+
 schedules:
 - cron: "0 2 * * 6"
   displayName: Weekly Saturday upgrade
@@ -12,6 +21,7 @@ pr:
   branches:
     include:
     - '*'
+  paths:
     exclude:
     - '*.yml'
 

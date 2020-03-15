@@ -82,6 +82,37 @@ resource azurerm_virtual_machine linux_agent {
   depends_on                   = [azurerm_network_interface_security_group_association.linux_nic_nsg]
 }
 
+# resource azurerm_linux_virtual_machine linux_agent {
+#   name                         = "${local.linux_vm_name}${count.index+1}"
+#   location                     = data.azurerm_resource_group.pipeline_resource_group.location
+#   resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+#   size                         = var.linux_vm_size
+#   admin_username               = var.user_name
+#   admin_password               = local.password
+#   network_interface_ids        = [azurerm_network_interface.linux_nic[count.index].id]
+
+#   admin_ssh_key {
+#     username                   = var.user_name
+#     public_key                 = file(var.ssh_public_key)
+#   }
+
+#   os_disk {
+#     caching                    = "ReadWrite"
+#     storage_account_type       = "Premium_LRS"
+#   }
+
+#   source_image_reference {
+#     publisher                  = var.linux_os_publisher
+#     offer                      = var.linux_os_offer
+#     sku                        = var.linux_os_sku
+#     version                    = "latest"
+#   }
+
+#   tags                         = local.tags
+#   count                        = var.linux_agent_count
+#   depends_on                   = [azurerm_network_interface_security_group_association.linux_nic_nsg]
+# }
+
 resource null_resource linux_bootstrap {
   # Always run this
   triggers                     = {

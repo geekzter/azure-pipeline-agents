@@ -75,8 +75,22 @@ resource azurerm_windows_virtual_machine windows_agent {
   identity {
     type                       = "SystemAssigned"
   }
-
+  
   tags                         = local.tags
+  count                        = var.windows_agent_count
+}
+
+resource null_resource vm_start {
+  # Always run this
+  triggers                     = {
+    always_run                 = timestamp()
+  }
+
+  provisioner local-exec {
+    # Start VM, so we can update the extension
+    command                    = "az vm start --ids ${azurerm_windows_virtual_machine.windows_agent[count.index].id}"
+  }
+
   count                        = var.windows_agent_count
 }
 
@@ -102,4 +116,5 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   EOF
 
   count                        = var.windows_agent_count
+  depends_on                   = [null_resource.vm_start]
 }

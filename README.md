@@ -1,24 +1,24 @@
 # Self-Hosted Pipeline Agents
 
-Azure Pipelines includes [Self-Hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops) provided by Microsoft. If you can use these agents I recommend you do as it is a complete managed experience.
+Azure Pipelines includes [Self-Hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops) provided by Microsoft. If you can use these agents I recommend you do so as it is a complete managed experience.
 
 However, there may be scenario's where you need to manage your own agent:
-- Configuration can't be met with any of the hosted agents (e.g. OS version)
+- Configuration can't be met with any of the hosted agents (e.g. Linux distribution, Windows version)
 - Improve build times by caching artifacts
 - Network access
 
 ## OS Agent
-This [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) describes how to install the Pipeline agent interactively. In this repo, you'll find [install_agent.sh](./scripts/agent/install_agent.sh), which automates the setup:
+This [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) describes how to install the Linux Pipeline agent interactively. In this repo, you'll find [install_agent.sh](./scripts/agent/install_agent.sh), which automates the setup:  
 `./install_agent.sh  --agent-name debian-agent --agent-pool Default --org myorg --pat <PAT>`  
 This will install the agent as systemd (auto start) service
 
-Likewise for Windows ([manual setup](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows)):
+Likewise, this will install the agent as a service on Windows ([manual setup](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows)):  
 `.\install_agent.ps1  -AgentName windows-agent -AgentPool Default -Organization myorg -PAT <PAT>`
 
 ## Agent Provisioning
-Taking it one step further, now you own the agents, you'll probably want to automate their provisioning as well. Using Terraform with the [Azure provider](https://www.terraform.io/docs/providers/azurerm/index.html) that can be automated as well.
+Taking it one step further, now you own the agents, you'll probably want to automate their provisioning as well. Using Terraform with the [Azure provider](https://www.terraform.io/docs/providers/azurerm/index.html) that can be automated.
 
-This snippet from [windows.tf](./terraform/windows.tf) shows whats involved:
+This snippet from [windows.tf](./terraform/windows.tf) illustrates whats involved:
 
 ```hcl
 resource azurerm_storage_blob install_agent {
@@ -87,13 +87,14 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   count                        = var.windows_agent_count
 }
 ```
+See also [linux.tf](./terraform/linux.tf)  
 
-You can provision agents by running:
+You can provision agents by running:  
 `terraform init`  
 `terraform apply`
 
 ## Pipeline
-The automation would not be complete if we don't run this whole process from an Azure Pipeline here is the most relevant task from [azure-pipelines.yml](./azure-pipelines.yml):
+The automation would not be complete if we don't run this whole process from an Azure Pipeline. Here is the most relevant task from [azure-pipelines.yml](./azure-pipelines.yml):
 
 ```yaml
 - task: AzureCLI@2
@@ -132,4 +133,7 @@ The automation would not be complete if we don't run this whole process from an 
     failOnStandardError: true
 ```
 
-This uses Powershell Core to share the Azure Active Directory Service Principal credentials used for the Azure subscrption connection with the Terraform azurerm provider
+This uses Powershell Core to share the Azure Active Directory Service Principal credentials used for the Azure subscription connection to [authentication](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html) the Terraform azurerm provider.
+
+## Limitations
+- This does not include any additional software you need to install on the agents

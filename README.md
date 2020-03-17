@@ -89,6 +89,11 @@ resource azurerm_virtual_machine_extension pipeline_agent {
 ```
 See also [linux.tf](./terraform/linux.tf)  
 
+Now use the [azure cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
+`az login`  
+`az account set --subscription="SUBSCRIPTION_ID"`
+
+This also [authenticates](https://www.terraform.io/docs/providers/azurerm/guides/azure_cli.html) the Terraform provider.
 You can provision agents by running:  
 `terraform init`  
 `terraform apply`
@@ -133,7 +138,8 @@ The automation would not be complete if we don't run this whole process from an 
     failOnStandardError: true
 ```
 
-This uses Powershell Core to share the Azure Active Directory Service Principal credentials used for the Azure subscription connection to [authentication](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html) the Terraform azurerm provider.
+This task provides a setting (`addSpnToEnvironment`) to share the Azure Active Directory Service Principal credentials used for the Azure subscription connection to [authenticate](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html) the Terraform azurerm provider.
+
 
 ## Limitations
 - This does not include any additional software you need to install on the agents

@@ -80,20 +80,6 @@ resource azurerm_windows_virtual_machine windows_agent {
   count                        = var.windows_agent_count
 }
 
-resource null_resource vm_start {
-  # Always run this
-  triggers                     = {
-    always_run                 = timestamp()
-  }
-
-  provisioner local-exec {
-    # Start VM, so we can update the extension
-    command                    = "az vm start --ids ${azurerm_windows_virtual_machine.windows_agent[count.index].id}"
-  }
-
-  count                        = var.windows_agent_count
-}
-
 resource azurerm_virtual_machine_extension pipeline_agent {
   name                         = "PipelineAgentCustomScript"
   virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
@@ -115,6 +101,14 @@ resource azurerm_virtual_machine_extension pipeline_agent {
     } 
   EOF
 
+  # Start VM, so we can update/destroy the extension
+  provisioner local-exec {
+    command                    = "az vm start --ids ${self.virtual_machine_id}"
+  }
+  provisioner local-exec {
+    when                       = destroy
+    command                    = "az vm start --ids ${self.virtual_machine_id}"
+  }
+
   count                        = var.windows_agent_count
-  depends_on                   = [null_resource.vm_start]
 }

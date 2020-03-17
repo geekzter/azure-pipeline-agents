@@ -82,6 +82,7 @@ rcf/
 
 #  Terraform
 **/.terraform/*
+*.plan
 *.tfstate
 *.tfstate.*
 *.tfplan

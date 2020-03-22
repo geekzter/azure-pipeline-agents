@@ -39,7 +39,9 @@ locals {
   password                     = ".Az9${random_string.password.result}"
   suffix                       = random_string.suffix.result
   tags                         = map(
-      "environment",             "pipelines",
+      "application",             "Pipeline Agents",
+      "environment",             terraform.workspace,
+      "provisioner",             "terraform",
       "suffix",                  local.suffix,
       "workspace",               terraform.workspace
   )

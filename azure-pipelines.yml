@@ -5,7 +5,7 @@ parameters:
   displayName: Debug
   type: boolean
 - name: destroyAgentIfExists
-  displayName: Destroy agent if it exists
+  displayName: Destroy agents if they exist
   type: boolean
   default: true
 - name: linuxAgentCount

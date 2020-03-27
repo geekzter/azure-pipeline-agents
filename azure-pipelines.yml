@@ -4,7 +4,11 @@ parameters:
 - name: debug
   displayName: Debug
   type: boolean
-
+- name: destroyAgentIfExists
+  displayName: Destroy agent if it exists
+  type: boolean
+  default: true
+  
 trigger:
   batch: true
   branches:
@@ -34,7 +38,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  #destroyAgentIfExists: false # defined as hidden variable
+  destroyAgentIfExists                : ${{ parameters.destroyAgentIfExists }}
   scriptDirectory                     : '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory                  : '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile                    : 'id_rsa.pub'

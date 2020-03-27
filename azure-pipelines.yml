@@ -8,7 +8,15 @@ parameters:
   displayName: Destroy agent if it exists
   type: boolean
   default: true
-  
+- name: linuxAgentCount
+  displayName: Number of Linux agents to create
+  type: number
+  default: 1
+- name: windowsAgentCount
+  displayName: Number of Windows agents to create
+  type: number
+  default: 1
+
 trigger:
   batch: true
   branches:
@@ -56,8 +64,10 @@ variables:
   TF_WORKSPACE                        : 'cd'
 
   # Terraform project variables
+  TF_VAR_linux_agent_count            : ${{ parameters.linuxAgentCount }}
   TF_VAR_linux_pipeline_agent_name    : 'ubuntu1804-agent'
   TF_VAR_linux_pipeline_agent_pool    : 'Default'
+  TF_VAR_windows_agent_count          : ${{ parameters.windowsAgentCount }}
   TF_VAR_windows_pipeline_agent_name  : 'windows-agent'
   TF_VAR_windows_pipeline_agent_pool  : 'Default'
   TF_VAR_pipeline_resource_group      : 'PipelineAgents'

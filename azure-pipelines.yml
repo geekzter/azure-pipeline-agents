@@ -1,5 +1,10 @@
 # This pipeline uses Terraform to create/update a Self-Hosted Pipeline Agent
 
+parameters:
+- name: debug
+  displayName: Debug
+  type: boolean
+
 trigger:
   batch: true
   branches:
@@ -33,6 +38,7 @@ variables:
   scriptDirectory                     : '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory                  : '$(System.DefaultWorkingDirectory)/terraform'
   sshPublicKeyFile                    : 'id_rsa.pub'
+  system.debug                        : ${{ parameters.debug }}
 
   # Terraform backend variables
   # terraformBackendResourceGroup: # Defined as secret variable

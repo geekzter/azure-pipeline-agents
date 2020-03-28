@@ -4,6 +4,7 @@ parameters:
 - name: debug
   displayName: Debug
   type: boolean
+  default: false
 - name: destroyAgentIfExists
   displayName: Destroy agents if they exist
   type: boolean

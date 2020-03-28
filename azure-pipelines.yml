@@ -1,5 +1,23 @@
 # This pipeline uses Terraform to create/update a Self-Hosted Pipeline Agent
 
+parameters:
+- name: debug
+  displayName: Debug
+  type: boolean
+  default: false
+- name: destroyAgentIfExists
+  displayName: Destroy agents if they exist
+  type: boolean
+  default: true
+- name: linuxAgentCount
+  displayName: Number of Linux agents to create
+  type: number
+  default: 1
+- name: windowsAgentCount
+  displayName: Number of Windows agents to create
+  type: number
+  default: 1
+
 trigger:
   batch: true
   branches:
@@ -29,10 +47,10 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  #destroyAgentIfExists: false # defined as hidden variable
+  destroyAgentIfExists                : ${{ parameters.destroyAgentIfExists }}
   scriptDirectory                     : '$(System.DefaultWorkingDirectory)/scripts'
   terraformDirectory                  : '$(System.DefaultWorkingDirectory)/terraform'
-  sshPublicKeyFile                    : 'id_rsa.pub'
+  system.debug                        : ${{ parameters.debug }}
 
   # Terraform backend variables
   # terraformBackendResourceGroup: # Defined as secret variable
@@ -46,8 +64,10 @@ variables:
   TF_WORKSPACE                        : 'cd'
 
   # Terraform project variables
+  TF_VAR_linux_agent_count            : ${{ parameters.linuxAgentCount }}
   TF_VAR_linux_pipeline_agent_name    : 'ubuntu1804-agent'
   TF_VAR_linux_pipeline_agent_pool    : 'Default'
+  TF_VAR_windows_agent_count          : ${{ parameters.windowsAgentCount }}
   TF_VAR_windows_pipeline_agent_name  : 'windows-agent'
   TF_VAR_windows_pipeline_agent_pool  : 'Default'
   TF_VAR_pipeline_resource_group      : 'PipelineAgents'
@@ -58,7 +78,7 @@ steps:
 - task: DownloadSecureFile@1
   displayName: 'Download SSH Public Key'
   inputs:
-    secureFile: '$(sshPublicKeyFile)'
+    secureFile: '$(TF_VAR_ssh_public_key)'
 
 - pwsh: |
     foreach ($file in $(Get-ChildItem Env:*SECUREFILEPATH))

@@ -16,7 +16,7 @@ parameters:
 - name: windowsAgentCount
   displayName: Number of Windows agents to create
   type: number
-  default: 1
+  default: 0
 
 trigger:
   batch: true

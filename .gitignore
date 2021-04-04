@@ -88,6 +88,7 @@ rcf/
 *.tfplan
 *.auto.tfvars
 terraform.log
+backend.tf
 
 # Certificates
 *.pfx

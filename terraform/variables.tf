@@ -1,3 +1,6 @@
+variable address_space {
+  default                      = "17.32.0.0/12"
+}
 
 variable devops_org {}
 variable devops_pat {}
@@ -26,6 +29,10 @@ variable linux_vm_name_prefix {
 }
 variable linux_vm_size {
   default                      = "Standard_D2s_v3"
+}
+
+variable location {
+  default                      = "westeurope"
 }
 
 variable pipeline_resource_group {

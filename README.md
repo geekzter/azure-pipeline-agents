@@ -34,8 +34,8 @@ resource azurerm_storage_blob install_agent {
 
 resource azurerm_windows_virtual_machine windows_agent {
   name                         = "${local.windows_vm_name}${count.index+1}"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
   network_interface_ids        = [azurerm_network_interface.windows_nic[count.index].id]
   size                         = var.windows_vm_size
   admin_username               = var.user_name

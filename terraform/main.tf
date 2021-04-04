@@ -1,19 +1,3 @@
-# Data sources
-data azurerm_resource_group pipeline_resource_group {
-  name                         = var.pipeline_resource_group
-}
-
-data azurerm_virtual_network pipeline_network {
-  name                         = var.pipeline_network
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
-}
-
-data azurerm_subnet pipeline_subnet {
-  name                         = var.pipeline_subnet
-  virtual_network_name         = data.azurerm_virtual_network.pipeline_network.name
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
-}
-
 # Random resource suffix, this will prevent name collisions when creating resources in parallel
 resource random_string suffix {
   length                       = 4
@@ -40,17 +24,41 @@ locals {
   suffix                       = random_string.suffix.result
   tags                         = map(
       "application",             "Pipeline Agents",
-      "environment",             terraform.workspace,
+      "environment",             "dev",
       "provisioner",             "terraform",
+      "repository",              "azure-pipeline-agents",
+      "shutdown",                "false",
       "suffix",                  local.suffix,
       "workspace",               terraform.workspace
   )
 }
 
+resource azurerm_resource_group rg {
+  name                         = "azure-pipelines-agents-${local.suffix}"
+  location                     = var.location
+  tags                         = local.tags
+}
+
+resource azurerm_virtual_network pipeline_network {
+  name                         = "${azurerm_resource_group.rg.name}-${var.location}-network"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  address_space                = [var.address_space]
+
+  tags                         = local.tags
+}
+
+resource azurerm_subnet agent_subnet {
+  name                         = "PipelineAgents"
+  virtual_network_name         = azurerm_virtual_network.pipeline_network.name
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],8,1)]
+}
+
 resource azurerm_network_security_group nsg {
   name                         = "${local.linux_vm_name}-nsg"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
 
   security_rule {
     name                       = "InboundRDP"
@@ -79,12 +87,13 @@ resource azurerm_network_security_group nsg {
 }
 
 resource azurerm_storage_account automation_storage {
-  name                         = "${lower(replace(data.azurerm_resource_group.pipeline_resource_group.name,"-",""))}${local.suffix}stor"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+  name                         = "${lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/",""))}${local.suffix}stor"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"
   account_tier                 = "Standard"
   account_replication_type     = "LRS"
+  allow_blob_public_access     = true
   enable_https_traffic_only    = true
 
   tags                         = local.tags

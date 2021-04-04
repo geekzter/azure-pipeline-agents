@@ -5,8 +5,8 @@ locals {
 
 resource azurerm_public_ip linux_pip {
   name                         = "${local.linux_vm_name}${count.index+1}-pip"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
   allocation_method            = "Static"
   sku                          = "Standard"
 
@@ -16,12 +16,12 @@ resource azurerm_public_ip linux_pip {
 
 resource azurerm_network_interface linux_nic {
   name                         = "${local.linux_vm_name}${count.index+1}-nic"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
 
   ip_configuration {
     name                       = "ipconfig"
-    subnet_id                  = data.azurerm_subnet.pipeline_subnet.id
+    subnet_id                  = azurerm_subnet.agent_subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id       = azurerm_public_ip.linux_pip[count.index].id
   }
@@ -40,8 +40,8 @@ resource azurerm_network_interface_security_group_association linux_nic_nsg {
 
 resource azurerm_linux_virtual_machine linux_agent {
   name                         = "${local.linux_vm_name}${count.index+1}"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
   size                         = var.linux_vm_size
   admin_username               = var.user_name
   admin_password               = local.password

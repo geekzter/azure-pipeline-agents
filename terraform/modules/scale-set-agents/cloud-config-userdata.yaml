@@ -1,7 +1,8 @@
 #cloud-config
 bootcmd:
   - sudo apt remove unattended-upgrades -y
-  #- while ( fuser /var/lib/dpkg/lock >/dev/null 2>&1 ); do sleep 5; done;
+  # Prevent race condition with VM extension provisioning
+  - while ( fuser /var/lib/dpkg/lock >/dev/null 2>&1 ); do sleep 5; done;
   # Get apt repository signing keys
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
   - sudo apt-add-repository https://cli.github.com/packages
@@ -35,36 +36,36 @@ packages:
   - gnupg
   - lsb-release
   - software-properties-common
-  - wget
+  # - wget
   # Tools
   - ansible
   - coreutils
-  - dnsutils
+  # - dnsutils
   - docker
-  - dos2unix
-  - findutils
-  - fish
-  - fuse
-  - git
-  - htop
-  - jq
-  - less
-  - man
-  - mc
-  - nano
-  - nmap
-  - node-typescript
-  - sed
-  - snapd
-  - telnet
-  - tmux
-  - traceroute
-  - tree
+  # - dos2unix
+  # - findutils
+  # - fish
+  # - fuse
+  # - git
+  # - htop
+  # - jq
+  # - less
+  # - man
+  # - mc
+  # - nano
+  # - nmap
+  # - node-typescript
+  # - sed
+  # - snapd
+  # - telnet
+  # - tmux
+  # - traceroute
+  # - tree
   - unixodbc-dev
   - unzip
-  - whois
+  # - whois
   # Services
-  - dnsmasq
+  # - dnsmasq
   # GitHub
   # - gh
   # Kubernetes
@@ -73,7 +74,7 @@ packages:
   # Microsoft
   - azure-cli
   - azure-functions-core-tools
-  - blobfuse
+  # - blobfuse
   - dotnet-sdk-3.1
   # - msodbcsql17
   # - mssql-tools
@@ -85,5 +86,12 @@ runcmd:
   - sudo ACCEPT_EULA=Y apt install mssql-tools -y
   # Automatic updates: re-enable them
   - sudo apt install unattended-upgrades -y
+
+write_files:
+- path: /etc/environment
+  # GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
+  content: |
+    GEEKZTER_AGENT_SUBNET_ID="${subnet_id}"
+  append: true
 
 final_message: "Up after $UPTIME seconds"

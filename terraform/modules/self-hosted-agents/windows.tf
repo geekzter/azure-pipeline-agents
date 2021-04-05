@@ -44,7 +44,7 @@ resource azurerm_storage_blob install_agent {
   storage_container_name       = local.scripts_container_name
 
   type                         = "Block"
-  source                       = "../scripts/agent/install_agent.ps1"
+  source                       = "${path.root}/scripts/agent/install_agent.ps1"
 
   count                        = var.windows_agent_count > 0 ? 1 : 0
 }
@@ -56,12 +56,12 @@ resource azurerm_windows_virtual_machine windows_agent {
   network_interface_ids        = [azurerm_network_interface.windows_nic[count.index].id]
   size                         = var.windows_vm_size
   admin_username               = var.user_name
-  admin_password               = var.password
+  admin_password               = var.user_password
 
   os_disk {
     name                       = "${local.windows_vm_name}${count.index+1}-osdisk"
     caching                    = "ReadWrite"
-    storage_account_type       = "Premium_LRS"
+    storage_account_type       = var.windows_storage_type
   }
 
   source_image_reference {

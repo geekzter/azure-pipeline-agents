@@ -1,5 +1,5 @@
 variable address_space {
-  default                      = "17.32.0.0/12"
+  default                      = "10.32.0.0/12"
 }
 
 variable devops_org {}
@@ -25,6 +25,9 @@ variable linux_pipeline_agent_name {
 variable linux_pipeline_agent_pool {
   default                      = "Default"
 }
+variable linux_storage_type {
+  default                      = "Standard_LRS"
+}
 variable linux_vm_name_prefix {
   default                      = "ubuntu1804-agent"
 }
@@ -49,6 +52,15 @@ variable pipeline_subnet {
 
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
+}
+
+variable use_scale_set {
+  default                      = false
+  type                         = bool
+}
+variable use_self_hosted {
+  default                      = true
+  type                         = bool
 }
 
 variable user_name {
@@ -78,6 +90,9 @@ variable windows_pipeline_agent_name {
 }
 variable windows_pipeline_agent_pool {
   default                      = "Default"
+}
+variable windows_storage_type {
+  default                      = "Standard_LRS"
 }
 variable windows_vm_name_prefix {
   default                      = "win"

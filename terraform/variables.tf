@@ -7,6 +7,7 @@ variable devops_pat {}
 
 variable linux_agent_count {
   default                      = 2
+  type                         = number
 }
 variable linux_os_offer {
   default                      = "UbuntuServer"
@@ -60,6 +61,7 @@ variable vm_accelerated_networking {
 
 variable windows_agent_count {
   default                      = 2
+  type                         = number
 }
 variable windows_os_offer {
   default                      = "WindowsServer"

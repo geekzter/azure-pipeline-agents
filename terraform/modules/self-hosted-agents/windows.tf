@@ -1,33 +1,33 @@
 locals {
   windows_pipeline_agent_name  = var.windows_pipeline_agent_name != "" ? "${lower(var.windows_pipeline_agent_name)}-${terraform.workspace}" : local.windows_vm_name
-  windows_vm_name              = "${var.windows_vm_name_prefix}${substr(terraform.workspace,0,3)}${local.suffix}w"
+  windows_vm_name              = "${var.windows_vm_name_prefix}${substr(terraform.workspace,0,3)}${var.suffix}w"
 }
 
 resource azurerm_public_ip windows_pip {
   name                         = "${local.windows_vm_name}${count.index+1}-pip"
-  location                     = azurerm_resource_group.rg.location
-  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
   allocation_method            = "Static"
   sku                          = "Standard"
 
-  tags                         = local.tags
+  tags                         = var.tags
   count                        = var.windows_agent_count
 }
 
 resource azurerm_network_interface windows_nic {
   name                         = "${local.windows_vm_name}${count.index+1}-nic"
-  location                     = azurerm_resource_group.rg.location
-  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
 
   ip_configuration {
     name                       = "ipconfig"
-    subnet_id                  = azurerm_subnet.agent_subnet.id
+    subnet_id                  = var.subnet_id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id       = azurerm_public_ip.windows_pip[count.index].id
   }
   enable_accelerated_networking = var.vm_accelerated_networking
 
-  tags                         = local.tags
+  tags                         = var.tags
   count                        = var.windows_agent_count
 }
 
@@ -40,8 +40,8 @@ resource azurerm_network_interface_security_group_association windows_nic_nsg {
 
 resource azurerm_storage_blob install_agent {
   name                         = "install_agent.ps1"
-  storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.scripts.name
+  storage_account_name         = local.scripts_storage_name
+  storage_container_name       = local.scripts_container_name
 
   type                         = "Block"
   source                       = "../scripts/agent/install_agent.ps1"
@@ -51,12 +51,12 @@ resource azurerm_storage_blob install_agent {
 
 resource azurerm_windows_virtual_machine windows_agent {
   name                         = "${local.windows_vm_name}${count.index+1}"
-  location                     = azurerm_resource_group.rg.location
-  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
   network_interface_ids        = [azurerm_network_interface.windows_nic[count.index].id]
   size                         = var.windows_vm_size
   admin_username               = var.user_name
-  admin_password               = local.password
+  admin_password               = var.password
 
   os_disk {
     name                       = "${local.windows_vm_name}${count.index+1}-osdisk"
@@ -76,7 +76,7 @@ resource azurerm_windows_virtual_machine windows_agent {
     type                       = "SystemAssigned"
   }
   
-  tags                         = local.tags
+  tags                         = var.tags
   count                        = var.windows_agent_count
 }
 

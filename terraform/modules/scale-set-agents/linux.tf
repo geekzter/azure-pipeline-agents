@@ -1,12 +1,23 @@
+data cloudinit_config user_data {
+  gzip                         = false
+  base64_encode                = false
+
+  part {
+    content                    = file("${path.module}/cloud-config-userdata.yaml")
+    content_type               = "text/cloud-config"
+  }
+}
+
 resource azurerm_linux_virtual_machine_scale_set linux_agents {
   name                         = "${var.resource_group_name}-linux-agents"
   location                     = var.location
   resource_group_name          = var.resource_group_name
-  sku                          = var.linux_vm_size
-  instances                    = var.linux_agent_count
-  admin_username               = var.user_name
 
+  admin_username               = var.user_name
+  custom_data                  = base64encode(data.cloudinit_config.user_data.rendered)
+  instances                    = var.linux_agent_count
   overprovision                = false
+  sku                          = var.linux_vm_size
   upgrade_mode                 = "Manual"
 
   admin_ssh_key {
@@ -26,10 +37,6 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
       name                     = "ipconfig"
       primary                  = true
       subnet_id                = var.subnet_id
-
-      # public_ip_address {
-      #   name                   = "${var.resource_group_name}-linux-agents-pip"
-      # }
     }
   }
 
@@ -48,6 +55,11 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
     version                    = "latest"
   }
 
+  lifecycle {
+    ignore_changes             = [
+      instances,
+    ]
+  }
   tags                         = var.tags
 }
 

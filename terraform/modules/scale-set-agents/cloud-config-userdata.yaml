@@ -89,9 +89,9 @@ runcmd:
 
 write_files:
 - path: /etc/environment
-  # GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
   content: |
     GEEKZTER_AGENT_SUBNET_ID="${subnet_id}"
+    GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
   append: true
 
 final_message: "Up after $UPTIME seconds"

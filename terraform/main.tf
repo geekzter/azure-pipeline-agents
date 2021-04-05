@@ -55,13 +55,11 @@ resource azurerm_storage_account automation_storage {
 
   tags                         = local.tags
 }
-
 resource azurerm_storage_container scripts {
   name                         = "scripts"
   storage_account_name         = azurerm_storage_account.automation_storage.name
   container_access_type        = "container"
 }
-
 resource azurerm_storage_container configuration {
   name                         = "configuration"
   storage_account_name         = azurerm_storage_account.automation_storage.name
@@ -84,7 +82,6 @@ resource azurerm_storage_blob terraform_backend_configuration {
   count                        = fileexists("${path.root}/backend.tf") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
 }
-
 resource azurerm_storage_blob terraform_auto_vars_configuration {
   name                         = "${local.config_directory}/config.auto.tfvars"
   storage_account_name         = azurerm_storage_account.automation_storage.name
@@ -95,7 +92,6 @@ resource azurerm_storage_blob terraform_auto_vars_configuration {
   count                        = fileexists("${path.root}/config.auto.tfvars") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
 }
-
 resource azurerm_storage_blob terraform_workspace_vars_configuration {
   name                         = "${local.config_directory}/${terraform.workspace}.tfvars"
   storage_account_name         = azurerm_storage_account.automation_storage.name
@@ -105,6 +101,19 @@ resource azurerm_storage_blob terraform_workspace_vars_configuration {
 
   count                        = fileexists("${path.root}/${terraform.workspace}.tfvars") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
+}
+
+resource azurerm_storage_account diagnostics {
+  name                         = "${lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/",""))}${local.suffix}diag"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  account_kind                 = "StorageV2"
+  account_tier                 = "Standard"
+  account_replication_type     = "LRS"
+  allow_blob_public_access     = true
+  enable_https_traffic_only    = true
+
+  tags                         = local.tags
 }
 
 resource azurerm_log_analytics_workspace monitor {

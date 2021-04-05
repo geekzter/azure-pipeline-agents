@@ -14,6 +14,10 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
     public_key                 = file(var.ssh_public_key)
   }
 
+  boot_diagnostics {
+    storage_account_uri        = data.azurerm_storage_account.diagnostics.primary_blob_endpoint
+  }
+
   network_interface {
     name                       = "${var.resource_group_name}-linux-agents-nic"
     primary                    = true
@@ -49,7 +53,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
 
 # resource "azurerm_virtual_machine_scale_set_extension" "example" {
 #   name                         = "example"
-#   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.example.id
+#   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
 #   publisher                    = "Microsoft.Azure.Extensions"
 #   type                         = "CustomScript"
 #   type_handler_version         = "2.0"
@@ -77,7 +81,7 @@ resource azurerm_virtual_machine_scale_set_extension log_analytics {
   EOF
 }
 
-resource azurerm_virtual_machine_scale_set_extension vm_dependency_monitor {
+resource azurerm_virtual_machine_scale_set_extension dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
@@ -96,7 +100,7 @@ resource azurerm_virtual_machine_scale_set_extension vm_dependency_monitor {
     } 
   EOF
 }
-resource azurerm_virtual_machine_scale_set_extension vm_watcher {
+resource azurerm_virtual_machine_scale_set_extension watcher {
   name                         = "AzureNetworkWatcherExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.Azure.NetworkWatcher"
@@ -104,3 +108,17 @@ resource azurerm_virtual_machine_scale_set_extension vm_watcher {
   type_handler_version         = "1.4"
   auto_upgrade_minor_version   = true
 }
+
+# resource azurerm_monitor_diagnostic_setting vm {
+#   name                         = "${azurerm_linux_virtual_machine_scale_set.linux_agents.name}-diagnostics"
+#   target_resource_id           = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+#   log_analytics_workspace_id   = data.azurerm_log_analytics_workspace.monitor.id
+
+#   metric {
+#     category                   = "AllMetrics"
+
+#     retention_policy {
+#       enabled                  = false
+#     }
+#   }
+# }

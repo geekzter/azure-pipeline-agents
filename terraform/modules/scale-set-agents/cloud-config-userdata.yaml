@@ -3,6 +3,7 @@ bootcmd:
   - sudo apt remove unattended-upgrades -y
   # Prevent race condition with VM extension provisioning
   - while ( fuser /var/lib/dpkg/lock >/dev/null 2>&1 ); do sleep 5; done;
+  - while ( fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ); do sleep 5; done;
   # Get apt repository signing keys
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
   - sudo apt-add-repository https://cli.github.com/packages

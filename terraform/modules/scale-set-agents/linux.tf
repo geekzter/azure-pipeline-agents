@@ -124,17 +124,3 @@ resource azurerm_virtual_machine_scale_set_extension watcher {
   type_handler_version         = "1.4"
   auto_upgrade_minor_version   = true
 }
-
-# resource azurerm_monitor_diagnostic_setting vm {
-#   name                         = "${azurerm_linux_virtual_machine_scale_set.linux_agents.name}-diagnostics"
-#   target_resource_id           = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-#   log_analytics_workspace_id   = data.azurerm_log_analytics_workspace.monitor.id
-
-#   metric {
-#     category                   = "AllMetrics"
-
-#     retention_policy {
-#       enabled                  = false
-#     }
-#   }
-# }

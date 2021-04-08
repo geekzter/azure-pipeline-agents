@@ -67,17 +67,16 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   tags                         = var.tags
 }
 
-# resource "azurerm_virtual_machine_scale_set_extension" "example" {
-#   name                         = "example"
-#   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-#   publisher                    = "Microsoft.Azure.Extensions"
-#   type                         = "CustomScript"
-#   type_handler_version         = "2.0"
-#   settings = jsonencode({
-#     "commandToExecute" = "echo $HOSTNAME"
-#   })
-# }
-
+resource azurerm_virtual_machine_scale_set_extension cloud_config_status {
+  name                         = "CloudConfigStatusScript"
+  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+  publisher                    = "Microsoft.Azure.Extensions"
+  type                         = "CustomScript"
+  type_handler_version         = "2.0"
+  settings                     = jsonencode({
+    "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
+  })
+}
 resource azurerm_virtual_machine_scale_set_extension log_analytics {
   name                         = "OmsAgentForLinux"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
@@ -95,8 +94,12 @@ resource azurerm_virtual_machine_scale_set_extension log_analytics {
       "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
     } 
   EOF
-}
 
+  provision_after_extensions   = [
+    # Wait for cloud-init to complete before provisioning extensions
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
+  ]
+}
 resource azurerm_virtual_machine_scale_set_extension dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
@@ -115,6 +118,11 @@ resource azurerm_virtual_machine_scale_set_extension dependency_monitor {
       "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
     } 
   EOF
+
+  provision_after_extensions   = [
+    # Wait for cloud-init to complete before provisioning extensions
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
+  ]
 }
 resource azurerm_virtual_machine_scale_set_extension watcher {
   name                         = "AzureNetworkWatcherExtension"
@@ -123,4 +131,9 @@ resource azurerm_virtual_machine_scale_set_extension watcher {
   type                         = "NetworkWatcherAgentLinux"
   type_handler_version         = "1.4"
   auto_upgrade_minor_version   = true
+
+  provision_after_extensions   = [
+    # Wait for cloud-init to complete before provisioning extensions
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
+  ]
 }

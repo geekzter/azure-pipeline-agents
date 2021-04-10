@@ -1,6 +1,6 @@
 terraform {
   required_providers {
-    azurerm                    = "~> 2.54"
+    azurerm                    = "~> 2.55"
     cloudinit                  = "~> 2.2"
     null                       = "~> 3.1"
     random                     = "~> 3.1"

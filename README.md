@@ -1,4 +1,4 @@
-# Azure Pipeline Agents for Private Connectivity
+# Azure Pipeline Agents for Private Network Connectivity
 
 Azure Pipelines includes [Microsoft-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml) provided by the platform. If you can use these agents I recommend you do so as they provide a complete managed experience.
 
@@ -7,12 +7,14 @@ However, there may be scenarios where you need to manage your own agents:
 - Improve build times by caching artifacts
 - Network access
 
-The latter point is probably the most common reason to set up your own agents. With the advent of Private Link it is more common to deploy Azure Services do that they can only be access from a virtual network. Hence you need an agent hosting model that fits that requirement. 
+The latter point is probably the most common reason to set up your own agents. With the advent of Private Link it is more common to deploy Azure Services so that they can only be access from a virtual network. Hence you need an agent hosting model that fits that requirement. 
 
-![](visuals/diagram.png)
+<p align="center">
+<img src="visuals/diagram.png" width="640">
+</p>
 
 ## Self-hosted Agents
-[Self-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) are the predecessor to Scale Set Agents. They also provide the ability to run agents anywehere (including outside Azure). However, you have to manage to full lifecycle of each agent instance. Hence, if you want to go this route, a containerized approach may be better. I still include this approach as a seperate [Terraform module](terraform/modules/self-hosted-agents). It involves installing the VM agent as described on this [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) for Linux. 
+[Self-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) are the predecessor to Scale Set Agents. They also provide the ability to run agents anywhere (including outside Azure). However, you have to manage the full lifecycle of each agent instance. Hence, if you want to go this route, a containerized approach may be better. I still include this approach as a seperate [Terraform module](terraform/modules/self-hosted-agents). It involves installing the VM agent as described on this [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) for Linux. 
 
 In this module, you'll find [install_agent.sh](./scripts/agent/install_agent.sh), which automates the setup:  
 `./install_agent.sh  --agent-name debian-agent --agent-pool Default --org myorg --pat <PAT>`  
@@ -21,10 +23,10 @@ This will install the agent as systemd (auto start) service.
 Likewise, this will install the agent as a service on Windows ([manual setup](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows)):  
 `.\install_agent.ps1  -AgentName windows-agent -AgentPool Default -Organization myorg -PAT <PAT>`
 
-Set Terraform variable `use_self_hosted` to `true` (default: `false`) to provision self-hosted agents. You will also need to set `devops_pat` and `devops_org` in thise case.
+Set Terraform variable `use_self_hosted` to `true` (default: `false`) to provision self-hosted agents. You will also need to set `devops_pat` and `devops_org`.
 
 ## Scale Set Agents
-[Scale Set Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) leverage Azure Virtual Machine Scale Sets. The lifecycle of individual agents is managed my Azure DevOps, therefore I recommend Scale Set Agents over Self-hosted agents. 
+[Scale Set Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) leverage Azure Virtual Machine Scale Sets. The lifecycle of individual agents is managed by Azure DevOps, therefore I recommend Scale Set Agents over Self-hosted agents. 
 
 Set Terraform variable `use_scale_set` to `true` (default: `true`) to provision scale set agents. 
 
@@ -80,7 +82,6 @@ packages:
   # Microsoft
   - azure-cli
   - azure-functions-core-tools
-  # - blobfuse
   - dotnet-sdk-3.1
   - powershell
 
@@ -101,10 +102,10 @@ write_files:
 final_message: "Up after $UPTIME seconds"
 ```
 
-Note this also sets up some environment variables e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a connection from (see example below).
+Note this also sets up some environment variables e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
 ## Infrastructure Provisioning
 
-Use the [azure cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
+Use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
 `az login`  
 `az account set --subscription="SUBSCRIPTION_ID"`
 
@@ -113,11 +114,11 @@ You can provision agents by running:
 `terraform init`  
 `terraform apply`
 
-This will only provision the scale set. To create a pool from this scale set (AFAIK not automatable) using the instructions [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
+This will only provision the scale set. To create a pool from this scale set (AFAIK not automatable) use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
 
 
 ## Pipeline use
-The automation would not be complete if we don't run this whole process from an Azure Pipeline. Here is the most relevant task from [azure-pipelines.yml](./azure-pipelines.yml):
+This yaml snippet shows how to reference the scale set pool and use the environment variables set by the agent:
 
 ```yaml
 pool:
@@ -128,6 +129,6 @@ steps:
     # Use pipeline agent virtual network as VNet to peer from
     $env:TF_VAR_peer_network_id = $env:GEEKZTER_AGENT_VIRTUAL_NETWORK_ID
 
-    # Terraform will use $env:GEEKZTER_AGENT_VIRTUAL_NETWORK_ID as value for input variable 'peer_network_id'
+    # Terraform will use $env:GEEKZTER_AGENT_VIRTUAL_NETWORK_ID as value for input variable 'peer_network_id' 
+    # Create on-demand peering...
 ```
-

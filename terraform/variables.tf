@@ -1,9 +1,13 @@
+variable address_space {
+  default                      = "10.32.0.0/12"
+}
 
 variable devops_org {}
 variable devops_pat {}
 
 variable linux_agent_count {
   default                      = 2
+  type                         = number
 }
 variable linux_os_offer {
   default                      = "UbuntuServer"
@@ -21,6 +25,9 @@ variable linux_pipeline_agent_name {
 variable linux_pipeline_agent_pool {
   default                      = "Default"
 }
+variable linux_storage_type {
+  default                      = "Standard_LRS"
+}
 variable linux_vm_name_prefix {
   default                      = "ubuntu1804-agent"
 }
@@ -28,19 +35,21 @@ variable linux_vm_size {
   default                      = "Standard_D2s_v3"
 }
 
-variable pipeline_resource_group {
-  default                      = "PipelineAgents"
-}
-
-variable pipeline_network {
-  default                      = "PipelineAgents-vnet"
-}
-variable pipeline_subnet {
-  default                      = "default"
+variable location {
+  default                      = "westeurope"
 }
 
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
+}
+
+variable use_scale_set {
+  default                      = true
+  type                         = bool
+}
+variable use_self_hosted {
+  default                      = false
+  type                         = bool
 }
 
 variable user_name {
@@ -53,6 +62,7 @@ variable vm_accelerated_networking {
 
 variable windows_agent_count {
   default                      = 2
+  type                         = number
 }
 variable windows_os_offer {
   default                      = "WindowsServer"
@@ -69,6 +79,9 @@ variable windows_pipeline_agent_name {
 }
 variable windows_pipeline_agent_pool {
   default                      = "Default"
+}
+variable windows_storage_type {
+  default                      = "Standard_LRS"
 }
 variable windows_vm_name_prefix {
   default                      = "win"

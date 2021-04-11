@@ -1,95 +1,111 @@
-# Self-Hosted Pipeline Agents
+# Azure Pipeline Agents for Private Network Connectivity
 
-Azure Pipelines includes [Self-Hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops) provided by Microsoft. If you can use these agents I recommend you do so as it is a complete managed experience.
+Azure Pipelines includes [Microsoft-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml) provided by the platform. If you can use these agents I recommend you do so as they provide a complete managed experience.
 
-However, there may be scenario's where you need to manage your own agent:
+However, there may be scenarios where you need to manage your own agents:
 - Configuration can't be met with any of the hosted agents (e.g. Linux distribution, Windows version)
 - Improve build times by caching artifacts
 - Network access
 
-## OS Agent
-This [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) describes how to install the Linux Pipeline agent interactively. In this repo, you'll find [install_agent.sh](./scripts/agent/install_agent.sh), which automates the setup:  
+The latter point is probably the most common reason to set up your own agents. With the advent of Private Link it is more common to deploy Azure Services so that they can only be access from a virtual network. Hence you need an agent hosting model that fits that requirement. 
+
+<p align="center">
+<img src="visuals/diagram.png" width="640">
+</p>
+
+## Self-hosted Agents
+[Self-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) are the predecessor to Scale Set Agents. They also provide the ability to run agents anywhere (including outside Azure). However, you have to manage the full lifecycle of each agent instance. Hence, if you want to go this route, a containerized approach may be better. I still include this approach as a seperate [Terraform module](terraform/modules/self-hosted-agents). It involves installing the VM agent as described on this [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) for Linux. 
+
+In this module, you'll find [install_agent.sh](./scripts/agent/install_agent.sh), which automates the setup:  
 `./install_agent.sh  --agent-name debian-agent --agent-pool Default --org myorg --pat <PAT>`  
-This will install the agent as systemd (auto start) service
+This will install the agent as systemd (auto start) service.
 
 Likewise, this will install the agent as a service on Windows ([manual setup](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows)):  
 `.\install_agent.ps1  -AgentName windows-agent -AgentPool Default -Organization myorg -PAT <PAT>`
 
-## Agent Provisioning
-Taking it one step further, now you own the agents, you'll probably want to automate their provisioning as well. Using Terraform with the [Azure provider](https://www.terraform.io/docs/providers/azurerm/index.html) that can be automated.
+Set Terraform variable `use_self_hosted` to `true` (default: `false`) to provision self-hosted agents. You will also need to set `devops_pat` and `devops_org`.
 
-This snippet from [windows.tf](./terraform/windows.tf) illustrates whats involved:
+## Scale Set Agents
+[Scale Set Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) leverage Azure Virtual Machine Scale Sets. The lifecycle of individual agents is managed by Azure DevOps, therefore I recommend Scale Set Agents over Self-hosted agents. 
 
-```hcl
-resource azurerm_storage_blob install_agent {
-  name                         = "install_agent.ps1"
-  storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.scripts.name
+Set Terraform variable `use_scale_set` to `true` (default: `true`) to provision scale set agents. 
 
-  type                         = "Block"
-  source                       = "../scripts/agent/install_agent.ps1"
+The software in the scale set (I use Ubuntu only), is installed using [cloud-init](https://cloudinit.readthedocs.io/en/latest/). Here is the yaml used:
+```yaml
+#cloud-config
+bootcmd:
+  - sudo apt remove unattended-upgrades -y
+  # Prevent race condition with VM extension provisioning
+  - while ( fuser /var/lib/dpkg/lock >/dev/null 2>&1 ); do sleep 5; done;
+  - while ( fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ); do sleep 5; done;
+  # Get apt repository signing keys
+  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
+  - sudo apt-add-repository https://cli.github.com/packages
+  - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
+  - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
+  - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
 
-  count                        = var.windows_agent_count > 0 ? 1 : 0
-}
+apt:
+  sources:
+    git-core:
+      source: "ppa:git-core/ppa"
+    helm-stable-debian.list:
+      source: "deb https://baltocdn.com/helm/stable/debian/ all main"
+    kubernetes.list:
+      source: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    azure-cli.list:
+      source: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ bionic main"
+    microsoft-prod.list:
+      source: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main"
 
-resource azurerm_windows_virtual_machine windows_agent {
-  name                         = "${local.windows_vm_name}${count.index+1}"
-  location                     = data.azurerm_resource_group.pipeline_resource_group.location
-  resource_group_name          = data.azurerm_resource_group.pipeline_resource_group.name
-  network_interface_ids        = [azurerm_network_interface.windows_nic[count.index].id]
-  size                         = var.windows_vm_size
-  admin_username               = var.user_name
-  admin_password               = local.password
+package_update: true
+  # Disable package upgrades to get rid of the following error
+  #   Could not get lock /var/lib/dpkg/lock-frontend - open (11: Resource temporarily unavailable)
+# package_upgrade: true
+packages:
+  # Core
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  # Tools
+  - ansible
+  - coreutils
+  - docker
+  - unixodbc-dev
+  - unzip
+  # Kubernetes
+  - helm
+  - kubectl
+  # Microsoft
+  - azure-cli
+  - azure-functions-core-tools
+  - dotnet-sdk-3.1
+  - powershell
 
-  os_disk {
-    name                       = "${local.windows_vm_name}${count.index+1}-osdisk"
-    caching                    = "ReadWrite"
-    storage_account_type       = "Premium_LRS"
-  }
+runcmd:
+  # Microsoft packages
+  - sudo ACCEPT_EULA=Y apt install msodbcsql17 -y
+  - sudo ACCEPT_EULA=Y apt install mssql-tools -y
+  # Automatic updates: re-enable them
+  - sudo apt install unattended-upgrades -y
 
-  source_image_reference {
-    publisher                  = var.windows_os_publisher
-    offer                      = var.windows_os_offer
-    sku                        = var.windows_os_sku
-    version                    = "latest"
-  }
+write_files:
+- path: /etc/environment
+  content: |
+    GEEKZTER_AGENT_SUBNET_ID="${subnet_id}"
+    GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
+  append: true
 
-  # Required for AAD Login
-  identity {
-    type                       = "SystemAssigned"
-  }
-
-  tags                         = local.tags
-  count                        = var.windows_agent_count
-}
-
-resource azurerm_virtual_machine_extension pipeline_agent {
-  name                         = "PipelineAgentCustomScript"
-  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
-  publisher                    = "Microsoft.Compute"
-  type                         = "CustomScriptExtension"
-  type_handler_version         = "1.10"
-  auto_upgrade_minor_version   = true
-  settings                     = <<EOF
-    {
-      "fileUris": [
-                                 "${azurerm_storage_blob.install_agent.0.url}"
-      ]
-    }
-  EOF
-
-  protected_settings           = <<EOF
-    { 
-      "commandToExecute"       : "powershell.exe -ExecutionPolicy Unrestricted -Command \"./install_agent.ps1 -AgentName ${local.windows_pipeline_agent_name}${count.index+1} -AgentPool ${var.windows_pipeline_agent_pool} -Organization ${var.devops_org} -PAT ${var.devops_pat}\""
-    } 
-  EOF
-
-  count                        = var.windows_agent_count
-}
+final_message: "Up after $UPTIME seconds"
 ```
-See also [linux.tf](./terraform/linux.tf)  
 
-Now use the [azure cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
+Note this also sets up some environment variables e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
+## Infrastructure Provisioning
+
+Use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
 `az login`  
 `az account set --subscription="SUBSCRIPTION_ID"`
 
@@ -98,48 +114,21 @@ You can provision agents by running:
 `terraform init`  
 `terraform apply`
 
-## Pipeline
-The automation would not be complete if we don't run this whole process from an Azure Pipeline. Here is the most relevant task from [azure-pipelines.yml](./azure-pipelines.yml):
+This will only provision the scale set. To create a pool from this scale set (AFAIK not automatable) use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
+
+
+## Pipeline use
+This yaml snippet shows how to reference the scale set pool and use the environment variables set by the agent:
 
 ```yaml
-- task: AzureCLI@2
-  displayName: 'Terraforming'
-  enabled: true
-  inputs:
-    azureSubscription: '$(subscriptionConnection)'
-    scriptType: pscore
-    scriptLocation: inlineScript
-    inlineScript: |
-      # Use Pipeline Service Principal and Service Connection to configure Terraform azurerm provider
-      $env:ARM_CLIENT_ID=$env:servicePrincipalId
-      $env:ARM_CLIENT_SECRET=$env:servicePrincipalKey
-      $env:ARM_SUBSCRIPTION_ID=(az account show --query id) -replace '"',''
-      $env:ARM_TENANT_ID=$env:tenantId
+pool:
+  name: 'Scale Set Agents 1' # Name of the Scale Set Agent Pool you created
 
-      # Fix case of environment variables mangled by Azure Pipeline Agent
-      foreach ($tfvar in $(Get-ChildItem Env:TF_VAR_*)) {
-          $properCaseName = $tfvar.Name.Substring(0,7) + $tfvar.Name.Substring(7).ToLowerInvariant()
-          Invoke-Expression "`$env:$properCaseName = `$env:$($tfvar.Name)"  
-      }
-      # List environment variables (debug)
-      Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_* | Sort-Object -Property Name
+steps:
+- pwsh: |
+    # Use pipeline agent virtual network as VNet to peer from
+    $env:TF_VAR_peer_network_id = $env:GEEKZTER_AGENT_VIRTUAL_NETWORK_ID
 
-      # Terraforming
-      terraform init -backend-config=storage_account_name=$(terraformBackendStorageAccount) -backend-config=resource_group_name=$(terraformBackendResourceGroup)
-      Write-Host "terraform workspace is '$(terraform workspace show)'"
-      if ([System.Convert]::ToBoolean("$(destroyAgentIfExists)")) {
-        terraform destroy -auto-approve
-      }
-      terraform plan -out='agent.plan'
-      terraform apply agent.plan
-    addSpnToEnvironment: true
-    useGlobalConfig: true
-    workingDirectory: '$(terraformDirectory)'
-    failOnStandardError: true
+    # Terraform will use $env:GEEKZTER_AGENT_VIRTUAL_NETWORK_ID as value for input variable 'peer_network_id' 
+    # Create on-demand peering...
 ```
-
-This task provides a setting (`addSpnToEnvironment`) to share the Azure Active Directory Service Principal credentials used for the Azure subscription connection to [authenticate](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html) the Terraform azurerm provider.
-
-
-## Limitations
-- This does not include any additional software you need to install on the agents

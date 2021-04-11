@@ -9,6 +9,8 @@ However, there may be scenarios where you need to manage your own agents:
 
 The latter point is probably the most common reason to set up your own agents. With the advent of Private Link it is more common to deploy Azure Services do that they can only be access from a virtual network. Hence you need an agent hosting model that fits that requirement. 
 
+![](visuals/diagram.png)
+
 ## Self-hosted Agents
 [Self-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) are the predecessor to Scale Set Agents. They also provide the ability to run agents anywehere (including outside Azure). However, you have to manage to full lifecycle of each agent instance. Hence, if you want to go this route, a containerized approach may be better. I still include this approach as a seperate [Terraform module](terraform/modules/self-hosted-agents). It involves installing the VM agent as described on this [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) for Linux. 
 

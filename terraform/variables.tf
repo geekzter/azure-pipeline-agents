@@ -39,27 +39,16 @@ variable location {
   default                      = "westeurope"
 }
 
-variable pipeline_resource_group {
-  default                      = "PipelineAgents"
-}
-
-variable pipeline_network {
-  default                      = "PipelineAgents-vnet"
-}
-variable pipeline_subnet {
-  default                      = "default"
-}
-
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }
 
 variable use_scale_set {
-  default                      = false
+  default                      = true
   type                         = bool
 }
 variable use_self_hosted {
-  default                      = true
+  default                      = false
   type                         = bool
 }
 

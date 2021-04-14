@@ -61,6 +61,7 @@ if [ -f $HOME/pipeline-agent/.agent ]; then
     sudo ./svc.sh stop
     sudo ./svc.sh uninstall
     ./config.sh remove --unattended --auth pat --token $PAT
+    popd
 fi
 
 # Get latest released version from GitHub

@@ -6,28 +6,23 @@ echo $(basename $0) "$@"
 function validate {
     valid=1
 
-    if [[ "$AGENT_POOL" == "" ]] 
-    then
+    if [[ "$AGENT_POOL" == "" ]]; then
         echo "No agent pool. Use --agent-pool to specify agent pool"
         valid=0
-    fi    
-    if [[ "$AGENT_NAME" == "" ]] 
-    then
+    fi
+    if [[ "$AGENT_NAME" == "" ]]; then
         echo "No agent name. Use --agent-name to specify agent name"
         valid=0
-    fi               
-    if [[ "$ORG" == "" ]] 
-    then
+    fi
+    if [[ "$ORG" == "" ]]; then
         echo "No Azure DevOps organization. Use --org to specify an organization"
         valid=0
     fi
-    if [[ "$PAT" == "" ]] 
-    then
+    if [[ "$PAT" == "" ]]; then
         echo "No Personal Access Token. Use --pat to specify a Personal Access Token"
         valid=0
     fi
-    if (( valid == 0)) 
-    then
+    if (( valid == 0)); then
         exit 1
     fi
 }
@@ -36,16 +31,16 @@ while [ "$1" != "" ]; do
     case $1 in
         --agent-name)                   shift
                                         AGENT_NAME=$1
-                                        ;;                                                                                                                
+                                        ;;
         --agent-pool)                   shift
                                         AGENT_POOL=$1
                                         ;;
         --org)                          shift
                                         ORG=$1
-                                        ;;        
+                                        ;;
         --pat)                          shift
                                         PAT=$1
-                                        ;;        
+                                        ;;
        * )                              echo "Invalid argument: $1"
                                         exit 1
     esac

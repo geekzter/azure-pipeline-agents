@@ -85,10 +85,12 @@ sudo ./bin/installdependencies.sh
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops#unattended-config
 echo "Creating agent ${AGENT_NAME} and adding it to pool ${AGENT_POOL} in organization ${ORG}..."
 ./config.sh --unattended \
-            --url https://dev.azure.com/${ORG} \
-            --auth pat --token $PAT \
-            --pool $AGENT_POOL \
-            --agent $AGENT_NAME --replace \
+            --url "https://dev.azure.com/${ORG}" \
+            --auth pat \
+            --token "${PAT}" \
+            --pool "${AGENT_POOL}" \
+            --agent "${AGENT_NAME}" \
+            --replace \
             --acceptTeeEula
 
 if [ ! -f /etc/systemd/system/vsts.agent.${ORG}.* ]; then

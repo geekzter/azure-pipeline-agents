@@ -46,7 +46,7 @@ resource azurerm_resource_group rg {
 }
 
 resource azurerm_storage_account automation_storage {
-  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,20)}${local.suffix}stor"
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,16)}${local.suffix}stor"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"
@@ -106,7 +106,7 @@ resource azurerm_storage_blob terraform_workspace_vars_configuration {
 }
 
 resource azurerm_storage_account diagnostics {
-  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,20)}${local.suffix}diag"
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,16)}${local.suffix}diag"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"

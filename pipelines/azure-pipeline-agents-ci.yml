@@ -8,7 +8,6 @@ parameters:
   - ci1
   - ci2
   - ci3
-  - cd
   - cd1
   - cd2
   - cd3
@@ -186,7 +185,6 @@ jobs:
           workingDirectory: '$(terraformDirectory)'
 
     - pwsh: |
-        Remove-Item env:TF_VAR_ADDRESS_SPACE 2>$null
         if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
           $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
         }

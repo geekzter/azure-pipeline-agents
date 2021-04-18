@@ -33,6 +33,7 @@ function UpdateAgent(
     }
     $Settings["id"] = $AgentId
     $requestBody = $Settings | ConvertTo-Json
+    Write-Verbose "`$requestBody: $requestBody"
     if ($DebugPreference -ine "SilentlyContinue") {
         Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Get | Write-Host -ForegroundColor Yellow 
     }

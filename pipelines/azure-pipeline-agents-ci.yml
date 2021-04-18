@@ -284,6 +284,11 @@ jobs:
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
+            if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+              $DebugPreference       = "Continue"
+              $InformationPreference = "Continue"
+              $VerbosePreference     = "Continue"
+            }
             ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
             ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
           addSpnToEnvironment: true

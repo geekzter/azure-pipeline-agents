@@ -265,7 +265,9 @@ jobs:
           workingDirectory: '$(terraformDirectory)'
           environmentServiceName: '$(subscriptionConnection)'
           runAzLogin: true
+          ommandOptions: '$(terraformVariables.variableOption)'
           allowTelemetryCollection: true
+
 
 - ${{ if ne(parameters.destroy, 'Never') }}:
   # Clean up resources, in the event 'terraform destroy' fails   

@@ -48,7 +48,9 @@ module self_hosted_agents {
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
+  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   location                     = var.location
+  log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.monitor.id
 
   linux_agent_count            = var.linux_agent_count
   linux_pipeline_agent_name    = var.linux_pipeline_agent_name

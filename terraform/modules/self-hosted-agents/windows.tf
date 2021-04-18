@@ -81,6 +81,65 @@ resource azurerm_windows_virtual_machine windows_agent {
   tags                         = var.tags
   count                        = var.windows_agent_count
 }
+resource azurerm_virtual_machine_extension windows_log_analytics {
+  name                         = "MMAExtension"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
+  publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
+  type                         = "MicrosoftMonitoringAgent"
+  type_handler_version         = "1.0"
+  auto_upgrade_minor_version   = true
+  settings                     = <<EOF
+    {
+      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.workspace_id}"
+      "azureResourceId"        : "${azurerm_windows_virtual_machine.windows_agent[count.index].id}",
+      "stopOnMultipleConnections": "true"
+    }
+  EOF
+  protected_settings = <<EOF
+    { 
+      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
+    } 
+  EOF
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+}
+resource azurerm_virtual_machine_extension windows_dependency_monitor {
+  name                         = "DAExtension"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
+  publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
+  type                         = "DependencyAgentWindows"
+  type_handler_version         = "9.5"
+  auto_upgrade_minor_version   = true
+  settings                     = <<EOF
+    {
+      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.id}"
+    }
+  EOF
+
+  protected_settings = <<EOF
+    { 
+      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
+    } 
+  EOF
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+}
+resource azurerm_virtual_machine_extension windows_watcher {
+  name                         = "AzureNetworkWatcherExtension"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
+  publisher                    = "Microsoft.Azure.NetworkWatcher"
+  type                         = "NetworkWatcherAgentWindows"
+  type_handler_version         = "1.4"
+  auto_upgrade_minor_version   = true
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+}
 
 resource azurerm_virtual_machine_extension pipeline_agent {
   name                         = "PipelineAgentCustomScript"
@@ -113,4 +172,9 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   }
 
   count                        = var.windows_agent_count
+  depends_on                   = [
+    azurerm_virtual_machine_extension.windows_log_analytics,
+    azurerm_virtual_machine_extension.windows_dependency_monitor,
+    azurerm_virtual_machine_extension.windows_watcher,
+  ]
 }

@@ -1,6 +1,8 @@
 variable devops_org {}
 variable devops_pat {}
 
+variable diagnostics_storage_id {}
+
 variable linux_agent_count {}
 variable linux_os_offer {}
 variable linux_os_publisher {}
@@ -12,6 +14,7 @@ variable linux_vm_name_prefix {}
 variable linux_vm_size {}
 
 variable location {}
+variable log_analytics_workspace_resource_id {}
 variable resource_group_name {}
 variable scripts_container_id {}
 variable subnet_id {}

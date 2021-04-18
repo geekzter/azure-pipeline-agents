@@ -68,6 +68,10 @@ resource azurerm_linux_virtual_machine linux_agent {
     public_key                 = file(var.ssh_public_key)
   }
 
+  boot_diagnostics {
+    storage_account_uri        = data.azurerm_storage_account.diagnostics.primary_blob_endpoint
+  }
+
   os_disk {
     caching                    = "ReadWrite"
     storage_account_type       = var.linux_storage_type
@@ -95,6 +99,66 @@ resource azurerm_virtual_machine_extension cloud_config_status {
     "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
   })
   count                        = var.linux_agent_count
+}
+resource azurerm_virtual_machine_extension linux_log_analytics {
+  name                         = "OmsAgentForLinux"
+  virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent[count.index].id
+  publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
+  type                         = "OmsAgentForLinux"
+  type_handler_version         = "1.7"
+  auto_upgrade_minor_version   = true
+  settings                     = <<EOF
+    {
+      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.workspace_id}"
+    }
+  EOF
+  protected_settings = <<EOF
+    { 
+      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
+    } 
+  EOF
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+  depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
+}
+resource azurerm_virtual_machine_extension linux_dependency_monitor {
+  name                         = "DAExtension"
+  virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent[count.index].id
+  publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
+  type                         = "DependencyAgentLinux"
+  type_handler_version         = "9.5"
+  auto_upgrade_minor_version   = true
+  settings                     = <<EOF
+    {
+      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.id}"
+    }
+  EOF
+
+  protected_settings = <<EOF
+    { 
+      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
+    } 
+  EOF
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+  depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
+}
+resource azurerm_virtual_machine_extension linux_watcher {
+  name                         = "AzureNetworkWatcherExtension"
+  virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent[count.index].id
+  publisher                    = "Microsoft.Azure.NetworkWatcher"
+  type                         = "NetworkWatcherAgentLinux"
+  type_handler_version         = "1.4"
+  auto_upgrade_minor_version   = true
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+  depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }
 
 resource null_resource cloud_config_status {
@@ -125,7 +189,12 @@ resource null_resource cloud_config_status {
   }
 
   count                        = var.linux_agent_count
-  depends_on                   = [azurerm_linux_virtual_machine.linux_agent,azurerm_network_interface_security_group_association.linux_nic_nsg]
+  depends_on                   = [
+    azurerm_virtual_machine_extension.linux_log_analytics,
+    azurerm_virtual_machine_extension.linux_dependency_monitor,
+    azurerm_virtual_machine_extension.linux_watcher,
+    azurerm_network_interface_security_group_association.linux_nic_nsg
+  ]
 }
 
 resource null_resource linux_pipeline_agent {

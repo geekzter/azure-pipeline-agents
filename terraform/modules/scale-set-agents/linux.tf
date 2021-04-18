@@ -77,7 +77,7 @@ resource azurerm_virtual_machine_scale_set_extension cloud_config_status {
     "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
   })
 }
-resource azurerm_virtual_machine_scale_set_extension log_analytics {
+resource azurerm_virtual_machine_scale_set_extension linux_log_analytics {
   name                         = "OmsAgentForLinux"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
@@ -100,7 +100,7 @@ resource azurerm_virtual_machine_scale_set_extension log_analytics {
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 }
-resource azurerm_virtual_machine_scale_set_extension dependency_monitor {
+resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
@@ -124,7 +124,7 @@ resource azurerm_virtual_machine_scale_set_extension dependency_monitor {
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 }
-resource azurerm_virtual_machine_scale_set_extension watcher {
+resource azurerm_virtual_machine_scale_set_extension linux_watcher {
   name                         = "AzureNetworkWatcherExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.Azure.NetworkWatcher"

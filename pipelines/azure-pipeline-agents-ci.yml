@@ -89,6 +89,8 @@ variables:
 - ${{ if eq(parameters.clear, true) }}:  # Don't reset suffix if we want to keep existing resources
   - name: 'TF_VAR_resource_suffix'
     value: '$(Build.BuildId)'
+- name: 'TF_VAR_ssh_public_key'
+  value: 'id_rsa.pub' # Key will be downloaded in terraform directory
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
 
@@ -124,6 +126,17 @@ jobs:
     clean: all
 
   steps:
+    - task: DownloadSecureFile@1
+      displayName: 'Download SSH Public Key'
+      inputs:
+        secureFile: '$(TF_VAR_ssh_public_key)'
+    - pwsh: |
+        foreach ($file in $(Get-ChildItem Env:*SECUREFILEPATH))
+        {
+            Copy-Item $file.Value '$(terraformDirectory)'
+        }
+      displayName: 'Copy Secure Files'
+
     - pwsh: |
         $terraformVersion = (Get-Content .terraform-version)
         Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"    

@@ -90,17 +90,17 @@ variables:
   value: 'ubuntu1804-agent'
 - name: 'TF_VAR_linux_pipeline_agent_pool'
   value: 'CIPool'
+- ${{ if eq(parameters.clear, true) }}:  # Don't reset suffix if we want to keep existing resources
+  - name: 'TF_VAR_resource_suffix'
+    value: '$(Build.BuildId)'
+- name: 'TF_VAR_run_id'
+  value: '$(Build.BuildId)'
+- name: 'TF_VAR_ssh_public_key'
+  value: 'id_rsa.pub' # Key will be downloaded in terraform directory
 - name: 'TF_VAR_windows_pipeline_agent_name'
   value: 'windows-agent'
 - name: 'TF_VAR_windows_pipeline_agent_pool'
   value: 'CIPool'
-- ${{ if eq(parameters.clear, true) }}:  # Don't reset suffix if we want to keep existing resources
-  - name: 'TF_VAR_resource_suffix'
-    value: '$(Build.BuildId)'
-# - name: 'TF_VAR_ssh_public_key'
-#   value: 'id_rsa.pub' # Key will be downloaded in terraform directory
-- name: 'TF_VAR_run_id'
-  value: '$(Build.BuildId)'
 
 - name: 'resourceGroup' 
   value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'

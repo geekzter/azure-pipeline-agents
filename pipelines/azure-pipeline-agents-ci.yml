@@ -265,7 +265,7 @@ jobs:
           workingDirectory: '$(terraformDirectory)'
           environmentServiceName: '$(subscriptionConnection)'
           runAzLogin: true
-          ommandOptions: '$(terraformVariables.variableOption)'
+          commandOptions: '$(terraformVariables.variableOption)'
           allowTelemetryCollection: true
 
 

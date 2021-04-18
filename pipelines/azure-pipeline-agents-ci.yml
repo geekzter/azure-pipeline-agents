@@ -89,10 +89,18 @@ variables:
 - ${{ if eq(parameters.clear, true) }}:  # Don't reset suffix if we want to keep existing resources
   - name: 'TF_VAR_resource_suffix'
     value: '$(Build.BuildId)'
-- name: 'TF_VAR_ssh_public_key'
-  value: 'id_rsa.pub' # Key will be downloaded in terraform directory
+# - name: 'TF_VAR_ssh_public_key'
+#   value: 'id_rsa.pub' # Key will be downloaded in terraform directory
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
+
+  # TF_VAR_linux_agent_count            : ${{ parameters.linuxAgentCount }}
+  TF_VAR_linux_pipeline_agent_name    : 'ubuntu1804-agent'
+  # TF_VAR_linux_pipeline_agent_pool    : 'Default'
+  # TF_VAR_windows_agent_count          : ${{ parameters.windowsAgentCount }}
+  TF_VAR_windows_pipeline_agent_name  : 'windows-agent'
+  # TF_VAR_windows_pipeline_agent_pool  : 'Default'
+  TF_VAR_ssh_public_key               : 'id_rsa.pub' # Key will be downloaded in terraform directory
 
 - name: 'resourceGroup' 
   value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'

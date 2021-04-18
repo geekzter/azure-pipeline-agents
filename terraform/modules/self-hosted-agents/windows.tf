@@ -1,6 +1,7 @@
 locals {
   windows_pipeline_agent_name  = var.windows_pipeline_agent_name != "" ? "${lower(var.windows_pipeline_agent_name)}-${terraform.workspace}" : local.windows_vm_name
-  windows_vm_name              = "${var.windows_vm_name_prefix}${substr(terraform.workspace,0,3)}${var.suffix}w"
+  windows_vm_name              = "${var.windows_vm_name_prefix}-${terraform.workspace}-${var.suffix}"
+  windows_vm_computer_name     = "${var.windows_vm_name_prefix}${substr(terraform.workspace,0,3)}${var.suffix}w"
 }
 
 resource azurerm_public_ip windows_pip {
@@ -51,6 +52,7 @@ resource azurerm_storage_blob install_agent {
 
 resource azurerm_windows_virtual_machine windows_agent {
   name                         = "${local.windows_vm_name}${count.index+1}"
+  computer_name                = "${local.windows_vm_computer_name}${count.index+1}"
   location                     = var.location
   resource_group_name          = var.resource_group_name
   network_interface_ids        = [azurerm_network_interface.windows_nic[count.index].id]

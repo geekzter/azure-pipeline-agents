@@ -107,16 +107,13 @@ resource azurerm_virtual_machine_extension linux_log_analytics {
   type                         = "OmsAgentForLinux"
   type_handler_version         = "1.7"
   auto_upgrade_minor_version   = true
-  settings                     = <<EOF
-    {
-      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.workspace_id}"
-    }
-  EOF
-  protected_settings = <<EOF
-    { 
-      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
-    } 
-  EOF
+
+  settings                     = jsonencode({
+    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings           = jsonencode({
+    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+  })
 
   tags                         = var.tags
 
@@ -130,17 +127,13 @@ resource azurerm_virtual_machine_extension linux_dependency_monitor {
   type                         = "DependencyAgentLinux"
   type_handler_version         = "9.5"
   auto_upgrade_minor_version   = true
-  settings                     = <<EOF
-    {
-      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.id}"
-    }
-  EOF
 
-  protected_settings = <<EOF
-    { 
-      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
-    } 
-  EOF
+  settings                     = jsonencode({
+    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings           = jsonencode({
+    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+  })
 
   tags                         = var.tags
 

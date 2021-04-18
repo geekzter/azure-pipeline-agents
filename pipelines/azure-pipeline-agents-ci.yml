@@ -87,7 +87,7 @@ variables:
 - name: 'terraformDirectory'
   value: '$(Build.SourcesDirectory)/terraform'
 - name: 'TF_VAR_linux_pipeline_agent_name'
-  value: 'ubuntu1804-agent'
+  value: 'ubuntu-agent'
 - name: 'TF_VAR_linux_pipeline_agent_pool'
   value: 'CIPool'
 - ${{ if eq(parameters.clear, true) }}:  # Don't reset suffix if we want to keep existing resources

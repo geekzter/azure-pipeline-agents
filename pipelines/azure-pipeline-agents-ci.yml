@@ -233,23 +233,23 @@ jobs:
         publishPlanResults: 'ci'
 
     - ${{ if parameters.deploy }}:
-    - task: AzureCLI@2
-      displayName: 'Disable Self-Hosted Agent(s)'
-      name: 'agentConfig'
-      condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
-      inputs:
-        azureSubscription: '$(subscriptionConnection)'
-        scriptType: 'pscore'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
-          ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
-        addSpnToEnvironment: true
-        useGlobalConfig: true
-        workingDirectory: '$(scriptDirectory)'
-      env:
-        # Use Pipeline token to access Azure DevOps
-        AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
+      - task: AzureCLI@2
+        displayName: 'Disable Self-Hosted Agent(s)'
+        name: 'agentConfig'
+        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        inputs:
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          workingDirectory: '$(scriptDirectory)'
+        env:
+          # Use Pipeline token to access Azure DevOps
+          AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
     - task: TerraformCLI@0
       displayName: 'Terraform apply'
@@ -263,22 +263,22 @@ jobs:
 
 
     - ${{ if parameters.deploy }}:
-    - task: AzureCLI@2
-      displayName: 'Enable Self-Hosted Agent(s)'
-      condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
-      inputs:
-        azureSubscription: '$(subscriptionConnection)'
-        scriptType: 'pscore'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
-          ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
-        addSpnToEnvironment: true
-        useGlobalConfig: true
-        workingDirectory: '$(scriptDirectory)'
-      env:
-        # Use Pipeline token to access Azure DevOps
-        AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'        
+      - task: AzureCLI@2
+        displayName: 'Enable Self-Hosted Agent(s)'
+        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        inputs:
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          workingDirectory: '$(scriptDirectory)'
+        env:
+          # Use Pipeline token to access Azure DevOps
+          AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'        
 
     - task: TerraformCLI@0
       displayName: 'Terraform output'

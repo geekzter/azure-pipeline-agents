@@ -39,7 +39,7 @@ data azurerm_client_config current {}
 
 
 resource azurerm_resource_group rg {
-  name                         = "azure-pipelines-agents-${local.suffix}"
+  name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-agents-${terraform.workspace}-${local.suffix}"
   location                     = var.location
   tags                         = local.tags
 }

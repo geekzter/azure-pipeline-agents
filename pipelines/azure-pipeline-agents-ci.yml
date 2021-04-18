@@ -94,7 +94,7 @@ variables:
   value: '$(Build.BuildId)'
 
 - name: 'resourceGroup' 
-  value: 'azure-pipelines-agents-$(TF_VAR_resource_suffix)'
+  value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
 
 jobs:
 - job: 'Provision'

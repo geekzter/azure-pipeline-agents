@@ -21,7 +21,7 @@ resource random_string password {
 
 locals {
   config_directory             = "${formatdate("YYYY",timestamp())}/${formatdate("MM",timestamp())}/${formatdate("DD",timestamp())}/${formatdate("hhmm",timestamp())}"
-  environment                  = var.resource_environment != "" ? lower(var.resource_environment) : terraform.workspace
+  environment                  = "dev"
   password                     = ".Az9${random_string.password.result}"
   suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
   tags                         = map(

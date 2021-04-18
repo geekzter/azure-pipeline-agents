@@ -21,13 +21,15 @@ resource random_string password {
 
 locals {
   config_directory             = "${formatdate("YYYY",timestamp())}/${formatdate("MM",timestamp())}/${formatdate("DD",timestamp())}/${formatdate("hhmm",timestamp())}"
+  environment                  = "dev"
   password                     = ".Az9${random_string.password.result}"
-  suffix                       = random_string.suffix.result
+  suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
   tags                         = map(
       "application",             "Pipeline Agents",
-      "environment",             "dev",
+      "environment",             local.environment,
       "provisioner",             "terraform",
       "repository",              "azure-pipeline-agents",
+      "runid",                   var.run_id,
       "shutdown",                "false",
       "suffix",                  local.suffix,
       "workspace",               terraform.workspace
@@ -38,13 +40,13 @@ data azurerm_client_config current {}
 
 
 resource azurerm_resource_group rg {
-  name                         = "azure-pipelines-agents-${local.suffix}"
+  name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-agents-${terraform.workspace}-${local.suffix}"
   location                     = var.location
   tags                         = local.tags
 }
 
 resource azurerm_storage_account automation_storage {
-  name                         = "${lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/",""))}${local.suffix}stor"
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,16)}${local.suffix}stor"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"
@@ -104,7 +106,7 @@ resource azurerm_storage_blob terraform_workspace_vars_configuration {
 }
 
 resource azurerm_storage_account diagnostics {
-  name                         = "${lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/",""))}${local.suffix}diag"
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,16)}${local.suffix}diag"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"

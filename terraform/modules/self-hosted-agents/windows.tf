@@ -1,6 +1,7 @@
 locals {
   windows_pipeline_agent_name  = var.windows_pipeline_agent_name != "" ? "${lower(var.windows_pipeline_agent_name)}-${terraform.workspace}" : local.windows_vm_name
-  windows_vm_name              = "${var.windows_vm_name_prefix}${substr(terraform.workspace,0,3)}${var.suffix}w"
+  windows_vm_name              = "${var.windows_vm_name_prefix}-${terraform.workspace}-${var.suffix}"
+  windows_vm_computer_name     = "${var.windows_vm_name_prefix}${substr(terraform.workspace,0,3)}${var.suffix}w"
 }
 
 resource azurerm_public_ip windows_pip {
@@ -44,13 +45,14 @@ resource azurerm_storage_blob install_agent {
   storage_container_name       = local.scripts_container_name
 
   type                         = "Block"
-  source                       = "${path.root}/scripts/agent/install_agent.ps1"
+  source                       = "${path.root}/../scripts/agent/install_agent.ps1"
 
   count                        = var.windows_agent_count > 0 ? 1 : 0
 }
 
 resource azurerm_windows_virtual_machine windows_agent {
   name                         = "${local.windows_vm_name}${count.index+1}"
+  computer_name                = "${local.windows_vm_computer_name}${count.index+1}"
   location                     = var.location
   resource_group_name          = var.resource_group_name
   network_interface_ids        = [azurerm_network_interface.windows_nic[count.index].id]
@@ -79,8 +81,60 @@ resource azurerm_windows_virtual_machine windows_agent {
   tags                         = var.tags
   count                        = var.windows_agent_count
 }
+resource azurerm_virtual_machine_extension windows_log_analytics {
+  name                         = "MMAExtension"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
+  publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
+  type                         = "MicrosoftMonitoringAgent"
+  type_handler_version         = "1.0"
+  auto_upgrade_minor_version   = true
 
-resource azurerm_virtual_machine_extension pipeline_agent {
+  settings                     = jsonencode({
+    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
+    "azureResourceId"          = azurerm_windows_virtual_machine.windows_agent[count.index].id
+    "stopOnMultipleConnections"= "true"
+  })
+  protected_settings           = jsonencode({
+    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+  })
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+}
+resource azurerm_virtual_machine_extension windows_dependency_monitor {
+  name                         = "DAExtension"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
+  publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
+  type                         = "DependencyAgentWindows"
+  type_handler_version         = "9.5"
+  auto_upgrade_minor_version   = true
+
+  settings                     = jsonencode({
+    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings           = jsonencode({
+    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+  })
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+}
+resource azurerm_virtual_machine_extension windows_watcher {
+  name                         = "AzureNetworkWatcherExtension"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
+  publisher                    = "Microsoft.Azure.NetworkWatcher"
+  type                         = "NetworkWatcherAgentWindows"
+  type_handler_version         = "1.4"
+  auto_upgrade_minor_version   = true
+
+  tags                         = var.tags
+
+  count                        = var.linux_agent_count
+}
+
+resource azurerm_virtual_machine_extension windows_pipeline_agent {
   name                         = "PipelineAgentCustomScript"
   virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent[count.index].id
   publisher                    = "Microsoft.Compute"
@@ -111,4 +165,9 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   }
 
   count                        = var.windows_agent_count
+  depends_on                   = [
+    azurerm_virtual_machine_extension.windows_log_analytics,
+    azurerm_virtual_machine_extension.windows_dependency_monitor,
+    azurerm_virtual_machine_extension.windows_watcher,
+  ]
 }

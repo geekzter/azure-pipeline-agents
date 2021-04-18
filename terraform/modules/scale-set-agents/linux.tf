@@ -3,7 +3,7 @@ data cloudinit_config user_data {
   base64_encode                = false
 
   part {
-    content                    = templatefile("${path.module}/cloud-config-userdata.yaml",
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
       subnet_id                = var.subnet_id
       virtual_network_id       = local.virtual_network_id
@@ -77,54 +77,47 @@ resource azurerm_virtual_machine_scale_set_extension cloud_config_status {
     "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
   })
 }
-resource azurerm_virtual_machine_scale_set_extension log_analytics {
+resource azurerm_virtual_machine_scale_set_extension linux_log_analytics {
   name                         = "OmsAgentForLinux"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
   type                         = "OmsAgentForLinux"
   type_handler_version         = "1.7"
   auto_upgrade_minor_version   = true
-  settings                     = <<EOF
-    {
-      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.workspace_id}"
-    }
-  EOF
-  protected_settings = <<EOF
-    { 
-      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
-    } 
-  EOF
+
+  settings                     = jsonencode({
+    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings           = jsonencode({
+    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+  })
 
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 }
-resource azurerm_virtual_machine_scale_set_extension dependency_monitor {
+resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
   type                         = "DependencyAgentLinux"
   type_handler_version         = "9.5"
   auto_upgrade_minor_version   = true
-  settings                     = <<EOF
-    {
-      "workspaceId"            : "${data.azurerm_log_analytics_workspace.monitor.id}"
-    }
-  EOF
 
-  protected_settings = <<EOF
-    { 
-      "workspaceKey"           : "${data.azurerm_log_analytics_workspace.monitor.primary_shared_key}"
-    } 
-  EOF
+  settings                     = jsonencode({
+    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings           = jsonencode({
+    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+  })
 
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 }
-resource azurerm_virtual_machine_scale_set_extension watcher {
+resource azurerm_virtual_machine_scale_set_extension linux_watcher {
   name                         = "AzureNetworkWatcherExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.Azure.NetworkWatcher"

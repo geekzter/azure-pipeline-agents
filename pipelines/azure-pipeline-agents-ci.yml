@@ -1,0 +1,456 @@
+parameters:
+- name: workspace
+  displayName: Pipeline Environment / Terraform Workspace
+  type: string
+  default: ci
+  values:
+  - ci
+  - ci1
+  - ci2
+  - ci3
+  - cd1
+  - cd2
+  - cd3
+- name: clear
+  displayName: Clear State
+  type: boolean
+  default: false
+- name: deploy
+  displayName: Deploy Agents
+  type: boolean
+  default: true
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: string
+  default: Always
+  values:
+  - Always
+  - Never 
+  - 'On failure'
+  - 'On success'
+
+trigger: none
+
+pr:
+  branches:
+    include:
+    - '*'
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
+
+schedules:
+- cron: '0 3 * * *'
+  displayName: 'Nightly build (UTC)'
+  # Run if there are no changes
+  always: 'true'
+  branches:
+    include:
+    - main
+
+variables:
+- group: 'pipeline-agents-ci'
+- name: destroyOnFailure
+  ${{ if eq(parameters.destroy, 'Always') }}:
+    value: true
+  ${{ if eq(parameters.destroy, 'Never') }}:
+    value: false
+  ${{ if eq(parameters.destroy, 'On failure') }}:
+    value: true
+  ${{ if eq(parameters.destroy, 'On success') }}:
+    value: false
+- name: destroyOnSuccess
+  ${{ if eq(parameters.destroy, 'Always') }}:
+    value: true
+  ${{ if eq(parameters.destroy, 'Never') }}:
+    value: false
+  ${{ if eq(parameters.destroy, 'On failure') }}:
+    value: false
+  ${{ if eq(parameters.destroy, 'On success') }}:
+    value: true
+- name: 'jobTimeOutMinutes'
+  value: 180
+- name: 'repository'
+  value: 'azure-pipeline-agents'
+- name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
+  value: 'yes_without_prompt'
+- name: 'TF_IN_AUTOMATION'
+  value: 'true'
+- name: 'TF_INPUT'
+  value: 0
+- name: 'TF_WORKSPACE'
+  value: ${{ parameters.workspace }}
+- name: 'scriptDirectory'
+  value: '$(Build.SourcesDirectory)/scripts'
+- name: 'terraformDirectory'
+  value: '$(Build.SourcesDirectory)/terraform'
+- name: 'TF_VAR_linux_pipeline_agent_name'
+  value: 'ubuntu-agent'
+- name: 'TF_VAR_linux_pipeline_agent_pool'
+  value: 'CIPool'
+- ${{ if eq(parameters.clear, true) }}:  # Don't reset suffix if we want to keep existing resources
+  - name: 'TF_VAR_resource_suffix'
+    value: '$(Build.BuildId)'
+- name: 'TF_VAR_run_id'
+  value: '$(Build.BuildId)'
+- name: 'TF_VAR_ssh_public_key'
+  value: 'id_rsa.pub' # Key will be downloaded in terraform directory
+- name: 'TF_VAR_windows_pipeline_agent_name'
+  value: 'windows-agent'
+- name: 'TF_VAR_windows_pipeline_agent_pool'
+  value: 'CIPool'
+
+- name: 'resourceGroup' 
+  value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
+
+jobs:
+- job: 'Provision'
+  ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
+    displayName: 'Provision, Deploy, Test & Destroy'
+  ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
+    displayName: 'Provision, Deploy & Test'
+  ${{ if and(eq(parameters.destroy, 'On failure'),parameters.deploy) }}:
+    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
+  ${{ if and(eq(parameters.destroy, 'On success'),parameters.deploy) }}:
+    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
+  ${{ if and(eq(parameters.destroy, 'Always'),not(parameters.deploy)) }}:
+    displayName: 'Provision & Destroy'
+  ${{ if and(eq(parameters.destroy, 'Never'),not(parameters.deploy)) }}:
+    displayName: 'Provision'
+  ${{ if and(eq(parameters.destroy, 'On failure'),not(parameters.deploy)) }}:
+    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
+  ${{ if and(eq(parameters.destroy, 'On success'),not(parameters.deploy)) }}:
+    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
+  condition: succeeded()
+  timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+  pool:
+    name: '$(pool)'
+    vmImage: $(vmImage)
+
+  workspace:
+    clean: all
+
+  steps:
+    - task: DownloadSecureFile@1
+      displayName: 'Download SSH Public Key'
+      inputs:
+        secureFile: '$(TF_VAR_ssh_public_key)'
+    - pwsh: |
+        foreach ($file in $(Get-ChildItem Env:*SECUREFILEPATH))
+        {
+            Copy-Item $file.Value '$(terraformDirectory)'
+        }
+      displayName: 'Copy Secure Files'
+
+    - pwsh: |
+        $terraformVersion = (Get-Content .terraform-version)
+        Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"    
+
+        Copy-Item backend.tf.sample backend.tf
+      name: terraformConfig
+      displayName: 'Prepare Terraform config'
+      workingDirectory: '$(terraformDirectory)'
+
+    - task: TerraformInstaller@0
+      displayName: 'Install terraform'
+      inputs:
+        terraformVersion: '$(terraformConfig.version)'
+
+    - task: TerraformCLI@0
+      displayName: 'Terraform init'
+      inputs:
+        command: 'init'
+        workingDirectory: '$(terraformDirectory)'
+        backendType: 'azurerm'
+        backendServiceArm: '$(subscriptionConnection)'
+        backendAzureRmResourceGroupName: '$(TF_STATE_RESOURCE_GROUP_NAME)'
+        backendAzureRmStorageAccountName: '$(TF_STATE_STORAGE_ACCOUNT_NAME)'
+        backendAzureRmContainerName: '$(TF_STATE_CONTAINER_NAME)'
+        backendAzureRmKey: 'terraform.tfstate'
+        allowTelemetryCollection: true
+
+    - ${{ if eq(parameters.clear, true) }}:
+      - task: AzureCLI@2
+        name: cleanup
+        displayName: 'Clear Terraform state'
+        inputs:
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            # Clean up Terraform state
+            # Propagate pipeline Service Principal as Terraform variables
+            $env:ARM_CLIENT_ID       ??= $env:servicePrincipalId
+            $env:ARM_CLIENT_SECRET   ??= $env:servicePrincipalKey
+            $env:ARM_TENANT_ID       ??= $env:tenantId
+            # Get from Azure CLI context
+            $env:ARM_TENANT_ID       ??= $(az account show --query tenantId -o tsv)
+            $env:ARM_SUBSCRIPTION_ID ??= $(az account show --query id -o tsv)
+            $terraformState = (terraform state pull | ConvertFrom-Json)
+            if ($terraformState.resources) {
+              Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
+              $terraformState.outputs = New-Object PSObject # Empty output
+              $terraformState.resources = @() # No resources
+              $terraformState.serial++
+              $terraformState | ConvertTo-Json | terraform state push -
+            } else {
+              Write-Host "No resources in Terraform state in workspace ${env:TF_WORKSPACE}..."
+            }
+            terraform state pull 
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          failOnStandardError: true
+          workingDirectory: '$(terraformDirectory)'
+
+    - pwsh: |
+        if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
+          $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
+        }
+        # Set random CIDR (to reduce the risk of clashing VNet peerings with agent VNet)
+        $env:TF_VAR_resource_suffix ??= "$(Build.BuildId)"
+
+        # List environment variables
+        Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
+
+        # Convert uppercased Terraform environment variables to .auto.tfvars file
+        foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
+          $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
+          $terraformVariableValue = $tfVar.Value
+
+          $varArgs += " -var ${terraformVariableName}=${terraformVariableValue}"
+        } 
+
+        Write-Host "Terraform plan/apply options: ${varArgs}"
+        Write-Host "##vso[task.setvariable variable=variableOption;isOutput=true]$varArgs"
+      name: terraformVariables
+      displayName: 'Prepare Terraform variables'
+      workingDirectory: '$(terraformDirectory)'
+
+    - task: TerraformCLI@0
+      displayName: 'Terraform plan'
+      inputs:
+        command: 'plan'
+        workingDirectory: '$(terraformDirectory)'
+        environmentServiceName: '$(subscriptionConnection)'
+        runAzLogin: true
+        commandOptions: '$(terraformVariables.variableOption) -out=ci.tfplan'
+        allowTelemetryCollection: true
+        publishPlanResults: 'ci'
+
+    - ${{ if parameters.deploy }}:
+      - task: AzureCLI@2
+        displayName: 'Disable Self-Hosted Agent(s)'
+        name: 'agentConfig'
+        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        inputs:
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+              $DebugPreference       = "Continue"
+              $InformationPreference = "Continue"
+              $VerbosePreference     = "Continue"
+            }
+            ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          workingDirectory: '$(scriptDirectory)'
+        env:
+          # Use Pipeline token to access Azure DevOps
+          AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
+
+    - task: TerraformCLI@0
+      displayName: 'Terraform apply'
+      inputs:
+        command: 'apply'
+        workingDirectory: '$(terraformDirectory)'
+        environmentServiceName: '$(subscriptionConnection)'
+        runAzLogin: true
+        commandOptions: 'ci.tfplan'
+        allowTelemetryCollection: true
+
+
+    - ${{ if parameters.deploy }}:
+      - task: AzureCLI@2
+        displayName: 'Enable Self-Hosted Agent(s)'
+        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        inputs:
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+              $DebugPreference       = "Continue"
+              $InformationPreference = "Continue"
+              $VerbosePreference     = "Continue"
+            }
+            ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          workingDirectory: '$(scriptDirectory)'
+        env:
+          # Use Pipeline token to access Azure DevOps
+          AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'        
+
+    - task: TerraformCLI@0
+      displayName: 'Terraform output'
+      inputs:
+        command: 'output'
+        workingDirectory: '$(terraformDirectory)'
+        environmentServiceName: '$(subscriptionConnection)'
+        runAzLogin: true
+        allowTelemetryCollection: true
+
+    - ${{ if not(eq(parameters.destroy, 'Never')) }}:
+      - task: TerraformCLI@0
+        displayName: 'Terraform destroy (${{ lower(parameters.destroy) }})'
+        ${{ if eq(parameters.destroy, 'Always') }}:
+          condition: succeededOrFailed()
+        ${{ if eq(parameters.destroy, 'On failure') }}:
+          condition: failed()
+        ${{ if eq(parameters.destroy, 'On success') }}:
+          condition: succeeded()
+        inputs:
+          command: 'destroy'
+          workingDirectory: '$(terraformDirectory)'
+          environmentServiceName: '$(subscriptionConnection)'
+          runAzLogin: true
+          commandOptions: '$(terraformVariables.variableOption)'
+          allowTelemetryCollection: true
+
+
+- ${{ if ne(parameters.destroy, 'Never') }}:
+  # Clean up resources, in the event 'terraform destroy' fails   
+  - job: 'Teardown'
+    dependsOn:
+      - Provision
+    displayName: 'Tear down & Clean up (${{ lower(parameters.destroy) }})'
+    ${{ if ne(parameters.destroy, 'Always') }}:
+      condition: |
+        or(
+          and(eq(dependencies.Provision.result, 'Failed'),variables.destroyOnFailure), 
+          and(eq(dependencies.Provision.result, 'Succeeded'),variables.destroyOnSuccess),
+          and(canceled(),variables.destroyOnFailure)
+        )
+    timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+    variables:
+      terraformVersion: $[ dependencies.Provision.outputs['terraformConfig.version'] ]
+
+    pool:
+      name: '$(pool)'
+      vmImage: $(vmImage)
+
+    workspace:
+      clean: all
+
+    steps:
+    - task: AzureCLI@2
+      name: teardown
+      displayName: 'Tear down remaining resources'
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resoyrce group fails
+          # Build JMESPath expression
+          $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '${env:TF_WORKSPACE}' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
+          Write-Host "Removing resources identified by `"$tagQuery`"..."
+
+          # Remove resource groups
+          $resourceGroupIDs = $(az group list --query "${tagQuery}" -o tsv)
+          if ($resourceGroupIDs) {
+            Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceGroupIDs 2>&1
+            }
+          } else {
+            Write-Host "No resource groups to remove"
+          }
+
+          # Remove (remaining) resources
+          $resourceIDs = $(az resource list --query "${tagQuery}" -o tsv)
+          if ($resourceIDs) {
+            Write-Host "Removing resources `"${resourceIDs}`"..."
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceIDs 2>&1
+            }
+          } else {
+            Write-Host "No resources to remove"
+          }
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(terraformDirectory)'
+
+    - ${{ if eq(parameters.clear, true) }}: # Only works if we can identity the suffix and thefore the resource group name
+      - task: AzureResourceManagerTemplateDeployment@3
+        displayName: 'Delete $(resourceGroup)'
+        condition: failed() # Try this if the previous approach failed
+        inputs:
+          deploymentScope: 'Resource Group'
+          azureResourceManagerConnection: '$(subscriptionConnection)'
+          subscriptionId: '$(ARM_SUBSCRIPTION_ID)'
+          action: 'DeleteRG'
+          resourceGroupName: '$(resourceGroup)'
+
+    - task: TerraformInstaller@0
+      condition: succeededOrFailed() # Procees clearing Terraform state, even if resources could not be removed
+      displayName: 'Install terraform'
+      inputs:
+        terraformVersion: '$(terraformVersion)'
+
+    - task: TerraformCLI@0
+      displayName: 'Terraform init'
+      inputs:
+        command: 'init'
+        workingDirectory: '$(terraformDirectory)'
+        backendType: 'azurerm'
+        backendServiceArm: '$(subscriptionConnection)'
+        backendAzureRmResourceGroupName: '$(TF_STATE_RESOURCE_GROUP_NAME)'
+        backendAzureRmStorageAccountName: '$(TF_STATE_STORAGE_ACCOUNT_NAME)'
+        backendAzureRmContainerName: '$(TF_STATE_CONTAINER_NAME)'
+        backendAzureRmKey: 'terraform.tfstate'
+        allowTelemetryCollection: true
+
+    - task: AzureCLI@2
+      name: cleanup
+      displayName: 'Clean up Terraform state'
+      condition: succeededOrFailed()
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Clean up Terraform state
+          # Propagate pipeline Service Principal as Terraform variables
+          $env:ARM_CLIENT_ID       ??= $env:servicePrincipalId
+          $env:ARM_CLIENT_SECRET   ??= $env:servicePrincipalKey
+          $env:ARM_TENANT_ID       ??= $env:tenantId
+          # Get from Azure CLI context
+          $env:ARM_TENANT_ID       ??= $(az account show --query tenantId -o tsv)
+          $env:ARM_SUBSCRIPTION_ID ??= $(az account show --query id -o tsv)
+          $terraformState = (terraform state pull | ConvertFrom-Json)
+          if ($terraformState.resources) {
+            Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
+            $terraformState.outputs = New-Object PSObject # Empty output
+            $terraformState.resources = @() # No resources
+            $terraformState.serial++
+            $terraformState | ConvertTo-Json | terraform state push -
+          } else {
+            Write-Host "No resources in Terraform state in workspace ${env:TF_WORKSPACE}..."
+          }
+          terraform state pull 
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(terraformDirectory)'

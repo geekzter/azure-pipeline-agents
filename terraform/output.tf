@@ -6,7 +6,9 @@ output agent_subnet_id {
 output resource_group_name {
   value                        = azurerm_resource_group.rg.name
 }
-
+output resource_suffix {
+  value                        = local.suffix
+}
 output self_hosted_linux_vm_ids {
   value                        = var.use_self_hosted ? module.self_hosted_agents.0.linux_vm_ids : null
 }

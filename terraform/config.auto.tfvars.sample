@@ -1,0 +1,9 @@
+# devops_org                     = "myorg"
+# devops_pat                     = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Self-Hosted Agent Build
+# linux_vm_size                  = "Standard_D4s_v3"
+# linux_agent_count              = 1
+
+# use_scale_set                  = true
+# use_self_hosted                = false
+
+# windows_agent_count            = 0

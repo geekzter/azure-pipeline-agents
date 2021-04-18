@@ -22,12 +22,13 @@ resource random_string password {
 locals {
   config_directory             = "${formatdate("YYYY",timestamp())}/${formatdate("MM",timestamp())}/${formatdate("DD",timestamp())}/${formatdate("hhmm",timestamp())}"
   password                     = ".Az9${random_string.password.result}"
-  suffix                       = random_string.suffix.result
+  suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
   tags                         = map(
       "application",             "Pipeline Agents",
       "environment",             "dev",
       "provisioner",             "terraform",
       "repository",              "azure-pipeline-agents",
+      "runid",                   var.run_id,
       "shutdown",                "false",
       "suffix",                  local.suffix,
       "workspace",               terraform.workspace

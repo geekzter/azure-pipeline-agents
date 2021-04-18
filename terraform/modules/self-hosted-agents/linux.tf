@@ -1,3 +1,17 @@
+data cloudinit_config user_data {
+  gzip                         = false
+  base64_encode                = false
+
+  part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
+    {
+      subnet_id                = var.subnet_id
+      virtual_network_id       = local.virtual_network_id
+    })
+    content_type               = "text/cloud-config"
+  }
+}
+
 locals {
   linux_pipeline_agent_name    = var.linux_pipeline_agent_name != "" ? "${lower(var.linux_pipeline_agent_name)}-${terraform.workspace}" : local.linux_vm_name
   linux_vm_name                = "${var.linux_vm_name_prefix}-${terraform.workspace}-${var.suffix}"
@@ -45,6 +59,7 @@ resource azurerm_linux_virtual_machine linux_agent {
   size                         = var.linux_vm_size
   admin_username               = var.user_name
   admin_password               = var.user_password
+  custom_data                  = base64encode(data.cloudinit_config.user_data.rendered)
   disable_password_authentication = false
   network_interface_ids        = [azurerm_network_interface.linux_nic[count.index].id]
 
@@ -70,7 +85,19 @@ resource azurerm_linux_virtual_machine linux_agent {
   depends_on                   = [azurerm_network_interface_security_group_association.linux_nic_nsg]
 }
 
-resource null_resource linux_bootstrap {
+resource azurerm_virtual_machine_extension cloud_config_status {
+  name                         = "CloudConfigStatusScript"
+  virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent[count.index].id
+  publisher                    = "Microsoft.Azure.Extensions"
+  type                         = "CustomScript"
+  type_handler_version         = "2.0"
+  settings                     = jsonencode({
+    "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
+  })
+  count                        = var.linux_agent_count
+}
+
+resource null_resource cloud_config_status {
   # Always run this
   triggers                     = {
     always_run                 = timestamp()
@@ -84,9 +111,9 @@ resource null_resource linux_bootstrap {
   # Bootstrap using https://github.com/geekzter/bootstrap-os/tree/master/linux
   provisioner remote-exec {
     inline                     = [
-      "echo ${var.user_password} | sudo -S apt-get update -y",
-      "sudo apt-get -y install curl", 
-      "curl -sk https://raw.githubusercontent.com/geekzter/bootstrap-os/master/linux/bootstrap_linux.sh | bash"
+      "echo -n 'waiting for cloud-init to complete'",
+      "/usr/bin/cloud-init status --long --wait >/dev/null", # Let Terraform print progress
+      "systemctl status cloud-final.service --full --no-pager --wait"
     ]
 
     connection {
@@ -138,5 +165,5 @@ resource null_resource linux_pipeline_agent {
   }
 
   count                        = var.linux_agent_count
-  depends_on                   = [null_resource.linux_bootstrap,azurerm_network_interface_security_group_association.linux_nic_nsg]
+  depends_on                   = [null_resource.cloud_config_status,azurerm_network_interface_security_group_association.linux_nic_nsg]
 }

@@ -106,7 +106,7 @@ final_message: "Up after $UPTIME seconds"
 
 Note this also sets up some environment variables e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
 ## Infrastructure Provisioning
-
+### Interactive
 Use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
 `az login`  
 `az account set --subscription="SUBSCRIPTION_ID"`
@@ -117,7 +117,8 @@ You can provision agents by running:
 `terraform apply`
 
 This will only provision the scale set. To create a pool from this scale set (AFAIK not automatable) use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
-
+### From Pipeline
+This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool. For this reason, it is recommended to create a specific pool for CI/CD only.
 
 ## Pipeline use
 This yaml snippet shows how to reference the scale set pool and use the environment variables set by the agent:

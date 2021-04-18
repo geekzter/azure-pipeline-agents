@@ -213,7 +213,7 @@ jobs:
         $env:TF_VAR_resource_suffix ??= "$(Build.BuildId)"
 
         # List environment variables
-        Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,GEEKZTER_*,TF_* | Sort-Object -Property Name
+        Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
 
         # Convert uppercased Terraform environment variables to .auto.tfvars file
         foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
@@ -250,7 +250,7 @@ jobs:
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            if ($$(System.Debug)) {
+            if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
               $DebugPreference       = "Continue"
               $InformationPreference = "Continue"
               $VerbosePreference     = "Continue"

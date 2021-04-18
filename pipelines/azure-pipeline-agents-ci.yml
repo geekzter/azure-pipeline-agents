@@ -331,18 +331,12 @@ jobs:
     dependsOn:
       - Provision
     displayName: 'Tear down & Clean up (${{ lower(parameters.destroy) }})'
-    # Run if Terraform destroy failed, or the whole pipeline was canceled
     ${{ if ne(parameters.destroy, 'Always') }}:
       condition: |
         or(
-          and(
-            and(eq(dependencies.Provision.result, 'Failed'),variables.destroyOnFailure), 
-            and(eq(dependencies.Provision.result, 'Succeeded'),variables.destroyOnSuccess)
-          ), 
-          and(
-            canceled(),
-            variables.destroyOnFailure
-          )
+          and(eq(dependencies.Provision.result, 'Failed'),variables.destroyOnFailure), 
+          and(eq(dependencies.Provision.result, 'Succeeded'),variables.destroyOnSuccess),
+          and(canceled(),variables.destroyOnFailure)
         )
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 

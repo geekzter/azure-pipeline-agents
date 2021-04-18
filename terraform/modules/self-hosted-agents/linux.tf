@@ -108,7 +108,7 @@ resource null_resource linux_pipeline_agent {
   }
 
   provisioner "file" {
-    source                     = "${path.root}/scripts/agent/install_agent.sh"
+    source                     = "${path.root}/../scripts/agent/install_agent.sh"
     destination                = "~/install_agent.sh"
 
     connection {

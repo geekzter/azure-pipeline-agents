@@ -64,6 +64,10 @@ az devops configure --defaults organization="$OrganizationUrl"
 
 # Get identifiers using az devops cli
 $agentPoolId = $(az pipelines pool list --query="[?name=='$AgentPoolName'].id | [0]")
+if (!$agentPoolId) {
+    Write-Error "Could not retrieve ID of Agent Pool '${AgentPoolName}' in organization '${OrganizationUrl}'"
+    exit
+}
 Write-Debug "Agent pool id is '$agentPoolId'"
 $agentIds = $(az pipelines agent list --pool-id $agentPoolId --query="[?starts_with(name,'$AgentNamePrefix')].id" | ConvertFrom-Json)
 Write-Debug "Agent ids: $agentIds"

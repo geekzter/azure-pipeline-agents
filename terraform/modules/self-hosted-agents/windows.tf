@@ -44,7 +44,7 @@ resource azurerm_storage_blob install_agent {
   storage_container_name       = local.scripts_container_name
 
   type                         = "Block"
-  source                       = "${path.root}/scripts/agent/install_agent.ps1"
+  source                       = "${path.root}/../scripts/agent/install_agent.ps1"
 
   count                        = var.windows_agent_count > 0 ? 1 : 0
 }

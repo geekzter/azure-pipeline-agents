@@ -3,7 +3,7 @@ data cloudinit_config user_data {
   base64_encode                = false
 
   part {
-    content                    = templatefile("${path.module}/cloud-config-userdata.yaml",
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
       subnet_id                = var.subnet_id
       virtual_network_id       = local.virtual_network_id

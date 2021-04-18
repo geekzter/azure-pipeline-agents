@@ -236,7 +236,7 @@ jobs:
     - task: AzureCLI@2
       displayName: 'Disable Self-Hosted Agent(s)'
       name: 'agentConfig'
-      enabled: eq(variables['TF_VAR_use_self_hosted'],'true')
+      condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
       inputs:
         azureSubscription: '$(subscriptionConnection)'
         scriptType: 'pscore'
@@ -265,7 +265,7 @@ jobs:
     - ${{ if parameters.deploy }}:
     - task: AzureCLI@2
       displayName: 'Enable Self-Hosted Agent(s)'
-      enabled: eq(variables['TF_VAR_use_self_hosted'],'true')
+      condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
       inputs:
         azureSubscription: '$(subscriptionConnection)'
         scriptType: 'pscore'

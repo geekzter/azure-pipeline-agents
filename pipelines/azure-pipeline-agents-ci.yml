@@ -116,11 +116,6 @@ jobs:
     clean: all
 
   steps:
-    - pwsh: |
-        Write-Error "Error"
-        throws "exception"
-      displayName: 'Throw error'
-        
     - task: DownloadSecureFile@1
       displayName: 'Download SSH Public Key'
       inputs:
@@ -133,6 +128,16 @@ jobs:
       displayName: 'Copy Secure Files'
 
     - pwsh: |
+        Write-Error "Error"
+        throws "exception"
+      displayName: 'Throw error'
+        
+    - task: TerraformInstaller@0
+      displayName: 'Install terraform'
+      inputs:
+        terraformVersion: '$(terraformConfig.version)'
+
+    - pwsh: |
         $terraformVersion = (Get-Content .terraform-version)
         Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"    
 
@@ -140,11 +145,6 @@ jobs:
       name: terraformConfig
       displayName: 'Prepare Terraform config'
       workingDirectory: '$(terraformDirectory)'
-
-    - task: TerraformInstaller@0
-      displayName: 'Install terraform'
-      inputs:
-        terraformVersion: '$(terraformConfig.version)'
 
     - task: TerraformCLI@0
       displayName: 'Terraform init'

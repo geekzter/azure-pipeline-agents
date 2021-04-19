@@ -48,7 +48,7 @@ schedules:
   always: 'true'
   branches:
     include:
-    - main
+    - master
 
 variables:
 - group: 'pipeline-agents-ci'
@@ -338,6 +338,8 @@ jobs:
           and(eq(dependencies.Provision.result, 'Succeeded'),variables.destroyOnSuccess),
           and(canceled(),variables.destroyOnFailure)
         )
+    ${{ if eq(parameters.destroy, 'Always') }}:
+      condition: always()
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     variables:

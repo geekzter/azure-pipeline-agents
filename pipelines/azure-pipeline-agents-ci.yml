@@ -48,28 +48,10 @@ schedules:
   always: 'true'
   branches:
     include:
-    - main
+    - master
 
 variables:
 - group: 'pipeline-agents-ci'
-- name: destroyOnFailure
-  ${{ if eq(parameters.destroy, 'Always') }}:
-    value: true
-  ${{ if eq(parameters.destroy, 'Never') }}:
-    value: false
-  ${{ if eq(parameters.destroy, 'On failure') }}:
-    value: true
-  ${{ if eq(parameters.destroy, 'On success') }}:
-    value: false
-- name: destroyOnSuccess
-  ${{ if eq(parameters.destroy, 'Always') }}:
-    value: true
-  ${{ if eq(parameters.destroy, 'Never') }}:
-    value: false
-  ${{ if eq(parameters.destroy, 'On failure') }}:
-    value: false
-  ${{ if eq(parameters.destroy, 'On success') }}:
-    value: true
 - name: 'jobTimeOutMinutes'
   value: 180
 - name: 'repository'
@@ -155,7 +137,7 @@ jobs:
       workingDirectory: '$(terraformDirectory)'
 
     - task: TerraformInstaller@0
-      displayName: 'Install terraform'
+      displayName: 'Install Terraform'
       inputs:
         terraformVersion: '$(terraformConfig.version)'
 
@@ -274,7 +256,6 @@ jobs:
         commandOptions: 'ci.tfplan'
         allowTelemetryCollection: true
 
-
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2
         displayName: 'Enable Self-Hosted Agent(s)'
@@ -308,6 +289,13 @@ jobs:
         allowTelemetryCollection: true
 
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
+      - pwsh: |
+          Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+        name: provisioningResult
+        displayName: 'Indicate provisioning success'
+        condition: succeeded()
+
+    - ${{ if not(eq(parameters.destroy, 'Never')) }}:
       - task: TerraformCLI@0
         displayName: 'Terraform destroy (${{ lower(parameters.destroy) }})'
         ${{ if eq(parameters.destroy, 'Always') }}:
@@ -331,13 +319,12 @@ jobs:
     dependsOn:
       - Provision
     displayName: 'Tear down & Clean up (${{ lower(parameters.destroy) }})'
-    ${{ if ne(parameters.destroy, 'Always') }}:
-      condition: |
-        or(
-          and(eq(dependencies.Provision.result, 'Failed'),variables.destroyOnFailure), 
-          and(eq(dependencies.Provision.result, 'Succeeded'),variables.destroyOnSuccess),
-          and(canceled(),variables.destroyOnFailure)
-        )
+    ${{ if eq(parameters.destroy, 'Always') }}:
+      condition: succeededOrFailed()
+    ${{ if eq(parameters.destroy, 'On failure') }}:
+      condition: not(eq(dependencies.Provision.outputs['provisioningResult.result'],'success'))
+    ${{ if eq(parameters.destroy, 'On success') }}:
+      condition: eq(dependencies.Provision.outputs['provisioningResult.result'],'success')
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     variables:

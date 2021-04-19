@@ -298,7 +298,7 @@ jobs:
           Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
         name: provisioningResult
         displayName: 'Indicate provisioning success'
-        condition: success()
+        condition: succeeded()
 
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
       - task: TerraformCLI@0

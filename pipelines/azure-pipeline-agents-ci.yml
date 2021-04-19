@@ -128,6 +128,12 @@ jobs:
       displayName: 'Copy Secure Files'
 
     - pwsh: |
+        Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+      name: provisioningResult
+      displayName: 'Indicate provisioning success'
+      condition: succeeded()
+      
+    - pwsh: |
         Write-Error "Error"
         throws "exception"
       displayName: 'Throw error'
@@ -293,12 +299,12 @@ jobs:
         runAzLogin: true
         allowTelemetryCollection: true
 
-    - ${{ if not(eq(parameters.destroy, 'Never')) }}:
-      - pwsh: |
-          Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
-        name: provisioningResult
-        displayName: 'Indicate provisioning success'
-        condition: succeeded()
+    # - ${{ if not(eq(parameters.destroy, 'Never')) }}:
+    #   - pwsh: |
+    #       Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+    #     name: provisioningResult
+    #     displayName: 'Indicate provisioning success'
+    #     condition: succeeded()
 
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
       - task: TerraformCLI@0

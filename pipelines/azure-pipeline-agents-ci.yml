@@ -136,6 +136,11 @@ jobs:
       displayName: 'Prepare Terraform config'
       workingDirectory: '$(terraformDirectory)'
 
+    - task: TerraformInstaller@0
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: '$(terraformConfig.version)'
+
     - task: TerraformCLI@0
       displayName: 'Terraform init'
       inputs:

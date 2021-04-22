@@ -197,7 +197,7 @@ jobs:
         # List environment variables
         Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
 
-        # Convert uppercased Terraform environment variables to .auto.tfvars file
+        # Convert uppercased Terraform environment variables to -var arguments
         foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
           $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
           $terraformVariableValue = $tfVar.Value

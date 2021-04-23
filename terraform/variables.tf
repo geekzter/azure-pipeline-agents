@@ -1,5 +1,6 @@
 variable address_space {
-  default                      = "10.32.0.0/12"
+  # Use Class C segment, to minimize conflict with networks provisioned from pipelines
+  default                      = "192.168.0.0/24"
 }
 
 variable devops_org {}

@@ -98,6 +98,9 @@ resource azurerm_virtual_machine_extension cloud_config_status {
   settings                     = jsonencode({
     "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
   })
+
+  tags                         = var.tags
+
   count                        = var.linux_agent_count
 }
 resource azurerm_virtual_machine_extension linux_log_analytics {

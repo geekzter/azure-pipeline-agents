@@ -379,7 +379,7 @@ jobs:
         failOnStandardError: true
         workingDirectory: '$(terraformDirectory)'
 
-    - ${{ if eq(parameters.clear, true) }}: # Only works if we can identity the suffix and thefore the resource group name
+    - ${{ if eq(parameters.clear, true) }}: # Only works if we can identity the suffix and therefore the resource group name
       - task: AzureResourceManagerTemplateDeployment@3
         displayName: 'Delete $(resourceGroup)'
         condition: failed() # Try this if the previous approach failed

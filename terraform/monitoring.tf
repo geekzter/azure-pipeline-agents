@@ -1,5 +1,5 @@
 resource azurerm_storage_account diagnostics {
-  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,16)}${local.suffix}diag"
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,15)}${local.suffix}diag"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"

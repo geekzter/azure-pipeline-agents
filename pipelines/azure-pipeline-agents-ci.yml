@@ -28,6 +28,22 @@ parameters:
   - Never 
   - 'On failure'
   - 'On success'
+- name: testReentrance
+  displayName: Test Terraform re-entrance (apply twice)
+  type: boolean
+  default: true
+- name: unpinTerraform
+  displayName: Unpin Terraform version
+  type: boolean
+  default: false
+- name: unpinTerraformProviders
+  displayName: Unpin Terraform provider versions
+  type: string
+  default: No
+  values:
+  - No
+  - Yes
+  - Strategy
 
 trigger: none
 
@@ -66,15 +82,14 @@ variables:
   value: ${{ parameters.workspace }}
 - name: 'scriptDirectory'
   value: '$(Build.SourcesDirectory)/scripts'
+- name: 'terraformArtifactName'
+  value: 'terraform'
 - name: 'terraformDirectory'
   value: '$(Build.SourcesDirectory)/terraform'
 - name: 'TF_VAR_linux_pipeline_agent_name'
   value: 'ubuntu-agent'
 - name: 'TF_VAR_linux_pipeline_agent_pool'
   value: 'CIPool'
-- ${{ if eq(parameters.clear, true) }}:  # Don't reset suffix if we want to keep existing resources
-  - name: 'TF_VAR_resource_suffix'
-    value: '$(Build.BuildId)'
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
 - name: 'TF_VAR_ssh_public_key'
@@ -112,6 +127,28 @@ jobs:
     name: '$(pool)'
     vmImage: $(vmImage)
 
+  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+    strategy:
+      matrix:
+        pinTerraformProviders:
+          publishTerraformArtifact: true
+          TF_VAR_resource_suffix: '$(Build.BuildId)p'
+          unpinTerraformProviders: false
+        unpinTerraformProviders:
+          publishTerraformArtifact: false
+          TF_VAR_resource_suffix: '$(Build.BuildId)u'
+          unpinTerraformProviders: true
+      maxParallel: 1
+
+  variables:
+    ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual')))) }}:
+      # Not runnig as strategy
+      ${{ if parameters.clear }}:  # Don't reset suffix if we want to keep existing resources
+        TF_VAR_resource_suffix: '$(Build.BuildId)'
+      unpinTerraformProviders: ${{ eq(parameters.unpinTerraformProviders, 'Yes') }}
+    publishTerraformArtifact: true
+    resourceGroup: '$(TF_VAR_resource_prefix)-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
+
   workspace:
     clean: all
 
@@ -127,19 +164,41 @@ jobs:
         }
       displayName: 'Copy Secure Files'
 
-    - pwsh: |
-        $terraformVersion = (Get-Content .terraform-version)
-        Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"    
-
-        Copy-Item backend.tf.sample backend.tf
-      name: terraformConfig
-      displayName: 'Prepare Terraform config'
-      workingDirectory: '$(terraformDirectory)'
+    - ${{ if not(parameters.unpinTerraform) }}:
+      - pwsh: |
+          $terraformVersion = (Get-Content .terraform-version)
+          Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"
+          Copy-Item backend.tf.sample backend.tf
+        name: terraformConfig
+        displayName: 'Prepare Terraform config'
+        workingDirectory: '$(terraformDirectory)'
+    - ${{ if parameters.unpinTerraform }}:
+      - pwsh: |
+          (Get-Content ./provider.tf) -replace "required_version *= `" *(~>|=) +",'required_version = ">= ' | Out-File provider.tf
+          Get-Content ./provider.tf
+          Write-Host "##vso[task.setvariable variable=version;isOutput=true]latest"
+          Copy-Item backend.tf.sample backend.tf
+        name: terraformConfig
+        displayName: 'Prepare Terraform config (latest version)'
+        workingDirectory: '$(terraformDirectory)'
 
     - task: TerraformInstaller@0
       displayName: 'Install Terraform'
       inputs:
         terraformVersion: '$(terraformConfig.version)'
+
+    - ${{ if or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+      # Unpin version e.g. "= 2.56" -> "~> 2.56"
+      - pwsh: |
+          (Get-Content ./provider.tf) -replace " = `" *= +",' = "~> ' | Out-File provider.tf
+          Get-Content ./provider.tf
+          if (Test-Path .terraform.lock.hcl) {
+            Remove-Item .terraform.lock.hcl -Force
+          }
+        displayName: 'Unpin Terraform provider versions'
+        # condition required as '- ${{ if ' template expression is not evaluated when using a strategy
+        condition: and(succeeded(), eq(variables['unpinTerraformProviders'],'true'))
+        workingDirectory: '$(terraformDirectory)'
 
     - task: TerraformCLI@0
       displayName: 'Terraform init'
@@ -153,6 +212,12 @@ jobs:
         backendAzureRmContainerName: '$(TF_STATE_CONTAINER_NAME)'
         backendAzureRmKey: 'terraform.tfstate'
         allowTelemetryCollection: true
+
+    - ${{ if ne(parameters.destroy, 'Never') }}:
+      - publish: $(terraformDirectory)
+        displayName: 'Publish Terraform workspace'
+        condition: and(succeeded(), eq(variables['publishTerraformArtifact'],'true'))
+        artifact: $(terraformArtifactName)
 
     - ${{ if eq(parameters.clear, true) }}:
       - task: AzureCLI@2
@@ -191,8 +256,6 @@ jobs:
         if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
           $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
         }
-        # Set random CIDR (to reduce the risk of clashing VNet peerings with agent VNet)
-        $env:TF_VAR_resource_suffix ??= "$(Build.BuildId)"
 
         # List environment variables
         Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
@@ -256,6 +319,15 @@ jobs:
         commandOptions: 'ci.tfplan'
         allowTelemetryCollection: true
 
+    - task: TerraformCLI@0
+      displayName: 'Terraform output'
+      inputs:
+        command: 'output'
+        workingDirectory: '$(terraformDirectory)'
+        environmentServiceName: '$(subscriptionConnection)'
+        runAzLogin: true
+        allowTelemetryCollection: true
+
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2
         displayName: 'Enable Self-Hosted Agent(s)'
@@ -279,15 +351,29 @@ jobs:
           # Use Pipeline token to access Azure DevOps
           AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'        
 
-    - task: TerraformCLI@0
-      displayName: 'Terraform output'
-      inputs:
-        command: 'output'
-        workingDirectory: '$(terraformDirectory)'
-        environmentServiceName: '$(subscriptionConnection)'
-        runAzLogin: true
-        allowTelemetryCollection: true
+    - ${{ if parameters.testReentrance }}:
+      - task: TerraformCLI@0
+        displayName: 'Terraform plan (re-entrance test)'
+        inputs:
+          command: 'plan'
+          workingDirectory: '$(terraformDirectory)'
+          environmentServiceName: '$(subscriptionConnection)'
+          runAzLogin: true
+          commandOptions: '$(terraformVariables.variableOption) -out=ci-update.tfplan'
+          allowTelemetryCollection: true
+          publishPlanResults: 'ci-update'
 
+    - ${{ if parameters.testReentrance }}:
+      - task: TerraformCLI@0
+        displayName: 'Terraform apply (re-entrance test)'
+        inputs:
+          command: 'apply'
+          workingDirectory: '$(terraformDirectory)'
+          environmentServiceName: '$(subscriptionConnection)'
+          runAzLogin: true
+          commandOptions: 'ci-update.tfplan'
+          allowTelemetryCollection: true
+          
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
       - pwsh: |
           Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
@@ -328,7 +414,11 @@ jobs:
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     variables:
-      terraformVersion: $[ dependencies.Provision.outputs['terraformConfig.version'] ]
+      terraformDirectory: $(Pipeline.Workspace)/$(terraformArtifactName)
+      ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual')))) }}:
+        terraformVersion: $[ dependencies.Provision.outputs['terraformConfig.version'] ]
+      ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+        terraformVersion: $[ dependencies.Provision.outputs['pinTerraformProviders.terraformConfig.version'] ]
 
     pool:
       name: '$(pool)'
@@ -395,6 +485,10 @@ jobs:
       displayName: 'Install terraform'
       inputs:
         terraformVersion: '$(terraformVersion)'
+
+    - download: current
+      displayName: 'Download Terraform directory from previous job'
+      artifact: $(terraformArtifactName)
 
     - task: TerraformCLI@0
       displayName: 'Terraform init'

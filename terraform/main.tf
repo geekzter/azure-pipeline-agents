@@ -24,16 +24,16 @@ locals {
   environment                  = "dev"
   password                     = ".Az9${random_string.password.result}"
   suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
-  tags                         = map(
-      "application",             "Pipeline Agents",
-      "environment",             local.environment,
-      "provisioner",             "terraform",
-      "repository",              "azure-pipeline-agents",
-      "runid",                   var.run_id,
-      "shutdown",                "false",
-      "suffix",                  local.suffix,
-      "workspace",               terraform.workspace
-  )
+  tags                         = {
+    application                = "Pipeline Agents"
+    environment                = local.environment
+    provisioner                = "terraform"
+    repository                 = "azure-pipeline-agents"
+    runid                      = var.run_id
+    shutdown                   = "false"
+    suffix                     = local.suffix
+    workspace                  = terraform.workspace
+  }
 }
 
 data azurerm_client_config current {}
@@ -46,7 +46,7 @@ resource azurerm_resource_group rg {
 }
 
 resource azurerm_storage_account automation_storage {
-  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,16)}${local.suffix}stor"
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,15)}${local.suffix}stor"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"
@@ -104,43 +104,3 @@ resource azurerm_storage_blob terraform_workspace_vars_configuration {
   count                        = fileexists("${path.root}/${terraform.workspace}.tfvars") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
 }
-
-resource azurerm_storage_account diagnostics {
-  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,16)}${local.suffix}diag"
-  location                     = var.location
-  resource_group_name          = azurerm_resource_group.rg.name
-  account_kind                 = "StorageV2"
-  account_tier                 = "Standard"
-  account_replication_type     = "LRS"
-  allow_blob_public_access     = true
-  enable_https_traffic_only    = true
-
-  tags                         = local.tags
-}
-
-resource azurerm_log_analytics_workspace monitor {
-  name                         = "${azurerm_resource_group.rg.name}-loganalytics"
-  resource_group_name          = azurerm_resource_group.rg.name
-  location                     = azurerm_resource_group.rg.location
-  sku                          = "PerGB2018"
-  retention_in_days            = 30
-
-  tags                         = local.tags
-}
-resource azurerm_log_analytics_solution solution {
-  solution_name                 = each.value
-  location                      = azurerm_log_analytics_workspace.monitor.location
-  resource_group_name           = azurerm_resource_group.rg.name
-  workspace_resource_id         = azurerm_log_analytics_workspace.monitor.id
-  workspace_name                = azurerm_log_analytics_workspace.monitor.name
-
-  plan {
-    publisher                   = "Microsoft"
-    product                     = "OMSGallery/${each.value}"
-  }
-
-  for_each                      = toset([
-    "ServiceMap",
-    "VMInsights",
-  ])
-} 

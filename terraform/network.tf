@@ -6,6 +6,28 @@ resource azurerm_virtual_network pipeline_network {
 
   tags                         = local.tags
 }
+resource azurerm_monitor_diagnostic_setting pipeline_network {
+  name                         = "${azurerm_virtual_network.pipeline_network.name}-logs"
+  target_resource_id           = azurerm_virtual_network.pipeline_network.id
+  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+
+  log {
+    category                   = "VMProtectionAlerts"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+
+  metric {
+    category                   = "AllMetrics"
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+}
 
 resource azurerm_subnet agent_subnet {
   name                         = "PipelineAgents"
@@ -29,6 +51,44 @@ resource azurerm_public_ip bastion_ip {
 
   tags                         = local.tags
 }
+resource azurerm_monitor_diagnostic_setting bastion_ip {
+  name                         = "${azurerm_public_ip.bastion_ip.name}-logs"
+  target_resource_id           = azurerm_public_ip.bastion_ip.id
+  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+
+  log {
+    category                   = "DDoSProtectionNotifications"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+  log {
+    category                   = "DDoSMitigationFlowLogs"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+  log {
+    category                   = "DDoSMitigationReports"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }  
+
+  metric {
+    category                   = "AllMetrics"
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+} 
 resource azurerm_bastion_host bastion {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-bastion"
   location                     = var.location
@@ -42,6 +102,20 @@ resource azurerm_bastion_host bastion {
 
   tags                         = local.tags
 }
+resource azurerm_monitor_diagnostic_setting bastion {
+  name                         = "${azurerm_bastion_host.bastion.name}-logs"
+  target_resource_id           = azurerm_bastion_host.bastion.id
+  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+
+  log {
+    category                   = "BastionAuditLogs"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+} 
 
 resource azurerm_nat_gateway egress {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-natgw"
@@ -56,6 +130,44 @@ resource azurerm_public_ip egress {
   allocation_method            = "Static"
   sku                          = "Standard"
 }
+resource azurerm_monitor_diagnostic_setting egress {
+  name                         = "${azurerm_public_ip.egress.name}-logs"
+  target_resource_id           = azurerm_public_ip.egress.id
+  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+
+  log {
+    category                   = "DDoSProtectionNotifications"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+  log {
+    category                   = "DDoSMitigationFlowLogs"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+  log {
+    category                   = "DDoSMitigationReports"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }  
+
+  metric {
+    category                   = "AllMetrics"
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+} 
 resource azurerm_nat_gateway_public_ip_association egress {
   nat_gateway_id               = azurerm_nat_gateway.egress.id
   public_ip_address_id         = azurerm_public_ip.egress.id

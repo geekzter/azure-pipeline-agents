@@ -52,15 +52,10 @@ resource azurerm_storage_account automation_storage {
   account_kind                 = "StorageV2"
   account_tier                 = "Standard"
   account_replication_type     = "LRS"
-  allow_blob_public_access     = true
+  allow_blob_public_access     = false
   enable_https_traffic_only    = true
 
   tags                         = local.tags
-}
-resource azurerm_storage_container scripts {
-  name                         = "scripts"
-  storage_account_name         = azurerm_storage_account.automation_storage.name
-  container_access_type        = "container"
 }
 resource azurerm_storage_container configuration {
   name                         = "configuration"

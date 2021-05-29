@@ -49,6 +49,10 @@ resource azurerm_windows_virtual_machine windows_agent {
   admin_username               = var.user_name
   admin_password               = var.user_password
 
+  boot_diagnostics {
+    storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
+  }
+
   custom_data                  = base64encode(file("${path.root}/../scripts/agent/install_agent.ps1"))
 
   os_disk {

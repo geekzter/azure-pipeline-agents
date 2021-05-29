@@ -30,7 +30,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   }
 
   boot_diagnostics {
-    storage_account_uri        = data.azurerm_storage_account.diagnostics.primary_blob_endpoint
+    storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
   network_interface {

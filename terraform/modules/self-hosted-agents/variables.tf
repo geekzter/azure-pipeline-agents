@@ -16,7 +16,6 @@ variable linux_vm_size {}
 variable location {}
 variable log_analytics_workspace_resource_id {}
 variable resource_group_name {}
-variable scripts_container_id {}
 variable subnet_id {}
 variable suffix {}
 variable tags {

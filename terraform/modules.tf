@@ -18,8 +18,6 @@ module scale_set_agents {
   linux_vm_name_prefix         = var.linux_vm_name_prefix
   linux_vm_size                = var.linux_vm_size
 
-  scripts_container_id         = azurerm_storage_container.scripts.id
-
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
@@ -61,8 +59,6 @@ module self_hosted_agents {
   linux_storage_type           = var.linux_storage_type
   linux_vm_name_prefix         = var.linux_vm_name_prefix
   linux_vm_size                = var.linux_vm_size
-
-  scripts_container_id         = azurerm_storage_container.scripts.id
 
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key

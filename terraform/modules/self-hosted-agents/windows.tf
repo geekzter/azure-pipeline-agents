@@ -39,17 +39,6 @@ resource azurerm_network_interface_security_group_association windows_nic_nsg {
   count                        = var.windows_agent_count
 }
 
-resource azurerm_storage_blob install_agent {
-  name                         = "install_agent.ps1"
-  storage_account_name         = local.scripts_storage_name
-  storage_container_name       = local.scripts_container_name
-
-  type                         = "Block"
-  source                       = "${path.root}/../scripts/agent/install_agent.ps1"
-
-  count                        = var.windows_agent_count > 0 ? 1 : 0
-}
-
 resource azurerm_windows_virtual_machine windows_agent {
   name                         = "${local.windows_vm_name}${count.index+1}"
   computer_name                = "${local.windows_vm_computer_name}${count.index+1}"
@@ -59,6 +48,8 @@ resource azurerm_windows_virtual_machine windows_agent {
   size                         = var.windows_vm_size
   admin_username               = var.user_name
   admin_password               = var.user_password
+
+  custom_data                  = base64encode(file("${path.root}/../scripts/agent/install_agent.ps1"))
 
   os_disk {
     name                       = "${local.windows_vm_name}${count.index+1}-osdisk"
@@ -141,19 +132,10 @@ resource azurerm_virtual_machine_extension windows_pipeline_agent {
   type                         = "CustomScriptExtension"
   type_handler_version         = "1.10"
   auto_upgrade_minor_version   = true
-  settings                     = <<EOF
-    {
-      "fileUris": [
-                                 "${azurerm_storage_blob.install_agent.0.url}"
-      ]
-    }
-  EOF
 
-  protected_settings           = <<EOF
-    { 
-      "commandToExecute"       : "powershell.exe -ExecutionPolicy Unrestricted -Command \"./install_agent.ps1 -AgentName ${local.windows_pipeline_agent_name}${count.index+1} -AgentPool ${var.windows_pipeline_agent_pool} -Organization ${var.devops_org} -PAT ${var.devops_pat}\""
-    } 
-  EOF
+  protected_settings           = jsonencode({
+    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command 'Copy-Item C:/AzureData/CustomData.bin ./install_agent.ps1 -Force;./install_agent.ps1 -AgentName ${local.windows_pipeline_agent_name}${count.index+1} -AgentPool ${var.windows_pipeline_agent_pool} -Organization ${var.devops_org} -PAT ${var.devops_pat}'"
+  })
 
   # Start VM, so we can update/destroy the extension
   provisioner local-exec {

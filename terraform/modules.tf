@@ -5,6 +5,7 @@ module scale_set_agents {
   devops_pat                   = var.devops_pat
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
+  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   location                     = var.location
   log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.monitor.id
 
@@ -47,6 +48,7 @@ module self_hosted_agents {
   devops_pat                   = var.devops_pat
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
+  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   location                     = var.location
   log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.monitor.id
 

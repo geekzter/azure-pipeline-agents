@@ -2,6 +2,7 @@ variable devops_org {}
 variable devops_pat {}
 
 variable diagnostics_storage_id {}
+variable diagnostics_storage_sas {}
 
 variable linux_agent_count {}
 variable linux_os_offer {}

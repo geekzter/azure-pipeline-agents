@@ -5,11 +5,43 @@ resource azurerm_storage_account diagnostics {
   account_kind                 = "StorageV2"
   account_tier                 = "Standard"
   account_replication_type     = "LRS"
-  allow_blob_public_access     = true
+  allow_blob_public_access     = false
   enable_https_traffic_only    = true
 
   tags                         = local.tags
 }
+data azurerm_storage_account_sas diagnostics {
+  connection_string            = azurerm_storage_account.diagnostics.primary_connection_string
+  https_only                   = true
+
+  resource_types {
+    service                    = true
+    container                  = true
+    object                     = true
+  }
+
+  services {
+    blob                       = true
+    queue                      = false
+    table                      = true
+    file                       = true
+  }
+
+  start                        = formatdate("YYYY-MM-DD",timestamp())
+  expiry                       = formatdate("YYYY-MM-DD",timeadd(timestamp(),"8760h")) # 1 year from now (365 days)
+
+  permissions {
+    read                       = true
+    add                        = true
+    create                     = true
+    write                      = true
+    delete                     = false
+    list                       = false
+    update                     = false
+    process                    = false
+  }
+}
+
 resource azurerm_log_analytics_workspace monitor {
   name                         = "${azurerm_resource_group.rg.name}-loganalytics"
   resource_group_name          = azurerm_resource_group.rg.name

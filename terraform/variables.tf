@@ -40,6 +40,11 @@ variable location {
   default                      = "westeurope"
 }
 
+variable log_analytics_workspace_id {
+  description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
+  default                      = ""
+}
+
 variable resource_suffix {
   description                  = "The suffix to put at the of resource names created"
   default                      = "" # Empty string triggers a random suffix
@@ -48,6 +53,12 @@ variable resource_suffix {
 variable run_id {
   description                  = "The ID that identifies the pipeline / workflow that invoked Terraform"
   default                      = ""
+}
+
+variable script_wrapper_check {
+  description                  = "Set to true in a .auto.tfvars file to force Terraform to check whether it's run from deploy.ps1"
+  type                         = bool
+  default                      = false
 }
 
 variable ssh_public_key {

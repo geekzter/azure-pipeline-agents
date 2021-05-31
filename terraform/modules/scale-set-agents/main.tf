@@ -6,6 +6,8 @@ locals {
   virtual_network_id           = join("/",slice(split("/",var.subnet_id),0,length(split("/",var.subnet_id))-2))
 }
 
+data azurerm_client_config current {}
+
 data azurerm_log_analytics_workspace monitor {
   name                         = local.log_analytics_workspace_name
   resource_group_name          = local.log_analytics_workspace_rg

@@ -144,3 +144,14 @@ resource azurerm_monitor_diagnostic_setting linux_agents {
     }
   }
 } 
+
+resource null_resource vmss_diagnostics {
+  triggers                     = {
+    vm                         = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+  }
+
+  provisioner local-exec {
+    command                    = "${path.root}/../scripts/configure_vmss_diagnostics.ps1 -VmScaleSetName ${azurerm_linux_virtual_machine_scale_set.linux_agents.name} -ResourceGroupName ${var.resource_group_name} -StorageAccountName ${local.diagnostics_storage_name} -StorageAccountSasToken '${var.diagnostics_storage_sas}' -Subscription ${data.azurerm_client_config.current.subscription_id}"
+    interpreter                = ["pwsh","-nop","-command"]
+  }
+}

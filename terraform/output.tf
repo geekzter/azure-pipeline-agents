@@ -2,6 +2,13 @@ output agent_subnet_id {
   value                        = azurerm_subnet.agent_subnet.id
 }
 
+output diagnostics_storage_account {
+  value                        = azurerm_storage_account.diagnostics.name
+}
+output diagnostics_storage_sas {
+  sensitive                    = true
+  value                        = data.azurerm_storage_account_sas.diagnostics.sas
+}
 
 output resource_group_name {
   value                        = azurerm_resource_group.rg.name

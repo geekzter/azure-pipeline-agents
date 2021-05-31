@@ -7,7 +7,7 @@ module scale_set_agents {
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   location                     = var.location
-  log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.monitor.id
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   linux_agent_count            = var.linux_agent_count
   linux_pipeline_agent_name    = var.linux_pipeline_agent_name
@@ -50,7 +50,7 @@ module self_hosted_agents {
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   location                     = var.location
-  log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.monitor.id
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   linux_agent_count            = var.linux_agent_count
   linux_pipeline_agent_name    = var.linux_pipeline_agent_name

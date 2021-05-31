@@ -4,6 +4,7 @@ terraform {
     cloudinit                  = "~> 2.2"
     null                       = "~> 3.1"
     random                     = "~> 3.1"
+    time                       = "~> 0.7"
   }
   required_version             = ">= 0.14.0"
 }

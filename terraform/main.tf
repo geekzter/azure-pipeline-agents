@@ -38,11 +38,35 @@ locals {
 
 data azurerm_client_config current {}
 
+resource null_resource script_wrapper_check {
+  # Always run this
+  triggers                     = {
+    always_run                 = timestamp()
+  }
+
+  provisioner local-exec {
+    command                    = "echo Terraform should be called from deploy.ps1, hit Ctrl-C to exit"
+  }
+
+  count                        = var.script_wrapper_check ? 1 : 0
+}
+resource time_sleep script_wrapper_check {
+  triggers                     = {
+    always_run                 = timestamp()
+  }
+
+  create_duration              = "999999h"
+
+  count                        = var.script_wrapper_check ? 1 : 0
+  depends_on                   = [null_resource.script_wrapper_check]
+}
 
 resource azurerm_resource_group rg {
   name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-agents-${terraform.workspace}-${local.suffix}"
   location                     = var.location
   tags                         = local.tags
+
+  depends_on                   = [time_sleep.script_wrapper_check]
 }
 
 resource azurerm_storage_account automation_storage {

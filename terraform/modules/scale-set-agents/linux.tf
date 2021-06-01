@@ -97,6 +97,28 @@ resource azurerm_virtual_machine_scale_set_extension linux_log_analytics {
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 }
+resource azurerm_virtual_machine_scale_set_extension diagnostics {
+  name                         = "LinuxDiagnostic"
+  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+  publisher                    = "Microsoft.Azure.Diagnostics"
+  type                         = "LinuxDiagnostic"
+  type_handler_version         = "3.0"
+  auto_upgrade_minor_version   = true
+
+  settings                     = templatefile("${path.module}/linuxdiagnostics.json", { 
+    storage_account_name       = data.azurerm_storage_account.diagnostics.name, 
+    virtual_machine_id         = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+  })
+  protected_settings           = jsonencode({
+    "storageAccountName"       = data.azurerm_storage_account.diagnostics.name
+    "storageAccountSasToken"   = var.diagnostics_storage_sas
+  })
+
+  provision_after_extensions   = [
+    # Wait for cloud-init to complete before provisioning extensions
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
+  ]
+}
 resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
@@ -144,14 +166,3 @@ resource azurerm_monitor_diagnostic_setting linux_agents {
     }
   }
 } 
-
-resource null_resource vmss_diagnostics {
-  triggers                     = {
-    vm                         = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-  }
-
-  provisioner local-exec {
-    command                    = "${path.root}/../scripts/configure_vmss_diagnostics.ps1 -VmScaleSetName ${azurerm_linux_virtual_machine_scale_set.linux_agents.name} -ResourceGroupName ${var.resource_group_name} -StorageAccountName ${local.diagnostics_storage_name} -StorageAccountSasToken '${var.diagnostics_storage_sas}' -Subscription ${data.azurerm_client_config.current.subscription_id}"
-    interpreter                = ["pwsh","-nop","-command"]
-  }
-}

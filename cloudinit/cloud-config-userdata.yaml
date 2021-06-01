@@ -41,7 +41,7 @@ packages:
   - ansible
   - coreutils
   - docker
-  - python2
+  - python-minimal
   - unixodbc-dev
   - unzip
   # GitHub

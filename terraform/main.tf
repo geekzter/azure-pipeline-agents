@@ -24,16 +24,19 @@ locals {
   environment                  = "dev"
   password                     = ".Az9${random_string.password.result}"
   suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
-  tags                         = {
-    application                = "Pipeline Agents"
-    environment                = local.environment
-    provisioner                = "terraform"
-    repository                 = "azure-pipeline-agents"
-    runid                      = var.run_id
-    shutdown                   = "false"
-    suffix                     = local.suffix
-    workspace                  = terraform.workspace
-  }
+  tags                         = merge(
+    {
+      application              = "Pipeline Agents"
+      environment              = local.environment
+      provisioner              = "terraform"
+      repository               = "azure-pipeline-agents"
+      runid                    = var.run_id
+      shutdown                 = "false"
+      suffix                   = local.suffix
+      workspace                = terraform.workspace
+      },
+    var.tags
+  )  
 }
 
 data azurerm_client_config current {}

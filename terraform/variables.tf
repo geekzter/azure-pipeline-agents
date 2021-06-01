@@ -65,6 +65,15 @@ variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }
 
+variable tags {
+  description                  = "A map of the tags to use for the resources that are deployed"
+  type                         = map
+
+  default = {
+    shutdown                   = "false"
+  }  
+} 
+
 variable use_scale_set {
   default                      = true
   type                         = bool

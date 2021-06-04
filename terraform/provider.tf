@@ -1,9 +1,10 @@
 terraform {
   required_providers {
-    azurerm                    = "~> 2.55"
+    azurerm                    = "~> 2.55, != 2.62"
     cloudinit                  = "~> 2.2"
     null                       = "~> 3.1"
     random                     = "~> 3.1"
+    time                       = "~> 0.7"
   }
   required_version             = ">= 0.14.0"
 }

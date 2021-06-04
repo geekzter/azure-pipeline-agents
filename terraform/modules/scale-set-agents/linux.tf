@@ -97,6 +97,33 @@ resource azurerm_virtual_machine_scale_set_extension linux_log_analytics {
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 }
+resource azurerm_virtual_machine_scale_set_extension diagnostics {
+  name                         = "LinuxDiagnostic"
+  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+  publisher                    = "Microsoft.Azure.Diagnostics"
+  type                         = "LinuxDiagnostic"
+  type_handler_version         = "3.0"
+  auto_upgrade_minor_version   = true
+
+  settings                     = templatefile("${path.module}/linuxdiagnostics.json", { 
+    storage_account_name       = data.azurerm_storage_account.diagnostics.name, 
+    virtual_machine_id         = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+  })
+  protected_settings           = jsonencode({
+    "storageAccountName"       = data.azurerm_storage_account.diagnostics.name
+    "storageAccountSasToken"   = trimprefix(var.diagnostics_storage_sas,"?")
+  })
+
+  depends_on                   = [
+    azurerm_virtual_machine_scale_set_extension.linux_log_analytics
+  ]
+
+  provision_after_extensions   = [
+    # Wait for cloud-init to complete before provisioning extensions
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name,
+    azurerm_virtual_machine_scale_set_extension.linux_log_analytics.name
+  ]
+}
 resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id

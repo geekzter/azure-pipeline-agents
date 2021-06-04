@@ -9,7 +9,7 @@ resource azurerm_virtual_network pipeline_network {
 resource azurerm_monitor_diagnostic_setting pipeline_network {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-logs"
   target_resource_id           = azurerm_virtual_network.pipeline_network.id
-  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+  log_analytics_workspace_id   = local.log_analytics_workspace_id
 
   log {
     category                   = "VMProtectionAlerts"
@@ -54,7 +54,7 @@ resource azurerm_public_ip bastion_ip {
 resource azurerm_monitor_diagnostic_setting bastion_ip {
   name                         = "${azurerm_public_ip.bastion_ip.name}-logs"
   target_resource_id           = azurerm_public_ip.bastion_ip.id
-  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+  log_analytics_workspace_id   = local.log_analytics_workspace_id
 
   log {
     category                   = "DDoSProtectionNotifications"
@@ -105,7 +105,7 @@ resource azurerm_bastion_host bastion {
 resource azurerm_monitor_diagnostic_setting bastion {
   name                         = "${azurerm_bastion_host.bastion.name}-logs"
   target_resource_id           = azurerm_bastion_host.bastion.id
-  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+  log_analytics_workspace_id   = local.log_analytics_workspace_id
 
   log {
     category                   = "BastionAuditLogs"
@@ -133,7 +133,7 @@ resource azurerm_public_ip egress {
 resource azurerm_monitor_diagnostic_setting egress {
   name                         = "${azurerm_public_ip.egress.name}-logs"
   target_resource_id           = azurerm_public_ip.egress.id
-  log_analytics_workspace_id   = azurerm_log_analytics_workspace.monitor.id
+  log_analytics_workspace_id   = local.log_analytics_workspace_id
 
   log {
     category                   = "DDoSProtectionNotifications"

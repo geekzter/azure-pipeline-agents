@@ -33,40 +33,17 @@ packages:
   - apt-transport-https
   - ca-certificates
   - curl
-  # - dirmngr
   - gnupg
   - lsb-release
   - software-properties-common
-  # - wget
+  - wget
   # Tools
   - ansible
   - coreutils
-  # - dnsutils
   - docker
-  # - dos2unix
-  # - findutils
-  # - fish
-  # - fuse
-  # - git
-  # - htop
-  # - jq
-  # - less
-  # - man
-  # - mc
-  # - nano
-  # - nmap
-  # - node-typescript
-  # - sed
-  # - snapd
-  # - telnet
-  # - tmux
-  # - traceroute
-  # - tree
+  - python-minimal
   - unixodbc-dev
   - unzip
-  # - whois
-  # Services
-  # - dnsmasq
   # GitHub
   # - gh
   # Kubernetes
@@ -77,8 +54,6 @@ packages:
   - azure-functions-core-tools
   # - blobfuse
   - dotnet-sdk-3.1
-  # - msodbcsql17
-  # - mssql-tools
   - powershell
 
 runcmd:

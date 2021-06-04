@@ -24,25 +24,52 @@ locals {
   environment                  = "dev"
   password                     = ".Az9${random_string.password.result}"
   suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
-  tags                         = {
-    application                = "Pipeline Agents"
-    environment                = local.environment
-    provisioner                = "terraform"
-    repository                 = "azure-pipeline-agents"
-    runid                      = var.run_id
-    shutdown                   = "false"
-    suffix                     = local.suffix
-    workspace                  = terraform.workspace
-  }
+  tags                         = merge(
+    {
+      application              = "Pipeline Agents"
+      environment              = local.environment
+      provisioner              = "terraform"
+      repository               = "azure-pipeline-agents"
+      runid                    = var.run_id
+      shutdown                 = "false"
+      suffix                   = local.suffix
+      workspace                = terraform.workspace
+      },
+    var.tags
+  )  
 }
 
 data azurerm_client_config current {}
 
+resource null_resource script_wrapper_check {
+  # Always run this
+  triggers                     = {
+    always_run                 = timestamp()
+  }
+
+  provisioner local-exec {
+    command                    = "echo Terraform should be called from deploy.ps1, hit Ctrl-C to exit"
+  }
+
+  count                        = var.script_wrapper_check ? 1 : 0
+}
+resource time_sleep script_wrapper_check {
+  triggers                     = {
+    always_run                 = timestamp()
+  }
+
+  create_duration              = "999999h"
+
+  count                        = var.script_wrapper_check ? 1 : 0
+  depends_on                   = [null_resource.script_wrapper_check]
+}
 
 resource azurerm_resource_group rg {
   name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-agents-${terraform.workspace}-${local.suffix}"
   location                     = var.location
   tags                         = local.tags
+
+  depends_on                   = [time_sleep.script_wrapper_check]
 }
 
 resource azurerm_storage_account automation_storage {

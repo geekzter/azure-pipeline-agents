@@ -111,7 +111,7 @@ resource azurerm_virtual_machine_scale_set_extension diagnostics {
   })
   protected_settings           = jsonencode({
     "storageAccountName"       = data.azurerm_storage_account.diagnostics.name
-    "storageAccountSasToken"   = var.diagnostics_storage_sas
+    "storageAccountSasToken"   = trimprefix(var.diagnostics_storage_sas,"?")
   })
 
   provision_after_extensions   = [

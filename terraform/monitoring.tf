@@ -14,12 +14,18 @@ resource azurerm_storage_account diagnostics {
 
   tags                         = local.tags
 }
+resource time_offset sas_expiry {
+  offset_years                 = 1
+}
+resource time_offset sas_start {
+  offset_days                  = -1
+}
 data azurerm_storage_account_sas diagnostics {
   connection_string            = azurerm_storage_account.diagnostics.primary_connection_string
   https_only                   = true
 
   resource_types {
-    service                    = true
+    service                    = false
     container                  = true
     object                     = true
   }
@@ -28,20 +34,20 @@ data azurerm_storage_account_sas diagnostics {
     blob                       = true
     queue                      = false
     table                      = true
-    file                       = true
+    file                       = false
   }
 
-  start                        = formatdate("YYYY-MM-DD",timestamp())
-  expiry                       = formatdate("YYYY-MM-DD",timeadd(timestamp(),"8760h")) # 1 year from now (365 days)
+  start                        = time_offset.sas_start.rfc3339
+  expiry                       = time_offset.sas_expiry.rfc3339  
 
   permissions {
-    read                       = true
+    read                       = false
     add                        = true
     create                     = true
     write                      = true
     delete                     = false
-    list                       = false
-    update                     = false
+    list                       = true
+    update                     = true
     process                    = false
   }
 }

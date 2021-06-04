@@ -114,9 +114,14 @@ resource azurerm_virtual_machine_scale_set_extension diagnostics {
     "storageAccountSasToken"   = trimprefix(var.diagnostics_storage_sas,"?")
   })
 
+  depends_on                   = [
+    azurerm_virtual_machine_scale_set_extension.linux_log_analytics
+  ]
+
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name,
+    azurerm_virtual_machine_scale_set_extension.linux_log_analytics.name
   ]
 }
 resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {

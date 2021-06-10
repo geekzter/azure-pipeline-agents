@@ -354,6 +354,7 @@ jobs:
     - ${{ if parameters.testReentrance }}:
       - task: TerraformCLI@0
         displayName: 'Terraform plan (re-entrance test)'
+        continueOnError: true # Treat failure as warning during re-entrance, we should have a testable infrastructure now
         inputs:
           command: 'plan'
           workingDirectory: '$(terraformDirectory)'
@@ -366,6 +367,7 @@ jobs:
     - ${{ if parameters.testReentrance }}:
       - task: TerraformCLI@0
         displayName: 'Terraform apply (re-entrance test)'
+        continueOnError: true # Treat failure as warning during re-entrance, we should have a testable infrastructure now
         inputs:
           command: 'apply'
           workingDirectory: '$(terraformDirectory)'
@@ -390,6 +392,7 @@ jobs:
           condition: failed()
         ${{ if eq(parameters.destroy, 'On success') }}:
           condition: succeeded()
+        continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
         inputs:
           command: 'destroy'
           workingDirectory: '$(terraformDirectory)'

@@ -254,6 +254,7 @@ jobs:
 
     - pwsh: |
         if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
+          $env:TF_VAR_RESOURCE_SUFFIX = $null
           $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
         }
 

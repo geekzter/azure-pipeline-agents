@@ -44,6 +44,9 @@ module scale_set_agents {
 module self_hosted_agents {
   source                       = "./modules/self-hosted-agents"
 
+  admin_cidr_ranges            = local.admin_cidr_ranges
+  terraform_cidr               = local.ipprefix
+
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 

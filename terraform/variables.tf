@@ -3,6 +3,10 @@ variable address_space {
   default                      = "192.168.0.0/24"
 }
 
+variable admin_ip_ranges {
+  default                      = []
+}
+
 variable devops_org {}
 variable devops_pat {}
 

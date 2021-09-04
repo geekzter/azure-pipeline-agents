@@ -222,6 +222,7 @@ resource null_resource cloud_config_status {
 
   count                        = var.linux_agent_count
   depends_on                   = [
+    azurerm_virtual_machine_extension.cloud_config_status,
     azurerm_virtual_machine_extension.linux_log_analytics,
     azurerm_virtual_machine_extension.linux_dependency_monitor,
     azurerm_virtual_machine_extension.linux_watcher,
@@ -266,5 +267,12 @@ resource null_resource linux_pipeline_agent {
   }
 
   count                        = var.linux_agent_count
-  depends_on                   = [null_resource.cloud_config_status,azurerm_network_interface_security_group_association.linux_nic_nsg]
+  depends_on                   = [
+    azurerm_virtual_machine_extension.cloud_config_status,
+    azurerm_virtual_machine_extension.linux_log_analytics,
+    azurerm_virtual_machine_extension.linux_dependency_monitor,
+    azurerm_virtual_machine_extension.linux_watcher,
+    azurerm_network_interface_security_group_association.linux_nic_nsg,
+    # null_resource.cloud_config_status
+  ]  
 }

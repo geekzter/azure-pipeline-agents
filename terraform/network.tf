@@ -35,6 +35,43 @@ resource azurerm_subnet agent_subnet {
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],1,1)]
 }
+resource azurerm_network_security_group agent_nsg {
+  name                         = "${azurerm_virtual_network.pipeline_network.name}-nsg"
+  location                     = var.location
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+
+  tags                         = local.tags
+}
+resource azurerm_network_security_rule ssh {
+  name                         = "AllowSSH"
+  priority                     = 201
+  direction                    = "Inbound"
+  access                       = "Allow"
+  protocol                     = "Tcp"
+  source_port_range            = "*"
+  destination_port_range       = "22"
+  source_address_prefix        = "*"
+  destination_address_prefix   = "*"
+  resource_group_name          = azurerm_network_security_group.agent_nsg.resource_group_name
+  network_security_group_name  = azurerm_network_security_group.agent_nsg.name
+}
+resource azurerm_network_security_rule rdp {
+  name                         = "AllowRDP"
+  priority                     = 202
+  direction                    = "Inbound"
+  access                       = "Allow"
+  protocol                     = "Tcp"
+  source_port_range            = "*"
+  destination_port_range       = "3389"
+  source_address_prefix        = "*"
+  destination_address_prefix   = "*"
+  resource_group_name          = azurerm_network_security_group.agent_nsg.resource_group_name
+  network_security_group_name  = azurerm_network_security_group.agent_nsg.name
+}
+resource azurerm_subnet_network_security_group_association agent_nsg {
+  subnet_id                    = azurerm_subnet.agent_subnet.id
+  network_security_group_id    = azurerm_network_security_group.agent_nsg.id
+}
 
 resource azurerm_subnet bastion_subnet {
   name                         = "AzureBastionSubnet"

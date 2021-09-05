@@ -275,17 +275,6 @@ jobs:
       displayName: 'Prepare Terraform variables'
       workingDirectory: '$(terraformDirectory)'
 
-    - task: TerraformCLI@0
-      displayName: 'Terraform plan'
-      inputs:
-        command: 'plan'
-        workingDirectory: '$(terraformDirectory)'
-        environmentServiceName: '$(subscriptionConnection)'
-        runAzLogin: true
-        commandOptions: '$(terraformVariables.variableOption) -out=ci.tfplan'
-        allowTelemetryCollection: true
-        publishPlanResults: 'ci'
-
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2
         displayName: 'Disable Self-Hosted Agent(s)'
@@ -310,24 +299,27 @@ jobs:
           # Use Pipeline token to access Azure DevOps
           AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
-    - task: TerraformCLI@0
-      displayName: 'Terraform apply'
+    - task: AzureCLI@2
+      displayName: 'Terraform plan & apply'
+      name: apply
       inputs:
-        command: 'apply'
-        workingDirectory: '$(terraformDirectory)'
-        environmentServiceName: '$(subscriptionConnection)'
-        runAzLogin: true
-        commandOptions: 'ci.tfplan'
-        allowTelemetryCollection: true
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Propagate pipeline Service Principal as Terraform variables
+          $env:ARM_CLIENT_ID       ??= $env:servicePrincipalId
+          $env:ARM_CLIENT_SECRET   ??= $env:servicePrincipalKey
+          $env:ARM_TENANT_ID       ??= $env:tenantId
+          # Get from Azure CLI context
+          $env:ARM_TENANT_ID       ??= $(az account show --query tenantId -o tsv)
+          $env:ARM_SUBSCRIPTION_ID ??= $(az account show --query id -o tsv)
 
-    - task: TerraformCLI@0
-      displayName: 'Terraform output'
-      inputs:
-        command: 'output'
-        workingDirectory: '$(terraformDirectory)'
-        environmentServiceName: '$(subscriptionConnection)'
-        runAzLogin: true
-        allowTelemetryCollection: true
+          ./deploy.ps1 -apply -force
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
 
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2
@@ -353,29 +345,26 @@ jobs:
           AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'        
 
     - ${{ if parameters.testReentrance }}:
-      - task: TerraformCLI@0
-        displayName: 'Terraform plan (re-entrance test)'
-        continueOnError: true # Treat failure as warning during re-entrance, we should have a testable infrastructure now
+      - task: AzureCLI@2
+        displayName: 'Terraform plan & apply (re-entrance test)'
         inputs:
-          command: 'plan'
-          workingDirectory: '$(terraformDirectory)'
-          environmentServiceName: '$(subscriptionConnection)'
-          runAzLogin: true
-          commandOptions: '$(terraformVariables.variableOption) -out=ci-update.tfplan'
-          allowTelemetryCollection: true
-          publishPlanResults: 'ci-update'
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            # Propagate pipeline Service Principal as Terraform variables
+            $env:ARM_CLIENT_ID       ??= $env:servicePrincipalId
+            $env:ARM_CLIENT_SECRET   ??= $env:servicePrincipalKey
+            $env:ARM_TENANT_ID       ??= $env:tenantId
+            # Get from Azure CLI context
+            $env:ARM_TENANT_ID       ??= $(az account show --query tenantId -o tsv)
+            $env:ARM_SUBSCRIPTION_ID ??= $(az account show --query id -o tsv)
 
-    - ${{ if parameters.testReentrance }}:
-      - task: TerraformCLI@0
-        displayName: 'Terraform apply (re-entrance test)'
-        continueOnError: true # Treat failure as warning during re-entrance, we should have a testable infrastructure now
-        inputs:
-          command: 'apply'
-          workingDirectory: '$(terraformDirectory)'
-          environmentServiceName: '$(subscriptionConnection)'
-          runAzLogin: true
-          commandOptions: 'ci-update.tfplan'
-          allowTelemetryCollection: true
+            ./deploy.ps1 -apply -force
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          failOnStandardError: true
+          workingDirectory: '$(scriptDirectory)'
           
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
       - pwsh: |

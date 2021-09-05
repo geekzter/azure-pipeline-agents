@@ -261,16 +261,20 @@ jobs:
         # List environment variables
         Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
 
-        # Convert uppercased Terraform environment variables to -var arguments
+        # Convert uppercased Terraform environment variables to .auto.tfvars file
         foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
           $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
           $terraformVariableValue = $tfVar.Value
 
-          $varArgs += " -var ${terraformVariableName}=${terraformVariableValue}"
+          if ($terraformVariableValue -imatch "^\W*(true|false|\[[^\]]*\]|\{[^\}]*\})\W*$") {
+            # Boolean or List, write as-is
+            Write-Output "${terraformVariableName} = ${terraformVariableValue}" | Out-File ci.auto.tfvars -Append -Force
+          } else {
+            Write-Output "${terraformVariableName} = `"${terraformVariableValue}`"" | Out-File ci.auto.tfvars -Append -Force
+          }
         } 
-
-        Write-Host "Terraform plan/apply options: ${varArgs}"
-        Write-Host "##vso[task.setvariable variable=variableOption;isOutput=true]$varArgs"
+        Write-Host "Contents of ci.auto.tfvars:"
+        Get-Content ci.auto.tfvars
       name: terraformVariables
       displayName: 'Prepare Terraform variables'
       workingDirectory: '$(terraformDirectory)'

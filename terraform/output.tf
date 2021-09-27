@@ -1,5 +1,5 @@
 output agent_subnet_id {
-  value                        = azurerm_subnet.agent_subnet.id
+  value                        = module.network.agent_subnet_id
 }
 
 output diagnostics_storage_account {
@@ -32,5 +32,5 @@ output user_password {
 }
 
 output virtual_network_id {
-  value                        = azurerm_virtual_network.pipeline_network.id
+  value                        = module.network.virtual_network_id
 }

@@ -1,3 +1,14 @@
+module network {
+  source                       = "./modules/network"
+
+  address_space                = var.address_space
+  location                     = var.location
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+  resource_group_name          = azurerm_resource_group.rg.name
+  tags                         = local.tags
+  use_firewall                 = var.use_firewall
+}
+
 module scale_set_agents {
   source                       = "./modules/scale-set-agents"
 
@@ -22,7 +33,7 @@ module scale_set_agents {
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
-  subnet_id                    = azurerm_subnet.agent_subnet.id
+  subnet_id                    = module.network.agent_subnet_id
   suffix                       = local.suffix
   user_name                    = var.user_name
   user_password                = local.password
@@ -68,7 +79,7 @@ module self_hosted_agents {
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
-  subnet_id                    = azurerm_subnet.agent_subnet.id
+  subnet_id                    = module.network.agent_subnet_id
   suffix                       = local.suffix
   user_name                    = var.user_name
   user_password                = local.password

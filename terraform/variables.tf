@@ -78,6 +78,10 @@ variable tags {
   }  
 } 
 
+variable use_firewall {
+  default                      = false
+  type                         = bool
+}
 variable use_scale_set {
   default                      = true
   type                         = bool

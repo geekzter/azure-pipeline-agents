@@ -10,14 +10,14 @@ variable devops_pat {}
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 
-variable linux_os_offer {}
-variable linux_os_publisher {}
-variable linux_os_sku {}
-variable linux_pipeline_agent_name {}
-variable linux_pipeline_agent_pool {}
-variable linux_storage_type {}
-variable linux_vm_name_prefix {}
-variable linux_vm_size {}
+variable os_offer {}
+variable os_publisher {}
+variable os_sku {}
+variable pipeline_agent_name {}
+variable pipeline_agent_pool {}
+variable storage_type {}
+variable vm_name_prefix {}
+variable vm_size {}
 
 variable location {}
 variable log_analytics_workspace_resource_id {}

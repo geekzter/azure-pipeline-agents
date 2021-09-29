@@ -14,8 +14,8 @@ data cloudinit_config user_data {
   part {
     content                    = templatefile("${path.module}/cloud-config-agent.yaml",
     {
-      agent_name               = var.linux_pipeline_agent_name
-      agent_pool               = var.linux_pipeline_agent_pool
+      agent_name               = var.pipeline_agent_name
+      agent_pool               = var.pipeline_agent_pool
       install_agent_script_b64 = filebase64("${path.root}/../scripts/agent/install_agent.sh")
       org                      = var.devops_org
       pat                      = var.devops_pat
@@ -38,12 +38,12 @@ resource null_resource display_cloud_config {
 }
 
 locals {
-  linux_pipeline_agent_name    = var.linux_pipeline_agent_name != "" ? "${lower(var.linux_pipeline_agent_name)}-${terraform.workspace}" : local.linux_vm_name
-  linux_vm_name                = "${var.linux_vm_name_prefix}-${terraform.workspace}-${var.suffix}"
+  pipeline_agent_name    = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
+  vm_name                = "${var.vm_name_prefix}-${terraform.workspace}-${var.suffix}"
 }
 
 resource azurerm_public_ip linux_pip {
-  name                         = "${local.linux_vm_name}-pip"
+  name                         = "${local.vm_name}-pip"
   location                     = var.location
   resource_group_name          = var.resource_group_name
   allocation_method            = "Static"
@@ -53,7 +53,7 @@ resource azurerm_public_ip linux_pip {
 }
 
 resource azurerm_network_interface linux_nic {
-  name                         = "${local.linux_vm_name}-nic"
+  name                         = "${local.vm_name}-nic"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
@@ -110,11 +110,11 @@ resource azurerm_network_interface_security_group_association linux_nic_nsg {
 }
 
 resource azurerm_linux_virtual_machine linux_agent {
-  name                         = local.linux_vm_name
-  computer_name                = substr(lower(replace("${local.linux_vm_name}","/a|e|i|o|u|y|-/","")),0,15)
+  name                         = local.vm_name
+  computer_name                = substr(lower(replace("${local.vm_name}","/a|e|i|o|u|y|-/","")),0,15)
   location                     = var.location
   resource_group_name          = var.resource_group_name
-  size                         = var.linux_vm_size
+  size                         = var.vm_size
   admin_username               = var.user_name
   admin_password               = var.user_password
   custom_data                  = base64encode(data.cloudinit_config.user_data.rendered)
@@ -132,13 +132,13 @@ resource azurerm_linux_virtual_machine linux_agent {
 
   os_disk {
     caching                    = "ReadWrite"
-    storage_account_type       = var.linux_storage_type
+    storage_account_type       = var.storage_type
   }
 
   source_image_reference {
-    publisher                  = var.linux_os_publisher
-    offer                      = var.linux_os_offer
-    sku                        = var.linux_os_sku
+    publisher                  = var.os_publisher
+    offer                      = var.os_offer
+    sku                        = var.os_sku
     version                    = "latest"
   }
 

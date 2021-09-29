@@ -43,8 +43,8 @@ module scale_set_agents {
   depends_on                   = [module.network]
 }
 
-module self_hosted_agents {
-  source                       = "./modules/self-hosted-agents"
+module self_hosted_linux_agents {
+  source                       = "./modules/self-hosted-linux-agent"
 
   admin_cidr_ranges            = local.admin_cidr_ranges
   terraform_cidr               = local.ipprefix
@@ -57,14 +57,14 @@ module self_hosted_agents {
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
-  linux_pipeline_agent_name    = "${var.linux_pipeline_agent_name}${count.index+1}"
-  linux_pipeline_agent_pool    = var.linux_pipeline_agent_pool
-  linux_os_offer               = var.linux_os_offer
-  linux_os_publisher           = var.linux_os_publisher
-  linux_os_sku                 = var.linux_os_sku
-  linux_storage_type           = var.linux_storage_type
-  linux_vm_name_prefix         = "${var.linux_vm_name_prefix}${count.index+1}"
-  linux_vm_size                = var.linux_vm_size
+  os_offer                     = var.linux_os_offer
+  os_publisher                 = var.linux_os_publisher
+  os_sku                       = var.linux_os_sku
+  pipeline_agent_name          = "${var.linux_pipeline_agent_name}${count.index+1}"
+  pipeline_agent_pool          = var.linux_pipeline_agent_pool
+  storage_type                 = var.linux_storage_type
+  vm_name_prefix               = "${var.linux_vm_name_prefix}${count.index+1}"
+  vm_size                      = var.linux_vm_size
 
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key

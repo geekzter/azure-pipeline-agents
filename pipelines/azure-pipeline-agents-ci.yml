@@ -413,7 +413,7 @@ jobs:
       - Provision
     displayName: 'Tear down & Clean up (${{ lower(parameters.destroy) }})'
     ${{ if eq(parameters.destroy, 'Always') }}:
-      condition: succeededOrFailed()
+      condition: or(always(),canceled())
     ${{ if eq(parameters.destroy, 'On failure') }}:
       condition: not(eq(dependencies.Provision.outputs['provisioningResult.result'],'success'))
     ${{ if eq(parameters.destroy, 'On success') }}:

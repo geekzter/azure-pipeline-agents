@@ -27,16 +27,6 @@ data cloudinit_config user_data {
 
 }
 
-resource null_resource display_cloud_config {
-  triggers                     = {
-    always                     = timestamp()
-  }
-
-  provisioner local-exec {
-    command                    = "echo \"${data.cloudinit_config.user_data.rendered}\""
-  }
-}
-
 locals {
   pipeline_agent_name    = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
   vm_name                = "${var.vm_name_prefix}-${terraform.workspace}-${var.suffix}"

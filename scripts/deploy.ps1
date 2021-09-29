@@ -120,15 +120,6 @@ try {
         $varArgs = " -var-file='$varsFile'"
     }
 
-    if ($Apply) {
-        # Taint Admin SSH rule(s) so they will be replaced and Terraform can get in to check cloud-init status
-        Write-Host "Tainting admin SSH rules to get just-in-time deployment access..."
-        terraform state list | Select-String -Pattern "admin_ssh" | foreach-object {
-            $resource = ($_ -replace "`"","`\`"")
-            Invoke-Expression "terraform taint '$resource'"
-        }
-    }
-
     if ($Plan -or $Apply) {
         # FIX: Start VM's to prevent https://github.com/terraform-providers/terraform-provider-azurerm/issues/8311
         $terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")

@@ -54,6 +54,7 @@ packages:
   - azure-functions-core-tools
   # - blobfuse
   - dotnet-sdk-3.1
+  - dotnet-sdk-5.0
   - powershell
 
 runcmd:
@@ -70,4 +71,4 @@ write_files:
     GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
   append: true
 
-final_message: "Up after $UPTIME seconds"
+final_message: "Base cloud init done after $UPTIME seconds"

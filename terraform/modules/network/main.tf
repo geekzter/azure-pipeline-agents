@@ -77,7 +77,7 @@ resource azurerm_subnet bastion_subnet {
   name                         = "AzureBastionSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],3,0)]
+  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],3,2)]
 }
 resource azurerm_public_ip bastion_ip {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-bastion-ip"

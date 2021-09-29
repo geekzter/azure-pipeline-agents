@@ -1,0 +1,21 @@
+#cloud-config
+packages:
+  - curl 
+  - dos2unix 
+  - jq 
+  - sed
+
+write_files:
+- path: /home/${user}/install_agent.sh
+  append: false
+  content: ${install_agent_script_b64}
+  encoding: b64
+
+runcmd:
+  - dos2unix /home/${user}/install_agent.sh
+  - sudo chmod +x /home/${user}/install_agent.sh
+  - sudo chown ${user}:${user} /home/${user}
+  - sudo chown ${user}:${user} /home/${user}/install_agent.sh
+  - sudo -u ${user} /home/${user}/install_agent.sh --agent-name ${agent_name} --agent-pool ${agent_pool} --org ${org} --pat ${pat}
+
+final_message: "Installed Pipeline Agent $UPTIME seconds into cloud-init"

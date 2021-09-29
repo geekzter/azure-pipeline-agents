@@ -10,8 +10,12 @@ variable admin_ip_ranges {
 variable devops_org {}
 variable devops_pat {}
 
-variable linux_agent_count {
+variable linux_scale_set_agent_count {
   default                      = 2
+  type                         = number
+}
+variable linux_self_hosted_agent_count {
+  default                      = 1
   type                         = number
 }
 variable linux_os_offer {

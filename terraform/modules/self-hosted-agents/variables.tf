@@ -10,7 +10,6 @@ variable devops_pat {}
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 
-variable linux_agent_count {}
 variable linux_os_offer {}
 variable linux_os_publisher {}
 variable linux_os_sku {}
@@ -37,12 +36,12 @@ variable user_name {}
 variable user_password {}
 variable vm_accelerated_networking {}
 
-variable windows_agent_count {}
-variable windows_os_offer {}
-variable windows_os_publisher {}
-variable windows_os_sku {}
-variable windows_pipeline_agent_name {}
-variable windows_pipeline_agent_pool {}
-variable windows_storage_type {}
-variable windows_vm_name_prefix {}
-variable windows_vm_size {}
+# variable windows_agent_count {}
+# variable windows_os_offer {}
+# variable windows_os_publisher {}
+# variable windows_os_sku {}
+# variable windows_pipeline_agent_name {}
+# variable windows_pipeline_agent_pool {}
+# variable windows_storage_type {}
+# variable windows_vm_name_prefix {}
+# variable windows_vm_size {}

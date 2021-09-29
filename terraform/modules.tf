@@ -20,7 +20,7 @@ module scale_set_agents {
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
-  linux_agent_count            = var.linux_agent_count
+  linux_agent_count            = var.linux_scale_set_agent_count
   linux_pipeline_agent_name    = var.linux_pipeline_agent_name
   linux_pipeline_agent_pool    = var.linux_pipeline_agent_pool
   linux_os_offer               = var.linux_os_offer
@@ -28,6 +28,42 @@ module scale_set_agents {
   linux_os_sku                 = var.linux_os_sku
   linux_storage_type           = var.linux_storage_type
   linux_vm_name_prefix         = var.linux_vm_name_prefix
+  linux_vm_size                = var.linux_vm_size
+
+  resource_group_name          = azurerm_resource_group.rg.name
+  ssh_public_key               = var.ssh_public_key
+  tags                         = local.tags
+  subnet_id                    = module.network.agent_subnet_id
+  suffix                       = local.suffix
+  user_name                    = var.user_name
+  user_password                = local.password
+  vm_accelerated_networking    = var.vm_accelerated_networking
+
+  count                        = var.use_scale_set ? 1 : 0
+  depends_on                   = [module.network]
+}
+
+module self_hosted_agents {
+  source                       = "./modules/self-hosted-agents"
+
+  admin_cidr_ranges            = local.admin_cidr_ranges
+  terraform_cidr               = local.ipprefix
+
+  devops_org                   = var.devops_org
+  devops_pat                   = var.devops_pat
+
+  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
+  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  location                     = var.location
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+
+  linux_pipeline_agent_name    = "${var.linux_pipeline_agent_name}${count.index+1}"
+  linux_pipeline_agent_pool    = var.linux_pipeline_agent_pool
+  linux_os_offer               = var.linux_os_offer
+  linux_os_publisher           = var.linux_os_publisher
+  linux_os_sku                 = var.linux_os_sku
+  linux_storage_type           = var.linux_storage_type
+  linux_vm_name_prefix         = "${var.linux_vm_name_prefix}${count.index+1}"
   linux_vm_size                = var.linux_vm_size
 
   resource_group_name          = azurerm_resource_group.rg.name
@@ -49,51 +85,6 @@ module scale_set_agents {
   # windows_vm_name_prefix       = var.windows_vm_name_prefix
   # windows_vm_size              = var.windows_vm_size
 
-  count                        = var.use_scale_set ? 1 : 0
-}
-
-module self_hosted_agents {
-  source                       = "./modules/self-hosted-agents"
-
-  admin_cidr_ranges            = local.admin_cidr_ranges
-  terraform_cidr               = local.ipprefix
-
-  devops_org                   = var.devops_org
-  devops_pat                   = var.devops_pat
-
-  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
-  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
-  location                     = var.location
-  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
-
-  linux_agent_count            = var.linux_agent_count
-  linux_pipeline_agent_name    = var.linux_pipeline_agent_name
-  linux_pipeline_agent_pool    = var.linux_pipeline_agent_pool
-  linux_os_offer               = var.linux_os_offer
-  linux_os_publisher           = var.linux_os_publisher
-  linux_os_sku                 = var.linux_os_sku
-  linux_storage_type           = var.linux_storage_type
-  linux_vm_name_prefix         = var.linux_vm_name_prefix
-  linux_vm_size                = var.linux_vm_size
-
-  resource_group_name          = azurerm_resource_group.rg.name
-  ssh_public_key               = var.ssh_public_key
-  tags                         = local.tags
-  subnet_id                    = module.network.agent_subnet_id
-  suffix                       = local.suffix
-  user_name                    = var.user_name
-  user_password                = local.password
-  vm_accelerated_networking    = var.vm_accelerated_networking
-
-  windows_agent_count          = var.windows_agent_count
-  windows_pipeline_agent_name  = var.windows_pipeline_agent_name
-  windows_pipeline_agent_pool  = var.windows_pipeline_agent_pool
-  windows_os_offer             = var.windows_os_offer
-  windows_os_publisher         = var.windows_os_publisher
-  windows_os_sku               = var.windows_os_sku
-  windows_storage_type         = var.windows_storage_type
-  windows_vm_name_prefix       = var.windows_vm_name_prefix
-  windows_vm_size              = var.windows_vm_size
-
-  count                        = var.use_self_hosted ? 1 : 0
+  count                        = var.use_self_hosted ? var.linux_self_hosted_agent_count : 0
+  depends_on                   = [module.network]
 }

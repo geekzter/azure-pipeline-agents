@@ -15,6 +15,14 @@ parameters:
   displayName: Clear State
   type: boolean
   default: false
+- name: egressDevice
+  displayName: Egress device
+  type: string
+  default: 'NAT Gateway'
+  values:
+  - Firewall
+  - 'NAT Gateway'
+  - Strategy
 - name: deploy
   displayName: Deploy Agents
   type: boolean
@@ -127,17 +135,20 @@ jobs:
     name: '$(pool)'
     vmImage: $(vmImage)
 
-  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
     strategy:
       matrix:
-        pinTerraformProviders:
+      ${{ if or(eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+        pinTerraformProvidersNAT:
           publishTerraformArtifact: true
-          TF_VAR_resource_suffix: '$(Build.BuildId)p'
-          unpinTerraformProviders: false
-        unpinTerraformProviders:
+          TF_VAR_resource_suffix: '$(Build.BuildId)a'
+          TF_VAR_use_firewall: ${{ or(eq(parameters.egressDevice, 'NAT Gateway'),eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}
+          unpinTerraformProviders: ${{ or(eq(parameters.unpinTerraformProviders, 'No'),eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}
+        unpinTerraformProvidersNAT:
           publishTerraformArtifact: false
-          TF_VAR_resource_suffix: '$(Build.BuildId)u'
-          unpinTerraformProviders: true
+          TF_VAR_resource_suffix: '$(Build.BuildId)b'
+          TF_VAR_use_firewall: ${{ and(eq(parameters.egressDevice, 'Firewall'),eq(variables['Build.Reason'], 'Manual')) }}
+          unpinTerraformProviders: ${{ and(eq(parameters.egressDevice, 'Yes'),eq(variables['Build.Reason'], 'Manual')) }}
       maxParallel: 1
 
   variables:

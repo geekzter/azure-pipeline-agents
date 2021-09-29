@@ -113,21 +113,21 @@ variables:
 jobs:
 - job: 'Provision'
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision, Deploy, Test & Destroy'
   ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy & Test (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision, Deploy & Test'
   ${{ if and(eq(parameters.destroy, 'On failure'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }}) (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
   ${{ if and(eq(parameters.destroy, 'On success'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }}) (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
   ${{ if and(eq(parameters.destroy, 'Always'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision & Destroy'
   ${{ if and(eq(parameters.destroy, 'Never'),not(parameters.deploy)) }}:
-    displayName: 'Provision (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision'
   ${{ if and(eq(parameters.destroy, 'On failure'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }}) (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
   ${{ if and(eq(parameters.destroy, 'On success'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }}) (egressDevice:$(TF_VAR_use_firewall),unpinTerraformProviders:$(unpinTerraformProviders))'
+    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
   condition: succeeded()
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 

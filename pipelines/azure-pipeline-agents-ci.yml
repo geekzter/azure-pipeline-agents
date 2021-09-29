@@ -113,21 +113,21 @@ variables:
 jobs:
 - job: 'Provision'
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy'
+    displayName: 'Provision, Deploy, Test & Destroy (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy & Test'
+    displayName: 'Provision, Deploy & Test (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   ${{ if and(eq(parameters.destroy, 'On failure'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
+    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }}) (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   ${{ if and(eq(parameters.destroy, 'On success'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
+    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }}) (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   ${{ if and(eq(parameters.destroy, 'Always'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy'
+    displayName: 'Provision & Destroy (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   ${{ if and(eq(parameters.destroy, 'Never'),not(parameters.deploy)) }}:
-    displayName: 'Provision'
+    displayName: 'Provision (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   ${{ if and(eq(parameters.destroy, 'On failure'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
+    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }}) (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   ${{ if and(eq(parameters.destroy, 'On success'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
+    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }}) (unpinTerraformProviders:${{ lower(parameters.unpinTerraformProviders) }}, egressDevice:${{ lower(parameters.egressDevice) }})'
   condition: succeeded()
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
@@ -139,15 +139,15 @@ jobs:
     strategy:
       matrix:
         ${{ if or(eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
-          pinTerraformProvidersNAT:
+          A:
             publishTerraformArtifact: true
             TF_VAR_resource_suffix: '$(Build.BuildId)a'
-            TF_VAR_use_firewall: ${{ or(eq(parameters.egressDevice, 'NAT Gateway'),eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}
+            TF_VAR_use_firewall: ${{ lower(or(eq(parameters.egressDevice, 'NAT Gateway'),eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual')))) }}
             unpinTerraformProviders: ${{ or(eq(parameters.unpinTerraformProviders, 'No'),eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}
-          unpinTerraformProvidersNAT:
+          B:
             publishTerraformArtifact: false
             TF_VAR_resource_suffix: '$(Build.BuildId)b'
-            TF_VAR_use_firewall: ${{ and(eq(parameters.egressDevice, 'Firewall'),eq(variables['Build.Reason'], 'Manual')) }}
+            TF_VAR_use_firewall: ${{ lower(and(eq(parameters.egressDevice, 'Firewall'),eq(variables['Build.Reason'], 'Manual'))) }}
             unpinTerraformProviders: ${{ and(eq(parameters.egressDevice, 'Yes'),eq(variables['Build.Reason'], 'Manual')) }}
       maxParallel: 1
 
@@ -181,7 +181,7 @@ jobs:
           Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"
           Copy-Item backend.tf.sample backend.tf
         name: terraformConfig
-        displayName: 'Prepare Terraform config'
+        displayName: 'Prepare Terraform config (pinned)'
         workingDirectory: '$(terraformDirectory)'
     - ${{ if parameters.unpinTerraform }}:
       - pwsh: |
@@ -190,7 +190,7 @@ jobs:
           Write-Host "##vso[task.setvariable variable=version;isOutput=true]latest"
           Copy-Item backend.tf.sample backend.tf
         name: terraformConfig
-        displayName: 'Prepare Terraform config (latest version)'
+        displayName: 'Prepare Terraform config (unpinned/latest)'
         workingDirectory: '$(terraformDirectory)'
 
     - task: TerraformInstaller@0
@@ -315,7 +315,7 @@ jobs:
           AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
     - task: AzureCLI@2
-      displayName: 'Terraform plan & apply'
+      displayName: 'Terraform plan & apply (TF_VAR_use_firewall $(TF_VAR_use_firewall),${{ variables.TF_VAR_use_firewall }})'
       name: apply
       inputs:
         azureSubscription: '$(subscriptionConnection)'

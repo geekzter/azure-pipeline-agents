@@ -88,3 +88,38 @@ module self_hosted_linux_agents {
   count                        = var.use_self_hosted ? var.linux_self_hosted_agent_count : 0
   depends_on                   = [module.network]
 }
+
+module self_hosted_windows_agents {
+  source                       = "./modules/self-hosted-windows-agent"
+
+  admin_cidr_ranges            = local.admin_cidr_ranges
+  terraform_cidr               = local.ipprefix
+
+  devops_org                   = var.devops_org
+  devops_pat                   = var.devops_pat
+
+  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
+  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  location                     = var.location
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+
+  os_offer                     = var.windows_os_offer
+  os_publisher                 = var.windows_os_publisher
+  os_sku                       = var.windows_os_sku
+  pipeline_agent_name          = "${var.windows_pipeline_agent_name}${count.index+1}"
+  pipeline_agent_pool          = var.windows_pipeline_agent_pool
+  storage_type                 = var.windows_storage_type
+  vm_name_prefix               = "${var.windows_vm_name_prefix}${count.index+1}"
+  vm_size                      = var.windows_vm_size
+
+  resource_group_name          = azurerm_resource_group.rg.name
+  tags                         = local.tags
+  subnet_id                    = module.network.agent_subnet_id
+  suffix                       = local.suffix
+  user_name                    = var.user_name
+  user_password                = local.password
+  vm_accelerated_networking    = var.vm_accelerated_networking
+
+  count                        = var.use_self_hosted ? var.windows_self_hosted_agent_count : 0
+  depends_on                   = [module.network]
+}

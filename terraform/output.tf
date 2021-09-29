@@ -19,9 +19,9 @@ output resource_suffix {
 output self_hosted_linux_vm_ids {
   value                        = var.use_self_hosted ? module.self_hosted_linux_agents.0.vm_ids : null
 }
-# output self_hosted_windows_vm_ids {
-#   value                        = var.use_self_hosted ? module.self_hosted_windows_agents.0.vm_ids : null
-# }
+output self_hosted_windows_vm_ids {
+  value                        = var.use_self_hosted ? module.self_hosted_windows_agents.0.vm_ids : null
+}
 
 output self_hosted_linux_cloud_config {
   sensitive                    = true

@@ -143,7 +143,7 @@ jobs:
           TF_VAR_resource_suffix: '$(Build.BuildId)a'
           TF_VAR_use_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
           unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
-        ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}_${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
+        ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}_${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
           publishTerraformArtifact: false
           TF_VAR_resource_suffix: '$(Build.BuildId)b'
           TF_VAR_use_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}

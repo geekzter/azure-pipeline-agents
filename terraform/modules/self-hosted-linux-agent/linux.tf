@@ -132,6 +132,12 @@ resource azurerm_linux_virtual_machine linux_agent {
     version                    = "latest"
   }
 
+  lifecycle {
+    ignore_changes             = [
+      custom_data
+    ]
+  }  
+
   tags                         = var.tags
   depends_on                   = [azurerm_network_interface_security_group_association.linux_nic_nsg]
 }

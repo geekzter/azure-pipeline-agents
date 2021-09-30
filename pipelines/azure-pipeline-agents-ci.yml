@@ -421,7 +421,7 @@ jobs:
 
     variables:
       terraformDirectory: $(Pipeline.Workspace)/$(terraformArtifactName)
-      terraformVersion: 'latest'
+      terraformVersion: 'latest' # Use the latest version so we don't need a depencency
 
     pool:
       name: '$(pool)'

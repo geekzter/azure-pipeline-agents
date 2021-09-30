@@ -135,28 +135,27 @@ jobs:
     name: '$(pool)'
     vmImage: $(vmImage)
 
-  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual')) }}:
     strategy:
       matrix:
-        ${{ if or(eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
-          A:
-            publishTerraformArtifact: true
-            TF_VAR_resource_suffix: '$(Build.BuildId)a'
-            TF_VAR_use_firewall: ${{ lower(or(eq(parameters.egressDevice, 'NAT Gateway'),eq(parameters.egressDevice, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual')))) }}
-            unpinTerraformProviders: ${{ or(eq(parameters.unpinTerraformProviders, 'No'),eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}
-          B:
-            publishTerraformArtifact: false
-            TF_VAR_resource_suffix: '$(Build.BuildId)b'
-            TF_VAR_use_firewall: ${{ lower(and(eq(parameters.egressDevice, 'Firewall'),eq(variables['Build.Reason'], 'Manual'))) }}
-            unpinTerraformProviders: ${{ and(eq(parameters.egressDevice, 'Yes'),eq(variables['Build.Reason'], 'Manual')) }}
+        ${{ lower(ne(parameters.egressDevice, 'Firewall')) }}${{ lower(ne(parameters.unpinTerraformProviders, 'Yes')) }}:
+          publishTerraformArtifact: true
+          TF_VAR_resource_suffix: '$(Build.BuildId)a'
+          TF_VAR_use_firewall: ${{ lower(ne(parameters.egressDevice, 'Firewall')) }}
+          unpinTerraformProviders: ${{ lower(ne(parameters.unpinTerraformProviders, 'Yes')) }}
+        ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}:
+          publishTerraformArtifact: false
+          TF_VAR_resource_suffix: '$(Build.BuildId)b'
+          TF_VAR_use_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+          unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
       maxParallel: 1
 
   variables:
-    ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual')))) }}:
+    ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
       # Not runnig as strategy
       ${{ if parameters.clear }}:  # Don't reset suffix if we want to keep existing resources
         TF_VAR_resource_suffix: '$(Build.BuildId)'
-      unpinTerraformProviders: ${{ eq(parameters.unpinTerraformProviders, 'Yes') }}
+      unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
     publishTerraformArtifact: true
     resourceGroup: '$(TF_VAR_resource_prefix)-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
 

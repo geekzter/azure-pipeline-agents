@@ -60,8 +60,6 @@ resource azurerm_network_interface linux_nic {
 
 resource azurerm_network_security_rule admin_ssh {
   name                         = "AdminSSH${count.index+1}"
-  # # Use unique names to force replacement and get just-in-time deployment access
-  # name                         = "AdminSSH-${formatdate("YYYYMMDDhhmmss",timestamp())}-${count.index+1}" 
   priority                     = count.index+201
   direction                    = "Inbound"
   access                       = var.public_access_enabled ? "Allow" : "Deny"
@@ -74,24 +72,6 @@ resource azurerm_network_security_rule admin_ssh {
   network_security_group_name  = azurerm_network_security_group.nsg.name
 
   count                        = length(var.admin_cidr_ranges)
-
-  # depends_on                   = [
-  #   null_resource.cloud_config_status # Close this port once we have obtained cloud init status via remote-provisioner
-  # ]
-}
-
-resource azurerm_network_security_rule terraform_ssh {
-  name                         = "TerraformSSH"
-  priority                     = 299
-  direction                    = "Inbound"
-  access                       = "Allow"
-  protocol                     = "Tcp"
-  source_port_range            = "*"
-  destination_port_range       = "22"
-  source_address_prefix        = var.terraform_cidr
-  destination_address_prefix   = "*"
-  resource_group_name          = azurerm_network_security_group.nsg.resource_group_name
-  network_security_group_name  = azurerm_network_security_group.nsg.name
 }
 
 resource azurerm_network_interface_security_group_association linux_nic_nsg {

@@ -138,12 +138,12 @@ jobs:
   ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual')) }}:
     strategy:
       matrix:
-        ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}:
+        ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}_${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}:
           publishTerraformArtifact: true
           TF_VAR_resource_suffix: '$(Build.BuildId)a'
           TF_VAR_use_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
           unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
-        ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
+        ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}_${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
           publishTerraformArtifact: false
           TF_VAR_resource_suffix: '$(Build.BuildId)b'
           TF_VAR_use_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
@@ -421,7 +421,7 @@ jobs:
 
     variables:
       terraformDirectory: $(Pipeline.Workspace)/$(terraformArtifactName)
-      terraformVersion: $[ dependencies.Provision.outputs['terraformConfig.version'] ]
+      terraformVersion: 'latest'
 
     pool:
       name: '$(pool)'

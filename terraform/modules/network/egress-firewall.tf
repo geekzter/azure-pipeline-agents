@@ -620,6 +620,16 @@ resource azurerm_route_table fw_route_table {
     next_hop_type              = "VnetLocal"
   }
   route {
+    name                       = "rfc1918-10"
+    address_prefix             = "10.0.0.0/8"
+    next_hop_type              = "VnetLocal"
+  }
+  route {
+    name                       = "rfc1918-17"
+    address_prefix             = "17.16.0.0/12"
+    next_hop_type              = "VnetLocal"
+  }
+  route {
     name                       = "InternetViaFW"
     address_prefix             = "0.0.0.0/0"
     next_hop_type              = "VirtualAppliance"

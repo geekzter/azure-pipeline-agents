@@ -21,6 +21,7 @@ variable vm_size {}
 
 variable location {}
 variable log_analytics_workspace_resource_id {}
+variable outbound_ip_address {}
 variable public_access_enabled {
     type    = bool
     default = false

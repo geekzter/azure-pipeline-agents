@@ -2,6 +2,7 @@ module network {
   source                       = "./modules/network"
 
   address_space                = var.address_space
+  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   resource_group_name          = azurerm_resource_group.rg.name
@@ -30,6 +31,7 @@ module scale_set_agents {
   linux_vm_name_prefix         = var.linux_vm_name_prefix
   linux_vm_size                = var.linux_vm_size
 
+  outbound_ip_address          = module.network.outbound_ip_address
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
@@ -66,6 +68,7 @@ module self_hosted_linux_agents {
   vm_name_prefix               = "${var.linux_vm_name_prefix}${count.index+1}"
   vm_size                      = var.linux_vm_size
 
+  outbound_ip_address          = module.network.outbound_ip_address
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
@@ -74,16 +77,6 @@ module self_hosted_linux_agents {
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
-
-  # windows_agent_count          = var.windows_agent_count
-  # windows_pipeline_agent_name  = var.windows_pipeline_agent_name
-  # windows_pipeline_agent_pool  = var.windows_pipeline_agent_pool
-  # windows_os_offer             = var.windows_os_offer
-  # windows_os_publisher         = var.windows_os_publisher
-  # windows_os_sku               = var.windows_os_sku
-  # windows_storage_type         = var.windows_storage_type
-  # windows_vm_name_prefix       = var.windows_vm_name_prefix
-  # windows_vm_size              = var.windows_vm_size
 
   count                        = var.use_self_hosted ? var.linux_self_hosted_agent_count : 0
   depends_on                   = [module.network]
@@ -112,6 +105,7 @@ module self_hosted_windows_agents {
   vm_name_prefix               = "${var.windows_vm_name_prefix}${count.index+1}"
   vm_size                      = var.windows_vm_size
 
+  # outbound_ip_address          = module.network.outbound_ip_address # TODO
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
   subnet_id                    = module.network.agent_subnet_id

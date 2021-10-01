@@ -10,6 +10,6 @@ AzureDiagnostics
 | extend Action1 = case(Action1 == "Deny","Deny","Unknown Action")
 | extend Action = case(Action2 == "",Action1,Action2),Rule = case(Rule2a == "", case(Rule1 == "",case(Rule2b == "","N/A", Rule2b),Rule1),Rule2a), 
 RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),FQDN = case(FQDN == "", "N/A", FQDN),TargetPort = case(TargetPort == "", "N/A", TargetPort)
-| project TimeGenerated, SourceIP, FQDN, TargetPort, Action ,RuleCollection, Rule
+| project TimeGenerated, SourceIP, FQDN, TargetPort, Action, RuleCollection, Rule
 | order by TimeGenerated desc
 | where Action == "Deny"

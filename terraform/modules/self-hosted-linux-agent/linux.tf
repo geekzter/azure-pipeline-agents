@@ -5,6 +5,7 @@ data cloudinit_config user_data {
   part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
+      outbound_ip              = var.outbound_ip_address
       subnet_id                = var.subnet_id
       virtual_network_id       = local.virtual_network_id
     })

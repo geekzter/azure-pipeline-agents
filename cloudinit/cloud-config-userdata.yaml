@@ -69,6 +69,7 @@ write_files:
   content: |
     GEEKZTER_AGENT_SUBNET_ID="${subnet_id}"
     GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
+    GEEKZTER_AGENT_OUTBOUND_IP="${outbound_ip}"
   append: true
 
 final_message: "Base cloud init done after $UPTIME seconds"

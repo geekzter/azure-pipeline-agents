@@ -98,10 +98,54 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     protocol {
-        port                   = "443"
-        type                   = "Https"
+      port                     = "443"
+      type                     = "Https"
     }
   } 
+
+
+  rule {
+    name                       = "Allow Pipeline tasks by URL"
+    description                = "Pipeline tasks e.g. Terraform"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      "*.amazonaws.com",
+      "*.queue.core.windows.net", # Synapse
+      "aka.ms",
+      "azure.microsoft.com",
+      "files.pythonhosted.org",
+      "ipapi.co",
+      "ipinfo.io",
+      "pypi.org",
+      "registry.terraform.io",
+      "releases.hashicorp.com",
+      "stat.ripe.net",
+      "storage.googleapis.com", # kubectl
+      "weaveworks.github.io",
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+
+  rule {
+    name                       = "Allow Pipeline tasks by Tag"
+    description                = "Pipeline tasks e.g. Azure SQL Database"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    fqdn_tags                  = [
+      "Sql",
+    ]
+  }
 
   rule {
     name                       = "Allow Packaging tools"
@@ -185,8 +229,8 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     protocol {
-        port                   = "443"
-        type                   = "Https"
+      port                     = "443"
+      type                     = "Https"
     }
   }
 
@@ -240,6 +284,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "*.telemetry.microsoft.com",
       "*.update.microsoft.com",
       "*.windowsupdate.com",
+      "clientconfig.passport.net",
       "checkappexec.microsoft.com",
       "device.login.microsoftonline.com",
       "edge.microsoft.com",
@@ -262,12 +307,14 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "sts.windows.net",
       "urs.microsoft.com",
       "validation-v2.sls.microsoft.com",
-      "vortex.data.microsoft.com"
+      "vortex.data.microsoft.com",
+      data.azurerm_storage_account.diagnostics.primary_blob_host,
+      data.azurerm_storage_account.diagnostics.primary_table_host
     ]
 
     protocol {
-        port                   = "443"
-        type                   = "Https"
+      port                     = "443"
+      type                     = "Https"
     }
   }
 
@@ -292,6 +339,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "crl.usertrust.com",
       "dl.delivery.mp.microsoft.com", # "Microsoft Edge"
       "go.microsoft.com",
+      "ipinfo.io",
       "keyserver.ubuntu.com",
       "mscrl.microsoft.com",
       "ocsp.msocsp.com",
@@ -305,8 +353,8 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     protocol {
-        port                   = "80"
-        type                   = "Http"
+      port                     = "80"
+      type                     = "Https"
     }
   }
 
@@ -477,6 +525,7 @@ resource azurerm_monitor_diagnostic_setting firewall_ip_logs {
   name                         = "${azurerm_public_ip.firewall.0.name}-logs"
   target_resource_id           = azurerm_public_ip.firewall.0.id
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
+  storage_account_id           = var.diagnostics_storage_id
 
   log {
     category                   = "DDoSProtectionNotifications"
@@ -520,6 +569,16 @@ resource azurerm_monitor_diagnostic_setting firewall_logs {
   name                         = "${azurerm_firewall.firewall.0.name}-logs"
   target_resource_id           = azurerm_firewall.firewall.0.id
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
+  storage_account_id           = var.diagnostics_storage_id
+
+  log {
+    category                   = "AzureFirewallDnsProxy"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
 
   log {
     category                   = "AzureFirewallApplicationRule"

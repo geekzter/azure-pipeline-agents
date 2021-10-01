@@ -103,9 +103,10 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     }
   } 
 
-
+  # Required traffic originating from within Build / Release jobs e.g. deployment of:
+  # AKS, Synapse
   rule {
-    name                       = "Allow Pipeline tasks by URL"
+    name                       = "Allow Pipeline tasks by URL (HTTPS)"
     description                = "Pipeline tasks e.g. Terraform"
 
     source_ip_groups           = [
@@ -114,6 +115,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
 
     target_fqdns               = [
       "*.amazonaws.com",
+      "*.cloudapp.azure.com", # Application Gateway
       "*.queue.core.windows.net", # Synapse
       "aka.ms",
       "azure.microsoft.com",
@@ -131,6 +133,26 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     protocol {
       port                     = "443"
       type                     = "Https"
+    }
+  }
+
+  # Required traffic originating from within Build / Release jobs e.g. deployment of:
+  # AKS, Synapse
+  rule {
+    name                       = "Allow Pipeline tasks by URL (HTTP)"
+    description                = "Pipeline tasks e.g. curl"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      "*.cloudapp.azure.com", # Application Gateway
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
     }
   }
 

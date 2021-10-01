@@ -354,7 +354,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
 
     protocol {
       port                     = "80"
-      type                     = "Https"
+      type                     = "Http"
     }
   }
 

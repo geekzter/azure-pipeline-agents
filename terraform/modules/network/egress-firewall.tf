@@ -156,18 +156,23 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     }
   }
 
-  rule {
-    name                       = "Allow Pipeline tasks by Tag"
-    description                = "Pipeline tasks e.g. Azure SQL Database"
+  # rule {
+  #   name                       = "Allow Azure SQL Database Pipeline tasks"
+  #   description                = "Pipeline tasks e.g. Azure SQL Database"
 
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
+  #   source_ip_groups           = [
+  #     azurerm_ip_group.agents.0.id
+  #   ]
 
-    fqdn_tags                  = [
-      "Sql",
-    ]
-  }
+  #   target_fqdns               = [
+  #     "*.database.windows.net"
+  #   ]
+
+  #   protocol {
+  #     port                     = "1433"
+  #     type                     = "Mssql"
+  #   }
+  # }  
 
   rule {
     name                       = "Allow Packaging tools"

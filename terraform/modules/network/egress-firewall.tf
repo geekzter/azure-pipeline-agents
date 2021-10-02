@@ -1,3 +1,85 @@
+locals {
+  locations                    = [ 
+    # Get regions: az account list-locations --query "[].name"
+    "asia",
+    "asiapacific",
+    "australia",
+    "australiacentral",
+    "australiacentral2",
+    "australiaeast",
+    "australiasoutheast",
+    "brazil",
+    "brazilsouth",
+    "brazilsoutheast",
+    "canada",
+    "canadacentral",
+    "canadaeast",
+    "centralindia",
+    "centralus",
+    "centraluseuap",
+    "centralusstage",
+    "eastasia",
+    "eastasiastage",
+    "eastus",
+    "eastus2",
+    "eastus2euap",
+    "eastus2stage",
+    "eastusslv",
+    "eastusstage",
+    "europe",
+    "france",
+    "francecentral",
+    "francesouth",
+    "germany",
+    "germanynorth",
+    "germanywestcentral",
+    "global",
+    "india",
+    "japan",
+    "japaneast",
+    "japanwest",
+    "jioindiacentral",
+    "jioindiawest",
+    "korea",
+    "koreacentral",
+    "koreasouth",
+    "northcentralus",
+    "northcentralusstage",
+    "northeurope",
+    "norway",
+    "norwayeast",
+    "norwaywest",
+    "qatarcentral",
+    "southafrica",
+    "southafricanorth",
+    "southafricawest",
+    "southcentralus",
+    "southcentralusstage",
+    "southeastasia",
+    "southeastasiastage",
+    "southindia",
+    "swedencentral",
+    "switzerland",
+    "switzerlandnorth",
+    "switzerlandwest",
+    "uae",
+    "uaecentral",
+    "uaenorth",
+    "uk",
+    "uksouth",
+    "ukwest",
+    "unitedstates",
+    "westcentralus",
+    "westeurope",
+    "westindia",
+    "westus",
+    "westus2",
+    "westus2stage",
+    "westus3",
+    "westusstage",
+  ]
+}
+
 resource azurerm_subnet fw_subnet {
   name                         = "AzureFirewallSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
@@ -147,7 +229,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     target_fqdns               = [
-      "*.cloudapp.azure.com", # Application Gateway
+      for location in local.locations : "*${var.dns_host_suffix}.${location}.cloudapp.azure.com"
     ]
 
     protocol {
@@ -175,7 +257,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   # }  
 
   rule {
-    name                       = "Allow Packaging tools"
+    name                       = "Allow packaging tools"
     description                = "Packaging (e.g. Chocolatey, NuGet) tools"
 
     source_ip_groups           = [
@@ -212,7 +294,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow Bootstrap scripts and tools"
+    name                       = "Allow bootstrap scripts and tools"
     description                = "Bootstrap scripts are hosted on GitHub, tools on their own locations"
 
     source_ip_groups           = [
@@ -262,7 +344,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow Management traffic by tag"
+    name                       = "Allow management traffic by tag"
     description                = "Azure Backup, Diagnostics, Management, Windows Update"
 
     source_ip_groups           = [
@@ -280,7 +362,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow Management traffic by url"
+    name                       = "Allow management traffic by url"
     description                = "Diagnostics, Management, Windows Update"
 
     source_ip_groups           = [

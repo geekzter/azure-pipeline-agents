@@ -10,6 +10,10 @@ variable admin_ip_ranges {
 variable devops_org {}
 variable devops_pat {}
 
+variable dns_host_suffix {
+  default                      = "mycicd"
+}
+
 variable linux_os_offer {
   default                      = "UbuntuServer"
 }

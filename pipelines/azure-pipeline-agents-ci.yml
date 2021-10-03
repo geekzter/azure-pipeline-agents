@@ -15,6 +15,14 @@ parameters:
   displayName: Clear State
   type: boolean
   default: false
+- name: egressDevice
+  displayName: Egress device
+  type: string
+  default: 'NAT Gateway'
+  values:
+  - Firewall
+  - 'NAT Gateway'
+  - Strategy
 - name: deploy
   displayName: Deploy Agents
   type: boolean
@@ -127,25 +135,27 @@ jobs:
     name: '$(pool)'
     vmImage: $(vmImage)
 
-  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual')) }}:
     strategy:
       matrix:
-        pinTerraformProviders:
+        ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}_${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}:
           publishTerraformArtifact: true
-          TF_VAR_resource_suffix: '$(Build.BuildId)p'
-          unpinTerraformProviders: false
-        unpinTerraformProviders:
+          TF_VAR_resource_suffix: '$(Build.BuildId)a'
+          TF_VAR_use_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+          unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
+        ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}_${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
           publishTerraformArtifact: false
-          TF_VAR_resource_suffix: '$(Build.BuildId)u'
-          unpinTerraformProviders: true
+          TF_VAR_resource_suffix: '$(Build.BuildId)b'
+          TF_VAR_use_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
+          unpinTerraformProviders: ${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
       maxParallel: 1
 
   variables:
-    ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual')))) }}:
+    ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
       # Not runnig as strategy
       ${{ if parameters.clear }}:  # Don't reset suffix if we want to keep existing resources
         TF_VAR_resource_suffix: '$(Build.BuildId)'
-      unpinTerraformProviders: ${{ eq(parameters.unpinTerraformProviders, 'Yes') }}
+      unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
     publishTerraformArtifact: true
     resourceGroup: '$(TF_VAR_resource_prefix)-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
 
@@ -170,7 +180,7 @@ jobs:
           Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"
           Copy-Item backend.tf.sample backend.tf
         name: terraformConfig
-        displayName: 'Prepare Terraform config'
+        displayName: 'Prepare Terraform config (pinned)'
         workingDirectory: '$(terraformDirectory)'
     - ${{ if parameters.unpinTerraform }}:
       - pwsh: |
@@ -179,7 +189,7 @@ jobs:
           Write-Host "##vso[task.setvariable variable=version;isOutput=true]latest"
           Copy-Item backend.tf.sample backend.tf
         name: terraformConfig
-        displayName: 'Prepare Terraform config (latest version)'
+        displayName: 'Prepare Terraform config (unpinned/latest)'
         workingDirectory: '$(terraformDirectory)'
 
     - task: TerraformInstaller@0
@@ -304,7 +314,7 @@ jobs:
           AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
     - task: AzureCLI@2
-      displayName: 'Terraform plan & apply'
+      displayName: 'Terraform plan & apply (use_firewall:$(TF_VAR_use_firewall))'
       name: apply
       inputs:
         azureSubscription: '$(subscriptionConnection)'
@@ -402,7 +412,7 @@ jobs:
       - Provision
     displayName: 'Tear down & Clean up (${{ lower(parameters.destroy) }})'
     ${{ if eq(parameters.destroy, 'Always') }}:
-      condition: succeededOrFailed()
+      condition: or(always(),canceled())
     ${{ if eq(parameters.destroy, 'On failure') }}:
       condition: not(eq(dependencies.Provision.outputs['provisioningResult.result'],'success'))
     ${{ if eq(parameters.destroy, 'On success') }}:
@@ -411,10 +421,7 @@ jobs:
 
     variables:
       terraformDirectory: $(Pipeline.Workspace)/$(terraformArtifactName)
-      ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual')))) }}:
-        terraformVersion: $[ dependencies.Provision.outputs['terraformConfig.version'] ]
-      ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
-        terraformVersion: $[ dependencies.Provision.outputs['pinTerraformProviders.terraformConfig.version'] ]
+      terraformVersion: 'latest' # Use the latest version so we don't need a depencency
 
     pool:
       name: '$(pool)'

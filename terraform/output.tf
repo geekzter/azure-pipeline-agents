@@ -1,5 +1,5 @@
 output agent_subnet_id {
-  value                        = azurerm_subnet.agent_subnet.id
+  value                        = module.network.agent_subnet_id
 }
 
 output diagnostics_storage_account {
@@ -17,12 +17,16 @@ output resource_suffix {
   value                        = local.suffix
 }
 output self_hosted_linux_vm_ids {
-  value                        = var.use_self_hosted ? module.self_hosted_agents.0.linux_vm_ids : null
+  value                        = var.use_self_hosted ? module.self_hosted_linux_agents.0.vm_ids : null
 }
 output self_hosted_windows_vm_ids {
-  value                        = var.use_self_hosted ? module.self_hosted_agents.0.windows_vm_ids : null
+  value                        = var.use_self_hosted ? module.self_hosted_windows_agents.0.vm_ids : null
 }
 
+output self_hosted_linux_cloud_config {
+  sensitive                    = true
+  value                        = var.use_self_hosted ? module.self_hosted_linux_agents.0.cloud_config : null
+}
 output user_name {
   value                        = var.user_name
 }
@@ -32,5 +36,5 @@ output user_password {
 }
 
 output virtual_network_id {
-  value                        = azurerm_virtual_network.pipeline_network.id
+  value                        = module.network.virtual_network_id
 }

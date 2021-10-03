@@ -1,0 +1,15 @@
+// Taken from https://docs.microsoft.com/en-us/azure/firewall/log-analytics-samples
+AzureDiagnostics
+| where Category == "AzureFirewallApplicationRule" 
+| parse msg_s with Protocol " request from " SourceIP ":" SourcePortInt:int " " TempDetails
+| parse TempDetails with "was " Action1 ". Reason: " Rule1
+| parse TempDetails with "to " FQDN ":" TargetPortInt:int ". Action: " Action2 "." *
+| parse TempDetails with * ". Rule Collection: " RuleCollection2a ". Rule:" Rule2a
+| parse TempDetails with * "Deny." RuleCollection2b ". Proceeding with" Rule2b
+| extend TargetPort = tostring(TargetPortInt)
+| extend Action1 = case(Action1 == "Deny","Deny","Unknown Action")
+| extend Action = case(Action2 == "",Action1,Action2),Rule = case(Rule2a == "", case(Rule1 == "",case(Rule2b == "","N/A", Rule2b),Rule1),Rule2a), 
+RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),FQDN = case(FQDN == "", "N/A", FQDN),TargetPort = case(TargetPort == "", "N/A", TargetPort)
+| project TimeGenerated, SourceIP, FQDN, TargetPort, Action, RuleCollection, Rule
+| order by TimeGenerated desc
+| where Action == "Deny"

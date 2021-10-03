@@ -66,12 +66,12 @@ try {
             $newBackend = (!(Test-Path $backendFile))
             $tfbackendArgs = ""
             if ($newBackend) {
-                if (!$env:TF_VAR_backend_storage_account -or !$env:TF_VAR_backend_storage_container) {
-                    Write-Warning "Environment variables TF_VAR_backend_storage_account and TF_VAR_backend_storage_container must be set when creating a new backend from $backendTemplate"
+                if (!$env:TF_STATE_backend_storage_account -or !$env:TF_STATE_backend_storage_container) {
+                    Write-Warning "Environment variables TF_STATE_backend_storage_account and TF_STATE_backend_storage_container must be set when creating a new backend from $backendTemplate"
                     $fail = $true
                 }
-                if (!($env:TF_VAR_backend_resource_group -or $env:ARM_ACCESS_KEY -or $env:ARM_SAS_TOKEN)) {
-                    Write-Warning "Environment variables ARM_ACCESS_KEY or ARM_SAS_TOKEN or TF_VAR_backend_resource_group (with $identity granted 'Storage Blob Data Contributor' role) must be set when creating a new backend from $backendTemplate"
+                if (!($env:TF_STATE_backend_resource_group -or $env:ARM_ACCESS_KEY -or $env:ARM_SAS_TOKEN)) {
+                    Write-Warning "Environment variables ARM_ACCESS_KEY or ARM_SAS_TOKEN or TF_STATE_backend_resource_group (with $identity granted 'Storage Blob Data Contributor' role) must be set when creating a new backend from $backendTemplate"
                     $fail = $true
                 }
                 if ($fail) {
@@ -88,14 +88,14 @@ try {
                 $tfbackendArgs += " -reconfigure"
             }
 
-            if ($env:TF_VAR_backend_resource_group) {
-                $tfbackendArgs += " -backend-config=`"resource_group_name=${env:TF_VAR_backend_resource_group}`""
+            if ($env:TF_STATE_backend_resource_group) {
+                $tfbackendArgs += " -backend-config=`"resource_group_name=${env:TF_STATE_backend_resource_group}`""
             }
-            if ($env:TF_VAR_backend_storage_account) {
-                $tfbackendArgs += " -backend-config=`"storage_account_name=${env:TF_VAR_backend_storage_account}`""
+            if ($env:TF_STATE_backend_storage_account) {
+                $tfbackendArgs += " -backend-config=`"storage_account_name=${env:TF_STATE_backend_storage_account}`""
             }
-            if ($env:TF_VAR_backend_storage_container) {
-                $tfbackendArgs += " -backend-config=`"container_name=${env:TF_VAR_backend_storage_container}`""
+            if ($env:TF_STATE_backend_storage_container) {
+                $tfbackendArgs += " -backend-config=`"container_name=${env:TF_STATE_backend_storage_container}`""
             }
         }
 
@@ -115,18 +115,9 @@ try {
         $forceArgs = "-auto-approve"
     }
 
-    if (!(Get-ChildItem Env:TF_VAR_* -Exclude TF_VAR_backend_*) -and (Test-Path $varsFile)) {
+    if (!(Get-ChildItem Env:TF_VAR_* -Exclude TF_STATE_backend_*) -and (Test-Path $varsFile)) {
         # Load variables from file, if it exists and environment variables have not been set
         $varArgs = " -var-file='$varsFile'"
-    }
-
-    if ($Apply) {
-        # Taint Admin SSH rule(s) so they will be replaced and Terraform can get in to check cloud-init status
-        Write-Host "Tainting admin SSH rules to get just-in-time deployment access..."
-        terraform state list | Select-String -Pattern "admin_ssh" | foreach-object {
-            $resource = ($_ -replace "`"","`\`"")
-            Invoke-Expression "terraform taint '$resource'"
-        }
     }
 
     if ($Plan -or $Apply) {

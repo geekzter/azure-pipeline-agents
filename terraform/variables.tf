@@ -10,10 +10,10 @@ variable admin_ip_ranges {
 variable devops_org {}
 variable devops_pat {}
 
-variable linux_agent_count {
-  default                      = 2
-  type                         = number
+variable dns_host_suffix {
+  default                      = "mycicd"
 }
+
 variable linux_os_offer {
   default                      = "UbuntuServer"
 }
@@ -29,6 +29,14 @@ variable linux_pipeline_agent_name {
 }
 variable linux_pipeline_agent_pool {
   default                      = "Default"
+}
+variable linux_scale_set_agent_count {
+  default                      = 2
+  type                         = number
+}
+variable linux_self_hosted_agent_count {
+  default                      = 1
+  type                         = number
 }
 variable linux_storage_type {
   default                      = "Standard_LRS"
@@ -78,6 +86,10 @@ variable tags {
   }  
 } 
 
+variable use_firewall {
+  default                      = false
+  type                         = bool
+}
 variable use_scale_set {
   default                      = true
   type                         = bool
@@ -114,6 +126,10 @@ variable windows_pipeline_agent_name {
 }
 variable windows_pipeline_agent_pool {
   default                      = "Default"
+}
+variable windows_self_hosted_agent_count {
+  default                      = 1
+  type                         = number
 }
 variable windows_storage_type {
   default                      = "Standard_LRS"

@@ -32,81 +32,18 @@ Set Terraform variable `use_self_hosted` to `true` (default: `false`) to provisi
 
 Set Terraform variable `use_scale_set` to `true` (default: `true`) to provision scale set agents. 
 
-The software in the scale set (I use Ubuntu only), is installed using [cloud-init](https://cloudinit.readthedocs.io/en/latest/). Here is the yaml used:
-```yaml
-#cloud-config
-bootcmd:
-  - sudo apt remove unattended-upgrades -y
-  # Prevent race condition with VM extension provisioning
-  - while ( fuser /var/lib/dpkg/lock >/dev/null 2>&1 ); do sleep 5; done;
-  - while ( fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ); do sleep 5; done;
-  # Get apt repository signing keys
-  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
-  - sudo apt-add-repository https://cli.github.com/packages
-  - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
-  - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
-  - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
+The software in the scale set (I use Ubuntu only), is installed using [cloud-init](https://cloudinit.readthedocs.io/en/latest/). 
 
-apt:
-  sources:
-    git-core:
-      source: "ppa:git-core/ppa"
-    helm-stable-debian.list:
-      source: "deb https://baltocdn.com/helm/stable/debian/ all main"
-    kubernetes.list:
-      source: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-    azure-cli.list:
-      source: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ bionic main"
-    microsoft-prod.list:
-      source: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main"
-
-package_update: true
-  # Disable package upgrades to get rid of the following error
-  #   Could not get lock /var/lib/dpkg/lock-frontend - open (11: Resource temporarily unavailable)
-# package_upgrade: true
-packages:
-  # Core
-  - apt-transport-https
-  - ca-certificates
-  - curl
-  - gnupg
-  - lsb-release
-  - software-properties-common
-  # Tools
-  - ansible
-  - coreutils
-  - docker
-  - unixodbc-dev
-  - unzip
-  # Kubernetes
-  - helm
-  - kubectl
-  # Microsoft
-  - azure-cli
-  - azure-functions-core-tools
-  - dotnet-sdk-3.1
-  - powershell
-
-runcmd:
-  # Microsoft packages
-  - sudo ACCEPT_EULA=Y apt install msodbcsql17 -y
-  - sudo ACCEPT_EULA=Y apt install mssql-tools -y
-  # Automatic updates: re-enable them
-  - sudo apt install unattended-upgrades -y
-
-write_files:
-- path: /etc/environment
-  content: |
-    GEEKZTER_AGENT_SUBNET_ID="${subnet_id}"
-    GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
-  append: true
-
-final_message: "Up after $UPTIME seconds"
-```
-
-Note this also sets up some environment variables e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
+Note this also sets up some environment variables on the agent e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
 ## Infrastructure Provisioning
-### Interactive
+### Local
+#### Pre-requisites
+If you set this up locally, make sure you have the following pre-requisites:
+- [Azure CLI](http://aka.ms/azure-cli)
+- [PowerShell](https://github.com/PowerShell/PowerShell#get-powershell)
+- [Terraform](https://www.terraform.io/downloads.html) (to get that you can use [tfenv](https://github.com/tfutils/tfenv) on Linux & macOS, [Homebrew](https://github.com/hashicorp/homebrew-tap) on macOS or [chocolatey](https://chocolatey.org/packages/terraform) on Windows).
+
+#### Interactive
 Use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
 `az login`  
 `az account set --subscription="SUBSCRIPTION_ID"`
@@ -116,9 +53,14 @@ You can provision agents by running:
 `terraform init`  
 `terraform apply`
 
-This will only provision the scale set. To create a pool from this scale set (AFAIK not automatable) use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
+#### Scripted
+Alternatively, run:  
+`./deploy.ps1`
+
+#### Pool
+This will perform the  provision the agents. To create a pool from the scale set use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
 ### From Pipeline
-This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool. For this reason, it is recommended to create a specific pool for CI/CD only.
+This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool. For this reason, it is recommended to have a dedicated project for this pipeline.
 
 ## Pipeline use
 This yaml snippet shows how to reference the scale set pool and use the environment variables set by the agent:
@@ -133,5 +75,5 @@ steps:
     $env:TF_VAR_peer_network_id = $env:GEEKZTER_AGENT_VIRTUAL_NETWORK_ID
 
     # Terraform will use $env:GEEKZTER_AGENT_VIRTUAL_NETWORK_ID as value for input variable 'peer_network_id' 
-    # Create on-demand peering...
+    # Create on-demand peering... (e.g. https://github.com/geekzter/azure-aks)
 ```

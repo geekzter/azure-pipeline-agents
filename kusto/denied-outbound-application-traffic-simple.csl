@@ -1,0 +1,5 @@
+AzureDiagnostics
+| where Category == "AzureFirewallApplicationRule" 
+| where msg_s contains "Deny"
+| order by TimeGenerated desc
+| project TimeGenerated, msg_s

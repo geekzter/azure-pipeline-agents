@@ -65,8 +65,16 @@ resource azurerm_nat_gateway_public_ip_association egress {
   count                        = var.use_firewall ? 0 : 1
 }
 
-resource azurerm_subnet_nat_gateway_association agent_subnet {
-  subnet_id                    = azurerm_subnet.agent_subnet.id
+resource azurerm_subnet_nat_gateway_association scale_set_agents {
+  subnet_id                    = azurerm_subnet.scale_set_agents.id
+  nat_gateway_id               = azurerm_nat_gateway.egress.0.id
+
+  depends_on                   = [azurerm_nat_gateway_public_ip_association.egress]
+
+  count                        = var.use_firewall ? 0 : 1
+}
+resource azurerm_subnet_nat_gateway_association self_hosted_agents {
+  subnet_id                    = azurerm_subnet.self_hosted_agents.id
   nat_gateway_id               = azurerm_nat_gateway.egress.0.id
 
   depends_on                   = [azurerm_nat_gateway_public_ip_association.egress]

@@ -39,7 +39,7 @@ module scale_set_agents {
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
-  subnet_id                    = module.network.agent_subnet_id
+  subnet_id                    = module.network.scale_set_agents_subnet_id
   suffix                       = local.suffix
   user_name                    = var.user_name
   user_password                = local.password
@@ -81,7 +81,7 @@ module self_hosted_linux_agents {
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
-  subnet_id                    = module.network.agent_subnet_id
+  subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
   user_name                    = var.user_name
   user_password                = local.password
@@ -120,7 +120,7 @@ module self_hosted_windows_agents {
   # outbound_ip_address          = module.network.outbound_ip_address # TODO
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
-  subnet_id                    = module.network.agent_subnet_id
+  subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
   user_name                    = var.user_name
   user_password                = local.password

@@ -11,5 +11,6 @@ AzureDiagnostics
 | extend Action1 = case(Action1 == "Deny","Deny","Unknown Action")
 | extend Action = case(Action2 == "",Action1,Action2),Rule = case(Rule2a == "", case(Rule1 == "",case(Rule2b == "","N/A", Rule2b),Rule1),Rule2a), 
 RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),FQDN = case(FQDN == "", "N/A", FQDN),TargetPort = case(TargetPort == "", "N/A", TargetPort)
-| summarize count() by SourceIP, FQDN, TargetPort, Action, RuleCollection, Rule
+| extend SourceSubnet = case(ipv4_is_match("192.168.0.128/26", SourceIP),"ScaleSetAgents",case(ipv4_is_match("192.168.0.192/26", SourceIP),"SelfHostedAgents","Other"))
+| summarize count() by SourceSubnet, FQDN, TargetPort, Action, RuleCollection, Rule
 | order by FQDN asc

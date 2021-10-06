@@ -1,7 +1,3 @@
-output agent_subnet_id {
-  value                        = module.network.agent_subnet_id
-}
-
 output diagnostics_storage_account {
   value                        = azurerm_storage_account.diagnostics.name
 }
@@ -15,6 +11,13 @@ output resource_group_name {
 }
 output resource_suffix {
   value                        = local.suffix
+}
+
+output scale_set_agents_subnet_id {
+  value                        = module.network.scale_set_agents_subnet_id
+}
+output self_hosted_agents_subnet_id {
+  value                        = module.network.self_hosted_agents_subnet_id
 }
 output self_hosted_linux_vm_ids {
   value                        = var.use_self_hosted ? module.self_hosted_linux_agents.0.vm_ids : null

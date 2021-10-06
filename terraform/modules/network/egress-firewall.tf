@@ -90,11 +90,11 @@ resource azurerm_subnet fw_subnet {
 }
 
 resource azurerm_ip_group agents {
-  name                         = "${azurerm_subnet.agent_subnet.name}-ip-group"
+  name                         = "agents-ip-group"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
-  cidrs                        = azurerm_subnet.agent_subnet.address_prefixes
+  cidrs                        = concat(azurerm_subnet.scale_set_agents.address_prefixes,azurerm_subnet.self_hosted_agents.address_prefixes)
 
   tags                         = var.tags
 
@@ -749,8 +749,20 @@ resource azurerm_route_table fw_route_table {
   count                        = var.use_firewall ? 1 : 0
 }
 
-resource azurerm_subnet_route_table_association fw_route_table {
-  subnet_id                    = azurerm_subnet.agent_subnet.id
+resource azurerm_subnet_route_table_association scale_set_agents {
+  subnet_id                    = azurerm_subnet.scale_set_agents.id
+  route_table_id               = azurerm_route_table.fw_route_table.0.id
+
+  count                        = var.use_firewall ? 1 : 0
+  depends_on                   = [
+    azurerm_firewall_application_rule_collection.fw_app_rules,
+    azurerm_firewall_network_rule_collection.fw_net_outbound_rules,
+    # azurerm_firewall_network_rule_collection.fw_net_outbound_debug_rules,
+    azurerm_monitor_diagnostic_setting.firewall_logs,
+  ]
+}
+resource azurerm_subnet_route_table_association self_hosted_agents {
+  subnet_id                    = azurerm_subnet.self_hosted_agents.id
   route_table_id               = azurerm_route_table.fw_route_table.0.id
 
   count                        = var.use_firewall ? 1 : 0

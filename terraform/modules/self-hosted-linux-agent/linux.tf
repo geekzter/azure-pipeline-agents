@@ -100,6 +100,7 @@ resource azurerm_linux_virtual_machine linux_agent {
   }
 
   os_disk {
+    name                       = "${var.name}-osdisk"
     caching                    = "ReadWrite"
     storage_account_type       = var.storage_type
   }

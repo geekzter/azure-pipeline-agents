@@ -15,7 +15,7 @@ data cloudinit_config user_data {
   part {
     content                    = templatefile("${path.module}/cloud-config-agent.yaml",
     {
-      agent_name               = var.pipeline_agent_name
+      agent_name               = local.pipeline_agent_name
       agent_pool               = var.pipeline_agent_pool
       install_agent_script_b64 = filebase64("${path.root}/../scripts/agent/install_agent.sh")
       org                      = var.devops_org
@@ -29,8 +29,8 @@ data cloudinit_config user_data {
 }
 
 locals {
-  pipeline_agent_name    = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
-  vm_name                = "${var.vm_name_prefix}-${terraform.workspace}-${var.suffix}"
+  pipeline_agent_name          = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
+  vm_name                      = "${var.vm_name_prefix}-${terraform.workspace}-${var.suffix}"
 }
 
 resource azurerm_public_ip linux_pip {
@@ -152,6 +152,7 @@ resource azurerm_virtual_machine_extension linux_log_analytics {
 
   tags                         = var.tags
 
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }
 resource azurerm_virtual_machine_extension linux_dependency_monitor {
@@ -171,6 +172,7 @@ resource azurerm_virtual_machine_extension linux_dependency_monitor {
 
   tags                         = var.tags
 
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }
 resource azurerm_virtual_machine_extension linux_watcher {
@@ -183,5 +185,6 @@ resource azurerm_virtual_machine_extension linux_watcher {
 
   tags                         = var.tags
 
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }

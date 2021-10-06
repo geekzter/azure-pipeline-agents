@@ -14,6 +14,8 @@ module network {
 module scale_set_agents {
   source                       = "./modules/scale-set-agents"
 
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
@@ -52,6 +54,8 @@ module self_hosted_linux_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
   terraform_cidr               = local.ipprefix
 
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
@@ -88,6 +92,8 @@ module self_hosted_windows_agents {
 
   admin_cidr_ranges            = local.admin_cidr_ranges
   terraform_cidr               = local.ipprefix
+
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat

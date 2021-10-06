@@ -7,6 +7,12 @@ variable admin_ip_ranges {
   default                      = []
 }
 
+variable deploy_non_essential_vm_extensions {
+  description                  = "Whether to deploy optional VM extensions"
+  default                      = true
+  type                         = bool
+}
+
 variable devops_org {}
 variable devops_pat {}
 

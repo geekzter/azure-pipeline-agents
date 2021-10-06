@@ -3,6 +3,8 @@
 # linux_vm_size                  = "Standard_D4s_v3"
 # linux_agent_count              = 1
 
+# deploy_non_essential_vm_extensions = true
+# use_firewall                   = false
 # use_scale_set                  = true
 # use_self_hosted                = false
 

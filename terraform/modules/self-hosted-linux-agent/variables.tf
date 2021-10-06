@@ -4,6 +4,10 @@ variable admin_cidr_ranges {
 }
 variable terraform_cidr {}
 
+variable deploy_non_essential_vm_extensions {
+  type                         = bool
+}
+
 variable devops_org {}
 variable devops_pat {}
 

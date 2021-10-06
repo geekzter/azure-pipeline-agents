@@ -1,3 +1,7 @@
+variable deploy_non_essential_vm_extensions {
+  type                         = bool
+}
+
 variable devops_org {}
 variable devops_pat {}
 

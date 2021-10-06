@@ -29,10 +29,6 @@ variable linux_os_publisher {
 variable linux_os_sku {
   default                      = "18.04-LTS"
 }
-variable linux_pipeline_agent_name {
-  # Defaults to VM name if empty string
-  default                      = "ubuntu1804-agent"
-}
 variable linux_pipeline_agent_pool {
   default                      = "Default"
 }
@@ -47,9 +43,6 @@ variable linux_self_hosted_agent_count {
 variable linux_storage_type {
   default                      = "Standard_LRS"
 }
-variable linux_vm_name_prefix {
-  default                      = "ubuntu1804-agent"
-}
 variable linux_vm_size {
   default                      = "Standard_D2s_v3"
 }
@@ -61,6 +54,11 @@ variable location {
 variable log_analytics_workspace_id {
   description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
   default                      = ""
+}
+
+variable prepare_host {
+  type                         = bool
+  default                      = true
 }
 
 variable resource_suffix {
@@ -126,10 +124,6 @@ variable windows_os_publisher {
 variable windows_os_sku {
   default                      = "2019-Datacenter"
 }
-variable windows_pipeline_agent_name {
-  # Defaults to VM name if empty string
-  default                      = "windows-agent"
-}
 variable windows_pipeline_agent_pool {
   default                      = "Default"
 }
@@ -139,9 +133,6 @@ variable windows_self_hosted_agent_count {
 }
 variable windows_storage_type {
   default                      = "Standard_LRS"
-}
-variable windows_vm_name_prefix {
-  default                      = "win"
 }
 variable windows_vm_size {
   default                      = "Standard_D4s_v3"

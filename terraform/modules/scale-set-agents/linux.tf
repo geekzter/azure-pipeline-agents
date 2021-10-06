@@ -19,7 +19,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   resource_group_name          = var.resource_group_name
 
   admin_username               = var.user_name
-  custom_data                  = base64encode(data.cloudinit_config.user_data.rendered)
+  custom_data                  = var.prepare_host ? base64encode(data.cloudinit_config.user_data.rendered) : null
   instances                    = var.linux_agent_count
   overprovision                = false
   sku                          = var.linux_vm_size

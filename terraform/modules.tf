@@ -25,16 +25,17 @@ module scale_set_agents {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   linux_agent_count            = var.linux_scale_set_agent_count
-  linux_pipeline_agent_name    = var.linux_pipeline_agent_name
+  linux_pipeline_agent_name    = "ubuntu-agent"
   linux_pipeline_agent_pool    = var.linux_pipeline_agent_pool
   linux_os_offer               = var.linux_os_offer
   linux_os_publisher           = var.linux_os_publisher
   linux_os_sku                 = var.linux_os_sku
   linux_storage_type           = var.linux_storage_type
-  linux_vm_name_prefix         = var.linux_vm_name_prefix
+  linux_vm_name_prefix         = "ubuntu-agent"
   linux_vm_size                = var.linux_vm_size
 
   outbound_ip_address          = module.network.outbound_ip_address
+  prepare_host                 = var.prepare_host
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
@@ -64,16 +65,19 @@ module self_hosted_linux_agents {
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
+  computer_name                = "linuxagent${count.index+1}"
+  name                         = "${azurerm_resource_group.rg.name}-linux-agent${count.index+1}"
   os_offer                     = var.linux_os_offer
   os_publisher                 = var.linux_os_publisher
   os_sku                       = var.linux_os_sku
-  pipeline_agent_name          = "${var.linux_pipeline_agent_name}${count.index+1}"
+  pipeline_agent_name          = "ubuntu-agent-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.linux_pipeline_agent_pool
   storage_type                 = var.linux_storage_type
-  vm_name_prefix               = "${var.linux_vm_name_prefix}${count.index+1}"
   vm_size                      = var.linux_vm_size
 
   outbound_ip_address          = module.network.outbound_ip_address
+  prepare_host                 = var.prepare_host
+  public_access_enabled        = !var.use_firewall
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
@@ -103,13 +107,14 @@ module self_hosted_windows_agents {
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
+  computer_name                = "windowsagent${count.index+1}"
+  name                         = "${azurerm_resource_group.rg.name}-windows-agent${count.index+1}"
   os_offer                     = var.windows_os_offer
   os_publisher                 = var.windows_os_publisher
   os_sku                       = var.windows_os_sku
-  pipeline_agent_name          = "${var.windows_pipeline_agent_name}${count.index+1}"
+  pipeline_agent_name          = "windows-agent-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.windows_pipeline_agent_pool
   storage_type                 = var.windows_storage_type
-  vm_name_prefix               = "${var.windows_vm_name_prefix}${count.index+1}"
   vm_size                      = var.windows_vm_size
 
   # outbound_ip_address          = module.network.outbound_ip_address # TODO

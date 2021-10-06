@@ -1,11 +1,5 @@
-locals {
-  pipeline_agent_name  = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
-  vm_name              = "${var.vm_name_prefix}-${terraform.workspace}-${var.suffix}"
-  vm_computer_name     = "${var.vm_name_prefix}${substr(terraform.workspace,0,3)}${var.suffix}w"
-}
-
 resource azurerm_public_ip windows_pip {
-  name                         = "${local.vm_name}-pip"
+  name                         = "${var.name}-pip"
   location                     = var.location
   resource_group_name          = var.resource_group_name
   allocation_method            = "Static"
@@ -15,7 +9,7 @@ resource azurerm_public_ip windows_pip {
 }
 
 resource azurerm_network_interface windows_nic {
-  name                         = "${local.vm_name}-nic"
+  name                         = "${var.name}-nic"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
@@ -52,8 +46,8 @@ resource azurerm_network_interface_security_group_association windows_nic_nsg {
 }
 
 resource azurerm_windows_virtual_machine windows_agent {
-  name                         = "${local.vm_name}"
-  computer_name                = "${local.vm_computer_name}"
+  name                         = var.name
+  computer_name                = var.computer_name
   location                     = var.location
   resource_group_name          = var.resource_group_name
   network_interface_ids        = [azurerm_network_interface.windows_nic.id]
@@ -68,7 +62,7 @@ resource azurerm_windows_virtual_machine windows_agent {
   custom_data                  = base64encode(file("${path.root}/../scripts/agent/install_agent.ps1"))
 
   os_disk {
-    name                       = "${local.vm_name}-osdisk"
+    name                       = "${var.name}-osdisk"
     caching                    = "ReadWrite"
     storage_account_type       = var.storage_type
   }
@@ -149,7 +143,7 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   auto_upgrade_minor_version   = true
 
   protected_settings           = jsonencode({
-    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./install_agent.ps1 -Force;./install_agent.ps1 -AgentName ${local.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> install_agent.log\""
+    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./install_agent.ps1 -Force;./install_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> install_agent.log\""
   })
 
   # Start VM, so we can update/destroy the extension

@@ -21,6 +21,9 @@ variable linux_vm_size {}
 variable location {}
 variable log_analytics_workspace_resource_id {}
 variable outbound_ip_address {}
+variable prepare_host {
+  type                         = bool
+}
 variable resource_group_name {}
 variable subnet_id {}
 variable suffix {}

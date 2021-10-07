@@ -120,7 +120,7 @@ try {
         $varArgs = " -var-file='$varsFile'"
     }
 
-    if ($Plan -or $Apply) {
+    if ($Plan -or $Apply -or $Destroy) {
         # FIX: Start VM's to prevent https://github.com/terraform-providers/terraform-provider-azurerm/issues/8311
         $terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")
         Push-Location $terraformDirectory

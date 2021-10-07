@@ -9,8 +9,12 @@ parameters:
   displayName: Agent Pool
   type: string
   default: Default
+- name: publishArtifacts
+  displayName: Publish artifacts
+  type: boolean
+  default: true
 - name: boardsQueryId
-  displayName: Work item query ID
+  displayName: Provide query ID to run query
   type: string
   default: '00000000-0000-0000-0000-000000000000'
 
@@ -30,7 +34,7 @@ variables:
 
 jobs:
 - job: jobA
-  displayName: Producer
+  displayName: Producer (${{ parameters.pool }})
   pool:
     name: '$(pool)'
     vmImage: '$(vmImage)'
@@ -45,37 +49,39 @@ jobs:
       echo "hello pipeline" > $(artifactSample)
     displayName: 'Prepare artifacts'
 
-  - publish: $(artifactDirectory)
-    displayName: 'Publish artifacts'
-    artifact: $(artifactName)
-
-- job: jobB
-  displayName: Consumer
-  dependsOn:
-    - jobA
-  pool:
-    name: '$(pool)'
-    vmImage: '$(vmImage)'
-
-  variables:
-    artifactDirectory: $(Pipeline.Workspace)/$(artifactName)
-
-  workspace:
-    clean: all
-
-  steps:
-  - download: current
-    displayName: 'Download artifacts directory from previous job'
-    artifact: $(artifactName)
-
-  - script: |
-      ls -al
-      cat $(artifactSample)
-    displayName: 'Read artifacts'
-    workingDirectory: '$(artifactDirectory)'
+  - ${{ if parameters.publishArtifacts }}:
+    - publish: $(artifactDirectory)
+      displayName: 'Publish artifacts'
+      artifact: $(artifactName)
 
   - ${{ if ne(coalesce(parameters.boardsQueryId,'00000000-0000-0000-0000-000000000000'),'00000000-0000-0000-0000-000000000000') }}:
     - task: queryWorkItems@0
       displayName: 'Query work items'
       inputs:
         queryId: ${{ parameters.boardsQueryId }}
+
+- ${{ if parameters.publishArtifacts }}:
+  - job: jobB
+    displayName: Consumer (${{ parameters.pool }})
+    dependsOn:
+      - jobA
+    pool:
+      name: '$(pool)'
+      vmImage: '$(vmImage)'
+
+    variables:
+      artifactDirectory: $(Pipeline.Workspace)/$(artifactName)
+
+    workspace:
+      clean: all
+
+    steps:
+    - download: current
+      displayName: 'Download artifacts directory from previous job'
+      artifact: $(artifactName)
+
+    - script: |
+        ls -al
+        cat $(artifactSample)
+      displayName: 'Read artifacts'
+      workingDirectory: '$(artifactDirectory)'

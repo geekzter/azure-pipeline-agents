@@ -25,7 +25,6 @@ jobs:
   steps:
   - pwsh: |
       Write-Output "hello pipeline" | Out-File $(artifactSample)
-    name: terraformConfig
     displayName: 'Prepare artifacts'
     workingDirectory: '$(artifactDirectory)'
 
@@ -54,6 +53,5 @@ jobs:
   - pwsh: |
       Get-ChildItem 
       Get-Content $(artifactSample)
-    name: terraformConfig
     displayName: 'Prepare artifacts'
     workingDirectory: '$(artifactDirectory)'

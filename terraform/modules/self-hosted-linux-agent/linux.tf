@@ -20,7 +20,7 @@ data cloudinit_config user_data {
     {
       agent_name               = var.pipeline_agent_name
       agent_pool               = var.pipeline_agent_pool
-      install_agent_script_b64 = filebase64("${path.root}/../scripts/agent/install_agent.sh")
+      install_agent_script_b64 = filebase64("${path.module}/install_agent.sh")
       org                      = var.devops_org
       pat                      = var.devops_pat
       user                     = var.user_name

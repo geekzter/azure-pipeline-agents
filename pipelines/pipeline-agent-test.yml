@@ -23,8 +23,8 @@ jobs:
     clean: all
 
   steps:
-  - pwsh: |
-      Write-Output "hello pipeline" | Out-File $(artifactSample)
+  - script: |
+      echo "hello pipeline" > $(artifactSample)
     displayName: 'Prepare artifacts'
     workingDirectory: '$(artifactDirectory)'
 
@@ -50,8 +50,8 @@ jobs:
     displayName: 'Download artifacts directory from previous job'
     artifact: $(artifactName)
 
-  - pwsh: |
-      Get-ChildItem 
-      Get-Content $(artifactSample)
+  - script: |
+      ls -al
+      cat $(artifactSample)
     displayName: 'Prepare artifacts'
     workingDirectory: '$(artifactDirectory)'

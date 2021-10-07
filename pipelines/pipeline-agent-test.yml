@@ -60,7 +60,7 @@ jobs:
     workingDirectory: '$(artifactDirectory)'
 
   - ${{ if ne(coalesce(parameters.boardsQueryId,'null'),'null') }}:
-    - task: queryWorkItems@1
+    - task: queryWorkItems@0
       displayName: 'Query work items'
       inputs:
         queryId: ${{ parameters.boardsQueryId }}

@@ -13,8 +13,12 @@ variable deploy_non_essential_vm_extensions {
   type                         = bool
 }
 
-variable devops_org {}
-variable devops_pat {}
+variable devops_org {
+  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+}
+variable devops_pat {
+  description                  = "A Personal Access Token to access the Azure DevOps organization"
+}
 
 variable dns_host_suffix {
   default                      = "mycicd"

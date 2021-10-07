@@ -16,5 +16,5 @@ $env:SHELL = (Get-Command pwsh).Source
 
 Set-Location $repoDirectory
 Write-Host "To update Codespace configuration, run $repoDirectory/.devcontainer/createorupdate.ps1"
-Write-Host "To provision infrastructure, make sure you're logged in with Azure CLI e.g. run 'az login' and 'az account set --subscription 00000000-0000-0000-0000-000000000000'. Then change to the $repoDirectory/terraform directory and run 'terraform apply'"
-Write-Host "To destroy infrastructure, replace 'apply' with 'destroy' in above statement(s)"
+Write-Host "To provision infrastructure, run $repoDirectory/scripts/deploy.ps1 -Apply"
+Write-Host "To destroy infrastructure, run $repoDirectory/scripts/deploy.ps1 -Destroy"

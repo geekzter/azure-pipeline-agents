@@ -49,3 +49,9 @@ AddorUpdateModule Posh-Git
 if (!(Test-Path $Profile)) {
     New-Item -ItemType symboliclink -Path $Profile -Target $profileTemplate -Force | Select-Object -ExpandProperty Name
 }
+
+# Create SSH keypair
+if (!(Test-Path ~/.ssh/id_rsa)) {
+    # pwsh doesn't let me create an empty passphrase
+    bash -c "ssh-keygen -q -m PEM -N '' -f ~/.ssh/id_rsa"
+}

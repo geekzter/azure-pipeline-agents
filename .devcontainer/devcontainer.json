@@ -14,5 +14,5 @@
   },
 
   // Run bash script in .devcontainer directory
-  "postCreateCommand": "/usr/bin/pwsh -nop -f ./.devcontainer/createorupdate.ps1 > ~/post-create.log"
+  "postCreateCommand": "/usr/bin/pwsh -nop -f ./.devcontainer/createorupdate.ps1 | tee ~/post-create.log"
 }

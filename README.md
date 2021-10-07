@@ -30,7 +30,7 @@ The software in the scale set (I use Ubuntu only), is installed using [cloud-ini
 Note this also sets up some environment variables on the agent e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
 ## Infrastructure Provisioning
 ### Codespace
-The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed.   
+The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation has completed to start a clean shell (pwsh). Follow the instructions shown to provision infrastructure.
 ### Local
 #### Pre-requisites
 If you set this up locally, make sure you have the following pre-requisites:

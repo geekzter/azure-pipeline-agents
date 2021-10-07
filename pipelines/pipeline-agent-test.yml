@@ -2,9 +2,9 @@
 #  e.g. to discover what outbound network access is required
 parameters:
 - name: boardsQueryId
-  displayName: Work item query ID (00000000-0000-0000-0000-000000000000)
+  displayName: Work item query ID
   type: string
-  default: 'skip'
+  default: '00000000-0000-0000-0000-000000000000'
 
 trigger: none
 
@@ -61,7 +61,7 @@ jobs:
     displayName: 'Read artifacts'
     workingDirectory: '$(artifactDirectory)'
 
-  - ${{ if ne(coalesce(parameters.boardsQueryId,'skip'),'skip') }}:
+  - ${{ if ne(coalesce(parameters.boardsQueryId,'00000000-0000-0000-0000-000000000000'),'00000000-0000-0000-0000-000000000000') }}:
     - task: queryWorkItems@0
       displayName: 'Query work items'
       inputs:

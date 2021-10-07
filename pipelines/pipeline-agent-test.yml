@@ -3,6 +3,7 @@
 parameters:
 - name: boardsQueryId
   type: string
+  default: 'skip'
 
 trigger: none
 
@@ -59,7 +60,7 @@ jobs:
     displayName: 'Read artifacts'
     workingDirectory: '$(artifactDirectory)'
 
-  - ${{ if ne(coalesce(parameters.boardsQueryId,'null'),'null') }}:
+  - ${{ if ne(coalesce(parameters.boardsQueryId,'skip'),'skip') }}:
     - task: queryWorkItems@0
       displayName: 'Query work items'
       inputs:

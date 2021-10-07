@@ -29,8 +29,9 @@ The software in the scale set (I use Ubuntu only), is installed using [cloud-ini
 
 Note this also sets up some environment variables on the agent e.g. `GEEKZTER_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
 ## Infrastructure Provisioning
+To customize provisioning, see [configuration](#configuration).
 ### Codespace
-The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation has completed to start a clean shell (pwsh). Follow the instructions shown to provision infrastructure.
+The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh). Follow the instructions shown to provision infrastructure.
 ### Local
 #### Pre-requisites
 If you set this up locally, make sure you have the following pre-requisites:
@@ -59,7 +60,7 @@ This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can
 To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool. For this reason, it is recommended to have a dedicated project for this pipeline.
 
 ## Configuration
-Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and can be overriden by creating a `.auto.tfvars` file (see [config.auto.tfvars.sample](terraform/config.auto.tfvars.sample)).
+Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and can be overriden by creating a `.auto.tfvars` file (see [config.auto.tfvars.sample](terraform/config.auto.tfvars.sample)), or environemt variables e.g. `TF_VAR_use_self_hosted="true"`.
 |Feature|Toggle|
 |---|---|
 |Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |`deploy_non_essential_vm_extensions`|

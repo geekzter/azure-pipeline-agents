@@ -10,7 +10,7 @@ trigger: none
 
 variables:
 - name: 'artifactDirectory'
-  value: 'visuals'
+  value: 'scratch'
 - name: 'artifactName'
   value: 'artifactTest'
 - name: 'artifactSample'
@@ -29,9 +29,10 @@ jobs:
 
   steps:
   - script: |
+      mkdir $(artifactDirectory)
+      cd $(artifactDirectory)
       echo "hello pipeline" > $(artifactSample)
     displayName: 'Prepare artifacts'
-    workingDirectory: '$(artifactDirectory)'
 
   - publish: $(artifactDirectory)
     displayName: 'Publish artifacts'

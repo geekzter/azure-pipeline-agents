@@ -7,10 +7,11 @@ AzureDiagnostics
 | parse TempDetails with "to " FQDN ":" TargetPortInt:int ". Action: " Action2 "." *
 | parse TempDetails with * ". Rule Collection: " RuleCollection2a ". Rule:" Rule2a
 | parse TempDetails with * "Deny." RuleCollection2b ". Proceeding with" Rule2b
+| where ipv4_is_match("192.168.0.128/25", SourceIP)
 | extend TargetPort = tostring(TargetPortInt)
 | extend Action1 = case(Action1 == "Deny","Deny","Unknown Action")
 | extend Action = case(Action2 == "",Action1,Action2),Rule = case(Rule2a == "", case(Rule1 == "",case(Rule2b == "","N/A", Rule2b),Rule1),Rule2a), 
 RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),FQDN = case(FQDN == "", "N/A", FQDN),TargetPort = case(TargetPort == "", "N/A", TargetPort)
 | extend SourceSubnet = case(ipv4_is_match("192.168.0.128/26", SourceIP),"ScaleSetAgents",case(ipv4_is_match("192.168.0.192/26", SourceIP),"SelfHostedAgents","Other"))
-| summarize count() by SourceSubnet, FQDN, TargetPort, Action, RuleCollection, Rule
-| order by FQDN asc
+| summarize count() by SourceSubnet, Rule, FQDN, TargetPort, Action
+| order by Rule, FQDN asc

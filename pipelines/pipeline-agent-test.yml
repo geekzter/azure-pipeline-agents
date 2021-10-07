@@ -53,5 +53,5 @@ jobs:
   - script: |
       ls -al
       cat $(artifactSample)
-    displayName: 'Prepare artifacts'
+    displayName: 'Read artifacts'
     workingDirectory: '$(artifactDirectory)'

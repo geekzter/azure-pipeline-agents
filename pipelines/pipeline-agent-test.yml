@@ -1,5 +1,8 @@
 # This pipeline is used to test self-hosted agents
 #  e.g. to discover what outbound network access is required
+parameters:
+- name: boardsQueryId
+  type: string
 
 trigger: none
 
@@ -55,3 +58,9 @@ jobs:
       cat $(artifactSample)
     displayName: 'Read artifacts'
     workingDirectory: '$(artifactDirectory)'
+
+  - ${{ if ne(coalesce(parameters.boardsQueryId,'null'),'null') }}:
+    - task: queryWorkItems@0
+      displayName: 'Query work items'
+      inputs:
+        queryId: ${{ parameters.boardsQueryId }}

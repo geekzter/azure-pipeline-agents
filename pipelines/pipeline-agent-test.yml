@@ -14,7 +14,7 @@ parameters:
   type: boolean
   default: true
 - name: boardsQueryId
-  displayName: Provide query ID to run query
+  displayName: Provide query ID to run Boards query
   type: string
   default: '00000000-0000-0000-0000-000000000000'
 

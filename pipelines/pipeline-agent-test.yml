@@ -15,9 +15,9 @@ variables:
 
 jobs:
 - job: jobA
+  displayName: Producer
   pool:
     name: '$(pool)'
-    # vmImage: $(vmImage)
 
   workspace:
     clean: all
@@ -27,18 +27,18 @@ jobs:
       Write-Output "hello pipeline" | Out-File $(artifactSample)
     name: terraformConfig
     displayName: 'Prepare artifacts'
-    workingDirectory: '$(terraformDirectory)'
+    workingDirectory: '$(artifactDirectory)'
 
   - publish: $(artifactDirectory)
     displayName: 'Publish artifacts'
     artifact: $(artifactName)
 
 - job: jobB
+  displayName: Consumer
   dependsOn:
     - jobA
   pool:
     name: '$(pool)'
-    # vmImage: $(vmImage)
 
   variables:
     artifactDirectory: $(Pipeline.Workspace)/$(artifactName)

@@ -1,3 +1,4 @@
+# This pipeline is for CI/CD
 parameters:
 - name: workspace
   displayName: Pipeline Environment / Terraform Workspace

@@ -1,0 +1,59 @@
+# This pipeline is used to test self-hosted agents
+#  e.g. to discover what outbound network access is required
+
+trigger: none
+
+variables:
+- name: 'artifactDirectory'
+  value: 'visuals'
+- name: 'artifactName'
+  value: 'artifactTest'
+- name: 'artifactSample'
+  value: 'sample.txt'
+- name: pool
+  value: Default
+
+jobs:
+- job: jobA
+  pool:
+    name: '$(pool)'
+    # vmImage: $(vmImage)
+
+  workspace:
+    clean: all
+
+  steps:
+  - pwsh: |
+      Write-Output "hello pipeline" | Out-File $(artifactSample)
+    name: terraformConfig
+    displayName: 'Prepare artifacts'
+    workingDirectory: '$(terraformDirectory)'
+
+  - publish: $(artifactDirectory)
+    displayName: 'Publish artifacts'
+    artifact: $(artifactName)
+
+- job: jobB
+  dependsOn:
+    - jobA
+  pool:
+    name: '$(pool)'
+    # vmImage: $(vmImage)
+
+  variables:
+    artifactDirectory: $(Pipeline.Workspace)/$(artifactName)
+
+  workspace:
+    clean: all
+
+  steps:
+  - download: current
+    displayName: 'Download artifacts directory from previous job'
+    artifact: $(artifactName)
+
+  - pwsh: |
+      Get-ChildItem 
+      Get-Content $(artifactSample)
+    name: terraformConfig
+    displayName: 'Prepare artifacts'
+    workingDirectory: '$(artifactDirectory)'

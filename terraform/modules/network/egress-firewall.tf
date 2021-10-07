@@ -291,8 +291,8 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     protocol {
-        port                   = "443"
-        type                   = "Https"
+      port                     = "443"
+      type                     = "Https"
     }
   }
 

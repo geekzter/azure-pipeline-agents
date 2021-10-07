@@ -2,6 +2,7 @@
 #  e.g. to discover what outbound network access is required
 parameters:
 - name: boardsQueryId
+  displayName: Work item query ID (00000000-0000-0000-0000-000000000000)
   type: string
   default: 'skip'
 

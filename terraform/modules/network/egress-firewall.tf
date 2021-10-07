@@ -168,6 +168,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "*.vsassets.io",
       "*.vsblob.visualstudio.com", # Pipeline artifacts
       "*.vsrm.visualstudio.com",
+      "*.vstmr.visualstudio.com",
       "*.vssps.visualstudio.com",
       "*.vstmrblob.vsassets.io",
     # "*vsblob*.blob.core.windows.net", # Pipeline artifacts, wildcard not allowed. So instead use:
@@ -176,6 +177,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "dev.azure.com",
       "login.microsoftonline.com",
       "visualstudio-devdiv-c2s.msedge.net",
+      "vssps.dev.azure.com",
       "vstsagentpackage.azureedge.net"
     ]
 
@@ -202,6 +204,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "aka.ms",
       "azure.microsoft.com",
       "files.pythonhosted.org",
+      "github.com",
       "ipapi.co",
       "ipinfo.io",
       "pypi.org",

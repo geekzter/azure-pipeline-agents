@@ -5,6 +5,9 @@ variable configure_cidr_allow_rules {
 variable configure_wildcard_allow_rules {
     type = bool
 }
+variable deploy_bastion {
+    type = bool
+}
 variable deploy_firewall {
     type = bool
 }

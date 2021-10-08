@@ -1,85 +1,3 @@
-locals {
-  locations                    = [ 
-    # Get regions: az account list-locations --query "[].name"
-    "asia",
-    "asiapacific",
-    "australia",
-    "australiacentral",
-    "australiacentral2",
-    "australiaeast",
-    "australiasoutheast",
-    "brazil",
-    "brazilsouth",
-    "brazilsoutheast",
-    "canada",
-    "canadacentral",
-    "canadaeast",
-    "centralindia",
-    "centralus",
-    "centraluseuap",
-    "centralusstage",
-    "eastasia",
-    "eastasiastage",
-    "eastus",
-    "eastus2",
-    "eastus2euap",
-    "eastus2stage",
-    "eastusslv",
-    "eastusstage",
-    "europe",
-    "france",
-    "francecentral",
-    "francesouth",
-    "germany",
-    "germanynorth",
-    "germanywestcentral",
-    "global",
-    "india",
-    "japan",
-    "japaneast",
-    "japanwest",
-    "jioindiacentral",
-    "jioindiawest",
-    "korea",
-    "koreacentral",
-    "koreasouth",
-    "northcentralus",
-    "northcentralusstage",
-    "northeurope",
-    "norway",
-    "norwayeast",
-    "norwaywest",
-    "qatarcentral",
-    "southafrica",
-    "southafricanorth",
-    "southafricawest",
-    "southcentralus",
-    "southcentralusstage",
-    "southeastasia",
-    "southeastasiastage",
-    "southindia",
-    "swedencentral",
-    "switzerland",
-    "switzerlandnorth",
-    "switzerlandwest",
-    "uae",
-    "uaecentral",
-    "uaenorth",
-    "uk",
-    "uksouth",
-    "ukwest",
-    "unitedstates",
-    "westcentralus",
-    "westeurope",
-    "westindia",
-    "westus",
-    "westus2",
-    "westus2stage",
-    "westus3",
-    "westusstage",
-  ]
-}
-
 resource azurerm_subnet fw_subnet {
   name                         = "AzureFirewallSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
@@ -180,6 +98,13 @@ resource azurerm_firewall firewall {
   }
 
   tags                         = var.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
+}
+
+resource azurerm_virtual_network_dns_servers dns_proxy {
+  virtual_network_id           = azurerm_virtual_network.pipeline_network.id
+  dns_servers                  = [azurerm_firewall.firewall.0.ip_configuration.0.private_ip_address]
 
   count                        = var.deploy_firewall ? 1 : 0
 }

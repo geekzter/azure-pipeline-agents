@@ -63,7 +63,6 @@ To be able to create Self-Hosted Agents, the 'Project Collection Build Service (
 Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and can be overriden by creating a `.auto.tfvars` file (see [config.auto.tfvars.sample](terraform/config.auto.tfvars.sample)), or environemt variables e.g. `TF_VAR_use_self_hosted="true"`.
 |Terraform variable|Feature|
 |---|---|
-| where Category == "AzureFirewallApplicationRule" or Category == "AzureFirewallNetworkRule"
 |`configure_cidr_allow_rules`|Configure allow rules for IP ranges documented [here](https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions). When enabled traffic allowed by this rule will not have FQDN's shown in the logs|
 |`configure_wildcard_allow_rules`|Configure reneric wildcard FQDN rules e.g. *.blob.core.windows.net|
 |`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it|

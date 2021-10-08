@@ -7,9 +7,30 @@ variable admin_ip_ranges {
   default                      = []
 }
 
+variable configure_cidr_allow_rules {
+  default                      = false
+  type                         = bool
+}
+variable configure_wildcard_allow_rules {
+  default                      = true
+  type                         = bool
+}
+variable deploy_firewall {
+  description                  = "Deploys NAT Gateway if set to false"
+  default                      = false
+  type                         = bool
+}
 variable deploy_non_essential_vm_extensions {
   description                  = "Whether to deploy optional VM extensions"
   default                      = true
+  type                         = bool
+}
+variable deploy_scale_set {
+  default                      = true
+  type                         = bool
+}
+variable deploy_self_hosted {
+  default                      = false
   type                         = bool
 }
 
@@ -93,19 +114,6 @@ variable tags {
     shutdown                   = "false"
   }  
 } 
-
-variable use_firewall {
-  default                      = false
-  type                         = bool
-}
-variable use_scale_set {
-  default                      = true
-  type                         = bool
-}
-variable use_self_hosted {
-  default                      = false
-  type                         = bool
-}
 
 variable user_name {
   default                      = "devopsadmin"

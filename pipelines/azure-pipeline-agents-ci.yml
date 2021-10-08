@@ -142,12 +142,12 @@ jobs:
         ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}_${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}:
           publishTerraformArtifact: true
           TF_VAR_resource_suffix: '$(Build.BuildId)a'
-          TF_VAR_use_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+          TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
           unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
         ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}_${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
           publishTerraformArtifact: false
           TF_VAR_resource_suffix: '$(Build.BuildId)b'
-          TF_VAR_use_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
+          TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
           unpinTerraformProviders: ${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
       maxParallel: 1
 
@@ -315,7 +315,7 @@ jobs:
           AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
     - task: AzureCLI@2
-      displayName: 'Terraform plan & apply (use_firewall:$(TF_VAR_use_firewall))'
+      displayName: 'Terraform plan & apply (deploy_firewall:$(TF_VAR_deploy_firewall))'
       name: apply
       inputs:
         azureSubscription: '$(subscriptionConnection)'

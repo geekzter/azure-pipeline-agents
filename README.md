@@ -61,13 +61,17 @@ To be able to create Self-Hosted Agents, the 'Project Collection Build Service (
 
 ## Configuration
 Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and can be overriden by creating a `.auto.tfvars` file (see [config.auto.tfvars.sample](terraform/config.auto.tfvars.sample)), or environemt variables e.g. `TF_VAR_use_self_hosted="true"`.
-|Feature|Toggle|
+|Terraform variable|Feature|
 |---|---|
-|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |`deploy_non_essential_vm_extensions`|
-Configure host image e.g. install packages (Ubuntu only) with [cloud-init](cloudinit)|`prepare_host`|
-|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it|`use_firewall`|
-|Deploy Scale Set agents|`use_scale_set`|
-|Deploy Self-Hosted agents|`use_self_hosted`|
+| where Category == "AzureFirewallApplicationRule" or Category == "AzureFirewallNetworkRule"
+|`configure_cidr_allow_rules`|Configure allow rules for IP ranges documented [here](https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions). When enabled traffic allowed by this rule will not have FQDN's shown in the logs|
+|`configure_wildcard_allow_rules`|Configure reneric wildcard FQDN rules e.g. *.blob.core.windows.net|
+|`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it|
+|`deploy_non_essential_vm_extensions`|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |
+|`deploy_scale_set`|Deploy Scale Set agents|
+|`deploy_self_hosted`|Deploy Self-Hosted agents|
+|`log_analytics_workspace_id`|Providing a value of an existing Log Analytics workspace allows you to retain logs after infrasructure is destroyed|
+|`prepare_host`|Configure host image e.g. install packages (Ubuntu only) with [cloud-init](cloudinit)|
 
 ## Pipeline use
 This yaml snippet shows how to reference the scale set pool and use the environment variables set by the agent:

@@ -2,13 +2,16 @@ module network {
   source                       = "./modules/network"
 
   address_space                = var.address_space
+  configure_cidr_allow_rules   = var.configure_cidr_allow_rules
+  configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
+  deploy_firewall              = var.deploy_firewall
+  devops_org                   = var.devops_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   dns_host_suffix              = var.dns_host_suffix
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
-  use_firewall                 = var.use_firewall
 }
 
 module scale_set_agents {
@@ -45,7 +48,7 @@ module scale_set_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
 
-  count                        = var.use_scale_set ? 1 : 0
+  count                        = var.deploy_scale_set ? 1 : 0
   depends_on                   = [module.network]
 }
 
@@ -77,7 +80,7 @@ module self_hosted_linux_agents {
 
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
-  public_access_enabled        = !var.use_firewall
+  public_access_enabled        = !var.deploy_firewall
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
@@ -87,7 +90,7 @@ module self_hosted_linux_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
 
-  count                        = var.use_self_hosted ? var.linux_self_hosted_agent_count : 0
+  count                        = var.deploy_self_hosted ? var.linux_self_hosted_agent_count : 0
   depends_on                   = [module.network]
 }
 
@@ -126,6 +129,6 @@ module self_hosted_windows_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
 
-  count                        = var.use_self_hosted ? var.windows_self_hosted_agent_count : 0
+  count                        = var.deploy_self_hosted ? var.windows_self_hosted_agent_count : 0
   depends_on                   = [module.network]
 }

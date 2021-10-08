@@ -1,14 +1,16 @@
-# Alternatively, define environment variables e.g. TF_VAR_use_firewall="true"
+# Alternatively, define environment variables e.g. TF_VAR_deploy_firewall="true"
 
 # devops_org                     = "myorg"
 # devops_pat                     = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Self-Hosted Agent Build
 # linux_vm_size                  = "Standard_D4s_v3"
 # linux_agent_count              = 1
 
-# deploy_non_essential_vm_extensions = true
-# prepare_host                   = true
-# use_firewall                   = false
-# use_scale_set                  = true
-# use_self_hosted                = false
+# configure_cidr_allow_rules     = true
+# configure_wildcard_allow_rules = true
+# deploy_non_essential_vm_extensions= false
+# prepare_host                   = false
+# deploy_firewall                = true
+# deploy_scale_set               = true
+# deploy_self_hosted             = true
 
 # windows_agent_count            = 0

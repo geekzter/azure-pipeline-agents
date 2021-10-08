@@ -86,19 +86,19 @@ resource azurerm_subnet fw_subnet {
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],2,0)]
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_ip_group agents {
-  name                         = "${azurerm_subnet.agent_subnet.name}-ip-group"
+  name                         = "agents-ip-group"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
-  cidrs                        = azurerm_subnet.agent_subnet.address_prefixes
+  cidrs                        = concat(azurerm_subnet.scale_set_agents.address_prefixes,azurerm_subnet.self_hosted_agents.address_prefixes)
 
   tags                         = var.tags
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_ip_group vnet {
@@ -110,7 +110,48 @@ resource azurerm_ip_group vnet {
 
   tags                         = var.tags
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
+}
+
+resource azurerm_ip_group ado {
+  name                         = "ado-ip-group"
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
+
+  cidrs                        = [
+    # https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions
+    "13.107.6.0/24",
+    "13.107.9.0/24",
+    "13.107.42.0/24",
+    "13.107.43.0/24",
+  ]
+
+  tags                         = var.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
+}
+
+resource azurerm_ip_group microsoft_365 {
+  name                         = "microsoft365-ip-group"
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
+
+  cidrs                        = [
+    # https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#other-ip-addresses
+    "40.82.190.38",
+    "52.108.0.0/14",
+    "52.237.19.6",
+    "52.238.106.116/32",
+    "52.244.37.168/32",
+    "52.244.203.72/32",
+    "52.244.207.172/32",
+    "52.244.223.198/32",
+    "52.247.150.191/32",
+  ]
+
+  tags                         = var.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_public_ip firewall {
@@ -118,11 +159,11 @@ resource azurerm_public_ip firewall {
   location                     = var.location
   resource_group_name          = var.resource_group_name
   allocation_method            = "Static"
-  sku                          = "Standard" # Zone redundant
+  sku                          = "Standard"
 
   tags                         = var.tags
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_firewall firewall {
@@ -130,8 +171,7 @@ resource azurerm_firewall firewall {
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
-  # Make zone redundant
-  zones                        = [1,2]
+  dns_servers                  = ["168.63.129.16"] # Azure DNS
 
   ip_configuration {
     name                       = "fw_ipconfig"
@@ -141,7 +181,7 @@ resource azurerm_firewall firewall {
 
   tags                         = var.tags
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 # Outbound domain whitelisting
@@ -161,7 +201,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     target_fqdns               = [
-      # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops
+      # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#im-running-a-firewall-and-my-code-is-in-azure-repos-what-urls-does-the-agent-need-to-communicate-with
       "*.dev.azure.com",
       "*.pkgs.visualstudio.com",
       "*.visualstudio.com",
@@ -169,14 +209,20 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "*.vsblob.visualstudio.com", # Pipeline artifacts
       "*.vsrm.visualstudio.com",
       "*.vssps.visualstudio.com",
+      "*.vstmr.visualstudio.com",
       "*.vstmrblob.vsassets.io",
-    # "*vsblob*.blob.core.windows.net", # Pipeline artifacts, wildcard not allowed. So instead use:
-      "*.blob.core.windows.net", # Pipeline artifacts
-      "*.blob.storage.azure.net",
+      "${var.devops_org}.pkgs.visualstudio.com",
+      "${var.devops_org}.visualstudio.com",
+      "${var.devops_org}.vsblob.visualstudio.com",
+      "${var.devops_org}.vsrm.visualstudio.com",
+      "${var.devops_org}.vssps.visualstudio.com",
+      "${var.devops_org}.vstmr.visualstudio.com",
+      "app.vssps.visualstudio.com",
       "dev.azure.com",
       "login.microsoftonline.com",
       "visualstudio-devdiv-c2s.msedge.net",
-      "vstsagentpackage.azureedge.net"
+      "vssps.dev.azure.com",
+      "vstsagentpackage.azureedge.net",
     ]
 
     protocol {
@@ -184,6 +230,29 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       type                     = "Https"
     }
   } 
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                     = "Allow Azure DevOps (wildcards)"
+      description              = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      target_fqdns             = [
+        # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#im-running-a-firewall-and-my-code-is-in-azure-repos-what-urls-does-the-agent-need-to-communicate-with
+        "*.blob.core.windows.net", # Pipeline artifacts *vsblob*.blob.core.windows.net
+        "*.blob.storage.azure.net",
+      ]
+
+      protocol {
+        port                   = "443"
+        type                   = "Https"
+      }
+    }
+  }
 
   # Required traffic originating from within Build / Release jobs e.g. deployment of:
   # AKS, Synapse
@@ -196,12 +265,10 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     target_fqdns               = [
-      "*.amazonaws.com",
-      "*.cloudapp.azure.com", # Application Gateway
-      "*.queue.core.windows.net", # Synapse
       "aka.ms",
       "azure.microsoft.com",
       "files.pythonhosted.org",
+      "github.com",
       "ipapi.co",
       "ipinfo.io",
       "pypi.org",
@@ -217,6 +284,30 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       type                     = "Https"
     }
   }
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                       = "Allow Pipeline tasks by URL wildcard (HTTPS)"
+      description                = "Cloud Services e.g. Azure App Service"
+
+      source_ip_groups           = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      target_fqdns               = [
+        "*.amazonaws.com",
+        "*.azurewebsites.net", # App Service
+        "*.cloudapp.azure.com", # Application Gateway
+        "*.queue.core.windows.net", # Synapse
+      ]
+
+      protocol {
+        port                     = "443"
+        type                     = "Https"
+      }
+    }
+  }  
 
   # Required traffic originating from within Build / Release jobs e.g. deployment of:
   # AKS, Synapse
@@ -288,8 +379,8 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     ]
 
     protocol {
-        port                   = "443"
-        type                   = "Https"
+      port                     = "443"
+      type                     = "Https"
     }
   }
 
@@ -467,7 +558,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     }
   }
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 } 
 
 resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
@@ -477,6 +568,31 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   priority                     = 101
   action                       = "Allow"
 
+  dynamic "rule" {
+    for_each = range(var.configure_cidr_allow_rules ? 1 : 0) 
+    content {
+      name                     = "AllowOutboundAzureDevOps"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      destination_ports        = [
+        "443",
+      ]
+      destination_ip_groups    = [
+        # https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions
+        azurerm_ip_group.ado.0.id,
+        # https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#other-ip-addresses
+        azurerm_ip_group.microsoft_365.0.id,
+      ]
+
+      protocols                = [
+        "TCP",
+      ]
+    }
+  }
+  
   rule {
     name                       = "AllowOutboundDNS"
 
@@ -594,7 +710,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
     ]
   }
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 
@@ -626,7 +742,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_debug_rules {
     ]
   }
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 */
 
@@ -671,7 +787,7 @@ resource azurerm_monitor_diagnostic_setting firewall_ip_logs {
     }
   }
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_monitor_diagnostic_setting firewall_logs {
@@ -715,7 +831,7 @@ resource azurerm_monitor_diagnostic_setting firewall_logs {
     }
   }
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_route_table fw_route_table {
@@ -746,14 +862,26 @@ resource azurerm_route_table fw_route_table {
   }
   tags                         = var.tags
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
-resource azurerm_subnet_route_table_association fw_route_table {
-  subnet_id                    = azurerm_subnet.agent_subnet.id
+resource azurerm_subnet_route_table_association scale_set_agents {
+  subnet_id                    = azurerm_subnet.scale_set_agents.id
   route_table_id               = azurerm_route_table.fw_route_table.0.id
 
-  count                        = var.use_firewall ? 1 : 0
+  count                        = var.deploy_firewall ? 1 : 0
+  depends_on                   = [
+    azurerm_firewall_application_rule_collection.fw_app_rules,
+    azurerm_firewall_network_rule_collection.fw_net_outbound_rules,
+    # azurerm_firewall_network_rule_collection.fw_net_outbound_debug_rules,
+    azurerm_monitor_diagnostic_setting.firewall_logs,
+  ]
+}
+resource azurerm_subnet_route_table_association self_hosted_agents {
+  subnet_id                    = azurerm_subnet.self_hosted_agents.id
+  route_table_id               = azurerm_route_table.fw_route_table.0.id
+
+  count                        = var.deploy_firewall ? 1 : 0
   depends_on                   = [
     azurerm_firewall_application_rule_collection.fw_app_rules,
     azurerm_firewall_network_rule_collection.fw_net_outbound_rules,

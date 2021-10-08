@@ -19,7 +19,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   resource_group_name          = var.resource_group_name
 
   admin_username               = var.user_name
-  custom_data                  = base64encode(data.cloudinit_config.user_data.rendered)
+  custom_data                  = var.prepare_host ? base64encode(data.cloudinit_config.user_data.rendered) : null
   instances                    = var.linux_agent_count
   overprovision                = false
   sku                          = var.linux_vm_size
@@ -97,6 +97,8 @@ resource azurerm_virtual_machine_scale_set_extension linux_log_analytics {
     # Wait for cloud-init to complete before provisioning extensions
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
+
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
 resource azurerm_virtual_machine_scale_set_extension diagnostics {
   name                         = "LinuxDiagnostic"
@@ -122,8 +124,10 @@ resource azurerm_virtual_machine_scale_set_extension diagnostics {
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name,
-    azurerm_virtual_machine_scale_set_extension.linux_log_analytics.name
+    azurerm_virtual_machine_scale_set_extension.linux_log_analytics.0.name
   ]
+
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
 resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
   name                         = "DAExtension"
@@ -144,6 +148,8 @@ resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
     # Wait for cloud-init to complete before provisioning extensions
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
+
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
 resource azurerm_virtual_machine_scale_set_extension linux_watcher {
   name                         = "AzureNetworkWatcherExtension"
@@ -157,6 +163,8 @@ resource azurerm_virtual_machine_scale_set_extension linux_watcher {
     # Wait for cloud-init to complete before provisioning extensions
     azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
+
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
 
 resource azurerm_monitor_diagnostic_setting linux_agents {

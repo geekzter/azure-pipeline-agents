@@ -7,8 +7,39 @@ variable admin_ip_ranges {
   default                      = []
 }
 
-variable devops_org {}
-variable devops_pat {}
+variable configure_cidr_allow_rules {
+  default                      = false
+  type                         = bool
+}
+variable configure_wildcard_allow_rules {
+  default                      = true
+  type                         = bool
+}
+variable deploy_firewall {
+  description                  = "Deploys NAT Gateway if set to false"
+  default                      = false
+  type                         = bool
+}
+variable deploy_non_essential_vm_extensions {
+  description                  = "Whether to deploy optional VM extensions"
+  default                      = true
+  type                         = bool
+}
+variable deploy_scale_set {
+  default                      = true
+  type                         = bool
+}
+variable deploy_self_hosted {
+  default                      = false
+  type                         = bool
+}
+
+variable devops_org {
+  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+}
+variable devops_pat {
+  description                  = "A Personal Access Token to access the Azure DevOps organization"
+}
 
 variable dns_host_suffix {
   default                      = "mycicd"
@@ -22,10 +53,6 @@ variable linux_os_publisher {
 }
 variable linux_os_sku {
   default                      = "18.04-LTS"
-}
-variable linux_pipeline_agent_name {
-  # Defaults to VM name if empty string
-  default                      = "ubuntu1804-agent"
 }
 variable linux_pipeline_agent_pool {
   default                      = "Default"
@@ -41,9 +68,6 @@ variable linux_self_hosted_agent_count {
 variable linux_storage_type {
   default                      = "Standard_LRS"
 }
-variable linux_vm_name_prefix {
-  default                      = "ubuntu1804-agent"
-}
 variable linux_vm_size {
   default                      = "Standard_D2s_v3"
 }
@@ -55,6 +79,11 @@ variable location {
 variable log_analytics_workspace_id {
   description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
   default                      = ""
+}
+
+variable prepare_host {
+  type                         = bool
+  default                      = true
 }
 
 variable resource_suffix {
@@ -86,19 +115,6 @@ variable tags {
   }  
 } 
 
-variable use_firewall {
-  default                      = false
-  type                         = bool
-}
-variable use_scale_set {
-  default                      = true
-  type                         = bool
-}
-variable use_self_hosted {
-  default                      = false
-  type                         = bool
-}
-
 variable user_name {
   default                      = "devopsadmin"
 }
@@ -120,10 +136,6 @@ variable windows_os_publisher {
 variable windows_os_sku {
   default                      = "2019-Datacenter"
 }
-variable windows_pipeline_agent_name {
-  # Defaults to VM name if empty string
-  default                      = "windows-agent"
-}
 variable windows_pipeline_agent_pool {
   default                      = "Default"
 }
@@ -133,9 +145,6 @@ variable windows_self_hosted_agent_count {
 }
 variable windows_storage_type {
   default                      = "Standard_LRS"
-}
-variable windows_vm_name_prefix {
-  default                      = "win"
 }
 variable windows_vm_size {
   default                      = "Standard_D4s_v3"

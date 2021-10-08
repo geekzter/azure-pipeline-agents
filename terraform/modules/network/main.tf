@@ -39,11 +39,17 @@ resource azurerm_monitor_diagnostic_setting pipeline_network {
   }
 }
 
-resource azurerm_subnet agent_subnet {
-  name                         = "PipelineAgents"
+resource azurerm_subnet scale_set_agents {
+  name                         = "ScaleSetAgents"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],1,1)]
+  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],2,2)]
+}
+resource azurerm_subnet self_hosted_agents {
+  name                         = "SelfHostedAgents"
+  virtual_network_name         = azurerm_virtual_network.pipeline_network.name
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],2,3)]
 }
 resource azurerm_network_security_group agent_nsg {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-nsg"
@@ -78,8 +84,12 @@ resource azurerm_network_security_rule rdp {
   resource_group_name          = azurerm_network_security_group.agent_nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.agent_nsg.name
 }
-resource azurerm_subnet_network_security_group_association agent_nsg {
-  subnet_id                    = azurerm_subnet.agent_subnet.id
+resource azurerm_subnet_network_security_group_association scale_set_agents {
+  subnet_id                    = azurerm_subnet.scale_set_agents.id
+  network_security_group_id    = azurerm_network_security_group.agent_nsg.id
+}
+resource azurerm_subnet_network_security_group_association self_hosted_agents {
+  subnet_id                    = azurerm_subnet.self_hosted_agents.id
   network_security_group_id    = azurerm_network_security_group.agent_nsg.id
 }
 

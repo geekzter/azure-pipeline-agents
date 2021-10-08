@@ -2,14 +2,17 @@ data cloudinit_config user_data {
   gzip                         = false
   base64_encode                = false
 
-  part {
-    content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
-    {
-      outbound_ip              = var.outbound_ip_address
-      subnet_id                = var.subnet_id
-      virtual_network_id       = local.virtual_network_id
-    })
-    content_type               = "text/cloud-config"
+  dynamic "part" {
+    for_each = range(var.prepare_host ? 1 : 0)
+    content {
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
+      {
+        outbound_ip            = var.outbound_ip_address
+        subnet_id              = var.subnet_id
+        virtual_network_id     = local.virtual_network_id
+      })
+      content_type             = "text/cloud-config"
+    }
   }
 
   part {
@@ -17,7 +20,7 @@ data cloudinit_config user_data {
     {
       agent_name               = var.pipeline_agent_name
       agent_pool               = var.pipeline_agent_pool
-      install_agent_script_b64 = filebase64("${path.root}/../scripts/agent/install_agent.sh")
+      install_agent_script_b64 = filebase64("${path.module}/install_agent.sh")
       org                      = var.devops_org
       pat                      = var.devops_pat
       user                     = var.user_name
@@ -28,13 +31,8 @@ data cloudinit_config user_data {
 
 }
 
-locals {
-  pipeline_agent_name    = var.pipeline_agent_name != "" ? "${lower(var.pipeline_agent_name)}-${terraform.workspace}" : local.vm_name
-  vm_name                = "${var.vm_name_prefix}-${terraform.workspace}-${var.suffix}"
-}
-
 resource azurerm_public_ip linux_pip {
-  name                         = "${local.vm_name}-pip"
+  name                         = "${var.name}-pip"
   location                     = var.location
   resource_group_name          = var.resource_group_name
   allocation_method            = "Static"
@@ -44,7 +42,7 @@ resource azurerm_public_ip linux_pip {
 }
 
 resource azurerm_network_interface linux_nic {
-  name                         = "${local.vm_name}-nic"
+  name                         = "${var.name}-nic"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
@@ -81,8 +79,8 @@ resource azurerm_network_interface_security_group_association linux_nic_nsg {
 }
 
 resource azurerm_linux_virtual_machine linux_agent {
-  name                         = local.vm_name
-  computer_name                = substr(lower(replace("${local.vm_name}","/a|e|i|o|u|y|-/","")),0,15)
+  name                         = var.name
+  computer_name                = var.computer_name
   location                     = var.location
   resource_group_name          = var.resource_group_name
   size                         = var.vm_size
@@ -102,6 +100,7 @@ resource azurerm_linux_virtual_machine linux_agent {
   }
 
   os_disk {
+    name                       = "${var.name}-osdisk"
     caching                    = "ReadWrite"
     storage_account_type       = var.storage_type
   }
@@ -152,6 +151,7 @@ resource azurerm_virtual_machine_extension linux_log_analytics {
 
   tags                         = var.tags
 
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }
 resource azurerm_virtual_machine_extension linux_dependency_monitor {
@@ -171,6 +171,7 @@ resource azurerm_virtual_machine_extension linux_dependency_monitor {
 
   tags                         = var.tags
 
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }
 resource azurerm_virtual_machine_extension linux_watcher {
@@ -183,5 +184,6 @@ resource azurerm_virtual_machine_extension linux_watcher {
 
   tags                         = var.tags
 
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }

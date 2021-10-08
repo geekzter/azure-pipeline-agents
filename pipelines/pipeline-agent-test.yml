@@ -1,0 +1,87 @@
+# This pipeline is used to test self-hosted agents
+#  e.g. to discover what outbound network access is required
+parameters:
+- name: vmImage
+  displayName: Agent Image
+  type: string
+  default: ubuntu-latest
+- name: pool
+  displayName: Agent Pool
+  type: string
+  default: Default
+- name: publishArtifacts
+  displayName: Publish artifacts
+  type: boolean
+  default: true
+- name: boardsQueryId
+  displayName: Provide query ID to run Boards query
+  type: string
+  default: '00000000-0000-0000-0000-000000000000'
+
+trigger: none
+
+variables:
+- name: 'artifactDirectory'
+  value: 'scratch'
+- name: 'artifactName'
+  value: 'artifactTest'
+- name: 'artifactSample'
+  value: 'sample.txt'
+- name: pool
+  value: ${{ parameters.pool }}
+- name: vmImage
+  value: ${{ parameters.vmImage }}
+
+jobs:
+- job: jobA
+  displayName: Producer (${{ parameters.pool }})
+  pool:
+    name: '$(pool)'
+    vmImage: '$(vmImage)'
+
+  workspace:
+    clean: all
+
+  steps:
+  - script: |
+      mkdir $(artifactDirectory)
+      cd $(artifactDirectory)
+      echo "hello pipeline" > $(artifactSample)
+    displayName: 'Prepare artifacts'
+
+  - ${{ if parameters.publishArtifacts }}:
+    - publish: $(artifactDirectory)
+      displayName: 'Publish artifacts'
+      artifact: $(artifactName)
+
+  - ${{ if ne(coalesce(parameters.boardsQueryId,'00000000-0000-0000-0000-000000000000'),'00000000-0000-0000-0000-000000000000') }}:
+    - task: queryWorkItems@0
+      displayName: 'Query work items'
+      inputs:
+        queryId: ${{ parameters.boardsQueryId }}
+
+- ${{ if parameters.publishArtifacts }}:
+  - job: jobB
+    displayName: Consumer (${{ parameters.pool }})
+    dependsOn:
+      - jobA
+    pool:
+      name: '$(pool)'
+      vmImage: '$(vmImage)'
+
+    variables:
+      artifactDirectory: $(Pipeline.Workspace)/$(artifactName)
+
+    workspace:
+      clean: all
+
+    steps:
+    - download: current
+      displayName: 'Download artifacts directory from previous job'
+      artifact: $(artifactName)
+
+    - script: |
+        ls -al
+        cat $(artifactSample)
+      displayName: 'Read artifacts'
+      workingDirectory: '$(artifactDirectory)'

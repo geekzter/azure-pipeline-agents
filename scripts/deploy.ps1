@@ -115,12 +115,12 @@ try {
         $forceArgs = "-auto-approve"
     }
 
-    if (!(Get-ChildItem Env:TF_VAR_* -Exclude TF_STATE_backend_*) -and (Test-Path $varsFile)) {
+    if (!(Get-ChildItem Env:TF_VAR_* -Exclude TF_VAR_backend_*) -and (Test-Path $varsFile)) {
         # Load variables from file, if it exists and environment variables have not been set
         $varArgs = " -var-file='$varsFile'"
     }
 
-    if ($Plan -or $Apply) {
+    if ($Plan -or $Apply -or $Destroy) {
         # FIX: Start VM's to prevent https://github.com/terraform-providers/terraform-provider-azurerm/issues/8311
         $terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")
         Push-Location $terraformDirectory

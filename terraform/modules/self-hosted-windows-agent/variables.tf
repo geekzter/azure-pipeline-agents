@@ -4,19 +4,24 @@ variable admin_cidr_ranges {
 }
 variable terraform_cidr {}
 
+variable deploy_non_essential_vm_extensions {
+  type                         = bool
+}
+
 variable devops_org {}
 variable devops_pat {}
 
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 
+variable computer_name {}
+variable name {}
 variable os_offer {}
 variable os_publisher {}
 variable os_sku {}
 variable pipeline_agent_name {}
 variable pipeline_agent_pool {}
 variable storage_type {}
-variable vm_name_prefix {}
 variable vm_size {}
 
 variable location {}

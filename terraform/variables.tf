@@ -15,6 +15,11 @@ variable configure_wildcard_allow_rules {
   default                      = true
   type                         = bool
 }
+variable deploy_bastion {
+  description                  = "Deploys managed bastion host"
+  default                      = true
+  type                         = bool
+}
 variable deploy_firewall {
   description                  = "Deploys NAT Gateway if set to false"
   default                      = false

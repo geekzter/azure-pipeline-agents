@@ -4,6 +4,7 @@ module network {
   address_space                = var.address_space
   configure_cidr_allow_rules   = var.configure_cidr_allow_rules
   configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
+  deploy_bastion               = var.deploy_bastion
   deploy_firewall              = var.deploy_firewall
   devops_org                   = var.devops_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
@@ -58,6 +59,7 @@ module self_hosted_linux_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
   terraform_cidr               = local.ipprefix
 
+  create_public_ip_address     = !var.deploy_firewall
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
@@ -100,6 +102,7 @@ module self_hosted_windows_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
   terraform_cidr               = local.ipprefix
 
+  create_public_ip_address     = !var.deploy_firewall
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org

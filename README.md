@@ -65,6 +65,7 @@ Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and 
 |---|---|
 |`configure_cidr_allow_rules`|Configure allow rules for IP ranges documented [here](https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions). When enabled traffic allowed by this rule will not have FQDN's shown in the logs|
 |`configure_wildcard_allow_rules`|Configure reneric wildcard FQDN rules e.g. *.blob.core.windows.net|
+|`deploy_bastion`|Deploy [managed bastion host](https://docs.microsoft.com/en-us/azure/bastion/)|
 |`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it|
 |`deploy_non_essential_vm_extensions`|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |
 |`deploy_scale_set`|Deploy Scale Set agents|

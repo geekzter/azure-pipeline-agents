@@ -46,12 +46,25 @@ resource azurerm_network_interface linux_nic {
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
-  ip_configuration {
-    name                       = "ipconfig"
-    subnet_id                  = var.subnet_id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id       = azurerm_public_ip.linux_pip.id
-  }
+  dynamic "ip_configuration" {
+    for_each = range(var.create_public_ip_address ? 1 : 0) 
+    content {
+      name                     = "ipconfig"
+      subnet_id                = var.subnet_id
+      private_ip_address_allocation = "Dynamic"
+      public_ip_address_id     = azurerm_public_ip.linux_pip.id
+    }
+  }  
+
+  dynamic "ip_configuration" {
+    for_each = range(var.create_public_ip_address ? 0 : 1) 
+    content {
+      name                     = "ipconfig"
+      subnet_id                = var.subnet_id
+      private_ip_address_allocation = "Dynamic"
+    }
+  }  
+
   enable_accelerated_networking = var.vm_accelerated_networking
 
   tags                         = var.tags

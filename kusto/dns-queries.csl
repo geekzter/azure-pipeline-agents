@@ -1,0 +1,4 @@
+AzureDiagnostics
+| where Category == "AzureFirewallDnsProxy"
+| parse msg_s with "DNS Request: " ClientIP ":" ClientPort " - " QueryID " " Request_Type " " Request_Class " " Request_Name ". " Request_Protocol " " Request_Size " " EDNSO_DO " " EDNS0_Buffersize " " Responce_Code " " Responce_Flags " " Responce_Size " " Response_Duration
+| order by TimeGenerated desc

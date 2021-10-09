@@ -1,0 +1,4 @@
+AzureDiagnostics
+| where Category == "AzureFirewallDnsProxy"
+| order by TimeGenerated desc
+| project TimeGenerated, msg_s

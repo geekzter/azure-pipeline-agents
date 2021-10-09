@@ -1,0 +1,10 @@
+AzureDiagnostics
+| where Category == "AzureFirewallDnsProxy"
+| parse msg_s with "DNS Request: " ClientIP ":" ClientPort " - " QueryID " " Request_Type " " Request_Class " " Request_Name ". " Request_Protocol " " Request_Size " " EDNSO_DO " " EDNS0_Buffersize " " Responce_Code " " Responce_Flags " " Responce_Size " " Response_Duration
+| where ipv4_is_match("192.168.0.128/25", ClientIP)
+| where Request_Type == "A" or Request_Type == "AAAA"
+| extend FQDN = Request_Name
+| extend Record = Request_Type
+| extend SourceSubnet = case(ipv4_is_match("192.168.0.128/26", ClientIP),"ScaleSetAgents",case(ipv4_is_match("192.168.0.192/26", ClientIP),"SelfHostedAgents","Other"))
+| summarize count() by SourceSubnet, FQDN
+| order by FQDN asc

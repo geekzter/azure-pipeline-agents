@@ -19,16 +19,17 @@ output scale_set_agents_subnet_id {
 output self_hosted_agents_subnet_id {
   value                        = module.network.self_hosted_agents_subnet_id
 }
-output self_hosted_linux_vm_ids {
-  value                        = var.deploy_self_hosted ? module.self_hosted_linux_agents.0.vm_ids : null
-}
-output self_hosted_windows_vm_ids {
-  value                        = var.deploy_self_hosted ? module.self_hosted_windows_agents.0.vm_ids : null
+
+output self_hosted_vm_id {
+  value                        = concat(
+    [for vm in module.self_hosted_linux_agents   : vm.vm_id],
+    [for vm in module.self_hosted_windows_agents : vm.vm_id]
+  )
 }
 
 output self_hosted_linux_cloud_config {
   sensitive                    = true
-  value                        = var.deploy_self_hosted ? module.self_hosted_linux_agents.0.cloud_config : null
+  value                        = var.deploy_self_hosted_vms && var.linux_self_hosted_agent_count > 0 ? module.self_hosted_linux_agents.0.cloud_config : null
 }
 output user_name {
   value                        = var.user_name

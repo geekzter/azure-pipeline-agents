@@ -148,6 +148,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "visualstudio-devdiv-c2s.msedge.net",
       "vssps.dev.azure.com",
       "vstsagentpackage.azureedge.net",
+      "vstsagenttools.blob.core.windows.net",
     ]
 
     protocol {

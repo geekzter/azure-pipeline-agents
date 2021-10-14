@@ -15,20 +15,24 @@ data cloudinit_config user_data {
     }
   }
 
-  part {
+  dynamic "part" {
+    for_each = range(var.deploy_agent_vm_extension ? 1 : 0)
+    content {
     content                    = templatefile("${path.module}/cloud-config-agent.yaml",
-    {
-      agent_name               = var.pipeline_agent_name
-      agent_pool               = var.pipeline_agent_pool
-      install_agent_script_b64 = filebase64("${path.module}/install_agent.sh")
-      org                      = var.devops_org
-      pat                      = var.devops_pat
-      user                     = var.user_name
-    })
-    content_type               = "text/cloud-config"
-    merge_type                 = "list(append)+dict(recurse_array)+str()"
+      {
+        agent_name             = var.pipeline_agent_name
+        agent_pool             = var.pipeline_agent_pool
+        install_agent_script_b64= filebase64("${path.module}/install_agent.sh")
+        org                    = var.devops_org
+        pat                    = var.devops_pat
+        user                   = var.user_name
+      })
+      content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
+    }
   }
 
+  count                        = var.deploy_agent_vm_extension || var.prepare_host ? 1 : 0
 }
 
 resource azurerm_public_ip linux_pip {
@@ -99,7 +103,7 @@ resource azurerm_linux_virtual_machine linux_agent {
   size                         = var.vm_size
   admin_username               = var.user_name
   admin_password               = var.user_password
-  custom_data                  = base64encode(data.cloudinit_config.user_data.rendered)
+  custom_data                  = var.deploy_agent_vm_extension || var.prepare_host ? base64encode(data.cloudinit_config.user_data.0.rendered) : null
   disable_password_authentication = false
   network_interface_ids        = [azurerm_network_interface.linux_nic.id]
 

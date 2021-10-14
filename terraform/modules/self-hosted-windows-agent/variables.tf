@@ -7,6 +7,9 @@ variable terraform_cidr {}
 variable create_public_ip_address {
   type                         = bool
 }
+variable deploy_agent_vm_extension {
+  type                         = bool
+}
 variable deploy_non_essential_vm_extensions {
   type                         = bool
 }

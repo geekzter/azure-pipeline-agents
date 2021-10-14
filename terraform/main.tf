@@ -20,6 +20,19 @@ resource random_string password {
 }
 
 locals {
+  configuration_bitmask        = (
+                                  (var.configure_cidr_allow_rules         ? pow(2,0) : 0) +
+                                  (var.configure_wildcard_allow_rules     ? pow(2,1) : 0) +
+                                  (var.deploy_bastion                     ? pow(2,2) : 0) +
+                                  (var.deploy_firewall                    ? pow(2,3) : 0) +
+                                  (var.deploy_non_essential_vm_extensions ? pow(2,4) : 0) +
+                                  (var.deploy_scale_set                   ? pow(2,5) : 0) +
+                                  (var.deploy_self_hosted_vms             ? pow(2,6) : 0) +
+                                  (var.deploy_self_hosted_vm_agents       ? pow(2,7) : 0) +
+                                  (var.prepare_host                       ? pow(2,8) : 0) +
+                                  0
+  )
+
   config_directory             = "${formatdate("YYYY",timestamp())}/${formatdate("MM",timestamp())}/${formatdate("DD",timestamp())}/${formatdate("hhmm",timestamp())}"
   environment                  = "dev"
   password                     = ".Az9${random_string.password.result}"
@@ -34,7 +47,17 @@ locals {
       shutdown                 = "false"
       suffix                   = local.suffix
       workspace                = terraform.workspace
-      },
+      configuration-bitmask    = local.configuration_bitmask
+      configure-cidr-allow-rules= var.configure_cidr_allow_rules
+      configure-wildcard-allow-rules= var.configure_wildcard_allow_rules
+      deploy-bastion           = var.deploy_bastion
+      deploy-firewall          = var.deploy_firewall
+      deploy-non-essential-vm-extensions= var.deploy_non_essential_vm_extensions
+      deploy-scale-set         = var.deploy_scale_set
+      deploy-self-hosted-vms   = var.deploy_self_hosted_vms
+      deploy-self-hosted-vm-agents= var.deploy_self_hosted_vm_agents
+      prepare_host             = var.prepare_host
+    },
     var.tags
   )  
 

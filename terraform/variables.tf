@@ -34,8 +34,12 @@ variable deploy_scale_set {
   default                      = true
   type                         = bool
 }
-variable deploy_self_hosted {
+variable deploy_self_hosted_vms {
   default                      = false
+  type                         = bool
+}
+variable deploy_self_hosted_vm_agents {
+  default                      = true
   type                         = bool
 }
 

@@ -118,7 +118,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   action                       = "Allow"
 
   rule {
-    name                       = "Allow Azure DevOps"
+    name                       = "Allow Azure DevOps (config:${var.configuration_name})"
     description                = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
 
     source_ip_groups           = [
@@ -160,7 +160,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   dynamic "rule" {
     for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
     content {
-      name                     = "Allow Azure DevOps (wildcards)"
+      name                     = "Allow Azure DevOps (wildcards) (config:${var.configuration_name})"
       description              = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
 
       source_ip_groups         = [
@@ -183,7 +183,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   # Required traffic originating from within Build / Release jobs e.g. deployment of:
   # AKS, Synapse
   rule {
-    name                       = "Allow Pipeline tasks by URL (HTTPS)"
+    name                       = "Allow Pipeline tasks by URL (HTTPS) (config:${var.configuration_name})"
     description                = "Pipeline tasks e.g. Terraform"
 
     source_ip_groups           = [
@@ -214,7 +214,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   dynamic "rule" {
     for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
     content {
-      name                       = "Allow Pipeline tasks by URL wildcard (HTTPS)"
+      name                       = "Allow Pipeline tasks by URL wildcard (HTTPS) (config:${var.configuration_name})"
       description                = "Cloud Services e.g. Azure App Service"
 
       source_ip_groups           = [
@@ -238,7 +238,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   # Required traffic originating from within Build / Release jobs e.g. deployment of:
   # AKS, Synapse
   rule {
-    name                       = "Allow Pipeline tasks by URL (HTTP)"
+    name                       = "Allow Pipeline tasks by URL (HTTP) (config:${var.configuration_name})"
     description                = "Pipeline tasks e.g. curl"
 
     source_ip_groups           = [
@@ -256,7 +256,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   # rule {
-  #   name                       = "Allow Azure SQL Database Pipeline tasks"
+  #   name                       = "Allow Azure SQL Database Pipeline tasks (config:${var.configuration_name})"
   #   description                = "Pipeline tasks e.g. Azure SQL Database"
 
   #   source_ip_groups           = [
@@ -274,7 +274,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   # }  
 
   rule {
-    name                       = "Allow packaging tools"
+    name                       = "Allow packaging tools (config:${var.configuration_name})"
     description                = "Packaging (e.g. Chocolatey, NuGet) tools"
 
     source_ip_groups           = [
@@ -311,7 +311,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow bootstrap scripts and tools"
+    name                       = "Allow bootstrap scripts and tools (config:${var.configuration_name})"
     description                = "Bootstrap scripts are hosted on GitHub, tools on their own locations"
 
     source_ip_groups           = [
@@ -361,7 +361,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow management traffic by tag"
+    name                       = "Allow management traffic by tag (config:${var.configuration_name})"
     description                = "Azure Backup, Diagnostics, Management, Windows Update"
 
     source_ip_groups           = [
@@ -379,7 +379,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow management traffic by url"
+    name                       = "Allow management traffic by url (config:${var.configuration_name})"
     description                = "Diagnostics, Management, Windows Update"
 
     source_ip_groups           = [
@@ -445,7 +445,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow selected HTTP traffic"
+    name                       = "Allow selected HTTP traffic (config:${var.configuration_name})"
     description                = "Plain HTTP traffic for some applications that need it"
 
     source_ip_groups           = [
@@ -497,7 +497,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   dynamic "rule" {
     for_each = range(var.configure_cidr_allow_rules ? 1 : 0) 
     content {
-      name                     = "AllowOutboundAzureDevOps"
+      name                     = "Allow outbound Azure DevOps (config:${var.configuration_name})"
 
       source_ip_groups         = [
         azurerm_ip_group.agents.0.id
@@ -520,7 +520,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
   
   rule {
-    name                       = "AllowOutboundDNS"
+    name                       = "Allow outbound DNS (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -540,7 +540,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
   
   rule {
-    name                       = "AllowAzureActiveDirectory"
+    name                       = "Allow Azure Active Directory (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -560,7 +560,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }    
 
   rule {
-    name                       = "AllowICMP"
+    name                       = "Allow ICMP (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -579,7 +579,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
 
   rule {
-    name                       = "AllowKMS"
+    name                       = "Allow KMS (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -599,7 +599,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
 
   # keyserver.ubuntu.com 
   rule {
-    name                       = "AllowUbuntuKeyServer"
+    name                       = "Allow Ubuntu Key Server (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -618,7 +618,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
 
   rule {
-    name                       = "AllowNTP"
+    name                       = "Allow NTP (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -650,7 +650,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_debug_rules {
 
 
   rule {
-    name                       = "DEBUGAllowAllOutbound"
+    name                       = "Allow All Outbound (DEBUG) (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id

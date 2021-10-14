@@ -1,4 +1,7 @@
 variable address_space {}
+variable configuration_name {
+    description = "This value is appended to Azure FW rule names, so it can be parsed in Log Analytics queries"
+}
 variable configure_cidr_allow_rules {
     type = bool
 }

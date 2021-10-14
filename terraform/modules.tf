@@ -2,6 +2,7 @@ module network {
   source                       = "./modules/network"
 
   address_space                = var.address_space
+  configuration_name           = local.configuration_bitmask
   configure_cidr_allow_rules   = var.configure_cidr_allow_rules
   configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
   deploy_bastion               = var.deploy_bastion
@@ -60,6 +61,7 @@ module self_hosted_linux_agents {
   terraform_cidr               = local.ipprefix
 
   create_public_ip_address     = !var.deploy_firewall
+  deploy_agent_vm_extension    = var.deploy_self_hosted_vm_agents
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
@@ -92,7 +94,7 @@ module self_hosted_linux_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
 
-  count                        = var.deploy_self_hosted ? var.linux_self_hosted_agent_count : 0
+  count                        = var.deploy_self_hosted_vms ? var.linux_self_hosted_agent_count : 0
   depends_on                   = [module.network]
 }
 
@@ -103,6 +105,7 @@ module self_hosted_windows_agents {
   terraform_cidr               = local.ipprefix
 
   create_public_ip_address     = !var.deploy_firewall
+  deploy_agent_vm_extension    = var.deploy_self_hosted_vm_agents
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
@@ -132,6 +135,6 @@ module self_hosted_windows_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
 
-  count                        = var.deploy_self_hosted ? var.windows_self_hosted_agent_count : 0
+  count                        = var.deploy_self_hosted_vms ? var.windows_self_hosted_agent_count : 0
   depends_on                   = [module.network]
 }

@@ -69,7 +69,8 @@ Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and 
 |`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it|
 |`deploy_non_essential_vm_extensions`|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |
 |`deploy_scale_set`|Deploy Scale Set agents|
-|`deploy_self_hosted`|Deploy Self-Hosted agents|
+|`deploy_self_hosted_vms`|Deploy Self-Hosted agent VMs|
+|`deploy_self_hosted_vm_agents`|Deploy Self-Hosted agent VM extensions|
 |`log_analytics_workspace_id`|Providing a value of an existing Log Analytics workspace allows you to retain logs after infrasructure is destroyed|
 |`prepare_host`|Configure host image e.g. install packages (Ubuntu only) with [cloud-init](cloudinit)|
 

@@ -2,55 +2,7 @@ locals {
   log_analytics_workspace_id   = var.log_analytics_workspace_id != "" && var.log_analytics_workspace_id != null ? var.log_analytics_workspace_id : azurerm_log_analytics_workspace.monitor.0.id
 }
 
-resource azurerm_storage_account diagnostics {
-  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,15)}${local.suffix}diag"
-  location                     = var.location
-  resource_group_name          = azurerm_resource_group.rg.name
-  account_kind                 = "StorageV2"
-  account_tier                 = "Standard"
-  account_replication_type     = "LRS"
-  allow_blob_public_access     = false
-  enable_https_traffic_only    = true
 
-  tags                         = local.tags
-}
-resource time_offset sas_expiry {
-  offset_years                 = 1
-}
-resource time_offset sas_start {
-  offset_days                  = -1
-}
-data azurerm_storage_account_sas diagnostics {
-  connection_string            = azurerm_storage_account.diagnostics.primary_connection_string
-  https_only                   = true
-
-  resource_types {
-    service                    = false
-    container                  = true
-    object                     = true
-  }
-
-  services {
-    blob                       = true
-    queue                      = false
-    table                      = true
-    file                       = false
-  }
-
-  start                        = time_offset.sas_start.rfc3339
-  expiry                       = time_offset.sas_expiry.rfc3339  
-
-  permissions {
-    read                       = false
-    add                        = true
-    create                     = true
-    write                      = true
-    delete                     = false
-    list                       = true
-    update                     = true
-    process                    = false
-  }
-}
 
 resource azurerm_log_analytics_workspace monitor {
   name                         = "${azurerm_resource_group.rg.name}-loganalytics"

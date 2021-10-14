@@ -1,3 +1,13 @@
+output private_endpoint_subnet_id {
+  value                        = azurerm_subnet.private_endpoint_subnet.id
+}
+output azurerm_private_dns_zone_blob_id {
+  value                        = azurerm_private_dns_zone.zone.id
+}
+output azurerm_private_dns_zone_blob_name {
+  value                        = azurerm_private_dns_zone.zone.name
+}
+
 output scale_set_agents_subnet_id {
   value                        = azurerm_subnet.scale_set_agents.id
 }

@@ -51,7 +51,11 @@ module scale_set_agents {
   vm_accelerated_networking    = var.vm_accelerated_networking
 
   count                        = var.deploy_scale_set ? 1 : 0
-  depends_on                   = [module.network]
+  depends_on                   = [
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+    module.network
+  ]
 }
 
 module self_hosted_linux_agents {

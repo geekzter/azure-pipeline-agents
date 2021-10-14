@@ -20,6 +20,7 @@ variable devops_pat {}
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 
+
 variable computer_name {}
 variable name {}
 variable os_offer {}

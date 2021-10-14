@@ -95,6 +95,14 @@ resource azurerm_network_interface_security_group_association linux_nic_nsg {
   network_security_group_id    = azurerm_network_security_group.nsg.id
 }
 
+resource azurerm_disk_access disk_access {
+  name                         = "${var.name}-disk-access"
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
+
+  tags                         = var.tags
+}
+
 resource azurerm_linux_virtual_machine linux_agent {
   name                         = var.name
   computer_name                = var.computer_name
@@ -137,6 +145,12 @@ resource azurerm_linux_virtual_machine linux_agent {
 
   tags                         = var.tags
   depends_on                   = [azurerm_network_interface_security_group_association.linux_nic_nsg]
+
+  # Terraform azurerm does not allow disk access configuration of OS disk
+  # BUG: https://github.com/Azure/azure-cli/issues/19455
+  provisioner local-exec {
+    command                    = "az disk update --name ${var.name}-osdisk --resource-group ${self.resource_group_name} --disk-access ${azurerm_disk_access.disk_access.name} --network-access-policy AllowPrivate"
+  }  
 }
 
 resource azurerm_virtual_machine_extension cloud_config_status {

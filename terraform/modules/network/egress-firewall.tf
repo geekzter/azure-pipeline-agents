@@ -118,7 +118,20 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   action                       = "Allow"
 
   rule {
-    name                       = "Allow Azure DevOps (config:${var.configuration_name})"
+    name                       = "Allow Azure DevOps by tag (config:${var.configuration_name})"
+    description                = "Does not cover all Azure DevOps traffic!"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    fqdn_tags                  = [
+      "AzureDevOps",
+    ]
+  }
+
+  rule {
+    name                       = "Allow Azure DevOps by FQDN (config:${var.configuration_name})"
     description                = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
 
     source_ip_groups           = [
@@ -142,6 +155,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "${var.devops_org}.vsrm.visualstudio.com",
       "${var.devops_org}.vssps.visualstudio.com",
       "${var.devops_org}.vstmr.visualstudio.com",
+      "api.github.com",
       "app.vssps.visualstudio.com",
       "dev.azure.com",
       "login.microsoftonline.com",
@@ -170,7 +184,6 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       target_fqdns             = [
         # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#im-running-a-firewall-and-my-code-is-in-azure-repos-what-urls-does-the-agent-need-to-communicate-with
         "*.blob.core.windows.net", # Pipeline artifacts *vsblob*.blob.core.windows.net
-        "*.blob.storage.azure.net",
       ]
 
       protocol {
@@ -273,6 +286,28 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   #   }
   # }  
 
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                     = "Allow Managed Disks (wildcard) (config:${var.configuration_name})"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      # e.g. md-hdd-s3mljswmnf5s.z22.blob.storage.azure.net
+      target_fqdns             = [
+        "*.blob.storage.azure.net",
+      ]
+
+      protocol {
+        port                   = "443"
+        type                   = "Https"
+      }
+    }
+  }
+
   rule {
     name                       = "Allow packaging tools (config:${var.configuration_name})"
     description                = "Packaging (e.g. Chocolatey, NuGet) tools"
@@ -372,7 +407,10 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "AzureActiveDirectory",
       "AzureBackup",
       "AzureMonitor",
+      "AzureUpdateDelivery",
+      "GuestAndHybridManagement",
       "MicrosoftActiveProtectionService",
+      "WindowsAdminCenter",
       "WindowsDiagnostics",
       "WindowsUpdate"
     ]

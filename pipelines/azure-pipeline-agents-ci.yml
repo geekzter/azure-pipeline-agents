@@ -95,16 +95,12 @@ variables:
   value: 'terraform'
 - name: 'terraformDirectory'
   value: '$(Build.SourcesDirectory)/terraform'
-- name: 'TF_VAR_linux_pipeline_agent_name'
-  value: 'ubuntu-agent'
 - name: 'TF_VAR_linux_pipeline_agent_pool'
   value: 'CIPool'
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
 - name: 'TF_VAR_ssh_public_key'
   value: 'id_rsa.pub' # Key will be downloaded in terraform directory
-- name: 'TF_VAR_windows_pipeline_agent_name'
-  value: 'windows-agent'
 - name: 'TF_VAR_windows_pipeline_agent_pool'
   value: 'CIPool'
 
@@ -294,7 +290,7 @@ jobs:
       - task: AzureCLI@2
         displayName: 'Disable Self-Hosted Agent(s)'
         name: 'agentConfig'
-        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: 'pscore'
@@ -339,7 +335,7 @@ jobs:
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2
         displayName: 'Enable Self-Hosted Agent(s)'
-        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: 'pscore'

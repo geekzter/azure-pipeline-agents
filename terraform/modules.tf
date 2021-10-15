@@ -66,7 +66,7 @@ module self_hosted_linux_agents {
   terraform_cidr               = local.ipprefix
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent_vm_extension    = var.deploy_self_hosted_vm_agents
+  deploy_agent                 = var.deploy_self_hosted_vm_agents
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org

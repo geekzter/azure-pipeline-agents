@@ -71,7 +71,9 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
-  custom_data                  = base64encode(file("${path.module}/install_agent.ps1"))
+  custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.module}/install_agent.ps1")) : null
+  allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
+  provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
 
   os_disk {
     name                       = "${var.name}-osdisk"
@@ -97,7 +99,7 @@ resource azurerm_windows_virtual_machine windows_agent {
   # BUG: https://github.com/Azure/azure-cli/issues/19455 
   #      So use disk_access_name instead of disk_access_id
   provisioner local-exec {
-    command                    = "az disk update --name ${var.name}-osdisk --resource-group ${self.resource_group_name} --disk-access ${var.disk_access_name} --network-access-policy AllowPrivate"
+    command                    = "az disk update --name ${var.name}-osdisk --resource-group ${self.resource_group_name} --disk-access ${var.disk_access_name} --network-access-policy AllowPrivate --query 'networkAccessPolicy'"
   }  
 }
 resource azurerm_virtual_machine_extension windows_log_analytics {

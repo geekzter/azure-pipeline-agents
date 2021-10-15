@@ -118,20 +118,230 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   action                       = "Allow"
 
   rule {
-    name                       = "Allow Azure DevOps by tag (config:${var.configuration_name})"
-    description                = "Does not cover all Azure DevOps traffic!"
+    name                       = "Allow management traffic by tag (config:${var.configuration_name})"
+    description                = "Azure Backup, Diagnostics, Management, Windows Update"
 
     source_ip_groups           = [
       azurerm_ip_group.agents.0.id
     ]
 
     fqdn_tags                  = [
-      "AzureDevOps",
+      "AzureActiveDirectory",
+      "AzureBackup",
+      "AzureMonitor",
+      "AzureUpdateDelivery",
+      "GuestAndHybridManagement",
+      "MicrosoftActiveProtectionService",
+      "WindowsAdminCenter",
+      "WindowsDiagnostics",
+      "WindowsUpdate"
     ]
   }
 
   rule {
-    name                       = "Allow Azure DevOps by FQDN (config:${var.configuration_name})"
+    name                       = "Allow management traffic by url (config:${var.configuration_name})"
+    description                = "Diagnostics, Management, Windows Update"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      "*.api.cdp.microsoft.com",
+      "*.applicationinsights.io",
+      "*.azure-automation.net",
+      "*.delivery.mp.microsoft.com",
+      "*.do.dsp.mp.microsoft.com",
+      "*.events.data.microsoft.com",
+      "*.identity.azure.net", # MSI Sidecar
+      "*.ingestion.msftcloudes.com",
+      "*.loganalytics.io",
+      "*.microsoftonline-p.com", # AAD Browser login
+      "*.monitoring.azure.com",
+      "*.msauth.net", # AAD Browser login
+      "*.msftauth.net", # AAD Browser login
+      "*.msauthimages.net", # AAD Browser login
+      "*.msftauthimages.net", # AAD Browser login
+      "*.ods.opinsights.azure.com",
+      "*.oms.opinsights.azure.com",
+      "*.portal.azure.com",
+      "*.portal.azure.net", # Portal images, resources
+      "*.systemcenteradvisor.com",
+      "*.telemetry.microsoft.com",
+      "*.update.microsoft.com",
+      "*.windowsupdate.com",
+      "clientconfig.passport.net",
+      "checkappexec.microsoft.com",
+      "device.login.microsoftonline.com",
+      "edge.microsoft.com",
+      "enterpriseregistration.windows.net",
+      "entropy.ubuntu.com",
+      "graph.microsoft.com",
+      "ieonline.microsoft.com",
+      "login.microsoftonline.com",
+      "management.azure.com",
+      "management.core.windows.net",
+      "motd.ubuntu.com",
+      "msft.sts.microsoft.com",
+      "nav.smartscreen.microsoft.com",
+      "opinsightsweuomssa.blob.core.windows.net",
+      "pas.windows.net",
+      "portal.azure.com",
+      "scadvisor.accesscontrol.windows.net",
+      "scadvisorcontent.blob.core.windows.net",
+      "scadvisorservice.accesscontrol.windows.net",
+      "settings-win.data.microsoft.com",
+      "smartscreen-prod.microsoft.com",
+      "sts.windows.net",
+      "urs.microsoft.com",
+      "validation-v2.sls.microsoft.com",
+      "vortex.data.microsoft.com",
+      data.azurerm_storage_account.diagnostics.primary_blob_host,
+      data.azurerm_storage_account.diagnostics.primary_table_host
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+  
+  rule {
+    name                       = "Allow bootstrap & packaging tools (config:${var.configuration_name})"
+    description                = "Packaging (e.g. Chocolatey, NuGet) tools. Bootstrap scripts are hosted on GitHub, tools on their own locations"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      "*.chocolatey.org",
+      "*.dlservice.microsoft.com",
+      "*.github.com",
+      "*.githubusercontent.com",
+      "*.hashicorp.com",
+      "*.launchpad.net",
+      "*.nuget.org",
+      "*.pivotal.io",
+      "*.powershellgallery.com",
+      "*.smartscreen-prod.microsoft.com",
+      "*.typescriptlang.org",
+      "*.ubuntu.com",
+      "*.vo.msecnd.net", # Visual Studio Code
+      "aka.ms",
+      "api.npms.io",
+      "api.snapcraft.io",
+      "azcopy.azureedge.net",
+      "azurecliprod.blob.core.windows.net",
+      "azuredatastudiobuilds.blob.core.windows.net",
+      "baltocdn.com",
+      "chocolatey.org",
+      "devopsgallerystorage.blob.core.windows.net",
+      "dl.pstmn.io", # Postman
+      "dl.xamarin.com",
+      "download.docker.com",
+      "download.elifulkerson.com",
+      "download.microsoft.com",
+      "download.sysinternals.com",
+      "download.visualstudio.com",
+      "download.visualstudio.microsoft.com",
+      "functionscdn.azureedge.net",
+      "get.helm.sh",
+      "github-production-release-asset-2e65be.s3.amazonaws.com", 
+      "github.com",
+      "go.microsoft.com",
+      "launchpad.net",
+      "licensing.mp.microsoft.com",
+      "marketplace.visualstudio.com",
+      "nuget.org",
+      "onegetcdn.azureedge.net",
+      "packages.cloud.google.com",
+      "packages.microsoft.com",
+      "psg-prod-eastus.azureedge.net", # PowerShell
+      "registry.npmjs.org",
+      "skimdb.npmjs.com",
+      "sqlopsbuilds.azureedge.net", # Data Studio
+      "sqlopsextensions.blob.core.windows.net", # Data Studio
+      "version.pm2.io",
+      "visualstudio-devdiv-c2s.msedge.net",
+      "visualstudio.microsoft.com",
+      "wdcp.microsoft.com",
+      "wdcpalt.microsoft.com",
+      "xamarin-downloads.azureedge.net",
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+
+  rule {
+    name                       = "Allow selected HTTP traffic (config:${var.configuration_name})"
+    description                = "Plain HTTP traffic for some applications that need it"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+  # https://docs.microsoft.com/en-us/azure/key-vault/general/whats-new#will-this-affect-me
+    target_fqdns               = [
+      "*.d-trust.net",
+      "*.digicert.com",
+    # "adl.windows.com",
+      "apt.kubernetes.io",
+      "archive.ubuntu.com",
+      "azure.archive.ubuntu.com",
+      "chocolatey.org",
+      "crl.microsoft.com",
+      "crl.usertrust.com",
+      "dl.delivery.mp.microsoft.com", # "Microsoft Edge"
+      "go.microsoft.com",
+      "ipinfo.io",
+      "keyserver.ubuntu.com",
+      "mscrl.microsoft.com",
+      "ocsp.msocsp.com",
+      "ocsp.sectigo.com",
+      "ocsp.usertrust.com",
+      "oneocsp.microsoft.com",
+      "ppa.launchpad.net",
+      "security.ubuntu.com",
+    # "www.microsoft.com",
+      "www.msftconnecttest.com"
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+  }
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                     = "Allow VM Guest Agent manifest (wildcard) (config:${var.configuration_name})"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      # e.g. md-sc4xrwvm2tv5.z36.blob.storage.azure.net
+      # StatusUploadBlob(Url)
+      # ArtifactsProfileBlob(Url)
+      # Guest Agent manifest Uris
+      target_fqdns             = [
+        "*.blob.storage.azure.net",
+      ]
+
+      protocol {
+        port                   = "443"
+        type                   = "Https"
+      }
+    }
+  }
+
+  rule {
+    name                       = "Allow Azure DevOps (config:${var.configuration_name})"
     description                = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
 
     source_ip_groups           = [
@@ -268,244 +478,26 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     }
   }
 
-  # rule {
-  #   name                       = "Allow Azure SQL Database Pipeline tasks (config:${var.configuration_name})"
-  #   description                = "Pipeline tasks e.g. Azure SQL Database"
-
-  #   source_ip_groups           = [
-  #     azurerm_ip_group.agents.0.id
-  #   ]
-
-  #   target_fqdns               = [
-  #     "*.database.windows.net"
-  #   ]
-
-  #   protocol {
-  #     port                     = "1433"
-  #     type                     = "Mssql"
-  #   }
-  # }  
-
-
   dynamic "rule" {
     for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
     content {
-      name                     = "Allow Managed Disks (wildcard) (config:${var.configuration_name})"
+      name                     = "Allow Azure SQL Database Pipeline tasks (wildcard) (config:${var.configuration_name})"
+      description              = "Pipeline tasks e.g. Azure SQL Database (SQL DB proxy mode required)"
 
       source_ip_groups         = [
         azurerm_ip_group.agents.0.id
       ]
 
-      # e.g. md-hdd-s3mljswmnf5s.z22.blob.storage.azure.net
       target_fqdns             = [
-        "*.blob.storage.azure.net",
+        "*.database.windows.net"
       ]
 
       protocol {
-        port                   = "443"
-        type                   = "Https"
+        port                   = "1433"
+        type                   = "Mssql"
       }
     }
-  }
-
-  rule {
-    name                       = "Allow bootstrap & packaging tools (config:${var.configuration_name})"
-    description                = "Packaging (e.g. Chocolatey, NuGet) tools. Bootstrap scripts are hosted on GitHub, tools on their own locations"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
-      "*.chocolatey.org",
-      "*.dlservice.microsoft.com",
-      "*.github.com",
-      "*.githubusercontent.com",
-      "*.hashicorp.com",
-      "*.launchpad.net",
-      "*.nuget.org",
-      "*.pivotal.io",
-      "*.powershellgallery.com",
-      "*.smartscreen-prod.microsoft.com",
-      "*.typescriptlang.org",
-      "*.ubuntu.com",
-      "*.vo.msecnd.net", # Visual Studio Code
-      "aka.ms",
-      "api.npms.io",
-      "api.snapcraft.io",
-      "azcopy.azureedge.net",
-      "azurecliprod.blob.core.windows.net",
-      "azuredatastudiobuilds.blob.core.windows.net",
-      "baltocdn.com",
-      "chocolatey.org",
-      "devopsgallerystorage.blob.core.windows.net",
-      "dl.pstmn.io", # Postman
-      "dl.xamarin.com",
-      "download.docker.com",
-      "download.elifulkerson.com",
-      "download.microsoft.com",
-      "download.sysinternals.com",
-      "download.visualstudio.com",
-      "download.visualstudio.microsoft.com",
-      "functionscdn.azureedge.net",
-      "get.helm.sh",
-      "github-production-release-asset-2e65be.s3.amazonaws.com", 
-      "github.com",
-      "go.microsoft.com",
-      "launchpad.net",
-      "licensing.mp.microsoft.com",
-      "marketplace.visualstudio.com",
-      "nuget.org",
-      "onegetcdn.azureedge.net",
-      "packages.cloud.google.com",
-      "packages.microsoft.com",
-      "psg-prod-eastus.azureedge.net", # PowerShell
-      "registry.npmjs.org",
-      "skimdb.npmjs.com",
-      "sqlopsbuilds.azureedge.net", # Data Studio
-      "sqlopsextensions.blob.core.windows.net", # Data Studio
-      "version.pm2.io",
-      "visualstudio-devdiv-c2s.msedge.net",
-      "visualstudio.microsoft.com",
-      "wdcp.microsoft.com",
-      "wdcpalt.microsoft.com",
-      "xamarin-downloads.azureedge.net",
-    ]
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  }
-
-  rule {
-    name                       = "Allow management traffic by tag (config:${var.configuration_name})"
-    description                = "Azure Backup, Diagnostics, Management, Windows Update"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    fqdn_tags                  = [
-      "AzureActiveDirectory",
-      "AzureBackup",
-      "AzureMonitor",
-      "AzureUpdateDelivery",
-      "GuestAndHybridManagement",
-      "MicrosoftActiveProtectionService",
-      "WindowsAdminCenter",
-      "WindowsDiagnostics",
-      "WindowsUpdate"
-    ]
-  }
-
-  rule {
-    name                       = "Allow management traffic by url (config:${var.configuration_name})"
-    description                = "Diagnostics, Management, Windows Update"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
-      "*.api.cdp.microsoft.com",
-      "*.applicationinsights.io",
-      "*.azure-automation.net",
-      "*.delivery.mp.microsoft.com",
-      "*.do.dsp.mp.microsoft.com",
-      "*.events.data.microsoft.com",
-      "*.identity.azure.net", # MSI Sidecar
-      "*.ingestion.msftcloudes.com",
-      "*.loganalytics.io",
-      "*.microsoftonline-p.com", # AAD Browser login
-      "*.monitoring.azure.com",
-      "*.msauth.net", # AAD Browser login
-      "*.msftauth.net", # AAD Browser login
-      "*.msauthimages.net", # AAD Browser login
-      "*.msftauthimages.net", # AAD Browser login
-      "*.ods.opinsights.azure.com",
-      "*.oms.opinsights.azure.com",
-      "*.portal.azure.com",
-      "*.portal.azure.net", # Portal images, resources
-      "*.systemcenteradvisor.com",
-      "*.telemetry.microsoft.com",
-      "*.update.microsoft.com",
-      "*.windowsupdate.com",
-      "clientconfig.passport.net",
-      "checkappexec.microsoft.com",
-      "device.login.microsoftonline.com",
-      "edge.microsoft.com",
-      "enterpriseregistration.windows.net",
-      "entropy.ubuntu.com",
-      "graph.microsoft.com",
-      "ieonline.microsoft.com",
-      "login.microsoftonline.com",
-      "management.azure.com",
-      "management.core.windows.net",
-      "motd.ubuntu.com",
-      "msft.sts.microsoft.com",
-      "nav.smartscreen.microsoft.com",
-      "opinsightsweuomssa.blob.core.windows.net",
-      "pas.windows.net",
-      "portal.azure.com",
-      "scadvisor.accesscontrol.windows.net",
-      "scadvisorcontent.blob.core.windows.net",
-      "scadvisorservice.accesscontrol.windows.net",
-      "settings-win.data.microsoft.com",
-      "smartscreen-prod.microsoft.com",
-      "sts.windows.net",
-      "urs.microsoft.com",
-      "validation-v2.sls.microsoft.com",
-      "vortex.data.microsoft.com",
-      data.azurerm_storage_account.diagnostics.primary_blob_host,
-      data.azurerm_storage_account.diagnostics.primary_table_host
-    ]
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  }
-
-  rule {
-    name                       = "Allow selected HTTP traffic (config:${var.configuration_name})"
-    description                = "Plain HTTP traffic for some applications that need it"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-  # https://docs.microsoft.com/en-us/azure/key-vault/general/whats-new#will-this-affect-me
-    target_fqdns               = [
-      "*.d-trust.net",
-      "*.digicert.com",
-    # "adl.windows.com",
-      "apt.kubernetes.io",
-      "archive.ubuntu.com",
-      "azure.archive.ubuntu.com",
-      "chocolatey.org",
-      "crl.microsoft.com",
-      "crl.usertrust.com",
-      "dl.delivery.mp.microsoft.com", # "Microsoft Edge"
-      "go.microsoft.com",
-      "ipinfo.io",
-      "keyserver.ubuntu.com",
-      "mscrl.microsoft.com",
-      "ocsp.msocsp.com",
-      "ocsp.sectigo.com",
-      "ocsp.usertrust.com",
-      "oneocsp.microsoft.com",
-      "ppa.launchpad.net",
-      "security.ubuntu.com",
-    # "www.microsoft.com",
-      "www.msftconnecttest.com"
-    ]
-
-    protocol {
-      port                     = "80"
-      type                     = "Http"
-    }
-  }
+  }  
 
   count                        = var.deploy_firewall ? 1 : 0
 } 

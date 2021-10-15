@@ -68,6 +68,8 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
   }
 
   tags                         = local.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_storage_account automation_storage {
@@ -102,6 +104,8 @@ resource azurerm_private_endpoint aut_blob_storage_endpoint {
   }
 
   tags                         = local.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
 }
 resource azurerm_storage_container configuration {
   name                         = "configuration"
@@ -144,4 +148,36 @@ resource azurerm_storage_blob terraform_workspace_vars_configuration {
 
   count                        = fileexists("${path.root}/${terraform.workspace}.tfvars") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
+}
+
+resource azurerm_disk_access disk_access {
+  name                         = "${azurerm_resource_group.rg.name}-disk-access"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+
+  tags                         = local.tags
+}
+
+resource azurerm_private_endpoint disk_access_endpoint {
+  name                         = "${azurerm_disk_access.disk_access.name}-endpoint"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  
+  subnet_id                    = module.network.private_endpoint_subnet_id
+
+  private_dns_zone_group {
+    name                       = module.network.azurerm_private_dns_zone_blob_name
+    private_dns_zone_ids       = [module.network.azurerm_private_dns_zone_blob_id]
+  }
+  
+  private_service_connection {
+    is_manual_connection       = false
+    name                       = "${azurerm_disk_access.disk_access.name}-endpoint-connection"
+    private_connection_resource_id = azurerm_disk_access.disk_access.id
+    subresource_names          = ["disks"]
+  }
+
+  tags                         = local.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
 }

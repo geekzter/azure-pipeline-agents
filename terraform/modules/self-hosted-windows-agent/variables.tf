@@ -21,6 +21,7 @@ variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 
 variable computer_name {}
+variable disk_access_name {}
 variable name {}
 variable os_offer {}
 variable os_publisher {}

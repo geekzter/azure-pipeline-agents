@@ -309,8 +309,8 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow packaging tools (config:${var.configuration_name})"
-    description                = "Packaging (e.g. Chocolatey, NuGet) tools"
+    name                       = "Allow bootstrap & packaging tools (config:${var.configuration_name})"
+    description                = "Packaging (e.g. Chocolatey, NuGet) tools. Bootstrap scripts are hosted on GitHub, tools on their own locations"
 
     source_ip_groups           = [
       azurerm_ip_group.agents.0.id
@@ -318,57 +318,32 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
 
     target_fqdns               = [
       "*.chocolatey.org",
-      "*.launchpad.net",
-      "*.nuget.org",
-      "*.powershellgallery.com",
-      "*.ubuntu.com",
-      "aka.ms",
-      "api.npms.io",
-      "api.snapcraft.io",
-      "baltocdn.com",
-      "chocolatey.org",
-      "devopsgallerystorage.blob.core.windows.net",
-      "download.microsoft.com",
-      "launchpad.net",
-      "nuget.org",
-      "onegetcdn.azureedge.net",
-      "packages.cloud.google.com",
-      "packages.microsoft.com",
-      "psg-prod-eastus.azureedge.net", # PowerShell
-      "registry.npmjs.org",
-      "skimdb.npmjs.com",
-    ]
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  }
-
-  rule {
-    name                       = "Allow bootstrap scripts and tools (config:${var.configuration_name})"
-    description                = "Bootstrap scripts are hosted on GitHub, tools on their own locations"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
       "*.dlservice.microsoft.com",
       "*.github.com",
       "*.githubusercontent.com",
       "*.hashicorp.com",
+      "*.launchpad.net",
+      "*.nuget.org",
       "*.pivotal.io",
+      "*.powershellgallery.com",
       "*.smartscreen-prod.microsoft.com",
       "*.typescriptlang.org",
+      "*.ubuntu.com",
       "*.vo.msecnd.net", # Visual Studio Code
+      "aka.ms",
+      "api.npms.io",
+      "api.snapcraft.io",
       "azcopy.azureedge.net",
       "azurecliprod.blob.core.windows.net",
       "azuredatastudiobuilds.blob.core.windows.net",
+      "baltocdn.com",
+      "chocolatey.org",
+      "devopsgallerystorage.blob.core.windows.net",
       "dl.pstmn.io", # Postman
       "dl.xamarin.com",
       "download.docker.com",
       "download.elifulkerson.com",
+      "download.microsoft.com",
       "download.sysinternals.com",
       "download.visualstudio.com",
       "download.visualstudio.microsoft.com",
@@ -377,16 +352,24 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "github-production-release-asset-2e65be.s3.amazonaws.com", 
       "github.com",
       "go.microsoft.com",
+      "launchpad.net",
       "licensing.mp.microsoft.com",
       "marketplace.visualstudio.com",
+      "nuget.org",
+      "onegetcdn.azureedge.net",
+      "packages.cloud.google.com",
+      "packages.microsoft.com",
+      "psg-prod-eastus.azureedge.net", # PowerShell
+      "registry.npmjs.org",
+      "skimdb.npmjs.com",
       "sqlopsbuilds.azureedge.net", # Data Studio
       "sqlopsextensions.blob.core.windows.net", # Data Studio
       "version.pm2.io",
-      "visualstudio.microsoft.com",
-      "xamarin-downloads.azureedge.net",
       "visualstudio-devdiv-c2s.msedge.net",
+      "visualstudio.microsoft.com",
       "wdcp.microsoft.com",
       "wdcpalt.microsoft.com",
+      "xamarin-downloads.azureedge.net",
     ]
 
     protocol {
@@ -453,11 +436,13 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "device.login.microsoftonline.com",
       "edge.microsoft.com",
       "enterpriseregistration.windows.net",
+      "entropy.ubuntu.com",
       "graph.microsoft.com",
       "ieonline.microsoft.com",
       "login.microsoftonline.com",
       "management.azure.com",
       "management.core.windows.net",
+      "motd.ubuntu.com",
       "msft.sts.microsoft.com",
       "nav.smartscreen.microsoft.com",
       "opinsightsweuomssa.blob.core.windows.net",

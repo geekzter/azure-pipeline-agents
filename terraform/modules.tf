@@ -54,6 +54,7 @@ module scale_set_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.disk_access_endpoint,
     module.network
   ]
 }
@@ -77,6 +78,7 @@ module self_hosted_linux_agents {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   computer_name                = "linuxagent${count.index+1}"
+  disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-linux-agent${count.index+1}"
   os_offer                     = var.linux_os_offer
   os_publisher                 = var.linux_os_publisher
@@ -99,7 +101,12 @@ module self_hosted_linux_agents {
   vm_accelerated_networking    = var.vm_accelerated_networking
 
   count                        = var.deploy_self_hosted_vms ? var.linux_self_hosted_agent_count : 0
-  depends_on                   = [module.network]
+  depends_on                   = [
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.disk_access_endpoint,
+    module.network
+  ]
 }
 
 module self_hosted_windows_agents {
@@ -121,6 +128,7 @@ module self_hosted_windows_agents {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   computer_name                = "windowsagent${count.index+1}"
+  disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-windows-agent${count.index+1}"
   os_offer                     = var.windows_os_offer
   os_publisher                 = var.windows_os_publisher
@@ -140,5 +148,10 @@ module self_hosted_windows_agents {
   vm_accelerated_networking    = var.vm_accelerated_networking
 
   count                        = var.deploy_self_hosted_vms ? var.windows_self_hosted_agent_count : 0
-  depends_on                   = [module.network]
+  depends_on                   = [
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.disk_access_endpoint,
+    module.network
+  ]
 }

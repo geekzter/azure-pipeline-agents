@@ -319,7 +319,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   dynamic "rule" {
     for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
     content {
-      name                     = "Allow VM Guest Agent manifest (wildcard) (config:${var.configuration_name})"
+      name                     = "Allow VM Guest Agent (wildcard) (config:${var.configuration_name})"
 
       source_ip_groups         = [
         azurerm_ip_group.agents.0.id

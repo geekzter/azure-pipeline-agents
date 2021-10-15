@@ -63,6 +63,9 @@ variable linux_os_publisher {
 variable linux_os_sku {
   default                      = "18.04-LTS"
 }
+variable linux_pipeline_agent_name_prefix {
+  default                      = "ubuntu-agent"
+}
 variable linux_pipeline_agent_pool {
   default                      = "Default"
 }
@@ -144,6 +147,9 @@ variable windows_os_publisher {
 }
 variable windows_os_sku {
   default                      = "2019-Datacenter"
+}
+variable windows_pipeline_agent_name_prefix {
+  default                      = "windows-agent"
 }
 variable windows_pipeline_agent_pool {
   default                      = "Default"

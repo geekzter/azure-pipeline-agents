@@ -81,7 +81,7 @@ module self_hosted_linux_agents {
   os_offer                     = var.linux_os_offer
   os_publisher                 = var.linux_os_publisher
   os_sku                       = var.linux_os_sku
-  pipeline_agent_name          = "ubuntu-agent-${terraform.workspace}${count.index+1}"
+  pipeline_agent_name          = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.linux_pipeline_agent_pool
   storage_type                 = var.linux_storage_type
   vm_size                      = var.linux_vm_size
@@ -125,7 +125,7 @@ module self_hosted_windows_agents {
   os_offer                     = var.windows_os_offer
   os_publisher                 = var.windows_os_publisher
   os_sku                       = var.windows_os_sku
-  pipeline_agent_name          = "windows-agent-${terraform.workspace}${count.index+1}"
+  pipeline_agent_name          = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.windows_pipeline_agent_pool
   storage_type                 = var.windows_storage_type
   vm_size                      = var.windows_vm_size

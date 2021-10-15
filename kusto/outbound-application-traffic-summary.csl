@@ -1,28 +1,30 @@
-// Taken from https://docs.microsoft.com/en-us/azure/firewall/log-analytics-samples
 AzureDiagnostics
 | where Category == "AzureFirewallApplicationRule" 
-// | where ResourceGroup == "AZURE-PIPELINES-AGENTS-TEST-XXXX"
+| where ResourceGroup == "AZURE-PIPELINES-AGENTS-TEST-LCQB"
 | parse msg_s with Protocol " request from " SourceIP ":" SourcePortInt:int " " TempDetails
 | parse TempDetails with "was " Action1 ". Reason: " Rule1
-| parse TempDetails with "to " FQDN ":" TargetPortInt:int ". Action: " Action2 "." *
-| parse TempDetails with * ". Rule Collection: " RuleCollection2a ". Rule:" Rule2a
+| parse TempDetails with "to " FQDN1 ":" TargetPortInt1:int ". Action: " Action2 "." RuleDetails1
+| parse TempDetails with "to " FQDN2 ":" TargetPortInt2:int ". Url: " Url ". Action: " Action3 "." RuleDetails2
+| extend RuleDetails=coalesce(RuleDetails1,RuleDetails2)
 | parse TempDetails with * "Deny." RuleCollection2b ". Proceeding with" Rule2b
+| parse RuleDetails with * "Rule Collection: " RuleCollection2a ". Rule:" Rule2a " (config:" ConfigurationString ")"
+| parse RuleDetails with Rule2c "."
 | where ipv4_is_match("192.168.0.128/25", SourceIP)
-| extend TargetPort = tostring(TargetPortInt)
-| extend Action1 = case(Action1 == "Deny","Deny","Unknown Action")
-| extend Action = case(Action2 == "",Action1,Action2),Rule3 = case(Rule2a == "", case(Rule1 == "",case(Rule2b == "","N/A", Rule2b),Rule1),Rule2a), 
-RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),FQDN = case(FQDN == "", "N/A", FQDN),TargetPort = case(TargetPort == "", "N/A", TargetPort)
-| extend SourceSubnet = case(ipv4_is_match("192.168.0.128/26", SourceIP),"ScaleSetAgents",case(ipv4_is_match("192.168.0.192/26", SourceIP),"SelfHostedAgents","Other"))
-| parse Rule3 with Rule " (config:" ConfigurationString ")"
+| extend Action = coalesce(Action1,Action2,Action3,"Unknown"),
+         Rule = coalesce(Rule2a,Rule2b,Rule1,Rule2c,"N/A"),
+         RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),
+         FQDN = coalesce(FQDN1,FQDN2,"N/A"),
+         TargetPort = coalesce(tostring(TargetPortInt1),tostring(TargetPortInt2),"N/A")
+| extend SourceSubnet = case(ipv4_is_match("192.168.0.128/26", SourceIP), "ScaleSetAgents", case(ipv4_is_match("192.168.0.192/26", SourceIP), "SelfHostedAgents", "Other"))
 | extend Configuration = toint(ConfigurationString)
-| extend configure_cidr_allow_rules = (binary_or(Configuration,toint(pow(2,0))) == Configuration)
-| extend configure_wildcard_allow_rules = (binary_or(Configuration,toint(pow(2,1))) == Configuration)
-| extend deploy_bastion = (binary_or(Configuration,toint(pow(2,2))) == Configuration)
-| extend deploy_firewall = (binary_or(Configuration,toint(pow(2,3))) == Configuration)
-| extend deploy_non_essential_vm_extensions = (binary_or(Configuration,toint(pow(2,4))) == Configuration)
-| extend deploy_scale_set = (binary_or(Configuration,toint(pow(2,5))) == Configuration)
-| extend deploy_self_hosted_vms = (binary_or(Configuration,toint(pow(2,6))) == Configuration)
-| extend deploy_self_hosted_vm_agents = (binary_or(Configuration,toint(pow(2,7))) == Configuration)
-| extend prepare_host = (binary_or(Configuration,toint(pow(2,8))) == Configuration)
+| extend configure_cidr_allow_rules = (binary_or(Configuration, toint(pow(2, 0))) == Configuration)
+| extend configure_wildcard_allow_rules = (binary_or(Configuration, toint(pow(2, 1))) == Configuration)
+| extend deploy_bastion = (binary_or(Configuration, toint(pow(2, 2))) == Configuration)
+| extend deploy_firewall = (binary_or(Configuration, toint(pow(2, 3))) == Configuration)
+| extend deploy_non_essential_vm_extensions = (binary_or(Configuration, toint(pow(2, 4))) == Configuration)
+| extend deploy_scale_set = (binary_or(Configuration, toint(pow(2, 5))) == Configuration)
+| extend deploy_self_hosted_vms = (binary_or(Configuration, toint(pow(2, 6))) == Configuration)
+| extend deploy_self_hosted_vm_agents = (binary_or(Configuration, toint(pow(2, 7))) == Configuration)
+| extend prepare_host = (binary_or(Configuration, toint(pow(2, 8))) == Configuration)
 | summarize count() by SourceSubnet, Rule, FQDN, TargetPort, Action
-| order by Rule, FQDN asc
+| order by FQDN asc

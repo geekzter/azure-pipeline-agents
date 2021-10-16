@@ -15,6 +15,10 @@ AzureDiagnostics
          RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),
          FQDN = coalesce(FQDN1,FQDN2,"N/A"),
          TargetPort = coalesce(tostring(TargetPortInt1),tostring(TargetPortInt2),"N/A")
+| extend Application1 = case(FQDN matches regex "(ums.*.blob.core.windows.net|md-.*.blob.storage.azure.net)","Azure VM Guest Agent","")
+| extend Application2 = case(FQDN matches regex "(zrdfe.*prdstr.*.blob.core.windows.net)","Azure VM Provisioning Agent","")
+| extend Application3 = case(FQDN matches regex "(.*.ods.opinsights.azure.com|.*.azure-automation.net|scadvisorcontent.blob.core.windows.net)","Log Analytics VM extension","")
+| extend Application = coalesce(Application1,Application2,Application3,replace_regex(replace_regex(replace_string(Rule,  "Allow ",""),"by.*$",""),"\\(.*$",""))
 | extend SourceSubnet = case(ipv4_is_match("192.168.0.128/26", SourceIP), "ScaleSetAgents", case(ipv4_is_match("192.168.0.192/26", SourceIP), "SelfHostedAgents", "Other"))
 | extend Configuration = toint(ConfigurationString)
 | extend configure_cidr_allow_rules = (binary_or(Configuration,toint(pow(2,0))) == Configuration)
@@ -26,6 +30,6 @@ AzureDiagnostics
 | extend deploy_self_hosted_vms = (binary_or(Configuration,toint(pow(2,6))) == Configuration)
 | extend deploy_self_hosted_vm_agents = (binary_or(Configuration,toint(pow(2,7))) == Configuration)
 | extend prepare_host = (binary_or(Configuration,toint(pow(2,8))) == Configuration)
-| project TimeGenerated, SourceSubnet, SourceIP, FQDN, TargetPort, Action ,RuleCollection, Rule, Configuration //, msg_s
+| project TimeGenerated, SourceSubnet, SourceIP, Application, FQDN, TargetPort, Action ,RuleCollection, Rule, Configuration //, msg_s
 | order by TimeGenerated desc
 | where Action == "Allow"

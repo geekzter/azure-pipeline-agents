@@ -399,8 +399,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   dynamic "rule" {
     for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
     content {
-      name                     = "Allow Azure DevOps (wildcards) (config:${var.configuration_name})"
-      description              = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
+      name                     = "Allow Azure DevOps Artifacts (wildcard) (config:${var.configuration_name})"
 
       source_ip_groups         = [
         azurerm_ip_group.agents.0.id
@@ -417,6 +416,25 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       }
     }
   }
+
+  # # HACK: Try to guess the FQDN's needed, and workaround the Azure Firewall limitation of the asterisk needed at either end of the wildcard expression
+  # rule {
+  #   name                       = "Allow Azure DevOps Artifacts (config:${var.configuration_name})"
+
+  #   source_ip_groups           = [
+  #     azurerm_ip_group.agents.0.id
+  #   ]
+
+  #   target_fqdns               = [
+  #     for i in range(1024,1,1) : format("*blobprodeus%d.blob.core.windows.net", i)
+  #   ]
+
+  #   protocol {
+  #     port                     = "443"
+  #     type                     = "Https"
+  #   }
+  # } 
+
 
   # Required traffic originating from within Build / Release jobs e.g. deployment of:
   # AKS, Synapse

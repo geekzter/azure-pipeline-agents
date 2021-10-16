@@ -277,37 +277,52 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   }
 
   rule {
-    name                       = "Allow selected HTTP traffic (config:${var.configuration_name})"
+    name                       = "Allow bootstrap & packaging tools (HTTP) (config:${var.configuration_name})"
     description                = "Plain HTTP traffic for some applications that need it"
 
     source_ip_groups           = [
       azurerm_ip_group.agents.0.id
     ]
 
-  # https://docs.microsoft.com/en-us/azure/key-vault/general/whats-new#will-this-affect-me
     target_fqdns               = [
-      "*.d-trust.net",
-      "*.digicert.com",
-    # "adl.windows.com",
       "apt.kubernetes.io",
       "archive.ubuntu.com",
       "azure.archive.ubuntu.com",
       "chocolatey.org",
-      "crl.microsoft.com",
-      "crl.usertrust.com",
       "dl.delivery.mp.microsoft.com", # "Microsoft Edge"
       "go.microsoft.com",
-      "ipinfo.io",
       "keyserver.ubuntu.com",
+      "ppa.launchpad.net",
+      "security.ubuntu.com",
+      "www.msftconnecttest.com"
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+  }
+
+  rule {
+    name                       = "Allow TLS CRL & OSCP (HTTP) (config:${var.configuration_name})"
+    description                = "Plain HTTP traffic for Certificate Revocation List (CRL) download and/or Online Certificate Status Protocol locations"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+  # https://docs.microsoft.com/en-us/azure/security/fundamentals/tls-certificate-changes
+    target_fqdns               = [
+      "*.d-trust.net",
+      "*.digicert.com",
+      "crl.microsoft.com",
+      "crl.usertrust.com",
       "mscrl.microsoft.com",
       "ocsp.msocsp.com",
       "ocsp.sectigo.com",
       "ocsp.usertrust.com",
       "oneocsp.microsoft.com",
-      "ppa.launchpad.net",
-      "security.ubuntu.com",
-    # "www.microsoft.com",
-      "www.msftconnecttest.com"
+      "www.microsoft.com",
     ]
 
     protocol {
@@ -319,7 +334,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   dynamic "rule" {
     for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
     content {
-      name                     = "Allow VM Guest Agent (wildcard) (config:${var.configuration_name})"
+      name                     = "Allow Azure VM Guest Agent (wildcard) (config:${var.configuration_name})"
 
       source_ip_groups         = [
         azurerm_ip_group.agents.0.id
@@ -512,7 +527,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   dynamic "rule" {
     for_each = range(var.configure_cidr_allow_rules ? 1 : 0) 
     content {
-      name                     = "Allow outbound Azure DevOps (config:${var.configuration_name})"
+      name                     = "Allow Azure DevOps (config:${var.configuration_name})"
 
       source_ip_groups         = [
         azurerm_ip_group.agents.0.id
@@ -535,7 +550,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
   
   rule {
-    name                       = "Allow outbound DNS (config:${var.configuration_name})"
+    name                       = "Allow DNS (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id

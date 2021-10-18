@@ -15,20 +15,24 @@ data cloudinit_config user_data {
     }
   }
 
-  part {
+  dynamic "part" {
+    for_each = range(var.deploy_agent ? 1 : 0)
+    content {
     content                    = templatefile("${path.module}/cloud-config-agent.yaml",
-    {
-      agent_name               = var.pipeline_agent_name
-      agent_pool               = var.pipeline_agent_pool
-      install_agent_script_b64 = filebase64("${path.module}/install_agent.sh")
-      org                      = var.devops_org
-      pat                      = var.devops_pat
-      user                     = var.user_name
-    })
-    content_type               = "text/cloud-config"
-    merge_type                 = "list(append)+dict(recurse_array)+str()"
+      {
+        agent_name             = var.pipeline_agent_name
+        agent_pool             = var.pipeline_agent_pool
+        install_agent_script_b64= filebase64("${path.module}/install_agent.sh")
+        org                    = var.devops_org
+        pat                    = var.devops_pat
+        user                   = var.user_name
+      })
+      content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
+    }
   }
 
+  count                        = var.deploy_agent || var.prepare_host ? 1 : 0
 }
 
 resource azurerm_public_ip linux_pip {
@@ -99,9 +103,11 @@ resource azurerm_linux_virtual_machine linux_agent {
   size                         = var.vm_size
   admin_username               = var.user_name
   admin_password               = var.user_password
-  custom_data                  = base64encode(data.cloudinit_config.user_data.rendered)
+  allow_extension_operations   = var.deploy_non_essential_vm_extensions || var.deploy_agent || var.prepare_host
+  custom_data                  = var.deploy_agent || var.prepare_host ? base64encode(data.cloudinit_config.user_data.0.rendered) : null
   disable_password_authentication = false
   network_interface_ids        = [azurerm_network_interface.linux_nic.id]
+  provision_vm_agent           = var.deploy_non_essential_vm_extensions || var.deploy_agent || var.prepare_host
 
   admin_ssh_key {
     username                   = var.user_name
@@ -133,6 +139,13 @@ resource azurerm_linux_virtual_machine linux_agent {
 
   tags                         = var.tags
   depends_on                   = [azurerm_network_interface_security_group_association.linux_nic_nsg]
+
+  # Terraform azurerm does not allow disk access configuration of OS disk
+  # BUG: https://github.com/Azure/azure-cli/issues/19455 
+  #      So use disk_access_name instead of disk_access_id
+  provisioner local-exec {
+    command                    = "az disk update --name ${var.name}-osdisk --resource-group ${self.resource_group_name} --disk-access ${var.disk_access_name} --network-access-policy AllowPrivate --query 'networkAccessPolicy'"
+  }  
 }
 
 resource azurerm_virtual_machine_extension cloud_config_status {
@@ -146,6 +159,8 @@ resource azurerm_virtual_machine_extension cloud_config_status {
   })
 
   tags                         = var.tags
+
+  count                        = var.deploy_agent || var.prepare_host ? 1 : 0
 }
 resource azurerm_virtual_machine_extension linux_log_analytics {
   name                         = "OmsAgentForLinux"

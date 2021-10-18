@@ -95,7 +95,7 @@ variables:
   value: 'terraform'
 - name: 'terraformDirectory'
   value: '$(Build.SourcesDirectory)/terraform'
-- name: 'TF_VAR_linux_pipeline_agent_name'
+- name: 'TF_VAR_linux_pipeline_agent_name_prefix'
   value: 'ubuntu-agent'
 - name: 'TF_VAR_linux_pipeline_agent_pool'
   value: 'CIPool'
@@ -103,7 +103,7 @@ variables:
   value: '$(Build.BuildId)'
 - name: 'TF_VAR_ssh_public_key'
   value: 'id_rsa.pub' # Key will be downloaded in terraform directory
-- name: 'TF_VAR_windows_pipeline_agent_name'
+- name: 'TF_VAR_windows_pipeline_agent_name_prefix'
   value: 'windows-agent'
 - name: 'TF_VAR_windows_pipeline_agent_pool'
   value: 'CIPool'
@@ -294,7 +294,7 @@ jobs:
       - task: AzureCLI@2
         displayName: 'Disable Self-Hosted Agent(s)'
         name: 'agentConfig'
-        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: 'pscore'
@@ -305,8 +305,14 @@ jobs:
               $InformationPreference = "Continue"
               $VerbosePreference     = "Continue"
             }
-            ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
-            ./update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$false `
+                                      -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
+                                      -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
+                                      -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$false `
+                                      -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
+                                      -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
+                                      -Token "$(System.AccessToken)"
           addSpnToEnvironment: true
           useGlobalConfig: true
           workingDirectory: '$(scriptDirectory)'
@@ -339,7 +345,7 @@ jobs:
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2
         displayName: 'Enable Self-Hosted Agent(s)'
-        condition: and(eq(variables['TF_VAR_use_self_hosted'],'true'),succeeded())
+        condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: 'pscore'
@@ -350,8 +356,14 @@ jobs:
               $InformationPreference = "Continue"
               $VerbosePreference     = "Continue"
             }
-            ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool)   -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name)   -Token "$(System.AccessToken)"
-            ./update_agent_status.ps1 -Enabled:$true -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name) -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$true `
+                                      -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
+                                      -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)  `
+                                      -Token "$(System.AccessToken)"
+            ./update_agent_status.ps1 -Enabled:$true `
+                                      -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
+                                      -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
+                                      -Token "$(System.AccessToken)"
           addSpnToEnvironment: true
           useGlobalConfig: true
           workingDirectory: '$(scriptDirectory)'
@@ -374,6 +386,9 @@ jobs:
             # Get from Azure CLI context
             $env:ARM_TENANT_ID       ??= $(az account show --query tenantId -o tsv)
             $env:ARM_SUBSCRIPTION_ID ??= $(az account show --query id -o tsv)
+
+            # Swap NAT Gateway <-> Azure Firewall
+            # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
 
             ./deploy.ps1 -apply -force
           addSpnToEnvironment: true

@@ -7,6 +7,9 @@ variable terraform_cidr {}
 variable create_public_ip_address {
   type                         = bool
 }
+variable deploy_agent_vm_extension {
+  type                         = bool
+}
 variable deploy_non_essential_vm_extensions {
   type                         = bool
 }
@@ -18,6 +21,7 @@ variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 
 variable computer_name {}
+variable disk_access_name {}
 variable name {}
 variable os_offer {}
 variable os_publisher {}

@@ -118,249 +118,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   action                       = "Allow"
 
   rule {
-    name                       = "Allow Azure DevOps"
-    description                = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
-      # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#im-running-a-firewall-and-my-code-is-in-azure-repos-what-urls-does-the-agent-need-to-communicate-with
-      "*.dev.azure.com",
-      "*.pkgs.visualstudio.com",
-      "*.visualstudio.com",
-      "*.vsassets.io",
-      "*.vsblob.visualstudio.com", # Pipeline artifacts
-      "*.vsrm.visualstudio.com",
-      "*.vssps.visualstudio.com",
-      "*.vstmr.visualstudio.com",
-      "*.vstmrblob.vsassets.io",
-      "${var.devops_org}.pkgs.visualstudio.com",
-      "${var.devops_org}.visualstudio.com",
-      "${var.devops_org}.vsblob.visualstudio.com",
-      "${var.devops_org}.vsrm.visualstudio.com",
-      "${var.devops_org}.vssps.visualstudio.com",
-      "${var.devops_org}.vstmr.visualstudio.com",
-      "app.vssps.visualstudio.com",
-      "dev.azure.com",
-      "login.microsoftonline.com",
-      "visualstudio-devdiv-c2s.msedge.net",
-      "vssps.dev.azure.com",
-      "vstsagentpackage.azureedge.net",
-    ]
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  } 
-
-  dynamic "rule" {
-    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
-    content {
-      name                     = "Allow Azure DevOps (wildcards)"
-      description              = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
-
-      source_ip_groups         = [
-        azurerm_ip_group.agents.0.id
-      ]
-
-      target_fqdns             = [
-        # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#im-running-a-firewall-and-my-code-is-in-azure-repos-what-urls-does-the-agent-need-to-communicate-with
-        "*.blob.core.windows.net", # Pipeline artifacts *vsblob*.blob.core.windows.net
-        "*.blob.storage.azure.net",
-      ]
-
-      protocol {
-        port                   = "443"
-        type                   = "Https"
-      }
-    }
-  }
-
-  # Required traffic originating from within Build / Release jobs e.g. deployment of:
-  # AKS, Synapse
-  rule {
-    name                       = "Allow Pipeline tasks by URL (HTTPS)"
-    description                = "Pipeline tasks e.g. Terraform"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
-      "aka.ms",
-      "azure.microsoft.com",
-      "files.pythonhosted.org",
-      "github.com",
-      "ipapi.co",
-      "ipinfo.io",
-      "pypi.org",
-      "registry.terraform.io",
-      "releases.hashicorp.com",
-      "stat.ripe.net",
-      "storage.googleapis.com", # kubectl
-      "weaveworks.github.io",
-    ]
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  }
-
-  dynamic "rule" {
-    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
-    content {
-      name                       = "Allow Pipeline tasks by URL wildcard (HTTPS)"
-      description                = "Cloud Services e.g. Azure App Service"
-
-      source_ip_groups           = [
-        azurerm_ip_group.agents.0.id
-      ]
-
-      target_fqdns               = [
-        "*.amazonaws.com",
-        "*.azurewebsites.net", # App Service
-        "*.cloudapp.azure.com", # Application Gateway
-        "*.queue.core.windows.net", # Synapse
-      ]
-
-      protocol {
-        port                     = "443"
-        type                     = "Https"
-      }
-    }
-  }  
-
-  # Required traffic originating from within Build / Release jobs e.g. deployment of:
-  # AKS, Synapse
-  rule {
-    name                       = "Allow Pipeline tasks by URL (HTTP)"
-    description                = "Pipeline tasks e.g. curl"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
-      for location in local.locations : "*${var.dns_host_suffix}.${location}.cloudapp.azure.com"
-    ]
-
-    protocol {
-      port                     = "80"
-      type                     = "Http"
-    }
-  }
-
-  # rule {
-  #   name                       = "Allow Azure SQL Database Pipeline tasks"
-  #   description                = "Pipeline tasks e.g. Azure SQL Database"
-
-  #   source_ip_groups           = [
-  #     azurerm_ip_group.agents.0.id
-  #   ]
-
-  #   target_fqdns               = [
-  #     "*.database.windows.net"
-  #   ]
-
-  #   protocol {
-  #     port                     = "1433"
-  #     type                     = "Mssql"
-  #   }
-  # }  
-
-  rule {
-    name                       = "Allow packaging tools"
-    description                = "Packaging (e.g. Chocolatey, NuGet) tools"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
-      "*.chocolatey.org",
-      "*.launchpad.net",
-      "*.nuget.org",
-      "*.powershellgallery.com",
-      "*.ubuntu.com",
-      "aka.ms",
-      "api.npms.io",
-      "api.snapcraft.io",
-      "baltocdn.com",
-      "chocolatey.org",
-      "devopsgallerystorage.blob.core.windows.net",
-      "download.microsoft.com",
-      "launchpad.net",
-      "nuget.org",
-      "onegetcdn.azureedge.net",
-      "packages.cloud.google.com",
-      "packages.microsoft.com",
-      "psg-prod-eastus.azureedge.net", # PowerShell
-      "registry.npmjs.org",
-      "skimdb.npmjs.com",
-    ]
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  }
-
-  rule {
-    name                       = "Allow bootstrap scripts and tools"
-    description                = "Bootstrap scripts are hosted on GitHub, tools on their own locations"
-
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
-
-    target_fqdns               = [
-      "*.dlservice.microsoft.com",
-      "*.github.com",
-      "*.githubusercontent.com",
-      "*.hashicorp.com",
-      "*.pivotal.io",
-      "*.smartscreen-prod.microsoft.com",
-      "*.typescriptlang.org",
-      "*.vo.msecnd.net", # Visual Studio Code
-      "azcopy.azureedge.net",
-      "azurecliprod.blob.core.windows.net",
-      "azuredatastudiobuilds.blob.core.windows.net",
-      "dl.pstmn.io", # Postman
-      "dl.xamarin.com",
-      "download.docker.com",
-      "download.elifulkerson.com",
-      "download.sysinternals.com",
-      "download.visualstudio.com",
-      "download.visualstudio.microsoft.com",
-      "functionscdn.azureedge.net",
-      "get.helm.sh",
-      "github-production-release-asset-2e65be.s3.amazonaws.com", 
-      "github.com",
-      "go.microsoft.com",
-      "licensing.mp.microsoft.com",
-      "marketplace.visualstudio.com",
-      "sqlopsbuilds.azureedge.net", # Data Studio
-      "sqlopsextensions.blob.core.windows.net", # Data Studio
-      "version.pm2.io",
-      "visualstudio.microsoft.com",
-      "xamarin-downloads.azureedge.net",
-      "visualstudio-devdiv-c2s.msedge.net",
-      "wdcp.microsoft.com",
-      "wdcpalt.microsoft.com",
-    ]
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  }
-
-  rule {
-    name                       = "Allow management traffic by tag"
+    name                       = "Allow management traffic by tag (config:${var.configuration_name})"
     description                = "Azure Backup, Diagnostics, Management, Windows Update"
 
     source_ip_groups           = [
@@ -371,14 +129,17 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "AzureActiveDirectory",
       "AzureBackup",
       "AzureMonitor",
+      "AzureUpdateDelivery",
+      "GuestAndHybridManagement",
       "MicrosoftActiveProtectionService",
+      "WindowsAdminCenter",
       "WindowsDiagnostics",
       "WindowsUpdate"
     ]
   }
 
   rule {
-    name                       = "Allow management traffic by url"
+    name                       = "Allow management traffic by url (config:${var.configuration_name})"
     description                = "Diagnostics, Management, Windows Update"
 
     source_ip_groups           = [
@@ -414,11 +175,13 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "device.login.microsoftonline.com",
       "edge.microsoft.com",
       "enterpriseregistration.windows.net",
+      "entropy.ubuntu.com",
       "graph.microsoft.com",
       "ieonline.microsoft.com",
       "login.microsoftonline.com",
       "management.azure.com",
       "management.core.windows.net",
+      "motd.ubuntu.com",
       "msft.sts.microsoft.com",
       "nav.smartscreen.microsoft.com",
       "opinsightsweuomssa.blob.core.windows.net",
@@ -442,38 +205,95 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       type                     = "Https"
     }
   }
+  
+  rule {
+    name                       = "Allow bootstrap & packaging tools (config:${var.configuration_name})"
+    description                = "Packaging (e.g. Chocolatey, NuGet) tools. Bootstrap scripts are hosted on GitHub, tools on their own locations"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      "*.chocolatey.org",
+      "*.dlservice.microsoft.com",
+      "*.github.com",
+      "*.githubusercontent.com",
+      "*.hashicorp.com",
+      "*.launchpad.net",
+      "*.nuget.org",
+      "*.pivotal.io",
+      "*.powershellgallery.com",
+      "*.smartscreen-prod.microsoft.com",
+      "*.typescriptlang.org",
+      "*.ubuntu.com",
+      "*.vo.msecnd.net", # Visual Studio Code
+      "aka.ms",
+      "api.npms.io",
+      "api.snapcraft.io",
+      "azcopy.azureedge.net",
+      "azurecliprod.blob.core.windows.net",
+      "azuredatastudiobuilds.blob.core.windows.net",
+      "baltocdn.com",
+      "chocolatey.org",
+      "devopsgallerystorage.blob.core.windows.net",
+      "dl.pstmn.io", # Postman
+      "dl.xamarin.com",
+      "download.docker.com",
+      "download.elifulkerson.com",
+      "download.microsoft.com",
+      "download.sysinternals.com",
+      "download.visualstudio.com",
+      "download.visualstudio.microsoft.com",
+      "functionscdn.azureedge.net",
+      "get.helm.sh",
+      "github-production-release-asset-2e65be.s3.amazonaws.com", 
+      "github.com",
+      "go.microsoft.com",
+      "launchpad.net",
+      "licensing.mp.microsoft.com",
+      "marketplace.visualstudio.com",
+      "nuget.org",
+      "onegetcdn.azureedge.net",
+      "packages.cloud.google.com",
+      "packages.microsoft.com",
+      "psg-prod-eastus.azureedge.net", # PowerShell
+      "registry.npmjs.org",
+      "skimdb.npmjs.com",
+      "sqlopsbuilds.azureedge.net", # Data Studio
+      "sqlopsextensions.blob.core.windows.net", # Data Studio
+      "version.pm2.io",
+      "visualstudio-devdiv-c2s.msedge.net",
+      "visualstudio.microsoft.com",
+      "wdcp.microsoft.com",
+      "wdcpalt.microsoft.com",
+      "xamarin-downloads.azureedge.net",
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
 
   rule {
-    name                       = "Allow selected HTTP traffic"
+    name                       = "Allow bootstrap & packaging tools (HTTP) (config:${var.configuration_name})"
     description                = "Plain HTTP traffic for some applications that need it"
 
     source_ip_groups           = [
       azurerm_ip_group.agents.0.id
     ]
 
-  # https://docs.microsoft.com/en-us/azure/key-vault/general/whats-new#will-this-affect-me
     target_fqdns               = [
-      "*.d-trust.net",
-      "*.digicert.com",
-    # "adl.windows.com",
       "apt.kubernetes.io",
       "archive.ubuntu.com",
       "azure.archive.ubuntu.com",
       "chocolatey.org",
-      "crl.microsoft.com",
-      "crl.usertrust.com",
       "dl.delivery.mp.microsoft.com", # "Microsoft Edge"
       "go.microsoft.com",
-      "ipinfo.io",
       "keyserver.ubuntu.com",
-      "mscrl.microsoft.com",
-      "ocsp.msocsp.com",
-      "ocsp.sectigo.com",
-      "ocsp.usertrust.com",
-      "oneocsp.microsoft.com",
       "ppa.launchpad.net",
       "security.ubuntu.com",
-    # "www.microsoft.com",
       "www.msftconnecttest.com"
     ]
 
@@ -482,6 +302,235 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       type                     = "Http"
     }
   }
+
+  rule {
+    name                       = "Allow TLS CRL & OSCP (HTTP) (config:${var.configuration_name})"
+    description                = "Plain HTTP traffic for Certificate Revocation List (CRL) download and/or Online Certificate Status Protocol locations"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+  # https://docs.microsoft.com/en-us/azure/security/fundamentals/tls-certificate-changes
+    target_fqdns               = [
+      "*.d-trust.net",
+      "*.digicert.com",
+      "crl.microsoft.com",
+      "crl.usertrust.com",
+      "mscrl.microsoft.com",
+      "ocsp.msocsp.com",
+      "ocsp.sectigo.com",
+      "ocsp.usertrust.com",
+      "oneocsp.microsoft.com",
+      "www.microsoft.com",
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+  }
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                     = "Allow Azure VM Guest Agent (wildcard) (config:${var.configuration_name})"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      # e.g. md-sc4xrwvm2tv5.z36.blob.storage.azure.net
+      # StatusUploadBlob(Url)
+      # ArtifactsProfileBlob(Url)
+      # Guest Agent manifest Uris
+      target_fqdns             = [
+        "*.blob.storage.azure.net",
+      ]
+
+      protocol {
+        port                   = "443"
+        type                   = "Https"
+      }
+    }
+  }
+
+  rule {
+    name                       = "Allow Azure DevOps (config:${var.configuration_name})"
+    description                = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#im-running-a-firewall-and-my-code-is-in-azure-repos-what-urls-does-the-agent-need-to-communicate-with
+      "*.dev.azure.com",
+      "*.pkgs.visualstudio.com",
+      "*.visualstudio.com",
+      "*.vsassets.io",
+      "*.vsblob.visualstudio.com", # Pipeline artifacts
+      "*.vsrm.visualstudio.com",
+      "*.vssps.visualstudio.com",
+      "*.vstmr.visualstudio.com",
+      "*.vstmrblob.vsassets.io",
+      "${var.devops_org}.pkgs.visualstudio.com",
+      "${var.devops_org}.visualstudio.com",
+      "${var.devops_org}.vsblob.visualstudio.com",
+      "${var.devops_org}.vsrm.visualstudio.com",
+      "${var.devops_org}.vssps.visualstudio.com",
+      "${var.devops_org}.vstmr.visualstudio.com",
+      "api.github.com",
+      "app.vssps.visualstudio.com",
+      "dev.azure.com",
+      "login.microsoftonline.com",
+      "visualstudio-devdiv-c2s.msedge.net",
+      "vssps.dev.azure.com",
+      "vstsagentpackage.azureedge.net",
+      "vstsagenttools.blob.core.windows.net",
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  } 
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                     = "Allow Azure DevOps Artifacts (wildcard) (config:${var.configuration_name})"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      target_fqdns             = [
+        # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#im-running-a-firewall-and-my-code-is-in-azure-repos-what-urls-does-the-agent-need-to-communicate-with
+        "*.blob.core.windows.net", # Pipeline artifacts *vsblob*.blob.core.windows.net
+      ]
+
+      protocol {
+        port                   = "443"
+        type                   = "Https"
+      }
+    }
+  }
+
+  # # HACK: Try to guess the FQDN's needed, and workaround the Azure Firewall limitation of the asterisk needed at either end of the wildcard expression
+  # rule {
+  #   name                       = "Allow Azure DevOps Artifacts (config:${var.configuration_name})"
+
+  #   source_ip_groups           = [
+  #     azurerm_ip_group.agents.0.id
+  #   ]
+
+  #   target_fqdns               = [
+  #     for i in range(1024,1,1) : format("*blobprodeus%d.blob.core.windows.net", i)
+  #   ]
+
+  #   protocol {
+  #     port                     = "443"
+  #     type                     = "Https"
+  #   }
+  # } 
+
+
+  # Required traffic originating from within Build / Release jobs e.g. deployment of:
+  # AKS, Synapse
+  rule {
+    name                       = "Allow Pipeline tasks by URL (HTTPS) (config:${var.configuration_name})"
+    description                = "Pipeline tasks e.g. Terraform"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      "aka.ms",
+      "azure.microsoft.com",
+      "files.pythonhosted.org",
+      "github.com",
+      "ipapi.co",
+      "ipinfo.io",
+      "pypi.org",
+      "registry.terraform.io",
+      "releases.hashicorp.com",
+      "stat.ripe.net",
+      "storage.googleapis.com", # kubectl
+      "weaveworks.github.io",
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                       = "Allow Pipeline tasks by URL wildcard (HTTPS) (config:${var.configuration_name})"
+      description                = "Cloud Services e.g. Azure App Service"
+
+      source_ip_groups           = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      target_fqdns               = [
+        "*.amazonaws.com",
+        "*.azurewebsites.net", # App Service
+        "*.cloudapp.azure.com", # Application Gateway
+        "*.queue.core.windows.net", # Synapse
+      ]
+
+      protocol {
+        port                     = "443"
+        type                     = "Https"
+      }
+    }
+  }  
+
+  # Required traffic originating from within Build / Release jobs e.g. deployment of:
+  # AKS, Synapse
+  rule {
+    name                       = "Allow Pipeline tasks by URL (HTTP) (config:${var.configuration_name})"
+    description                = "Pipeline tasks e.g. curl"
+
+    source_ip_groups           = [
+      azurerm_ip_group.agents.0.id
+    ]
+
+    target_fqdns               = [
+      for location in local.locations : "*${var.dns_host_suffix}.${location}.cloudapp.azure.com"
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+  }
+
+  dynamic "rule" {
+    for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 
+    content {
+      name                     = "Allow Azure SQL Database Pipeline tasks (wildcard) (config:${var.configuration_name})"
+      description              = "Pipeline tasks e.g. Azure SQL Database (SQL DB proxy mode required)"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      target_fqdns             = [
+        "*.database.windows.net"
+      ]
+
+      protocol {
+        port                   = "1433"
+        type                   = "Mssql"
+      }
+    }
+  }  
 
   count                        = var.deploy_firewall ? 1 : 0
 } 
@@ -496,7 +545,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   dynamic "rule" {
     for_each = range(var.configure_cidr_allow_rules ? 1 : 0) 
     content {
-      name                     = "AllowOutboundAzureDevOps"
+      name                     = "Allow Azure DevOps (config:${var.configuration_name})"
 
       source_ip_groups         = [
         azurerm_ip_group.agents.0.id
@@ -519,7 +568,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
   
   rule {
-    name                       = "AllowOutboundDNS"
+    name                       = "Allow DNS (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -539,7 +588,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
   
   rule {
-    name                       = "AllowAzureActiveDirectory"
+    name                       = "Allow Azure Active Directory (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -559,7 +608,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }    
 
   rule {
-    name                       = "AllowICMP"
+    name                       = "Allow ICMP (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -578,7 +627,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
 
   rule {
-    name                       = "AllowKMS"
+    name                       = "Allow KMS (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -598,7 +647,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
 
   # keyserver.ubuntu.com 
   rule {
-    name                       = "AllowUbuntuKeyServer"
+    name                       = "Allow Ubuntu Key Server (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -617,7 +666,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }
 
   rule {
-    name                       = "AllowNTP"
+    name                       = "Allow NTP (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -649,7 +698,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_debug_rules {
 
 
   rule {
-    name                       = "DEBUGAllowAllOutbound"
+    name                       = "Allow All Outbound (DEBUG) (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id

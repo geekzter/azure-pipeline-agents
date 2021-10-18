@@ -388,7 +388,7 @@ jobs:
             $env:ARM_SUBSCRIPTION_ID ??= $(az account show --query id -o tsv)
 
             # Swap NAT Gateway <-> Azure Firewall
-            $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
+            # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
 
             ./deploy.ps1 -apply -force
           addSpnToEnvironment: true

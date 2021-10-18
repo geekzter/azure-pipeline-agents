@@ -303,33 +303,36 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
     }
   }
 
-  rule {
-    name                       = "Allow TLS CRL & OSCP (HTTP) (config:${var.configuration_name})"
-    description                = "Plain HTTP traffic for Certificate Revocation List (CRL) download and/or Online Certificate Status Protocol locations"
+  dynamic "rule" {
+    for_each = range(var.configure_crl_oscp_rules ? 1 : 0) 
+    content {
+      name                     = "Allow TLS CRL & OSCP (HTTP) (config:${var.configuration_name})"
+      description              = "Plain HTTP traffic for Certificate Revocation List (CRL) download and/or Online Certificate Status Protocol locations"
 
-    source_ip_groups           = [
-      azurerm_ip_group.agents.0.id
-    ]
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
 
-  # https://docs.microsoft.com/en-us/azure/security/fundamentals/tls-certificate-changes
-    target_fqdns               = [
-      "*.d-trust.net",
-      "*.digicert.com",
-      "crl.microsoft.com",
-      "crl.usertrust.com",
-      "mscrl.microsoft.com",
-      "ocsp.msocsp.com",
-      "ocsp.sectigo.com",
-      "ocsp.usertrust.com",
-      "oneocsp.microsoft.com",
-      "www.microsoft.com",
-    ]
+    # https://docs.microsoft.com/en-us/azure/security/fundamentals/tls-certificate-changes
+      target_fqdns             = [
+        "*.d-trust.net",
+        "*.digicert.com",
+        "crl.microsoft.com",
+        "crl.usertrust.com",
+        "mscrl.microsoft.com",
+        "ocsp.msocsp.com",
+        "ocsp.sectigo.com",
+        "ocsp.usertrust.com",
+        "oneocsp.microsoft.com",
+        "www.microsoft.com",
+      ]
 
-    protocol {
-      port                     = "80"
-      type                     = "Http"
+      protocol {
+        port                   = "80"
+        type                   = "Http"
+      }
     }
-  }
+  }  
 
   dynamic "rule" {
     for_each = range(var.configure_wildcard_allow_rules ? 1 : 0) 

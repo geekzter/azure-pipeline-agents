@@ -4,6 +4,7 @@ module network {
   address_space                = var.address_space
   configuration_name           = local.configuration_bitmask
   configure_cidr_allow_rules   = var.configure_cidr_allow_rules
+  configure_crl_oscp_rules     = var.configure_crl_oscp_rules
   configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
   deploy_bastion               = var.deploy_bastion
   deploy_firewall              = var.deploy_firewall

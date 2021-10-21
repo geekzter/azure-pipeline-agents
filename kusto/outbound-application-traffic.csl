@@ -32,5 +32,6 @@ AzureDiagnostics
 | extend deploy_self_hosted_vms = (binary_or(Configuration,toint(pow(2,6))) == Configuration)
 | extend deploy_self_hosted_vm_agents = (binary_or(Configuration,toint(pow(2,7))) == Configuration)
 | extend prepare_host = (binary_or(Configuration,toint(pow(2,8))) == Configuration)
+| extend configure_crl_oscp_rules = (binary_or(Configuration, toint(pow(2, 9))) == Configuration)
 | project TimeGenerated, SourceSubnet, SourceIP, Application, FQDN, TargetPort, Action ,RuleCollection, Rule, Configuration //, msg_s
 | order by TimeGenerated desc

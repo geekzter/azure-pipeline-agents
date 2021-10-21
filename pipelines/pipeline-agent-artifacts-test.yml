@@ -1,5 +1,6 @@
 # This pipeline is used to test self-hosted agents
 #  e.g. to discover what outbound network access is required
+# Credits https://github.com/anatolybolshakov
 parameters:
 - name: vmImage
   displayName: Agent Image
@@ -125,7 +126,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              "Some content">>$(Build.ArtifactStagingDirectory)/fileToCache.txt
+              echo "Some content">>$(Build.ArtifactStagingDirectory)/fileToCache.txt
 
   - stage: Delay5
     jobs:

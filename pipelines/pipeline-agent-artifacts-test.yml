@@ -16,6 +16,10 @@ pr: none
 variables:
 - name: delayBetweenJobsInMins
   value: 1
+- name: pool
+  value: ${{ parameters.pool }}
+- name: vmImage
+  value: ${{ parameters.vmImage }}
 
 pool:
   name: '$(pool)'

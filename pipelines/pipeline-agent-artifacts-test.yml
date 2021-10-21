@@ -1,11 +1,26 @@
+# This pipeline is used to test self-hosted agents
+#  e.g. to discover what outbound network access is required
+parameters:
+- name: vmImage
+  displayName: Agent Image
+  type: string
+  default: ubuntu-latest
+- name: pool
+  displayName: Agent Pool
+  type: string
+  default: Default
+
+trigger: none
+pr: none
 
 variables:
 - name: delayBetweenJobsInMins
   value: 1
-​
+
 pool:
-  vmImage: ubuntu-latest
-​
+  name: '$(pool)'
+  vmImage: '$(vmImage)'
+
 stages:
   - stage: PublishBuildArtifacts
     jobs:
@@ -21,6 +36,7 @@ stages:
             PathtoPublish: '$(Build.ArtifactStagingDirectory)'
             ArtifactName: 'drop'
             publishLocation: 'Container'
+
   - stage: Delay1
     jobs:
         - job: Delay
@@ -29,6 +45,7 @@ stages:
           - task: Delay@1
             inputs:
               delayForMinutes: $(delayBetweenJobsInMins)
+
   - stage: DownloadBuildArtifacts
     jobs:
     - job: DownloadBuildArtifacts
@@ -39,6 +56,7 @@ stages:
           downloadType: 'single'
           artifactName: 'drop'
           downloadPath: '$(System.ArtifactsDirectory)'
+
   - stage: Delay2
     jobs:
         - job: Delay
@@ -47,7 +65,7 @@ stages:
           - task: Delay@1
             inputs:
               delayForMinutes: $(delayBetweenJobsInMins)
-​
+
   - stage: PublishPipelineArtifacts
     jobs:
       - job: PublishPipelineArtifacts
@@ -62,6 +80,7 @@ stages:
             targetPath: '$(Build.ArtifactStagingDirectory)'
             artifact: 'PipelineArtifactDrop'
             publishLocation: 'pipeline'
+
   - stage: Delay3
     jobs:
         - job: Delay
@@ -70,6 +89,7 @@ stages:
           - task: Delay@1
             inputs:
               delayForMinutes: $(delayBetweenJobsInMins)
+
   - stage: DownloadPipelineArtifacts
     jobs:
       - job: DownloadPipelineArtifacts
@@ -79,6 +99,7 @@ stages:
                 buildType: 'current'
                 artifactName: 'PipelineArtifactDrop'
                 targetPath: '$(Pipeline.Workspace)'
+
   - stage: Delay4
     jobs:
         - job: Delay
@@ -87,6 +108,7 @@ stages:
           - task: Delay@1
             inputs:
               delayForMinutes: $(delayBetweenJobsInMins)
+
   - stage: CacheTask
     jobs:
       - job: CacheTask
@@ -100,6 +122,7 @@ stages:
             targetType: 'inline'
             script: |
               "Some content">>$(Build.ArtifactStagingDirectory)/fileToCache.txt
+
   - stage: Delay5
     jobs:
         - job: Delay
@@ -108,6 +131,7 @@ stages:
           - task: Delay@1
             inputs:
               delayForMinutes: $(delayBetweenJobsInMins)
+
   - stage: PublishTestResults
     jobs:
         - job: PublishTestResults

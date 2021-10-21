@@ -145,7 +145,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                "<testsuite><testcase time='2021-10-19T15:51:47.120Z' name='test1'></testcase></testsuite>">>$(Build.ArtifactStagingDirectory)/TEST-1.xml
+                echo "<testsuite><testcase time='2021-10-19T15:51:47.120Z' name='test1'></testcase></testsuite>">>$(Build.ArtifactStagingDirectory)/TEST-1.xml
           - task: PublishTestResults@2
             inputs:
                 testResultsFormat: 'JUnit'

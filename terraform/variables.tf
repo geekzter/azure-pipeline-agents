@@ -11,6 +11,10 @@ variable configure_cidr_allow_rules {
   default                      = false
   type                         = bool
 }
+variable configure_crl_oscp_rules {
+  default                      = true
+  type                         = bool
+}
 variable configure_wildcard_allow_rules {
   default                      = true
   type                         = bool

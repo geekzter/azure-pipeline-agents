@@ -1,0 +1,153 @@
+# This pipeline is used to test self-hosted agents
+#  e.g. to discover what outbound network access is required
+# Credits https://github.com/anatolybolshakov
+parameters:
+- name: vmImage
+  displayName: Agent Image
+  type: string
+  default: ubuntu-latest
+- name: pool
+  displayName: Agent Pool
+  type: string
+  default: Default
+
+trigger: none
+pr: none
+
+variables:
+- name: delayBetweenJobsInMins
+  value: 1
+- name: pool
+  value: ${{ parameters.pool }}
+- name: vmImage
+  value: ${{ parameters.vmImage }}
+
+pool:
+  name: '$(pool)'
+  vmImage: '$(vmImage)'
+
+stages:
+  - stage: PublishBuildArtifacts
+    jobs:
+      - job: PublishBuildArtifacts
+        steps:
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+             echo "Sample test">>$(Build.ArtifactStagingDirectory)/FileToPublish.txt
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+            ArtifactName: 'drop'
+            publishLocation: 'Container'
+
+  - stage: Delay1
+    jobs:
+        - job: Delay
+          pool: server
+          steps:
+          - task: Delay@1
+            inputs:
+              delayForMinutes: $(delayBetweenJobsInMins)
+
+  - stage: DownloadBuildArtifacts
+    jobs:
+    - job: DownloadBuildArtifacts
+      steps:
+      - task: DownloadBuildArtifacts@1
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'drop'
+          downloadPath: '$(System.ArtifactsDirectory)'
+
+  - stage: Delay2
+    jobs:
+        - job: Delay
+          pool: server
+          steps:
+          - task: Delay@1
+            inputs:
+              delayForMinutes: $(delayBetweenJobsInMins)
+
+  - stage: PublishPipelineArtifacts
+    jobs:
+      - job: PublishPipelineArtifacts
+        steps:
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+             echo "Sample test">>$(Build.ArtifactStagingDirectory)/FileToPublish.txt
+        - task: PublishPipelineArtifact@1
+          inputs:
+            targetPath: '$(Build.ArtifactStagingDirectory)'
+            artifact: 'PipelineArtifactDrop'
+            publishLocation: 'pipeline'
+
+  - stage: Delay3
+    jobs:
+        - job: Delay
+          pool: server
+          steps:
+          - task: Delay@1
+            inputs:
+              delayForMinutes: $(delayBetweenJobsInMins)
+
+  - stage: DownloadPipelineArtifacts
+    jobs:
+      - job: DownloadPipelineArtifacts
+        steps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                buildType: 'current'
+                artifactName: 'PipelineArtifactDrop'
+                targetPath: '$(Pipeline.Workspace)'
+
+  - stage: Delay4
+    jobs:
+        - job: Delay
+          pool: server
+          steps:
+          - task: Delay@1
+            inputs:
+              delayForMinutes: $(delayBetweenJobsInMins)
+
+  - stage: CacheTask
+    jobs:
+      - job: CacheTask
+        steps:
+        - task: Cache@2
+          inputs:
+            key: 'testFileToRestore'
+            path: '$(Build.ArtifactStagingDirectory)'
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              echo "Some content">>$(Build.ArtifactStagingDirectory)/fileToCache.txt
+
+  - stage: Delay5
+    jobs:
+        - job: Delay
+          pool: server
+          steps:
+          - task: Delay@1
+            inputs:
+              delayForMinutes: $(delayBetweenJobsInMins)
+
+  - stage: PublishTestResults
+    jobs:
+        - job: PublishTestResults
+          steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "<testsuite><testcase time='2021-10-19T15:51:47.120Z' name='test1'></testcase></testsuite>">>$(Build.ArtifactStagingDirectory)/TEST-1.xml
+          - task: PublishTestResults@2
+            inputs:
+                testResultsFormat: 'JUnit'
+                testResultsFiles: '$(Build.ArtifactStagingDirectory)/TEST-*.xml'
+                testRunTitle: 'testRun1'

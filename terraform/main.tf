@@ -30,6 +30,7 @@ locals {
                                   (var.deploy_self_hosted_vms             ? pow(2,6) : 0) +
                                   (var.deploy_self_hosted_vm_agents       ? pow(2,7) : 0) +
                                   (var.prepare_host                       ? pow(2,8) : 0) +
+                                  (var.configure_crl_oscp_rules           ? pow(2,9) : 0) +
                                   0
   )
 

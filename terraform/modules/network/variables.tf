@@ -5,6 +5,9 @@ variable configuration_name {
 variable configure_cidr_allow_rules {
     type = bool
 }
+variable configure_crl_oscp_rules {
+    type = bool
+}
 variable configure_wildcard_allow_rules {
     type = bool
 }

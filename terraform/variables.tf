@@ -19,6 +19,11 @@ variable configure_wildcard_allow_rules {
   default                      = true
   type                         = bool
 }
+variable create_contributor_service_principal {
+  description                  = "Create Service Principal that can be used for a Service Connection"
+  default                      = false
+  type                         = bool
+}
 variable deploy_bastion {
   description                  = "Deploys managed bastion host"
   default                      = true

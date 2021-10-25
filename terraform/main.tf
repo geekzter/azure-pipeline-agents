@@ -109,3 +109,11 @@ resource azurerm_resource_group rg {
 
   depends_on                   = [time_sleep.script_wrapper_check]
 }
+
+resource azurerm_role_assignment service_principal_contributor {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Contributor"
+  principal_id                 = module.service_principal.0.principal_id
+
+  count                        = var.create_contributor_service_principal ? 1 : 0
+}

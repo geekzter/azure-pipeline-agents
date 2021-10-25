@@ -17,6 +17,13 @@ module network {
   tags                         = local.tags
 }
 
+module service_principal {
+  source                       = "./modules/service-principal"
+  name                         = "azure-pipelines-service-connection-${terraform.workspace}-${local.suffix}"
+
+  count                        = var.create_contributor_service_principal ? 1 : 0
+}
+
 module scale_set_agents {
   source                       = "./modules/scale-set-agents"
 

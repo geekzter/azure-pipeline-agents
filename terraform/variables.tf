@@ -149,13 +149,13 @@ variable windows_agent_count {
   type                         = number
 }
 variable windows_os_offer {
-  default                      = "WindowsServer"
+  default                      = "visualstudio2019latest"
 }
 variable windows_os_publisher {
-  default                      = "MicrosoftWindowsServer"
+  default                      = "microsoftvisualstudio"
 }
 variable windows_os_sku {
-  default                      = "2019-Datacenter"
+  default                      = "vs-2019-comm-latest-ws2019"
 }
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"

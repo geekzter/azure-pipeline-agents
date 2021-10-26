@@ -163,6 +163,10 @@ variable windows_pipeline_agent_name_prefix {
 variable windows_pipeline_agent_pool {
   default                      = "Default"
 }
+variable windows_scale_set_agent_count {
+  default                      = 2
+  type                         = number
+}
 variable windows_self_hosted_agent_count {
   default                      = 1
   type                         = number

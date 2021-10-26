@@ -17,8 +17,15 @@ module network {
   tags                         = local.tags
 }
 
-module scale_set_agents {
-  source                       = "./modules/scale-set-agents"
+module service_principal {
+  source                       = "./modules/service-principal"
+  name                         = "azure-pipelines-service-connection-${terraform.workspace}-${local.suffix}"
+
+  count                        = var.create_contributor_service_principal ? 1 : 0
+}
+
+module scale_set_linux_agents {
+  source                       = "./modules/scale-set-linux-agents"
 
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
@@ -31,8 +38,6 @@ module scale_set_agents {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   linux_agent_count            = var.linux_scale_set_agent_count
-  linux_pipeline_agent_name    = "ubuntu-agent"
-  linux_pipeline_agent_pool    = var.linux_pipeline_agent_pool
   linux_os_offer               = var.linux_os_offer
   linux_os_publisher           = var.linux_os_publisher
   linux_os_sku                 = var.linux_os_sku
@@ -51,7 +56,47 @@ module scale_set_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
 
-  count                        = var.deploy_scale_set ? 1 : 0
+  count                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? 1 : 0
+  depends_on                   = [
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.disk_access_endpoint,
+    module.network
+  ]
+}
+
+module scale_set_windows_agents {
+  source                       = "./modules/scale-set-windows-agents"
+
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+
+  devops_org                   = var.devops_org
+  devops_pat                   = var.devops_pat
+
+  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
+  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  location                     = var.location
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+
+  windows_agent_count           = var.windows_scale_set_agent_count
+  windows_os_offer              = var.windows_os_offer
+  windows_os_publisher          = var.windows_os_publisher
+  windows_os_sku                = var.windows_os_sku
+  windows_storage_type          = var.windows_storage_type
+  windows_vm_name_prefix        = "windows-agent"
+  windows_vm_size               = var.windows_vm_size
+
+  outbound_ip_address          = module.network.outbound_ip_address
+  prepare_host                 = var.prepare_host
+  resource_group_name          = azurerm_resource_group.rg.name
+  tags                         = local.tags
+  subnet_id                    = module.network.scale_set_agents_subnet_id
+  suffix                       = local.suffix
+  user_name                    = var.user_name
+  user_password                = local.password
+  vm_accelerated_networking    = var.vm_accelerated_networking
+
+  count                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? 1 : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,

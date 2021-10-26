@@ -19,6 +19,11 @@ variable configure_wildcard_allow_rules {
   default                      = true
   type                         = bool
 }
+variable create_contributor_service_principal {
+  description                  = "Create Service Principal that can be used for a Service Connection"
+  default                      = false
+  type                         = bool
+}
 variable deploy_bastion {
   description                  = "Deploys managed bastion host"
   default                      = true
@@ -144,19 +149,23 @@ variable windows_agent_count {
   type                         = number
 }
 variable windows_os_offer {
-  default                      = "WindowsServer"
+  default                      = "visualstudio2019latest"
 }
 variable windows_os_publisher {
-  default                      = "MicrosoftWindowsServer"
+  default                      = "microsoftvisualstudio"
 }
 variable windows_os_sku {
-  default                      = "2019-Datacenter"
+  default                      = "vs-2019-comm-latest-ws2019"
 }
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"
 }
 variable windows_pipeline_agent_pool {
   default                      = "Default"
+}
+variable windows_scale_set_agent_count {
+  default                      = 2
+  type                         = number
 }
 variable windows_self_hosted_agent_count {
   default                      = 1

@@ -59,6 +59,7 @@ packages:
 
 runcmd:
   # Microsoft packages
+  - dotnet tool install --global dotnet-reportgenerator-globaltool
   - sudo ACCEPT_EULA=Y apt install msodbcsql17 -y
   - sudo ACCEPT_EULA=Y apt install mssql-tools -y
   # Automatic updates: re-enable them

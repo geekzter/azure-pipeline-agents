@@ -256,6 +256,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "nuget.org",
       "onegetcdn.azureedge.net",
       "packages.cloud.google.com",
+      "packages.efficios.com",
       "packages.microsoft.com",
       "psg-prod-eastus.azureedge.net", # PowerShell
       "registry.npmjs.org",

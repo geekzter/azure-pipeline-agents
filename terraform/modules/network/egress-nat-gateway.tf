@@ -4,6 +4,8 @@ resource azurerm_nat_gateway egress {
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   sku_name                     = "Standard"
 
+  tags                         = var.tags
+
   count                        = var.deploy_firewall ? 0 : 1
 }
 
@@ -13,6 +15,8 @@ resource azurerm_public_ip nat_egress {
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   allocation_method            = "Static"
   sku                          = "Standard"
+
+  tags                         = var.tags
 
   count                        = var.deploy_firewall ? 0 : 1
 }

@@ -43,21 +43,14 @@ locals {
       application              = "Pipeline Agents"
       environment              = local.environment
       provisioner              = "terraform"
+      provisioner-client-id    = data.azurerm_client_config.current.client_id
+      provisioner-object-id    = data.azurerm_client_config.current.object_id
       repository               = "azure-pipeline-agents"
       runid                    = var.run_id
       shutdown                 = "false"
       suffix                   = local.suffix
       workspace                = terraform.workspace
       configuration-bitmask    = local.configuration_bitmask
-      # configure-cidr-allow-rules= var.configure_cidr_allow_rules
-      # configure-wildcard-allow-rules= var.configure_wildcard_allow_rules
-      # deploy-bastion           = var.deploy_bastion
-      # deploy-firewall          = var.deploy_firewall
-      # deploy-non-essential-vm-extensions= var.deploy_non_essential_vm_extensions
-      # deploy-scale-set         = var.deploy_scale_set
-      # deploy-self-hosted-vms   = var.deploy_self_hosted_vms
-      # deploy-self-hosted-vm-agents= var.deploy_self_hosted_vm_agents
-      # prepare_host             = var.prepare_host
     },
     var.tags
   )  

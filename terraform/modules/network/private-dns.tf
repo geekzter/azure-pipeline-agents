@@ -27,3 +27,16 @@ resource azurerm_subnet private_endpoint_subnet {
 
   count                        = var.deploy_firewall ? 1 : 0
 }
+
+resource azurerm_monitor_private_link_scope monitor {
+  name                         = "${azurerm_virtual_network.pipeline_network.name}-ampls"
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+}
+
+# TODO: https://github.com/hashicorp/terraform-provider-azurerm/pull/14119
+# resource azurerm_monitor_private_link_scoped_service log_analytics {
+#   name                         = "${azurerm_monitor_private_link_scope.monitor}-log-analytics"
+#   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+#   scope_name                   = azurerm_monitor_private_link_scope.test.monitor
+#   linked_resource_id           = var.log_analytics_workspace_resource_id
+# }

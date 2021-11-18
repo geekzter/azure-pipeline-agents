@@ -340,6 +340,7 @@ jobs:
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true
+        retryCountOnTaskFailure: 3
         workingDirectory: '$(scriptDirectory)'
 
     - ${{ if parameters.deploy }}:
@@ -394,6 +395,7 @@ jobs:
           addSpnToEnvironment: true
           useGlobalConfig: true
           failOnStandardError: true
+          retryCountOnTaskFailure: 3
           workingDirectory: '$(scriptDirectory)'
           
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
@@ -419,6 +421,7 @@ jobs:
           environmentServiceName: '$(subscriptionConnection)'
           runAzLogin: true
           allowTelemetryCollection: true
+          retryCountOnTaskFailure: 3
 
 
 - ${{ if ne(parameters.destroy, 'Never') }}:

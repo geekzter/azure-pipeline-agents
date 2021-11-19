@@ -133,4 +133,11 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
 
   tags                         = var.tags
   count                        = var.deploy_firewall ? 1 : 0
+  depends_on                   = [
+    azurerm_private_dns_zone_virtual_network_link.monitor,
+    azurerm_private_dns_zone_virtual_network_link.oms,
+    azurerm_private_dns_zone_virtual_network_link.ods,
+    azurerm_private_dns_zone_virtual_network_link.agentsvc,
+    azurerm_private_dns_zone_virtual_network_link.blob,
+  ]
 }

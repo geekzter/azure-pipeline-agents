@@ -73,7 +73,7 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
 }
 
 resource azurerm_storage_account automation_storage {
-  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,15)}${local.suffix}stor"
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,15)}${substr(local.suffix,-6,-1)}aut"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"

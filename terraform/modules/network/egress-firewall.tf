@@ -844,6 +844,11 @@ resource azurerm_route_table fw_route_table {
 
   count                        = var.deploy_firewall ? 1 : 0
 }
+# FIX: Error: deleting Route Table "azure-pipelines-agents-ci-99999b-fw-routes" (Resource Group "azure-pipelines-agents-ci-99999b"): network.RouteTablesClient#Delete: Failure sending request: StatusCode=400 -- Original Error: Code="InUseRouteTableCannotBeDeleted" Message="Route table azure-pipelines-agents-ci-99999b-fw-routes is in use and cannot be deleted." Details=[]
+resource time_sleep fw_route_table_destroy_race_condition {
+  depends_on                   = [azurerm_route_table.fw_route_table]
+  destroy_duration             = "120s"
+}
 
 resource azurerm_subnet_route_table_association scale_set_agents {
   subnet_id                    = azurerm_subnet.scale_set_agents.id

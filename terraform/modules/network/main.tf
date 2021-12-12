@@ -44,12 +44,28 @@ resource azurerm_subnet scale_set_agents {
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],2,2)]
+  depends_on                   = [
+  # FIX: Error: deleting Network Security Group "azure-pipelines-agents-ci-99999b-westeurope-network-nsg" (Resource Group "azure-pipelines-agents-ci-99999b"): network.SecurityGroupsClient#Delete: Failure sending request: StatusCode=400 -- Original Error: Code="InUseNetworkSecurityGroupCannotBeDeleted" Message="Network security group /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/azure-pipelines-agents-ci-99999b/providers/Microsoft.Network/networkSecurityGroups/azure-pipelines-agents-ci-99999b-westeurope-network-nsg cannot be deleted because it is in use by the following resources: /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/azure-pipelines-agents-ci-99999b/providers/Microsoft.Network/virtualNetworks/azure-pipelines-agents-ci-99999b-westeurope-network/subnets/SelfHostedAgents. In order to delete the Network security group, remove the association with the resource(s). To learn how to do this, see aka.ms/deletensg." Details=[]
+    azurerm_network_security_group.agent_nsg,
+    time_sleep.agent_nsg_destroy_race_condition,
+  # FIX: Error: deleting Route Table "azure-pipelines-agents-ci-99999b-fw-routes" (Resource Group "azure-pipelines-agents-ci-99999b"): network.RouteTablesClient#Delete: Failure sending request: StatusCode=400 -- Original Error: Code="InUseRouteTableCannotBeDeleted" Message="Route table azure-pipelines-agents-ci-99999b-fw-routes is in use and cannot be deleted." Details=[]
+    azurerm_route_table.fw_route_table,
+    time_sleep.fw_route_table_destroy_race_condition
+  ]
 }
 resource azurerm_subnet self_hosted_agents {
   name                         = "SelfHostedAgents"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],2,3)]
+  depends_on                   = [
+  # FIX: Error: deleting Network Security Group "azure-pipelines-agents-ci-99999b-westeurope-network-nsg" (Resource Group "azure-pipelines-agents-ci-99999b"): network.SecurityGroupsClient#Delete: Failure sending request: StatusCode=400 -- Original Error: Code="InUseNetworkSecurityGroupCannotBeDeleted" Message="Network security group /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/azure-pipelines-agents-ci-99999b/providers/Microsoft.Network/networkSecurityGroups/azure-pipelines-agents-ci-99999b-westeurope-network-nsg cannot be deleted because it is in use by the following resources: /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/azure-pipelines-agents-ci-99999b/providers/Microsoft.Network/virtualNetworks/azure-pipelines-agents-ci-99999b-westeurope-network/subnets/SelfHostedAgents. In order to delete the Network security group, remove the association with the resource(s). To learn how to do this, see aka.ms/deletensg." Details=[]
+    azurerm_network_security_group.agent_nsg,
+    time_sleep.agent_nsg_destroy_race_condition,
+  # FIX: Error: deleting Route Table "azure-pipelines-agents-ci-99999b-fw-routes" (Resource Group "azure-pipelines-agents-ci-99999b"): network.RouteTablesClient#Delete: Failure sending request: StatusCode=400 -- Original Error: Code="InUseRouteTableCannotBeDeleted" Message="Route table azure-pipelines-agents-ci-99999b-fw-routes is in use and cannot be deleted." Details=[]
+    azurerm_route_table.fw_route_table,
+    time_sleep.fw_route_table_destroy_race_condition
+  ]
 }
 resource azurerm_network_security_group agent_nsg {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-nsg"

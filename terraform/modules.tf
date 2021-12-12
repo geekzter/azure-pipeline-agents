@@ -8,6 +8,7 @@ module network {
   configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
   deploy_bastion               = var.deploy_bastion
   deploy_firewall              = var.deploy_firewall
+  destroy_wait_minutes         = var.destroy_wait_minutes
   devops_org                   = var.devops_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   dns_host_suffix              = var.dns_host_suffix

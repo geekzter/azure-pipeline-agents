@@ -52,6 +52,10 @@ variable deploy_self_hosted_vm_agents {
   type                         = bool
 }
 
+variable destroy_wait_minutes {
+  default                      = 2
+  type                         = number
+}
 variable devops_org {
   description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
 }

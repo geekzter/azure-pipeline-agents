@@ -17,6 +17,9 @@ variable deploy_bastion {
 variable deploy_firewall {
     type = bool
 }
+variable destroy_wait_minutes {
+    type = number
+}
 variable devops_org {}
 variable diagnostics_storage_id {}
 variable dns_host_suffix {}

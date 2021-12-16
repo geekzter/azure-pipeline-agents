@@ -2,6 +2,7 @@ module network {
   source                       = "./modules/network"
 
   address_space                = var.address_space
+  admin_cidr_ranges            = local.admin_cidr_ranges
   configuration_name           = local.configuration_bitmask
   configure_cidr_allow_rules   = var.configure_cidr_allow_rules
   configure_crl_oscp_rules     = var.configure_crl_oscp_rules

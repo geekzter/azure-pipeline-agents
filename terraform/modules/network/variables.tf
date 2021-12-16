@@ -1,4 +1,8 @@
 variable address_space {}
+variable admin_cidr_ranges {
+    type                       = list
+    default                    = []
+}
 variable configuration_name {
     description = "This value is appended to Azure FW rule names, so it can be parsed in Log Analytics queries"
 }

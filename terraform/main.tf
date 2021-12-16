@@ -56,20 +56,20 @@ locals {
   )  
 
   # Networking
-  ipprefix                     = jsondecode(chomp(data.http.localpublicprefix.body)).data.prefix
+  ipprefix                     = jsondecode(chomp(data.http.local_public_prefix.body)).data.prefix
   admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.ipprefix])))) # Make sure ranges have correct base address
 }
 
 data azurerm_client_config current {}
 
-data http localpublicip {
+data http local_public_ip {
 # Get public IP address of the machine running this terraform template
   url                          = "https://ipinfo.io/ip"
 }
 
-data http localpublicprefix {
+data http local_public_prefix {
 # Get public IP prefix of the machine running this terraform template
-  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.localpublicip.body)}"
+  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.local_public_ip.body)}"
 }
 
 resource null_resource script_wrapper_check {

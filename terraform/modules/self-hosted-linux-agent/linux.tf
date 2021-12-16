@@ -75,19 +75,17 @@ resource azurerm_network_interface linux_nic {
 }
 
 resource azurerm_network_security_rule admin_ssh {
-  name                         = "AdminSSH${count.index+1}"
-  priority                     = count.index+201
+  name                         = "AdminSSH"
+  priority                     = 201
   direction                    = "Inbound"
   access                       = var.public_access_enabled ? "Allow" : "Deny"
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_range       = "22"
-  source_address_prefix        = var.admin_cidr_ranges[count.index]
+  source_address_prefixes      = var.admin_cidr_ranges
   destination_address_prefix   = "*"
   resource_group_name          = azurerm_network_security_group.nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.nsg.name
-
-  count                        = length(var.admin_cidr_ranges)
 }
 
 resource azurerm_network_interface_security_group_association linux_nic_nsg {

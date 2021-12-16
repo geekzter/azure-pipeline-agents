@@ -221,6 +221,9 @@ resource azurerm_bastion_host bastion {
   tags                         = var.tags
 
   count                        = var.deploy_bastion ? 1 : 0
+  depends_on                   = [
+    azurerm_subnet_network_security_group_association.bastion_nsg
+  ]
 }
 
 resource azurerm_monitor_diagnostic_setting bastion {

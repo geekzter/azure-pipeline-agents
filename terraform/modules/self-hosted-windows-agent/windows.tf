@@ -37,19 +37,17 @@ resource azurerm_network_interface windows_nic {
 }
 
 resource azurerm_network_security_rule rdp {
-  name                         = "AdminRDP${count.index+1}"
-  priority                     = count.index+202
+  name                         = "AdminRDP"
+  priority                     = 202
   direction                    = "Inbound"
   access                       = var.public_access_enabled ? "Allow" : "Deny"
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_range       = "3389"
-  source_address_prefix        = var.admin_cidr_ranges[count.index]
+  source_address_prefixes      = var.admin_cidr_ranges
   destination_address_prefix   = "*"
   resource_group_name          = azurerm_network_security_group.nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.nsg.name
-
-  count                        = length(var.admin_cidr_ranges)
 }
 
 resource azurerm_network_interface_security_group_association windows_nic_nsg {

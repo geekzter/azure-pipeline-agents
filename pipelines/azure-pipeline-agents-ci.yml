@@ -297,6 +297,7 @@ jobs:
     - task: AzureCLI@2
       name: cleanup
       displayName: 'Avoid VM images with known issues'
+      continueOnError: true # Ignore if we can succeed without it this
       inputs:
         azureSubscription: '$(subscriptionConnection)'
         scriptType: pscore
@@ -306,8 +307,7 @@ jobs:
           Write-Output "TF_VAR_windows_os_version = `"${env:TF_VAR_windows_os_version}`"" | Out-File ci.auto.tfvars -Append -Force
         useGlobalConfig: true
         failOnStandardError: true
-      continueOnError: true # Ignore if we can succeed without it this
-      workingDirectory: '$(terraformDirectory)'
+        workingDirectory: '$(terraformDirectory)'
 
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2

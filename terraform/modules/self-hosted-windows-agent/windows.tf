@@ -69,9 +69,9 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
-  custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.module}/install_agent.ps1")) : null
-  allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
-  provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
+ custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.module}/install_agent.ps1")) : null
+ allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
+ provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
 
   os_disk {
     name                       = "${var.name}-osdisk"
@@ -83,7 +83,7 @@ resource azurerm_windows_virtual_machine windows_agent {
     publisher                  = var.os_publisher
     offer                      = var.os_offer
     sku                        = var.os_sku
-    version                    = "latest"
+    version                    = var.os_version
   }
 
   # Required for AAD Login
@@ -99,9 +99,34 @@ resource azurerm_windows_virtual_machine windows_agent {
   provisioner local-exec {
     command                    = "az disk update --name ${var.name}-osdisk --resource-group ${self.resource_group_name} --disk-access ${var.disk_access_name} --network-access-policy AllowPrivate --query 'networkAccessPolicy'"
   }  
+
+  depends_on                   = [azurerm_network_interface_security_group_association.windows_nic_nsg]
+}
+resource azurerm_virtual_machine_extension azure_monitor {
+  name                         = "AzureMonitorWindowsAgent"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent.id
+  publisher                    = "Microsoft.Azure.Monitor"
+  type                         = "AzureMonitorWindowsAgent"
+  type_handler_version         = "1.0"
+  auto_upgrade_minor_version   = true
+
+  tags                         = var.tags
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+}
+resource null_resource prepare_log_analytics {
+  triggers                     = {
+    vm                         = azurerm_windows_virtual_machine.windows_agent.id
+  }
+
+  provisioner local-exec {
+    command                    = "${path.root}/../scripts/remove_vm_extension.ps1 -VmName ${azurerm_windows_virtual_machine.windows_agent.name} -ResourceGroupName ${var.resource_group_name} -Publisher Microsoft.EnterpriseCloud.Monitoring -ExtensionType MicrosoftMonitoringAgent -SkipExtensionName OmsAgentForMe"
+    interpreter                = ["pwsh","-nop","-command"]
+  }
+
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
 resource azurerm_virtual_machine_extension windows_log_analytics {
-  name                         = "MMAExtension"
+  name                         = "OmsAgentForMe"
   virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent.id
   publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
   type                         = "MicrosoftMonitoringAgent"
@@ -120,7 +145,9 @@ resource azurerm_virtual_machine_extension windows_log_analytics {
   tags                         = var.tags
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+  depends_on                   = [null_resource.prepare_log_analytics]  
 }
+
 resource azurerm_virtual_machine_extension windows_dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent.id
@@ -139,6 +166,10 @@ resource azurerm_virtual_machine_extension windows_dependency_monitor {
   tags                         = var.tags
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+  depends_on                   = [
+                                  azurerm_virtual_machine_extension.azure_monitor,
+                                  # azurerm_virtual_machine_extension.windows_log_analytics
+  ] 
 }
 resource azurerm_virtual_machine_extension windows_watcher {
   name                         = "AzureNetworkWatcherExtension"
@@ -146,6 +177,18 @@ resource azurerm_virtual_machine_extension windows_watcher {
   publisher                    = "Microsoft.Azure.NetworkWatcher"
   type                         = "NetworkWatcherAgentWindows"
   type_handler_version         = "1.4"
+  auto_upgrade_minor_version   = true
+
+  tags                         = var.tags
+
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+}
+resource azurerm_virtual_machine_extension policy {
+  name                         = "AzurePolicyforWindows"
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent.id
+  publisher                    = "Microsoft.GuestConfiguration"
+  type                         = "ConfigurationforWindows"
+  type_handler_version         = "1.0"
   auto_upgrade_minor_version   = true
 
   tags                         = var.tags

@@ -57,7 +57,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
     publisher                  = var.linux_os_publisher
     offer                      = var.linux_os_offer
     sku                        = var.linux_os_sku
-    version                    = "latest"
+    version                    = var.linux_os_version
   }
 
   lifecycle {

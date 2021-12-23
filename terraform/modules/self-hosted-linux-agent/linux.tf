@@ -126,7 +126,7 @@ resource azurerm_linux_virtual_machine linux_agent {
     publisher                  = var.os_publisher
     offer                      = var.os_offer
     sku                        = var.os_sku
-    version                    = "latest"
+    version                    = var.os_version
   }
 
   lifecycle {
@@ -161,7 +161,7 @@ resource azurerm_virtual_machine_extension cloud_config_status {
   count                        = var.deploy_agent || var.prepare_host ? 1 : 0
 }
 resource azurerm_virtual_machine_extension linux_log_analytics {
-  name                         = "OmsAgentForLinux"
+  name                         = "OmsAgentForMe"
   virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
   publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
   type                         = "OmsAgentForLinux"
@@ -212,4 +212,16 @@ resource azurerm_virtual_machine_extension linux_watcher {
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
+}
+resource azurerm_virtual_machine_extension policy {
+  name                         = "AzurePolicyforLinux"
+  virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
+  publisher                    = "Microsoft.GuestConfiguration"
+  type                         = "ConfigurationforLinux"
+  type_handler_version         = "1.0"
+  auto_upgrade_minor_version   = true
+
+  tags                         = var.tags
+
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }

@@ -76,6 +76,9 @@ variable linux_os_publisher {
 variable linux_os_sku {
   default                      = "18.04-LTS"
 }
+variable linux_os_version {
+  default                      = "latest"
+}
 variable linux_pipeline_agent_name_prefix {
   default                      = "ubuntu-agent"
 }
@@ -152,14 +155,18 @@ variable windows_agent_count {
   default                      = 2
   type                         = number
 }
+# az vm image list-skus -l westeurope -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
 variable windows_os_offer {
-  default                      = "visualstudio2019latest"
+  default                      = "visualstudio2022"
 }
 variable windows_os_publisher {
   default                      = "microsoftvisualstudio"
 }
 variable windows_os_sku {
-  default                      = "vs-2019-comm-latest-ws2019"
+  default                      = "vs-2022-comm-latest-ws2022"
+}
+variable windows_os_version {
+  default                      = "latest"
 }
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"

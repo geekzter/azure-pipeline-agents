@@ -277,8 +277,8 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: |
           az vm image list -l $(TF_VAR_location) -s "vs-2022-comm-latest-ws2022" -f "visualstudio2022" -p "microsoftvisualstudio" --query "max_by([?version!='2021.12.16'],&version).version" --all -o tsv | Set-Item env:TF_VAR_windows_os_version
-          Write-Output "TF_VAR_windows_os_version = `"${env:TF_VAR_windows_os_version}`""
-          Write-Output "TF_VAR_windows_os_version = `"${env:TF_VAR_windows_os_version}`"" | Out-File ci.auto.tfvars -Append -Force
+          Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`""
+          Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`"" | Out-File ci.auto.tfvars -Append -Force
         useGlobalConfig: true
         failOnStandardError: true
         workingDirectory: '$(terraformDirectory)'

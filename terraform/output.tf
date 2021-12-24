@@ -6,6 +6,9 @@ output diagnostics_storage_sas {
   value                        = data.azurerm_storage_account_sas.diagnostics.sas
 }
 
+output log_analytics_workspace_id {
+  value                        = local.log_analytics_workspace_id
+}
 output resource_group_name {
   value                        = azurerm_resource_group.rg.name
 }

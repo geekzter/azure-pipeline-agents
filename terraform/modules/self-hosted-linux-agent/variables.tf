@@ -27,6 +27,7 @@ variable name {}
 variable os_offer {}
 variable os_publisher {}
 variable os_sku {}
+variable os_version {}
 variable pipeline_agent_name {}
 variable pipeline_agent_pool {}
 variable storage_type {}

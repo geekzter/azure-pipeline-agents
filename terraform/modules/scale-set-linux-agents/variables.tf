@@ -12,6 +12,7 @@ variable linux_agent_count {}
 variable linux_os_offer {}
 variable linux_os_publisher {}
 variable linux_os_sku {}
+variable linux_os_version {}
 variable linux_storage_type {}
 variable linux_vm_name_prefix {}
 variable linux_vm_size {}

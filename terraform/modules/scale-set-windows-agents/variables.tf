@@ -12,6 +12,7 @@ variable windows_agent_count {}
 variable windows_os_offer {}
 variable windows_os_publisher {}
 variable windows_os_sku {}
+variable windows_os_version {}
 variable windows_storage_type {}
 variable windows_vm_name_prefix {}
 variable windows_vm_size {}

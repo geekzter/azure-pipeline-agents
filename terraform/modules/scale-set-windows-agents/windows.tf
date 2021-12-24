@@ -35,7 +35,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
     publisher                  = var.windows_os_publisher
     offer                      = var.windows_os_offer
     sku                        = var.windows_os_sku
-    version                    = "latest"
+    version                    = var.windows_os_version
   }
 
   lifecycle {

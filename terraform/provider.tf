@@ -3,6 +3,8 @@ terraform {
     azuread                    = "~> 2.7"
     azurerm                    = "~> 2.86"
     cloudinit                  = "~> 2.2"
+    http                       = "~> 2.1"
+    local                      = "~> 2.1"
     null                       = "~> 3.1"
     random                     = "~> 3.1"
     time                       = "~> 0.7"

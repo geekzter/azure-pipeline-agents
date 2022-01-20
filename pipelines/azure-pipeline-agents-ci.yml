@@ -262,7 +262,7 @@ jobs:
           workingDirectory: '$(terraformDirectory)'
 
     - task: AzureCLI@2
-      name: cleanup
+      name: avoidVMImages
       displayName: 'Avoid VM image versions with known issues'
       continueOnError: true # Ignore if we can succeed without it this
       inputs:

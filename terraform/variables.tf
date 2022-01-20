@@ -79,6 +79,9 @@ variable linux_os_sku {
 variable linux_os_version {
   default                      = "latest"
 }
+variable linux_os_vhd_url {
+  default                      = null
+}
 variable linux_pipeline_agent_name_prefix {
   default                      = "ubuntu-agent"
 }
@@ -156,6 +159,8 @@ variable windows_agent_count {
   type                         = number
 }
 # az vm image list-skus -l westeurope -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -o table
+# az vm image list -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
 variable windows_os_offer {
   default                      = "visualstudio2022"
 }
@@ -167,6 +172,9 @@ variable windows_os_sku {
 }
 variable windows_os_version {
   default                      = "latest"
+}
+variable windows_os_vhd_url {
+  default                      = null
 }
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"

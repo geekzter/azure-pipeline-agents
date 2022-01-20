@@ -44,6 +44,7 @@ module scale_set_linux_agents {
   linux_os_publisher           = var.linux_os_publisher
   linux_os_sku                 = var.linux_os_sku
   linux_os_version             = var.linux_os_version
+  linux_os_vhd_url             = var.linux_os_vhd_url
   linux_storage_type           = var.linux_storage_type
   linux_vm_name_prefix         = "ubuntu-agent"
   linux_vm_size                = var.linux_vm_size
@@ -86,6 +87,7 @@ module scale_set_windows_agents {
   windows_os_publisher         = var.windows_os_publisher
   windows_os_sku               = var.windows_os_sku
   windows_os_version           = var.windows_os_version
+  windows_os_vhd_url           = var.windows_os_vhd_url
   windows_storage_type         = var.windows_storage_type
   windows_vm_name_prefix       = "windows-agent"
   windows_vm_size              = var.windows_vm_size
@@ -134,6 +136,7 @@ module self_hosted_linux_agents {
   os_publisher                 = var.linux_os_publisher
   os_sku                       = var.linux_os_sku
   os_version                   = var.linux_os_version
+  os_vhd_url                   = var.linux_os_vhd_url
   pipeline_agent_name          = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.linux_pipeline_agent_pool
   storage_type                 = var.linux_storage_type
@@ -185,6 +188,7 @@ module self_hosted_windows_agents {
   os_publisher                 = var.windows_os_publisher
   os_sku                       = var.windows_os_sku
   os_version                   = var.windows_os_version
+  os_vhd_url                   = var.windows_os_vhd_url
   pipeline_agent_name          = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.windows_pipeline_agent_pool
   storage_type                 = var.windows_storage_type

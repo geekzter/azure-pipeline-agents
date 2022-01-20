@@ -1,6 +1,6 @@
 variable admin_cidr_ranges {
-    type                       = list
-    default                    = []
+  type                         = list
+  default                      = []
 }
 variable terraform_cidr {}
 
@@ -28,6 +28,9 @@ variable os_offer {}
 variable os_publisher {}
 variable os_sku {}
 variable os_version {}
+variable os_vhd_url {
+  default                      = null
+}
 variable pipeline_agent_name {}
 variable pipeline_agent_pool {}
 variable storage_type {}
@@ -40,13 +43,13 @@ variable prepare_host {
   type                         = bool
 }
 variable public_access_enabled {
-    type    = bool
+  type                         = bool
 }
 variable resource_group_name {}
 variable subnet_id {}
 variable suffix {}
 variable tags {
-    type    = map
+  type                         = map
 }
 variable ssh_public_key {}
 variable user_name {}

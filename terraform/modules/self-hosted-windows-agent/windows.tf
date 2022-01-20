@@ -55,6 +55,21 @@ resource azurerm_network_interface_security_group_association windows_nic_nsg {
   network_security_group_id    = azurerm_network_security_group.nsg.id
 }
 
+resource azurerm_image vhd {
+  name                         = "${var.name}-image"
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
+
+  os_disk {
+    os_type                    = "Windows"
+    os_state                   = "Generalized"
+    blob_uri                   = var.os_vhd_url
+    size_gb                    = 100
+  }
+
+  count                        = (var.os_vhd_url != null && var.os_vhd_url != "") ? 1 : 0
+}
+
 resource azurerm_windows_virtual_machine windows_agent {
   name                         = var.name
   computer_name                = var.computer_name
@@ -69,7 +84,7 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
- custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.module}/install_agent.ps1")) : null
+ custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.root}/../scripts/host/install_agent.ps1")) : null
  allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
  provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
 
@@ -79,17 +94,31 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_type       = var.storage_type
   }
 
-  source_image_reference {
-    publisher                  = var.os_publisher
-    offer                      = var.os_offer
-    sku                        = var.os_sku
-    version                    = var.os_version
-  }
+  source_image_id              = (var.os_vhd_url != null && var.os_vhd_url != "") ? azurerm_image.vhd.0.id : null
+
+  dynamic "source_image_reference" {
+    for_each = range((var.os_vhd_url != null && var.os_vhd_url != "") ? 0 : 1) 
+    content {
+      publisher                = var.os_publisher
+      offer                    = var.os_offer
+      sku                      = var.os_sku
+      version                  = var.os_version
+    }
+  }    
+
 
   # Required for AAD Login
   identity {
     type                       = "SystemAssigned"
   }
+
+  lifecycle {
+    ignore_changes             = [
+      custom_data,
+      source_image_id,
+      source_image_reference.0.version,
+    ]
+  }    
   
   tags                         = var.tags
 

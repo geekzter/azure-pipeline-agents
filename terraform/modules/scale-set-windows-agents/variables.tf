@@ -13,6 +13,9 @@ variable windows_os_offer {}
 variable windows_os_publisher {}
 variable windows_os_sku {}
 variable windows_os_version {}
+variable windows_os_vhd_url {
+  default                      = null
+}
 variable windows_storage_type {}
 variable windows_vm_name_prefix {}
 variable windows_vm_size {}

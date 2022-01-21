@@ -111,4 +111,4 @@ jobs:
       azurePowerShellVersion: latestVersion
       pwsh: true
       # failOnStandardError: true
-      workingDirectory: '$(imageScriptDirectory)'
+      # workingDirectory: '$(imageScriptDirectory)'

@@ -113,14 +113,14 @@ jobs:
       scriptType: inlineScript
       inline: |
         dir
+        Import-Module ./GenerateResourcesAndImage.ps1
+        echo GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
+                                  -ResourceGroupName $(imageResourceGroup) `
+                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
+                                  -ImageType Ubuntu1804 `
+                                  -AzureLocation $(TF_VAR_location)
       azurePowerShellVersion: 'latestVersion'
-      # pwsh: true
+      pwsh: true
       # failOnStandardError: true
       # workingDirectory: '$(imageScriptDirectory)'
 
-        # Import-Module ./GenerateResourcesAndImage.ps1
-        # echo GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
-        #                           -ResourceGroupName $(imageResourceGroup) `
-        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
-        #                           -ImageType Ubuntu1804 `
-        #                           -AzureLocation $(TF_VAR_location)

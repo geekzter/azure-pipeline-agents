@@ -113,7 +113,7 @@ jobs:
       scriptType: inlineScript
       inline: |
         dir
-        Import-Module ./GenerateResourcesAndImage.ps1
+        Import-Module $(imageScriptDirectory)/GenerateResourcesAndImage.ps1
         echo GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$(imageRepository)" `

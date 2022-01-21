@@ -50,23 +50,28 @@ variables:
 
 jobs:
 - job: 'Build'
-
   pool:
     name: 'Azure Pipelines'
     vmImage: windows-latest
+  timeoutInMinutes: 300
 
   steps:
   - checkout: self
   - checkout: virtual-environments
 
-  - pwsh: |
-      dir
-    displayName: 'Agent directory'
-    workingDirectory: '$(agentScriptDirectory)'
-  - pwsh: |
-      dir
-    displayName: 'Image directory'
-    workingDirectory: '$(imageScriptDirectory)'
+  - task: AzureCLI@2
+    displayName: 'Fetch credentials'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        Write-Host "##vso[task.setvariable variable=client_id;isoutput=true]${env:servicePrincipalId}"
+        Write-Host "##vso[task.setvariable variable=client_secret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+        Write-Host "##vso[task.setvariable variable=tenant_id;isoutput=true]${env:tenantId}"
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
 
   - task: AzurePowerShell@5
     name: build

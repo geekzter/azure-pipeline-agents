@@ -102,7 +102,7 @@ jobs:
       azureSubscription: $(subscriptionConnection)
       inline: |
         Import-Module ./GenerateResourcesAndImage.ps1
-        GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
+        echo GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$(imageRepository)" `
                                   -ImageType Ubuntu1804 `

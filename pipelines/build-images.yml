@@ -1,6 +1,13 @@
 # This pipeline is for CI/CD
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
 
+resources:
+  repositories:
+  - repository: virtual-environments
+    type: github
+    endpoint: geekzter
+    name: actions/virtual-environments
+
 trigger: none
 
 pr:
@@ -49,5 +56,6 @@ jobs:
 
   steps:
   - checkout: self
-  - checkout: github://actions/virtual-environments
-    path: virtual-environments
+  - checkout: virtual-environments
+  # - checkout: github://actions/virtual-environments
+  #   path: virtual-environments

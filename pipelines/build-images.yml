@@ -39,8 +39,10 @@ variables:
   value: 'true'
 - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
   value: 'yes_without_prompt'
-- name: 'scriptDirectory'
-  value: '$(Build.SourcesDirectory)/scripts'
+- name: 'agentScriptDirectory'
+  value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
+- name: 'imageScriptDirectory'
+  value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
 
@@ -57,5 +59,11 @@ jobs:
   steps:
   - checkout: self
   - checkout: virtual-environments
-  # - checkout: github://actions/virtual-environments
-  #   path: virtual-environments
+  - pwsh: |
+      dir
+    displayName: 'Agent directory'
+    workingDirectory: '$(agentScriptDirectory)'
+  - pwsh: |
+      dir
+    displayName: 'Image directory'
+    workingDirectory: '$(imageScriptDirectory)'

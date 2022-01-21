@@ -73,24 +73,40 @@ jobs:
     displayName: 'Image directory'
     workingDirectory: '$(imageScriptDirectory)'
 
-  - task: AzureCLI@2
+  # - task: AzureCLI@2
+  #   name: build
+  #   displayName: 'Build image'
+  #   inputs:
+  #     azureSubscription: $(subscriptionConnection)
+  #     scriptType: pscore
+  #     scriptLocation: inlineScript
+  #     inlineScript: |
+  #       Import-Module ./GenerateResourcesAndImage.ps1
+  #       GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
+  #                                 -ResourceGroupName $(imageResourceGroup) `
+  #                                 -ImageGenerationRepositoryRoot $(imageRepository) `
+  #                                 -ImageType Ubuntu1804 `
+  #                                 -AzureLocation $(TF_VAR_location) `
+  #                                 -AzureClientId $env:servicePrincipalId `
+  #                                 -AzureClientSecret "${env:servicePrincipalKey}" `
+  #                                 -AzureTenantId $env:tenantId
+  #     addSpnToEnvironment: true
+  #     useGlobalConfig: true
+  #     failOnStandardError: true
+  #     workingDirectory: '$(imageScriptDirectory)'
+
+  - task: AzurePowerShell@5
     name: build
     displayName: 'Build image'
     inputs:
-      azureSubscription: '$(subscriptionConnection)'
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
+      azureSubscription: $(subscriptionConnection)
+      inline: |
         Import-Module ./GenerateResourcesAndImage.ps1
         GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot $(imageRepository) `
                                   -ImageType Ubuntu1804 `
-                                  -AzureLocation $(TF_VAR_location) `
-                                  -AzureClientId $env:servicePrincipalId `
-                                  -AzureClientSecret "${env:servicePrincipalKey}" `
-                                  -AzureTenantId $env:tenantId
-      addSpnToEnvironment: true
-      useGlobalConfig: true
-      failOnStandardError: true
+                                  -AzureLocation $(TF_VAR_location)
+      azurePowerShellVersion: latestVersion
+      pwsh: true
       workingDirectory: '$(imageScriptDirectory)'

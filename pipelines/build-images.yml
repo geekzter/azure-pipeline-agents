@@ -5,7 +5,7 @@ resources:
   repositories:
   - repository: virtual-environments
     type: github
-    endpoint: github.com
+    endpoint: github.com # Service Connection
     name: actions/virtual-environments
 
 trigger: none

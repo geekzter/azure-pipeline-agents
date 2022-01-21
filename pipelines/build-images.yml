@@ -95,15 +95,15 @@ jobs:
   #     failOnStandardError: true
   #     workingDirectory: '$(imageScriptDirectory)'
 
-  - task: AzurePowerShell@5
-    displayName: Run Pester Tests
-    name: run_pester_tests
-    inputs:
-      azureSubscription: '$(subscriptionConnection)'
-      ScriptType: 'InlineScript'
-      Inline: |
-        Invoke-Pester -EnableExit -Script @{Path="$(System.DefaultWorkingDirectory)/pester/Parameter.Tests.ps1"; Parameters=@{ ParameterPath="$(System.DefaultWorkingDirectory)/parameters/azuredeploy.parameters.dev.json" }}  -OutputFile $(Build.ArtifactStagingDirectory)/Test-Pester-Readme.xml
-      azurePowerShellVersion: 'LatestVersion'
+  # - task: AzurePowerShell@5
+  #   displayName: Run Pester Tests
+  #   name: run_pester_tests
+  #   inputs:
+  #     azureSubscription: '$(subscriptionConnection)'
+  #     ScriptType: 'InlineScript'
+  #     Inline: |
+  #       Invoke-Pester -EnableExit -Script @{Path="$(System.DefaultWorkingDirectory)/pester/Parameter.Tests.ps1"; Parameters=@{ ParameterPath="$(System.DefaultWorkingDirectory)/parameters/azuredeploy.parameters.dev.json" }}  -OutputFile $(Build.ArtifactStagingDirectory)/Test-Pester-Readme.xml
+  #     azurePowerShellVersion: 'LatestVersion'
 
   - task: AzurePowerShell@5
     name: build
@@ -113,8 +113,8 @@ jobs:
       scriptType: inlineScript
       inline: |
         dir
-      azurePowerShellVersion: latestVersion
-      pwsh: true
+      azurePowerShellVersion: 'latestVersion'
+      # pwsh: true
       # failOnStandardError: true
       # workingDirectory: '$(imageScriptDirectory)'
 

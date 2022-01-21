@@ -60,15 +60,16 @@ jobs:
   - checkout: virtual-environments
 
   - task: AzureCLI@2
+    name: servicePrincipal
     displayName: 'Fetch credentials'
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        Write-Host "##vso[task.setvariable variable=client_id;isoutput=true]${env:servicePrincipalId}"
-        Write-Host "##vso[task.setvariable variable=client_secret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
-        Write-Host "##vso[task.setvariable variable=tenant_id;isoutput=true]${env:tenantId}"
+        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
+        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
@@ -92,7 +93,11 @@ jobs:
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$(imageRepository)" `
                                   -ImageType $(imageName) `
-                                  -AzureLocation $(TF_VAR_location)
+                                  -AzureLocation $(TF_VAR_location) `
+                                  -SubscriptionId $env:ARM_SUBSCRIPTION_ID `
+                                  -AzureClientId $(servicePrincipal.clientId) `
+                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+                                  -AzureTenantId $(servicePrincipal.tenantId) 
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true

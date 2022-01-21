@@ -81,7 +81,7 @@ jobs:
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$pwd" `
                                   -ImageType Ubuntu1804 `
-                                  -AzureLocation "West Europe" `
+                                  -AzureLocation $(TF_VAR_location) `
                                   -AzureClientId $env:servicePrincipalId `
                                   -AzureClientSecret "${env:servicePrincipalKey}" `
                                   -AzureTenantId $env:tenantId

@@ -70,6 +70,8 @@ jobs:
         Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
         Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
         Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
+
+        az ad sp show --id $env:servicePrincipalId
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
@@ -94,7 +96,6 @@ jobs:
                                   -ImageGenerationRepositoryRoot "$(imageRepository)" `
                                   -ImageType $(imageName) `
                                   -AzureLocation $(TF_VAR_location) `
-                                  -SubscriptionId $env:ARM_SUBSCRIPTION_ID `
                                   -AzureClientId $(servicePrincipal.clientId) `
                                   -AzureClientSecret "$(servicePrincipal.clientSecret)" `
                                   -AzureTenantId $(servicePrincipal.tenantId) 

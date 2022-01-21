@@ -75,10 +75,9 @@ jobs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: inlineScript
       inline: |
-        dir
-        Import-Module ./GenerateResourcesAndImage.ps1
+        Import-Module $(imageScriptDirectory)/GenerateResourcesAndImage.ps1
         Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        echo GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$(imageRepository)" `
                                   -ImageType $(imageName) `
@@ -86,5 +85,3 @@ jobs:
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
-      workingDirectory: '$(imageScriptDirectory)'
-

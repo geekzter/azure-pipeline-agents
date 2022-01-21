@@ -99,7 +99,7 @@ jobs:
     displayName: Run Pester Tests
     name: run_pester_tests
     inputs:
-      azureSubscription: 'Nipun Bahri Subscription(bf0f6779-86d2-467e-8226-10f92a8ad378)'
+      azureSubscription: '$(subscriptionConnection)'
       ScriptType: 'InlineScript'
       Inline: |
         Invoke-Pester -EnableExit -Script @{Path="$(System.DefaultWorkingDirectory)/pester/Parameter.Tests.ps1"; Parameters=@{ ParameterPath="$(System.DefaultWorkingDirectory)/parameters/azuredeploy.parameters.dev.json" }}  -OutputFile $(Build.ArtifactStagingDirectory)/Test-Pester-Readme.xml
@@ -109,7 +109,7 @@ jobs:
     name: build
     displayName: 'Build image'
     inputs:
-      azureSubscription: $(subscriptionConnection)
+      azureSubscription: '$(subscriptionConnection)'
       scriptType: inlineScript
       inline: |
         dir

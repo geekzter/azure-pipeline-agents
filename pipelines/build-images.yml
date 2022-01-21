@@ -101,12 +101,13 @@ jobs:
     inputs:
       azureSubscription: $(subscriptionConnection)
       inline: |
-        Import-Module ./GenerateResourcesAndImage.ps1
-        echo GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
-                                  -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
-                                  -ImageType Ubuntu1804 `
-                                  -AzureLocation $(TF_VAR_location)
+        dir
+        # Import-Module ./GenerateResourcesAndImage.ps1
+        # echo GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
+        #                           -ResourceGroupName $(imageResourceGroup) `
+        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
+        #                           -ImageType Ubuntu1804 `
+        #                           -AzureLocation $(TF_VAR_location)
       azurePowerShellVersion: latestVersion
       pwsh: true
       # failOnStandardError: true

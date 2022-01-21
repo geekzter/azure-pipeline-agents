@@ -96,10 +96,21 @@ jobs:
   #     workingDirectory: '$(imageScriptDirectory)'
 
   - task: AzurePowerShell@5
+    displayName: Run Pester Tests
+    name: run_pester_tests
+    inputs:
+      azureSubscription: 'Nipun Bahri Subscription(bf0f6779-86d2-467e-8226-10f92a8ad378)'
+      ScriptType: 'InlineScript'
+      Inline: |
+        Invoke-Pester -EnableExit -Script @{Path="$(System.DefaultWorkingDirectory)/pester/Parameter.Tests.ps1"; Parameters=@{ ParameterPath="$(System.DefaultWorkingDirectory)/parameters/azuredeploy.parameters.dev.json" }}  -OutputFile $(Build.ArtifactStagingDirectory)/Test-Pester-Readme.xml
+      azurePowerShellVersion: 'LatestVersion'
+
+  - task: AzurePowerShell@5
     name: build
     displayName: 'Build image'
     inputs:
       azureSubscription: $(subscriptionConnection)
+      scriptType: inlineScript
       inline: |
         dir
       azurePowerShellVersion: latestVersion

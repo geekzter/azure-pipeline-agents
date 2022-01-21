@@ -80,6 +80,12 @@ jobs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: inlineScript
       inline: |
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
         Import-Module $(imageScriptDirectory)/GenerateResourcesAndImage.ps1
         Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
         GenerateResourcesAndImage -SubscriptionId $subscriptionId `

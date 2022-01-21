@@ -13,7 +13,7 @@ variable windows_os_offer {}
 variable windows_os_publisher {}
 variable windows_os_sku {}
 variable windows_os_version {}
-variable windows_os_vhd_url {
+variable windows_os_image_id {
   default                      = null
 }
 variable windows_storage_type {}

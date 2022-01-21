@@ -40,11 +40,11 @@ module scale_set_linux_agents {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   linux_agent_count            = var.linux_scale_set_agent_count
+  linux_os_image_id            = local.linux_image_id
   linux_os_offer               = var.linux_os_offer
   linux_os_publisher           = var.linux_os_publisher
   linux_os_sku                 = var.linux_os_sku
   linux_os_version             = var.linux_os_version
-  linux_os_vhd_url             = var.linux_os_vhd_url
   linux_storage_type           = var.linux_storage_type
   linux_vm_name_prefix         = "ubuntu-agent"
   linux_vm_size                = var.linux_vm_size
@@ -83,11 +83,11 @@ module scale_set_windows_agents {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   windows_agent_count          = var.windows_scale_set_agent_count
+  windows_os_image_id          = local.windows_image_id
   windows_os_offer             = var.windows_os_offer
   windows_os_publisher         = var.windows_os_publisher
   windows_os_sku               = var.windows_os_sku
   windows_os_version           = var.windows_os_version
-  windows_os_vhd_url           = var.windows_os_vhd_url
   windows_storage_type         = var.windows_storage_type
   windows_vm_name_prefix       = "windows-agent"
   windows_vm_size              = var.windows_vm_size
@@ -132,11 +132,11 @@ module self_hosted_linux_agents {
   computer_name                = "linuxagent${count.index+1}"
   disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-linux-agent${count.index+1}"
+  os_image_id                  = local.linux_image_id
   os_offer                     = var.linux_os_offer
   os_publisher                 = var.linux_os_publisher
   os_sku                       = var.linux_os_sku
   os_version                   = var.linux_os_version
-  os_vhd_url                   = var.linux_os_vhd_url
   pipeline_agent_name          = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.linux_pipeline_agent_pool
   storage_type                 = var.linux_storage_type
@@ -184,11 +184,11 @@ module self_hosted_windows_agents {
   computer_name                = "windowsagent${count.index+1}"
   disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-windows-agent${count.index+1}"
+  os_image_id                  = local.windows_image_id
   os_offer                     = var.windows_os_offer
   os_publisher                 = var.windows_os_publisher
   os_sku                       = var.windows_os_sku
   os_version                   = var.windows_os_version
-  os_vhd_url                   = var.windows_os_vhd_url
   pipeline_agent_name          = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.windows_pipeline_agent_pool
   storage_type                 = var.windows_storage_type

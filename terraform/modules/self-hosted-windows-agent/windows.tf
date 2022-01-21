@@ -55,21 +55,6 @@ resource azurerm_network_interface_security_group_association windows_nic_nsg {
   network_security_group_id    = azurerm_network_security_group.nsg.id
 }
 
-resource azurerm_image vhd {
-  name                         = "${var.name}-image"
-  location                     = var.location
-  resource_group_name          = var.resource_group_name
-
-  os_disk {
-    os_type                    = "Windows"
-    os_state                   = "Generalized"
-    blob_uri                   = var.os_vhd_url
-    size_gb                    = 100
-  }
-
-  count                        = (var.os_vhd_url != null && var.os_vhd_url != "") ? 1 : 0
-}
-
 resource azurerm_windows_virtual_machine windows_agent {
   name                         = var.name
   computer_name                = var.computer_name
@@ -94,10 +79,10 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_type       = var.storage_type
   }
 
-  source_image_id              = (var.os_vhd_url != null && var.os_vhd_url != "") ? azurerm_image.vhd.0.id : null
+  source_image_id              = var.os_image_id
 
   dynamic "source_image_reference" {
-    for_each = range((var.os_vhd_url != null && var.os_vhd_url != "") ? 0 : 1) 
+    for_each = range(var.os_image_id == null || var.os_image_id == "" ? 1 : 0) 
     content {
       publisher                = var.os_publisher
       offer                    = var.os_offer
@@ -105,7 +90,6 @@ resource azurerm_windows_virtual_machine windows_agent {
       version                  = var.os_version
     }
   }    
-
 
   # Required for AAD Login
   identity {

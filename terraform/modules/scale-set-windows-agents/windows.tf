@@ -1,18 +1,3 @@
-resource azurerm_image vhd {
-  name                         = "${var.resource_group_name}-linux-agents-image"
-  location                     = var.location
-  resource_group_name          = var.resource_group_name
-
-  os_disk {
-    os_type                    = "Windows"
-    os_state                   = "Generalized"
-    blob_uri                   = var.windows_os_vhd_url
-    size_gb                    = 100
-  }
-
-  count                        = (var.windows_os_vhd_url != null && var.windows_os_vhd_url != "") ? 1 : 0
-}
-
 resource azurerm_windows_virtual_machine_scale_set windows_agents {
   name                         = "${var.resource_group_name}-windows-agents"
   computer_name_prefix         = "winvmss"
@@ -46,10 +31,10 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
     caching                    = "ReadWrite"
   }
 
-  source_image_id              = (var.windows_os_vhd_url != null && var.windows_os_vhd_url != "") ? azurerm_image.vhd.0.id : null
+  source_image_id              = var.windows_os_image_id
 
   dynamic "source_image_reference" {
-    for_each = range((var.windows_os_vhd_url != null && var.windows_os_vhd_url != "") ? 0 : 1) 
+    for_each = range(var.windows_os_image_id == null || var.windows_os_image_id == "" ? 1 : 0) 
     content {
       publisher                = var.windows_os_publisher
       offer                    = var.windows_os_offer

@@ -28,7 +28,7 @@ variable os_offer {}
 variable os_publisher {}
 variable os_sku {}
 variable os_version {}
-variable os_vhd_url {
+variable os_image_id {
   default                      = null
 }
 variable pipeline_agent_name {}

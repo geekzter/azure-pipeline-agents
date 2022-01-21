@@ -50,7 +50,7 @@ variables:
   value: 'azure-pipelines-images-$(Build.BuildId)'
 
 jobs:
-- job: 'Provision'
+- job: 'Build'
 
   pool:
     name: 'Azure Pipelines'
@@ -77,6 +77,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        Import-Module ./GenerateResourcesAndImage.ps1
         GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$pwd" `

@@ -44,7 +44,8 @@ variables:
 - name: 'imageRepository'
   value: '$(Build.SourcesDirectory)/virtual-environments'
 - name: 'imageResourceGroup' 
-  value: 'azure-pipelines-images-$(Build.BuildId)'
+  # value: 'azure-pipelines-images-$(Build.BuildId)'
+  value: 'packer-$(Build.BuildId)'
 - name: 'imageScriptDirectory'
   value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
 

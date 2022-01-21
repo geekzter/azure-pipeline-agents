@@ -1,0 +1,53 @@
+# This pipeline is for CI/CD
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ parameters.workspace }}-$(Build.BuildId)
+
+trigger: none
+
+pr:
+  branches:
+    include:
+    - '*'
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
+
+# schedules:
+# - cron: '0 0 * * Mon,Wed,Fri'
+#   displayName: 'Bi-Nightly build (UTC)'
+#   # Run if there are no changes
+#   always: 'true'
+#   branches:
+#     include:
+#     - master
+
+variables:
+- group: 'pipeline-agents-ci'
+- name: 'jobTimeOutMinutes'
+  value: 180
+- name: 'repository'
+  value: 'azure-pipeline-agents'
+- name: AZURE_CORE_ONLY_SHOW_ERRORS
+  value: 'true'
+- name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
+  value: 'yes_without_prompt'
+- name: 'scriptDirectory'
+  value: '$(Build.SourcesDirectory)/scripts'
+- name: 'TF_VAR_run_id'
+  value: '$(Build.BuildId)'
+
+- name: 'imageResourceGroup' 
+  value: 'azure-pipelines-images-$(Build.BuildId)'
+
+jobs:
+- job: 'Provision'
+
+  pool:
+    name: 'Azure Pipelines'
+    vmImage: windows-latest
+
+  steps:
+  - checkout: self
+  - checkout: github://actions/virtual-environments
+    path: virtual-environments

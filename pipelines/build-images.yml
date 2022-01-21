@@ -31,27 +31,22 @@ pr:
 
 variables:
 - group: 'pipeline-agents-ci'
-- name: 'jobTimeOutMinutes'
-  value: 180
-- name: 'repository'
-  value: 'azure-pipeline-agents'
-- name: AZURE_CORE_ONLY_SHOW_ERRORS
-  value: 'true'
-- name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
-  value: 'yes_without_prompt'
 - name: 'agentRepository'
   value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
 - name: 'agentScriptDirectory'
   value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
+- name: AZURE_CORE_ONLY_SHOW_ERRORS
+  value: 'true'
+- name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
+  value: 'yes_without_prompt'
+- name: 'imageName'
+  value: 'Ubuntu1804'
 - name: 'imageRepository'
   value: '$(Build.SourcesDirectory)/virtual-environments'
-- name: 'imageScriptDirectory'
-  value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
-- name: 'TF_VAR_run_id'
-  value: '$(Build.BuildId)'
-
 - name: 'imageResourceGroup' 
   value: 'azure-pipelines-images-$(Build.BuildId)'
+- name: 'imageScriptDirectory'
+  value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
 
 jobs:
 - job: 'Build'
@@ -73,38 +68,6 @@ jobs:
     displayName: 'Image directory'
     workingDirectory: '$(imageScriptDirectory)'
 
-  # - task: AzureCLI@2
-  #   name: build
-  #   displayName: 'Build image'
-  #   inputs:
-  #     azureSubscription: $(subscriptionConnection)
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       Import-Module ./GenerateResourcesAndImage.ps1
-  #       GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
-  #                                 -ResourceGroupName $(imageResourceGroup) `
-  #                                 -ImageGenerationRepositoryRoot $(imageRepository) `
-  #                                 -ImageType Ubuntu1804 `
-  #                                 -AzureLocation $(TF_VAR_location) `
-  #                                 -AzureClientId $env:servicePrincipalId `
-  #                                 -AzureClientSecret "${env:servicePrincipalKey}" `
-  #                                 -AzureTenantId $env:tenantId
-  #     addSpnToEnvironment: true
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(imageScriptDirectory)'
-
-  # - task: AzurePowerShell@5
-  #   displayName: Run Pester Tests
-  #   name: run_pester_tests
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     ScriptType: 'InlineScript'
-  #     Inline: |
-  #       Invoke-Pester -EnableExit -Script @{Path="$(System.DefaultWorkingDirectory)/pester/Parameter.Tests.ps1"; Parameters=@{ ParameterPath="$(System.DefaultWorkingDirectory)/parameters/azuredeploy.parameters.dev.json" }}  -OutputFile $(Build.ArtifactStagingDirectory)/Test-Pester-Readme.xml
-  #     azurePowerShellVersion: 'LatestVersion'
-
   - task: AzurePowerShell@5
     name: build
     displayName: 'Build image'
@@ -113,14 +76,15 @@ jobs:
       scriptType: inlineScript
       inline: |
         dir
-        Import-Module $(imageScriptDirectory)/GenerateResourcesAndImage.ps1
-        echo GenerateResourcesAndImage -SubscriptionId $(az account show --query id -o tsv) `
+        Import-Module ./GenerateResourcesAndImage.ps1
+        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        echo GenerateResourcesAndImage -SubscriptionId $subscriptionId `
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$(imageRepository)" `
-                                  -ImageType Ubuntu1804 `
+                                  -ImageType $(imageName) `
                                   -AzureLocation $(TF_VAR_location)
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
-      # failOnStandardError: true
-      # workingDirectory: '$(imageScriptDirectory)'
+      failOnStandardError: true
+      workingDirectory: '$(imageScriptDirectory)'
 

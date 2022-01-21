@@ -5,7 +5,7 @@ resources:
   repositories:
   - repository: virtual-environments
     type: github
-    endpoint: geekzter
+    endpoint: github.com
     name: actions/virtual-environments
 
 trigger: none

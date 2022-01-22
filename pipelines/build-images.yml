@@ -1,5 +1,15 @@
-# This pipeline is for CI/CD
-name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
+parameters:
+- name: image
+  displayName: Image
+  type: string
+  default: Ubuntu2004
+  values:
+  - Ubuntu1804
+  - Ubuntu2004
+  - Windows2019
+  - Windows2022
+
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ parameters.image }}-$(Build.BuildId)
 
 resources:
   repositories:
@@ -39,12 +49,41 @@ variables:
   value: 'true'
 - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
   value: 'yes_without_prompt'
+- name: 'galleryResourceGroup' 
+  value: 'Shared'
+- name: 'imageConfigFile'
+  value: '${{ lower(parameters.image) }}.json'
+- name: 'imageGalleryName'
+  value: 'testgal'
 - name: 'imageName'
-  value: 'Ubuntu2004'
+  value: '${{ parameters.image }}'
+- ${{ if contains(parameters.image,'buntu') }}:
+  - name: 'imageDefinitionName'
+    value: 'UbuntuPipelineHost'
+  - name: 'imageOffer'
+    value: 'Ubuntu'
+  - name: 'imageOSType'
+    value: 'linux'
+  - name: 'imageSKU'
+    value: ${{ if replace(parameters.image,'Ubuntu', '') }}
+  - name: 'imageSubDirectory'
+    value: 'linux'
+  ${{ else }}:
+  - name: 'imageDefinitionName'
+    value: 'WindowsPipelineHost'
+  - name: 'imageOffer'
+    value: 'Ubuntu'
+  - name: 'imageOSType'
+    value: 'windows'
+  - name: 'imageSKU'
+    value: ${{ if replace(parameters.image,'Windows', '') }}
+  - name: 'imageSubDirectory'
+    value: 'win'
+- name: 'imagePublisher'
+  value: 'PrivatePipelineImages'
 - name: 'imageRepository'
   value: '$(Build.SourcesDirectory)/virtual-environments'
 - name: 'imageResourceGroup' 
-  # value: 'azure-pipelines-images-$(Build.BuildId)'
   value: 'packer-$(Build.BuildId)'
 - name: 'imageScriptDirectory'
   value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
@@ -77,31 +116,55 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
 
-  - task: AzurePowerShell@5
-    name: build
-    displayName: 'Build image'
+  # - task: AzurePowerShell@5
+  #   name: build
+  #   displayName: 'Build image'
+  #   inputs:
+  #     azureSubscription: '$(subscriptionConnection)'
+  #     scriptType: inlineScript
+  #     inline: |
+  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+  #         $DebugPreference       = "Continue"
+  #         $InformationPreference = "Continue"
+  #         $VerbosePreference     = "Continue"
+  #         Set-PSDebug -Trace 2
+  #       }
+
+  #       Import-Module ./GenerateResourcesAndImage.ps1
+  #       Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+  #       GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+  #                                 -ResourceGroupName $(imageResourceGroup) `
+  #                                 -ImageGenerationRepositoryRoot "$(imageRepository)" `
+  #                                 -ImageType $(imageName) `
+  #                                 -AzureLocation $(TF_VAR_location) `
+  #                                 -AzureClientId $(servicePrincipal.clientId) `
+  #                                 -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+  #                                 -AzureTenantId $(servicePrincipal.tenantId) 
+  #     azurePowerShellVersion: 'latestVersion'
+  #     pwsh: true
+  #     failOnStandardError: true
+  #     workingDirectory: '$(imageScriptDirectory)'
+
+  - task: AzureCLI@2
+    name: publish
+    displayName: 'Publish image'
     inputs:
       azureSubscription: '$(subscriptionConnection)'
-      scriptType: inlineScript
-      inline: |
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $packerConfigFile = "$(imageRepository)/images/$(imageSubDirectory)/$(imageConfigFile)"
+        $packerVersion = $(git log -1 --format=%cs $packerConfigFile -replace "-",""
 
-        Import-Module ./GenerateResourcesAndImage.ps1
-        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-                                  -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
-                                  -ImageType $(imageName) `
-                                  -AzureLocation $(TF_VAR_location) `
-                                  -AzureClientId $(servicePrincipal.clientId) `
-                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-                                  -AzureTenantId $(servicePrincipal.tenantId) 
-      azurePowerShellVersion: 'latestVersion'
-      pwsh: true
+        echo ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
+                          -GalleryResourceGroupName $(galleryResourceGroup) `
+                          -GalleryName $(imageGalleryName) `
+                          -ImageDefinitionName $(imageDefinitionName) `
+                          -ImageDefinitionVersion $packerVersion `
+                          -Publisher $(imagePublisher) `
+                          -Offer $(imageOffer) `
+                          -SKU $(imageSKU) `
+                          -OsType $(imageOSType)
+      useGlobalConfig: true
       failOnStandardError: true
-      workingDirectory: '$(imageScriptDirectory)'
+    workingDirectory: '$(agentScriptDirectory)'

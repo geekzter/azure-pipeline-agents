@@ -145,6 +145,17 @@ jobs:
   #     failOnStandardError: true
   #     workingDirectory: '$(imageScriptDirectory)'
 
+  - pwsh: |
+      $packerConfigFile = "./$(imageSubDirectory)/$(imageConfigFile)"
+      $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
+
+      Write-Host "$packerConfigFile was created on $packerVersion"
+
+      Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerVersion}"
+    displayName: 'Determine image version'
+    name: version
+    workingDirectory: '$(imageScriptDirectory)/images'
+
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
@@ -153,14 +164,11 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        $packerConfigFile = "$(imageRepository)/images/$(imageSubDirectory)/$(imageConfigFile)"
-        $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
-
         echo ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
                           -GalleryResourceGroupName $(galleryResourceGroup) `
                           -GalleryName $(imageGalleryName) `
                           -ImageDefinitionName $(imageDefinitionName) `
-                          -ImageDefinitionVersion $packerVersion `
+                          -ImageDefinitionVersion $(version.shortDate) `
                           -Publisher $(imagePublisher) `
                           -Offer $(imageOffer) `
                           -SKU $(imageSKU) `

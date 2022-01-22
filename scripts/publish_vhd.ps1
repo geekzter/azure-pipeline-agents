@@ -26,7 +26,7 @@ param (
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$SKU,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$OsType
 ) 
-Write-Host $MyInvocation.line 
+Write-Verbose $MyInvocation.line 
 
 az group list --query "[?name=='$PackerResourceGroupName']" | ConvertFrom-Json | Set-Variable packerResourceGroup
 if (!$packerResourceGroup) {

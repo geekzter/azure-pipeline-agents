@@ -249,4 +249,4 @@ jobs:
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
-      workingDirectory: '$(terraformDirectory)'
+      workingDirectory: '$(agentScriptDirectory)'

@@ -18,7 +18,14 @@ resources:
     endpoint: github.com # Service Connection
     name: actions/virtual-environments
 
-trigger: none
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - 'images/**'
 
 pr:
   branches:

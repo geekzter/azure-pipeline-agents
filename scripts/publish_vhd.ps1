@@ -20,6 +20,7 @@ param (
     [parameter(Mandatory=$false)][string]$GalleryName,
     [parameter(Mandatory=$false)][string]$ImageDefinitionName,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$ImageDefinitionVersionLabel,
+    [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$ImageDefinitionBuild,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$Publisher,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$Offer,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$SKU,
@@ -94,6 +95,7 @@ if ($imageVersion) {
 
     Write-Host "Creating Image version ${newVersionString}..."
     [System.Collections.ArrayList]$imageTags = $tags.Clone()
+    $imageTags.Add("build=${ImageDefinitionBuild}") | Out-Null
     $imageTags.Add("versionlabel=${ImageDefinitionVersionLabel}") | Out-Null
     az sig image-version create --gallery-image-definition $ImageDefinitionName `
                                 --gallery-name $GalleryName `

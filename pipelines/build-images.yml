@@ -117,9 +117,44 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
 
+  - pwsh: |
+      $packerConfigFile = "./$(imageSubDirectory)/$(imageConfigFile)"
+      $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
+
+      Write-Host "$packerConfigFile was created on $packerVersion"
+
+      Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerVersion}"
+    displayName: 'Determine image definition date'
+    name: version
+    workingDirectory: '$(imageRepository)/images'
+
+  - task: AzureCLI@2
+    name: imageVersionCheck
+    displayName: 'Check for similar'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Determine whether image with same config already exists
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $(imageGalleryName) `
+                                  --resource-group $(galleryResourceGroup) `
+                                  --query "[?tags.versionlabel=='$(version.shortDate)']" | ConvertFrom-Json | Set-Variable imageVersion
+        $newImageVersion = !$imageVersion
+        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
+        if (!$newImageVersion) {
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$(version.shortDate)' already exists"
+          Write-Warning "Build & publish will be skipped"
+        }
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+
   - task: AzurePowerShell@5
     name: build
     displayName: 'Build image'
+    condition: eq(coalesce(variables['imageVersionCheck.newImageVersion'],'null'),'true')
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: inlineScript
@@ -146,20 +181,10 @@ jobs:
       failOnStandardError: true
       workingDirectory: '$(imageScriptDirectory)'
 
-  - pwsh: |
-      $packerConfigFile = "./$(imageSubDirectory)/$(imageConfigFile)"
-      $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
-
-      Write-Host "$packerConfigFile was created on $packerVersion"
-
-      Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerVersion}"
-    displayName: 'Determine image date'
-    name: version
-    workingDirectory: '$(imageRepository)/images'
-
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
+    condition: eq(coalesce(variables['imageVersionCheck.newImageVersion'],'null'),'true')
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
@@ -169,6 +194,7 @@ jobs:
                           -GalleryResourceGroupName $(galleryResourceGroup) `
                           -GalleryName $(imageGalleryName) `
                           -ImageDefinitionName $(imageDefinitionName) `
+                          -ImageDefinitionBuild $(Build.BuildId) `
                           -ImageDefinitionVersionLabel $(version.shortDate) `
                           -Publisher $(imagePublisher) `
                           -Offer $(imageOffer) `
@@ -177,3 +203,42 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
+
+  - task: AzureCLI@2
+    displayName: 'List published images'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
+                                  -GalleryName $(imageGalleryName) `
+                                  -ImageDefinitionName $(imageDefinitionName)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
+
+  - task: AzureCLI@2
+    name: teardown
+    displayName: 'Tear down temporary resources'
+    condition: succeededOrFailed()
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Remove resource groups
+        $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)'].id" -o tsv)
+        if ($resourceGroupIDs) {
+          Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+          &{ # az writes information to stderr
+            $ErrorActionPreference = 'SilentlyContinue'
+            az resource delete --ids $resourceGroupIDs 2>&1
+          }
+        } else {
+          Write-Host "No resource groups to remove"
+        }
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(terraformDirectory)'

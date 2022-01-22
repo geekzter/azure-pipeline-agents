@@ -30,7 +30,7 @@ Write-Host $MyInvocation.line
 
 az group list --query "[?name=='$PackerResourceGroupName']" | ConvertFrom-Json | Set-Variable packerResourceGroup
 if (!$packerResourceGroup) {
-    Write-Warning "Resource group $packerResourceGroup does not exist, exiting"
+    Write-Warning "Resource group '$packerResourceGroup' does not exist, exiting"
     exit
 }
 

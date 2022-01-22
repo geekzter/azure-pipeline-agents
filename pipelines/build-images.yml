@@ -198,6 +198,12 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
         ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
                           -GalleryResourceGroupName $(galleryResourceGroup) `
                           -GalleryName $(imageGalleryName) `

@@ -37,7 +37,8 @@ if (!$packerResourceGroup) {
 # Find VHD in Packer Resource Group
 az storage account list -g $PackerResourceGroupName --query "[0]" -o json | ConvertFrom-Json | Set-Variable storageAccount
 $storageAccountKey =  $(az storage account keys list -n $storageAccount.name --query "[0].value" -o tsv)
-$vhdPath = $(az storage blob directory list -c system -d "Microsoft.Compute/Images/images" --account-name $storageAccount.name --account-key $storageAccountKey --query "[?ends_with(name,'vhd')].name" -o tsv)
+# TODO: Use SAS or RBAC
+$vhdPath = $(az storage blob directory list -c system -d "Microsoft.Compute/Images/images" --account-name $storageAccount.name --account-key "${storageAccountKey}" --query "[?ends_with(name,'vhd')].name" -o tsv)
 $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/${vhdPath}"
 Write-Host "`nVHD: $vhdUrl"
 

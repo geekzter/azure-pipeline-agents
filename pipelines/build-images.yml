@@ -235,7 +235,7 @@ jobs:
   - task: AzureCLI@2
     name: teardown
     displayName: 'Tear down temporary resources'
-    condition: succeededOrFailed()
+    # condition: succeededOrFailed()
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore

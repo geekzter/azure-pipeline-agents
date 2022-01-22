@@ -40,7 +40,7 @@ variables:
 - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
   value: 'yes_without_prompt'
 - name: 'imageName'
-  value: 'Ubuntu1804'
+  value: 'Ubuntu2004'
 - name: 'imageRepository'
   value: '$(Build.SourcesDirectory)/virtual-environments'
 - name: 'imageResourceGroup' 
@@ -68,11 +68,11 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
+
         Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
         Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
         Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
-
-        az ad sp show --id $env:servicePrincipalId
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
@@ -90,7 +90,8 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
-        Import-Module $(imageScriptDirectory)/GenerateResourcesAndImage.ps1
+
+        Import-Module ./GenerateResourcesAndImage.ps1
         Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
         GenerateResourcesAndImage -SubscriptionId $subscriptionId `
                                   -ResourceGroupName $(imageResourceGroup) `
@@ -103,3 +104,4 @@ jobs:
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
+      workingDirectory: '$(imageScriptDirectory)'

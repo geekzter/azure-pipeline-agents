@@ -167,4 +167,4 @@ jobs:
                           -OsType $(imageOSType)
       useGlobalConfig: true
       failOnStandardError: true
-    workingDirectory: '$(agentScriptDirectory)'
+      workingDirectory: '$(agentScriptDirectory)'

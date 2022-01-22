@@ -30,7 +30,7 @@ param (
 az storage account list -g $PackerResourceGroupName --query "[0]" -o json | ConvertFrom-Json | Set-Variable storageAccount
 $storageAccountKey =  $(az storage account keys list -n $storageAccount.name --query "[0].value" -o tsv)
 $vhdPath = $(az storage blob directory list -c system -d "Microsoft.Compute/Images/images" --account-name $storageAccount.name --account-key $storageAccountKey --query "[?ends_with(name,'vhd')].name" -o tsv)
-$vhdUrl = "$($storageAccount.primaryEndpoints.blob)$vhdPath"
+$vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/$vhdPath"
 Write-Host "`nVHD: $vhdUrl"
 
 # Image Gallery
@@ -71,15 +71,21 @@ if (!$imageDefinition) {
                                    --publisher $Publisher --offer $Offer --sku $SKU `
                                    --os-type $OsType --os-state Generalized `
                                    --tags $tags | ConvertFrom-Json | Set-Variable imageDefinition
-
-    # $version = $(git log -1 --format=%cs <packerfile>.json) -replace "-",""
-
-    az sig image-version create --gallery-image-definition $ImageDefinitionName `
-                                --gallery-name $GalleryName `
-                                --gallery-image-version $ImageDefinitionVersion `
-                                --resource-group $GalleryResourceGroupName `
-                                --os-vhd-uri $vhdUrl `
-                                --tags $tags | ConvertFrom-Json | Set-Variable imageVersion
-    $imageVersion | Format-List
 }
 
+[version]$latestVersion = $(az sig image-version list --gallery-image-definition $ImageDefinitionName `
+                                                      --gallery-name $GalleryName `
+                                                      --resource-group $GalleryResourceGroupName --query "max_by([],&name).name" -o tsv)
+# Increment version
+[version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
+$newVersionString = $newVersion.ToString()
+
+Write-Host "Creating Image version ${newVersionString}..."
+az sig image-version create --gallery-image-definition $ImageDefinitionName `
+                            --gallery-name $GalleryName `
+                            --gallery-image-version $newVersionString `
+                            --resource-group $GalleryResourceGroupName `
+                            --os-vhd-uri $vhdUrl `
+                            --os-vhd-storage-account $storageAccount.name `
+                            --tags $tags | ConvertFrom-Json | Set-Variable imageVersion
+$imageVersion | Format-List

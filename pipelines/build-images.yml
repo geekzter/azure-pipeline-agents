@@ -154,7 +154,7 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         $packerConfigFile = "$(imageRepository)/images/$(imageSubDirectory)/$(imageConfigFile)"
-        $packerVersion = $(git log -1 --format=%cs $packerConfigFile -replace "-",""
+        $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
 
         echo ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
                           -GalleryResourceGroupName $(galleryResourceGroup) `

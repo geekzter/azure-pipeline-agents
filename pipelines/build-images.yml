@@ -154,7 +154,7 @@ jobs:
       Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerVersion}"
     displayName: 'Determine image version'
     name: version
-    workingDirectory: '$(imageScriptDirectory)/images'
+    workingDirectory: '$(imageRepository)/images'
 
   - task: AzureCLI@2
     name: publish

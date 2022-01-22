@@ -15,17 +15,18 @@ resources:
   repositories:
   - repository: virtual-environments
     type: github
-    endpoint: github.com # Service Connection
+    endpoint: github.com # Service Connection name
     name: actions/virtual-environments
+    trigger:
+      branches:
+        include:
+        - main
+      paths:
+        include:
+        - 'images/linux/**'
+        - 'images/win/**'
 
-trigger:
-  batch: true
-  branches:
-    include:
-    - main
-  paths:
-    include:
-    - 'images/**'
+trigger: none
 
 pr:
   branches:

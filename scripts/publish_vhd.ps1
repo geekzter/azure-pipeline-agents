@@ -19,12 +19,18 @@ param (
     [parameter(Mandatory=$false)][string]$GalleryResourceGroupName,
     [parameter(Mandatory=$false)][string]$GalleryName,
     [parameter(Mandatory=$false)][string]$ImageDefinitionName,
-    [parameter(Mandatory=$false)][string]$ImageDefinitionVersion,
+    [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$ImageDefinitionVersionLabel,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$Publisher,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$Offer,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$SKU,
     [parameter(Mandatory=$false,HelpMessage="Only required if Gallery Image Definition does not exist yet")][string]$OsType
 ) 
+
+az group list --query "[?name=='$PackerResourceGroupName']" | ConvertFrom-Json | Set-Variable packerResourceGroup
+if (!$packerResourceGroup) {
+    Write-Warning "Resource group $packerResourceGroup does not exist, exiting"
+    exit
+}
 
 # Find VHD in Packer Resource Group
 az storage account list -g $PackerResourceGroupName --query "[0]" -o json | ConvertFrom-Json | Set-Variable storageAccount
@@ -48,9 +54,6 @@ if (!$galleryResourceGroup) {
 az sig list --resource-group $GalleryResourceGroupName --query "[?name=='$GalleryName']" -o json | ConvertFrom-Json | Set-Variable gallery
 if (!$gallery) {
     Write-Host "Shared Gallery '$GalleryName' does not exist yet, creating it..."
-
-    # az feature register --namespace Microsoft.Compute --name SIGSoftDelete
-    # az sig create --resource-group $GalleryResourceGroupName --gallery-name $GalleryName --soft-delete -l $galleryResourceGroup.location --tags $tags
     az sig create --gallery-name $GalleryName --resource-group $GalleryResourceGroupName -l $galleryResourceGroup.location --tags $tags
 }
 
@@ -60,7 +63,7 @@ if (!$ImageDefinitionName) {
 }
 az sig image-definition list --gallery-name $GalleryName --resource-group $GalleryResourceGroupName --query "[?name=='$ImageDefinitionName']" -o json | ConvertFrom-Json | Set-Variable imageDefinition
 if (!$imageDefinition) {
-    if (!$Publisher -or !$Offer -or !$SKU -or !$OsType) {
+    if (!$Publisher -or !$Offer -or !$SKU -or !$OsType -or !$ImageDefinitionVersionLabel) {
         Write-Warning "Image Definition '$ImageDefinitionName' does not exist yet and arguments to create it were not (all) not specified, exiting"
         exit
     }
@@ -73,19 +76,32 @@ if (!$imageDefinition) {
                                    --tags $tags | ConvertFrom-Json | Set-Variable imageDefinition
 }
 
-[version]$latestVersion = $(az sig image-version list --gallery-image-definition $ImageDefinitionName `
-                                                      --gallery-name $GalleryName `
-                                                      --resource-group $GalleryResourceGroupName --query "max_by([],&name).name" -o tsv)
-# Increment version
-[version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
-$newVersionString = $newVersion.ToString()
 
-Write-Host "Creating Image version ${newVersionString}..."
-az sig image-version create --gallery-image-definition $ImageDefinitionName `
-                            --gallery-name $GalleryName `
-                            --gallery-image-version $newVersionString `
-                            --resource-group $GalleryResourceGroupName `
-                            --os-vhd-uri $vhdUrl `
-                            --os-vhd-storage-account $storageAccount.name `
-                            --tags $tags | ConvertFrom-Json | Set-Variable imageVersion
+az sig image-version list --gallery-image-definition $ImageDefinitionName `
+                          --gallery-name $GalleryName `
+                          --resource-group $GalleryResourceGroupName `
+                          --query "[?tags.versionlabel=='$ImageDefinitionVersionLabel']" | ConvertFrom-Json | Set-Variable imageVersion
+
+if ($imageVersion) {
+    Write-Warning "Image Definition '$ImageDefinitionName' with tag versionlabel='$ImageDefinitionVersionLabel' already exists"
+} else {
+    [version]$latestVersion = $(az sig image-version list --gallery-image-definition $ImageDefinitionName `
+                                                          --gallery-name $GalleryName `
+                                                          --resource-group $GalleryResourceGroupName --query "max_by([],&name).name" -o tsv)
+    # Increment version
+    [version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
+    $newVersionString = $newVersion.ToString()
+
+    Write-Host "Creating Image version ${newVersionString}..."
+    [System.Collections.ArrayList]$imageTags = $tags.Clone()
+    $imageTags.Add("versionlabel=${ImageDefinitionVersionLabel}") | Out-Null
+    az sig image-version create --gallery-image-definition $ImageDefinitionName `
+                                --gallery-name $GalleryName `
+                                --gallery-image-version $newVersionString `
+                                --resource-group $GalleryResourceGroupName `
+                                --os-vhd-uri $vhdUrl `
+                                --os-vhd-storage-account $storageAccount.name `
+                                --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
+}
+
 $imageVersion | Format-List

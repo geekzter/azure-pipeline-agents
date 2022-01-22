@@ -90,6 +90,7 @@ variables:
 
 jobs:
 - job: 'Build'
+  displayName: 'Build & publish ${{ parameters.image }}'
   pool:
     name: 'Azure Pipelines'
     vmImage: windows-latest
@@ -164,11 +165,11 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        echo ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
+        ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
                           -GalleryResourceGroupName $(galleryResourceGroup) `
                           -GalleryName $(imageGalleryName) `
                           -ImageDefinitionName $(imageDefinitionName) `
-                          -ImageDefinitionVersion $(version.shortDate) `
+                          -ImageDefinitionVersionLabel $(version.shortDate) `
                           -Publisher $(imagePublisher) `
                           -Offer $(imageOffer) `
                           -SKU $(imageSKU) `

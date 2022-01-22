@@ -68,7 +68,7 @@ variables:
     value: ${{ replace(parameters.image,'Ubuntu', '') }}
   - name: 'imageSubDirectory'
     value: 'linux'
-  ${{ else }}:
+- ${{ else }}:
   - name: 'imageDefinitionName'
     value: 'WindowsPipelineHost'
   - name: 'imageOffer'

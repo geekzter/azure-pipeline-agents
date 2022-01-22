@@ -65,7 +65,7 @@ variables:
   - name: 'imageOSType'
     value: 'linux'
   - name: 'imageSKU'
-    value: ${{ if replace(parameters.image,'Ubuntu', '') }}
+    value: ${{ replace(parameters.image,'Ubuntu', '') }}
   - name: 'imageSubDirectory'
     value: 'linux'
   ${{ else }}:
@@ -76,7 +76,7 @@ variables:
   - name: 'imageOSType'
     value: 'windows'
   - name: 'imageSKU'
-    value: ${{ if replace(parameters.image,'Windows', '') }}
+    value: ${{ replace(parameters.image,'Windows', '') }}
   - name: 'imageSubDirectory'
     value: 'win'
 - name: 'imagePublisher'

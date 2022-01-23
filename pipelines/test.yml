@@ -10,7 +10,7 @@ parameters:
   - Windows2022
 
 jobs:
-- job: 'Build'
+- job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'
   pool:
     name: 'Azure Pipelines'

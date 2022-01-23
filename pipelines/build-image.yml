@@ -127,14 +127,13 @@ jobs:
 
   - pwsh: |
       $packerConfigFile = "$(imageRepository)/images/$(imageSubDirectory)/$(imageConfigFile)"
-      $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
-
-      $packerLongHash = $(git rev-parse HEAD)
+      $packerShortDate = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
       $packerShortHash = $(git rev-parse --short HEAD)
+      $packerLongHash = $(git rev-parse HEAD)
 
-      Write-Host "$packerConfigFile was created on $packerVersion in commit $packerShortHash"
+      Write-Host "$packerConfigFile was created on $packerShortDate in commit $packerShortHash"
 
-      Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerVersion}"
+      Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerShortDate}"
       Write-Host "##vso[task.setvariable variable=shortHash;isoutput=true]${packerShortHash}"
       Write-Host "##vso[task.setvariable variable=longHash;isoutput=true]${packerLongHash}"
     displayName: 'Determine image definition date'

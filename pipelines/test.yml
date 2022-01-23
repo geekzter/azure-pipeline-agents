@@ -39,7 +39,7 @@ jobs:
     value: '${{ parameters.image }}'
   - ${{ if contains(parameters.image,'buntu') }}:
     - name: 'imageDefinitionName'
-      value: 'UbuntuPipelineHost'
+      value: '${{ parameters.image }}'
     - name: 'imageOffer'
       value: 'Ubuntu'
     - name: 'imageOSType'
@@ -50,7 +50,7 @@ jobs:
       value: 'linux'
   - ${{ else }}:
     - name: 'imageDefinitionName'
-      value: 'WindowsPipelineHost'
+      value: '${{ parameters.image }}'
     - name: 'imageOffer'
       value: 'Ubuntu'
     - name: 'imageOSType'

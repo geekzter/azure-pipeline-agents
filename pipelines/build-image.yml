@@ -126,13 +126,13 @@ jobs:
       failOnStandardError: true
 
   - pwsh: |
-      $packerConfigFile = "./$(imageSubDirectory)/$(imageConfigFile)"
+      $packerConfigFile = "$(imageRepository)/images/$(imageSubDirectory)/$(imageConfigFile)"
       $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
 
       $packerLongHash = $(git rev-parse HEAD)
       $packerShortHash = $(git rev-parse --short HEAD)
 
-      Write-Host "$packerConfigFile was created on $packerVersion"
+      Write-Host "$packerConfigFile was created on $packerVersion in commit $packerShortHash"
 
       Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerVersion}"
       Write-Host "##vso[task.setvariable variable=shortHash;isoutput=true]${packerShortHash}"
@@ -143,7 +143,7 @@ jobs:
 
   - task: AzureCLI@2
     name: imageVersionCheck
-    displayName: 'Check for similar'
+    displayName: 'Image version check'
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore

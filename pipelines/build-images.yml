@@ -47,7 +47,7 @@ schedules:
   branches:
     include:
     - master
-    
+
 variables:
 - group: 'pipeline-agents-ci'
 
@@ -56,16 +56,26 @@ jobs:
   - template: test.yml
     parameters:
       image: ${{ parameters.image }}
+      # imageResourceGroup: 'packer-$(Build.BuildId)'
+      imageResourceGroup: 'packer-11420'
 - ${{ else }}:
   - template: test.yml
     parameters:
       image: Ubuntu1804
+      # imageResourceGroup: 'packer-$(Build.BuildId)a'
+      imageResourceGroup: 'packer-11420'
   - template: test.yml
     parameters:
       image: Ubuntu2004
+      # imageResourceGroup: 'packer-$(Build.BuildId)b'
+      imageResourceGroup: 'packer-11420'
   - template: test.yml
     parameters:
       image: Windows2019
+      # imageResourceGroup: 'packer-$(Build.BuildId)c'
+      imageResourceGroup: 'packer-11420'
   - template: test.yml
     parameters:
       image: Windows2022
+      # imageResourceGroup: 'packer-$(Build.BuildId)d'
+      imageResourceGroup: 'packer-11420'

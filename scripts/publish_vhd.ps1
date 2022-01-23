@@ -67,7 +67,7 @@ if (!$imageDefinition) {
         Write-Warning "`nImage Definition '$ImageDefinitionName' does not exist yet and arguments to create it were not (all) not specified, exiting"
         exit
     }
-    Write-Host "`nImage Definition '$imageDefinition' does not exist yet, creating it..."
+    Write-Host "`nImage Definition '$ImageDefinitionName' (${Publisher}/${Offer}/{$SKU}) does not exist yet, creating it..."
     az sig image-definition create --gallery-image-definition $ImageDefinitionName `
                                    --gallery-name $GalleryName `
                                    --resource-group $GalleryResourceGroupName `

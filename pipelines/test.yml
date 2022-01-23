@@ -8,6 +8,10 @@ parameters:
   - Ubuntu2004
   - Windows2019
   - Windows2022
+- name: imageResourceGroup
+  displayName: Image Resource Group
+  type: string
+  default: packer
 
 jobs:
 - job: '${{ parameters.image }}'
@@ -59,9 +63,6 @@ jobs:
     value: 'PrivatePipelineImages'
   - name: 'imageRepository'
     value: '$(Build.SourcesDirectory)/virtual-environments'
-  - name: 'imageResourceGroup' 
-    # value: 'packer-$(Build.BuildId)'
-    value: 'packer-11420'
   - name: 'imageScriptDirectory'
     value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
   steps:

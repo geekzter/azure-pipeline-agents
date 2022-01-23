@@ -12,7 +12,7 @@ parameters:
   displayName: Image Resource Group
   type: string
   default: packer
-  
+
 jobs:
 - job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'
@@ -39,9 +39,9 @@ jobs:
     value: 'testgal'
   - name: 'imageName'
     value: '${{ parameters.image }}'
+  - name: 'imageDefinitionName'
+    value: '${{ parameters.image }}'
   - ${{ if contains(parameters.image,'buntu') }}:
-    - name: 'imageDefinitionName'
-      value: 'UbuntuPipelineHost'
     - name: 'imageOffer'
       value: 'Ubuntu'
     - name: 'imageOSType'
@@ -51,8 +51,6 @@ jobs:
     - name: 'imageSubDirectory'
       value: 'linux'
   - ${{ else }}:
-    - name: 'imageDefinitionName'
-      value: 'WindowsPipelineHost'
     - name: 'imageOffer'
       value: 'Windows'
     - name: 'imageOSType'

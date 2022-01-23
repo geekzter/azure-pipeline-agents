@@ -16,5 +16,8 @@ param (
 az sig image-version list --gallery-image-definition $ImageDefinitionName `
                           --gallery-name $GalleryName `
                           --resource-group $GalleryResourceGroupName `
-                          --query "[].{Version:name, Build:tags.build, Label:tags.versionlabel, Date:publishingProfile.publishedDate}" `
-                          -o table
+                          --query "[].{Version:name, Build:tags.build, Label:tags.versionlabel, Hash:tags.hash, Date:publishingProfile.publishedDate}" `
+                          -o json `
+                          | ConvertFrom-Json `
+                          | Sort-Object -Property Date -Descending `
+                          | Format-Table -Property Version, Build, Label, Date, Hash

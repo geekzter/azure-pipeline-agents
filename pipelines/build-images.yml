@@ -210,9 +210,9 @@ jobs:
           Set-PSDebug -Trace 2
         }
         $imageDefinitionVersionTags = @{
-          build = $(Build.BuildId)
-          hash = $(version.shortHash)
-          versionlabel = $(version.shortDate)
+          build = "$(Build.BuildId)"
+          hash = "$(version.shortHash)"
+          versionlabel = "$(version.shortDate)"
         }
         ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
                           -GalleryResourceGroupName $(galleryResourceGroup) `

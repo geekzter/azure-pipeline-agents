@@ -63,6 +63,8 @@ jobs:
     value: 'PrivatePipelineImages'
   - name: 'imageRepository'
     value: '$(Build.SourcesDirectory)/virtual-environments'
+  - name: 'imageResourceGroup' 
+    value: '${{ parameters.imageResourceGroup }}'
   - name: 'imageScriptDirectory'
     value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
   steps:

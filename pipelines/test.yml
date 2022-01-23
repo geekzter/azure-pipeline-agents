@@ -19,7 +19,7 @@ jobs:
   pool:
     name: 'Azure Pipelines'
     vmImage: windows-latest
-  timeoutInMinutes: 300
+  timeoutInMinutes: 360
   variables:
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'

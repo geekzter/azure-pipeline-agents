@@ -11,38 +11,10 @@ parameters:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ parameters.image }}-$(Build.BuildId)
 
-resources:
-  repositories:
-  - repository: virtual-environments
-    type: github
-    endpoint: github.com # Service Connection name
-    name: actions/virtual-environments
-    trigger:
-      branches:
-        include:
-        - main
-      paths:
-        include:
-        - 'images/linux/**'
-        - 'images/win/**'
-
 trigger: none
 
-pr:
-  branches:
-    include:
-    - '*'
-  paths:
-    exclude:
-    - '.devcontainer/**'  
-    - 'visuals/**'  
-    - '*.md'  
-
-variables:
-- group: 'pipeline-agents-ci'
-
 jobs:
-- job: 'Build'
+- job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'
   pool:
     name: 'Azure Pipelines'
@@ -50,6 +22,7 @@ jobs:
   timeoutInMinutes: 360
 
   variables:
+  - group: 'pipeline-agents-ci'
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: 'agentScriptDirectory'
@@ -93,7 +66,7 @@ jobs:
   - name: 'imageRepository'
     value: '$(Build.SourcesDirectory)/virtual-environments'
   - name: 'imageResourceGroup' 
-    value: 'packer-$(Build.BuildId)'
+    value: '${{ parameters.imageResourceGroup }}'
   - name: 'imageScriptDirectory'
     value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
 
@@ -156,35 +129,35 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
 
-  - task: AzurePowerShell@5
-    name: build
-    displayName: 'Build image'
-    condition: eq(coalesce(variables['imageVersionCheck.newImageVersion'],'null'),'true')
-    inputs:
-      azureSubscription: '$(subscriptionConnection)'
-      scriptType: inlineScript
-      inline: |
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
+  # - task: AzurePowerShell@5
+  #   name: build
+  #   displayName: 'Build image'
+  #   condition: eq(coalesce(variables['imageVersionCheck.newImageVersion'],'null'),'true')
+  #   inputs:
+  #     azureSubscription: '$(subscriptionConnection)'
+  #     scriptType: inlineScript
+  #     inline: |
+  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+  #         $DebugPreference       = "Continue"
+  #         $InformationPreference = "Continue"
+  #         $VerbosePreference     = "Continue"
+  #         Set-PSDebug -Trace 2
+  #       }
 
-        Import-Module ./GenerateResourcesAndImage.ps1
-        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-                                  -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
-                                  -ImageType $(imageName) `
-                                  -AzureLocation $(TF_VAR_location) `
-                                  -AzureClientId $(servicePrincipal.clientId) `
-                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-                                  -AzureTenantId $(servicePrincipal.tenantId) 
-      azurePowerShellVersion: 'latestVersion'
-      pwsh: true
-      failOnStandardError: true
-      workingDirectory: '$(imageScriptDirectory)'
+  #       Import-Module ./GenerateResourcesAndImage.ps1
+  #       Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+  #       GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+  #                                 -ResourceGroupName $(imageResourceGroup) `
+  #                                 -ImageGenerationRepositoryRoot "$(imageRepository)" `
+  #                                 -ImageType $(imageName) `
+  #                                 -AzureLocation $(TF_VAR_location) `
+  #                                 -AzureClientId $(servicePrincipal.clientId) `
+  #                                 -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+  #                                 -AzureTenantId $(servicePrincipal.tenantId) 
+  #     azurePowerShellVersion: 'latestVersion'
+  #     pwsh: true
+  #     failOnStandardError: true
+  #     workingDirectory: '$(imageScriptDirectory)'
 
   - task: AzureCLI@2
     name: publish

@@ -130,9 +130,14 @@ jobs:
       $packerConfigFile = "./$(imageSubDirectory)/$(imageConfigFile)"
       $packerVersion = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
 
+      $packerLongHash = $(git rev-parse HEAD)
+      $packerShortHash = $(git rev-parse --short HEAD)
+
       Write-Host "$packerConfigFile was created on $packerVersion"
 
       Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerVersion}"
+      Write-Host "##vso[task.setvariable variable=shortHash;isoutput=true]${packerShortHash}"
+      Write-Host "##vso[task.setvariable variable=longHash;isoutput=true]${packerLongHash}"
     displayName: 'Determine image definition date'
     name: version
     workingDirectory: '$(imageRepository)/images'
@@ -205,12 +210,16 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
+        $imageDefinitionVersionTags = @{
+          build = $(Build.BuildId)
+          hash = $(version.shortHash)
+          versionlabel = $(version.shortDate)
+        }
         ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
                           -GalleryResourceGroupName $(galleryResourceGroup) `
                           -GalleryName $(imageGalleryName) `
                           -ImageDefinitionName $(imageDefinitionName) `
-                          -ImageDefinitionBuild $(Build.BuildId) `
-                          -ImageDefinitionVersionLabel $(version.shortDate) `
+                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
                           -Publisher $(imagePublisher) `
                           -Offer $(imageOffer) `
                           -SKU $(imageSKU) `

@@ -91,7 +91,7 @@ if ($imageVersion) {
 } else {
     [version]$latestVersion = $(az sig image-version list --gallery-image-definition $ImageDefinitionName `
                                                           --gallery-name $GalleryName `
-                                                          --resource-group $GalleryResourceGroupName --query "max_by([],&name).name" -o tsv)
+                                                          --resource-group $GalleryResourceGroupName --query "[-1].name" -o tsv)
     # Increment version
     [version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
     $newVersionString = $newVersion.ToString()

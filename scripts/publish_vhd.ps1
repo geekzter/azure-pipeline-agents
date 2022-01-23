@@ -29,47 +29,45 @@ Write-Verbose $MyInvocation.line
 
 az group list --query "[?name=='$PackerResourceGroupName']" | ConvertFrom-Json | Set-Variable packerResourceGroup
 if (!$packerResourceGroup) {
-    Write-Warning "Resource group '$packerResourceGroup' does not exist, exiting"
+    Write-Warning "`nResource group '$packerResourceGroup' does not exist, exiting"
     exit
 }
 
 # Find VHD in Packer Resource Group
 az storage account list -g $PackerResourceGroupName --query "[0]" -o json | ConvertFrom-Json | Set-Variable storageAccount
-# $storageAccountKey =  $(az storage account keys list -n $($storageAccount.name) --query "[0].value" -o tsv)
-# TODO: Use SAS or RBAC
 $vhdPath = $(az storage blob directory list -c system -d "Microsoft.Compute/Images/images" --account-name $($storageAccount.name) --query "[?ends_with(@.name, 'vhd')].name" -o tsv)
 $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/${vhdPath}"
 Write-Host "`nVHD: $vhdUrl"
 
 # Image Gallery
 if (!$GalleryResourceGroupName -or !$GalleryName) {
-    Write-Warning "Shared Image Gallery not specified, exiting"
+    Write-Warning "`nShared Image Gallery not specified, exiting"
     exit
 }
 
 az group list --query "[?name=='$GalleryResourceGroupName']" -o json | ConvertFrom-Json | Set-Variable galleryResourceGroup
 $tags=@("application=Pipeline Agents","provisioner=azure-cli")
 if (!$galleryResourceGroup) {
-    Write-Host "Shared Gallery Resource Group '$GalleryResourceGroupName' does not exist yet, creating it..."
+    Write-Host "`nShared Gallery Resource Group '$GalleryResourceGroupName' does not exist yet, creating it..."
     az group create -n $GalleryResourceGroupName -l $storageAccount.primaryLocation --tags $tags -o json | ConvertFrom-Json | Set-Variable galleryResourceGroup
 }
 az sig list --resource-group $GalleryResourceGroupName --query "[?name=='$GalleryName']" -o json | ConvertFrom-Json | Set-Variable gallery
 if (!$gallery) {
-    Write-Host "Shared Gallery '$GalleryName' does not exist yet, creating it..."
+    Write-Host "`nShared Gallery '$GalleryName' does not exist yet, creating it..."
     az sig create --gallery-name $GalleryName --resource-group $GalleryResourceGroupName -l $galleryResourceGroup.location --tags $tags
 }
 
 if (!$ImageDefinitionName) {
-    Write-Warning "Image Definition not specified, exiting"
+    Write-Warning "`nImage Definition not specified, exiting"
     exit
 }
 az sig image-definition list --gallery-name $GalleryName --resource-group $GalleryResourceGroupName --query "[?name=='$ImageDefinitionName']" -o json | ConvertFrom-Json | Set-Variable imageDefinition
 if (!$imageDefinition) {
     if (!$Publisher -or !$Offer -or !$SKU -or !$OsType) {
-        Write-Warning "Image Definition '$ImageDefinitionName' does not exist yet and arguments to create it were not (all) not specified, exiting"
+        Write-Warning "`nImage Definition '$ImageDefinitionName' does not exist yet and arguments to create it were not (all) not specified, exiting"
         exit
     }
-    Write-Host "Image Definition '$imageDefinition' does not exist yet, creating it..."
+    Write-Host "`nImage Definition '$imageDefinition' does not exist yet, creating it..."
     az sig image-definition create --gallery-image-definition $ImageDefinitionName `
                                    --gallery-name $GalleryName `
                                    --resource-group $GalleryResourceGroupName `
@@ -78,9 +76,8 @@ if (!$imageDefinition) {
                                    --tags $tags | ConvertFrom-Json | Set-Variable imageDefinition
 }
 
-
 if (!$ImageDefinitionVersionTags -or !$ImageDefinitionVersionTags.ContainsKey("versionlabel")) {
-    Write-Warning "ImageDefinitionVersionTags not specified, exiting"
+    Write-Warning "`nImageDefinitionVersionTags not specified, exiting"
     exit
 }
 $imageDefinitionVersionLabel = $ImageDefinitionVersionTags["versionlabel"]
@@ -90,7 +87,7 @@ az sig image-version list --gallery-image-definition $ImageDefinitionName `
                           --query "[?tags.versionlabel=='$imageDefinitionVersionLabel']" | ConvertFrom-Json | Set-Variable imageVersion
 
 if ($imageVersion) {
-    Write-Warning "Image Definition '$ImageDefinitionName' with tag versionlabel='$imageDefinitionVersionLabel' already exists"
+    Write-Warning "`nImage Definition '$ImageDefinitionName' with tag versionlabel='$imageDefinitionVersionLabel' already exists"
 } else {
     az sig image-version list --gallery-image-definition $ImageDefinitionName `
                               --gallery-name $GalleryName `
@@ -109,10 +106,10 @@ if ($imageVersion) {
         $tagValue = $ImageDefinitionVersionTags[$tagName]
         $imageTags.Add("${tagName}=${tagValue}") | Out-Null
     }
-    Write-Host "Tags that will be applied to version ${newVersionString} of Image Definition '$ImageDefinitionName':"
-    $imageTags | Format-List
+    Write-Host "`nTags that will be applied to version ${newVersionString} of Image Definition '$ImageDefinitionName':"
+    $imageTags.GetEnumerator() | Sort-Object -Property Name | Format-Table
 
-    Write-Host "Creating Image version ${newVersionString} for Image Definition '$ImageDefinitionName'..."
+    Write-Host "`nCreating Image version ${newVersionString} for Image Definition '$ImageDefinitionName'..."
     az sig image-version create --gallery-image-definition $ImageDefinitionName `
                                 --gallery-name $GalleryName `
                                 --gallery-image-version $newVersionString `

@@ -1,3 +1,15 @@
+parameters:
+- name: image
+  displayName: Image
+  type: string
+  default: All
+  values:
+  - All
+  - Ubuntu1804
+  - Ubuntu2004
+  - Windows2019
+  - Windows2022
+
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
 
 resources:
@@ -37,6 +49,20 @@ schedules:
     - master
 
 jobs:
-- template: test.yml
-  parameters:
-    image: Ubuntu2004
+- ${{ if ne(parameters.image,'All') }}:
+  - template: test.yml
+    parameters:
+      image: ${{ parameters.image }}
+- ${{ else }}:
+  - template: test.yml
+    parameters:
+      image: Ubuntu1804
+  - template: test.yml
+    parameters:
+      image: Ubuntu2004
+  - template: test.yml
+    parameters:
+      image: Windows2019
+  - template: test.yml
+    parameters:
+      image: Windows2022

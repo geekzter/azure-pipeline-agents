@@ -17,7 +17,6 @@ jobs:
     vmImage: windows-latest
   timeoutInMinutes: 300
   variables:
-  - group: 'pipeline-agents-ci'
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: 'agentScriptDirectory'

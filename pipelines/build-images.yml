@@ -47,6 +47,9 @@ schedules:
   branches:
     include:
     - master
+    
+variables:
+- group: 'pipeline-agents-ci'
 
 jobs:
 - ${{ if ne(parameters.image,'All') }}:

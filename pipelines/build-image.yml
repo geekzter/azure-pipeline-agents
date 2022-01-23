@@ -127,35 +127,35 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
 
-  # - task: AzurePowerShell@5
-  #   name: build
-  #   displayName: 'Build image'
-  #   condition: eq(coalesce(variables['imageVersionCheck.newImageVersion'],'null'),'true')
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: inlineScript
-  #     inline: |
-  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-  #         $DebugPreference       = "Continue"
-  #         $InformationPreference = "Continue"
-  #         $VerbosePreference     = "Continue"
-  #         Set-PSDebug -Trace 2
-  #       }
+  - task: AzurePowerShell@5
+    name: build
+    displayName: 'Build image'
+    condition: eq(coalesce(variables['imageVersionCheck.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: inlineScript
+      inline: |
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
 
-  #       Import-Module ./GenerateResourcesAndImage.ps1
-  #       Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-  #       GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-  #                                 -ResourceGroupName $(imageResourceGroup) `
-  #                                 -ImageGenerationRepositoryRoot "$(imageRepository)" `
-  #                                 -ImageType $(imageName) `
-  #                                 -AzureLocation $(TF_VAR_location) `
-  #                                 -AzureClientId $(servicePrincipal.clientId) `
-  #                                 -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-  #                                 -AzureTenantId $(servicePrincipal.tenantId) 
-  #     azurePowerShellVersion: 'latestVersion'
-  #     pwsh: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(imageScriptDirectory)'
+        Import-Module ./GenerateResourcesAndImage.ps1
+        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+                                  -ResourceGroupName $(imageResourceGroup) `
+                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
+                                  -ImageType $(imageName) `
+                                  -AzureLocation $(TF_VAR_location) `
+                                  -AzureClientId $(servicePrincipal.clientId) `
+                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+                                  -AzureTenantId $(servicePrincipal.tenantId) 
+      azurePowerShellVersion: 'latestVersion'
+      pwsh: true
+      failOnStandardError: true
+      workingDirectory: '$(imageScriptDirectory)'
 
   - task: AzureCLI@2
     name: publish

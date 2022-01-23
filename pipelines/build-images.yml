@@ -52,7 +52,7 @@ variables:
 
 jobs:
 - ${{ if ne(parameters.image,'All') }}:
-  - template: test.yml
+  - template: build-image.yml
     parameters:
       image: ${{ parameters.image }}
       imageResourceGroup: 'packer-$(Build.BuildId)'

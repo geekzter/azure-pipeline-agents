@@ -8,7 +8,11 @@ parameters:
   - Ubuntu2004
   - Windows2019
   - Windows2022
-
+- name: imageResourceGroup
+  displayName: Image Resource Group
+  type: string
+  default: packer
+  
 jobs:
 - job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'

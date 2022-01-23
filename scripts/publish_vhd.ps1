@@ -2,11 +2,13 @@
 
 <# 
 .SYNOPSIS 
-    Finds VHD in given Resource Group and publishes it in Shared Image Gallery
+    Finds VHD in given Resource Group and publishes it in a Shared Image Gallery
  
 .DESCRIPTION 
     The image build script (https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1)
-    creates a storage account, storage container and VHD. This scipt finfs the VHD based on the Resource Group name that is input to aforementioned script.
+    creates a storage account, storage container and VHD. 
+    This scipt finds the VHD based on the Resource Group name that is input to aforementioned script. 
+    The VHD found will be published, creating required artifacts including the Shared Image Gallery itself if it does not exist yet.
 
 .EXAMPLE
     ./publish_vhd.ps1 packer-99999 -GalleryResourceGroupName Shared -GalleryName testgal -ImageDefinitionName UbuntuPipelineHost -Publisher PrivatePipelineImages -Offer Ubuntu -SKU 18 -OsType linux
@@ -67,7 +69,7 @@ if (!$imageDefinition) {
         Write-Warning "`nImage Definition '$ImageDefinitionName' does not exist yet and arguments to create it were not (all) not specified, exiting"
         exit
     }
-    Write-Host "`nImage Definition '$ImageDefinitionName' (${Publisher}/${Offer}/{$SKU}) does not exist yet, creating it..."
+    Write-Host "`nImage Definition '$ImageDefinitionName' (${Publisher}/${Offer}/${SKU}) does not exist yet, creating it..."
     az sig image-definition create --gallery-image-definition $ImageDefinitionName `
                                    --gallery-name $GalleryName `
                                    --resource-group $GalleryResourceGroupName `

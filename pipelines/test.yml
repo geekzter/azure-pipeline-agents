@@ -52,7 +52,7 @@ jobs:
     - name: 'imageDefinitionName'
       value: '${{ parameters.image }}'
     - name: 'imageOffer'
-      value: 'Ubuntu'
+      value: 'Windows'
     - name: 'imageOSType'
       value: 'windows'
     - name: 'imageSKU'

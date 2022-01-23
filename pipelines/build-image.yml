@@ -38,63 +38,8 @@ pr:
     - 'visuals/**'  
     - '*.md'  
 
-# schedules:
-# - cron: '0 0 * * Mon,Wed,Fri'
-#   displayName: 'Bi-Nightly build (UTC)'
-#   # Run if there are no changes
-#   always: 'true'
-#   branches:
-#     include:
-#     - master
-
 variables:
 - group: 'pipeline-agents-ci'
-- name: 'agentRepository'
-  value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
-- name: 'agentScriptDirectory'
-  value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
-- name: AZURE_CORE_ONLY_SHOW_ERRORS
-  value: 'true'
-- name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
-  value: 'yes_without_prompt'
-- name: 'galleryResourceGroup' 
-  value: 'Shared'
-- name: 'imageConfigFile'
-  value: '${{ lower(parameters.image) }}.json'
-- name: 'imageGalleryName'
-  value: 'testgal'
-- name: 'imageName'
-  value: '${{ parameters.image }}'
-- ${{ if contains(parameters.image,'buntu') }}:
-  - name: 'imageDefinitionName'
-    value: 'UbuntuPipelineHost'
-  - name: 'imageOffer'
-    value: 'Ubuntu'
-  - name: 'imageOSType'
-    value: 'linux'
-  - name: 'imageSKU'
-    value: ${{ replace(parameters.image,'Ubuntu', '') }}
-  - name: 'imageSubDirectory'
-    value: 'linux'
-- ${{ else }}:
-  - name: 'imageDefinitionName'
-    value: 'WindowsPipelineHost'
-  - name: 'imageOffer'
-    value: 'Ubuntu'
-  - name: 'imageOSType'
-    value: 'windows'
-  - name: 'imageSKU'
-    value: ${{ replace(parameters.image,'Windows', '') }}
-  - name: 'imageSubDirectory'
-    value: 'win'
-- name: 'imagePublisher'
-  value: 'PrivatePipelineImages'
-- name: 'imageRepository'
-  value: '$(Build.SourcesDirectory)/virtual-environments'
-- name: 'imageResourceGroup' 
-  value: 'packer-$(Build.BuildId)'
-- name: 'imageScriptDirectory'
-  value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
 
 jobs:
 - job: 'Build'
@@ -103,6 +48,54 @@ jobs:
     name: 'Azure Pipelines'
     vmImage: windows-latest
   timeoutInMinutes: 300
+
+  variables:
+  - name: 'agentRepository'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
+  - name: 'agentScriptDirectory'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
+  - name: AZURE_CORE_ONLY_SHOW_ERRORS
+    value: 'true'
+  - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
+    value: 'yes_without_prompt'
+  - name: 'galleryResourceGroup' 
+    value: 'Shared'
+  - name: 'imageConfigFile'
+    value: '${{ lower(parameters.image) }}.json'
+  - name: 'imageGalleryName'
+    value: 'testgal'
+  - name: 'imageName'
+    value: '${{ parameters.image }}'
+  - ${{ if contains(parameters.image,'buntu') }}:
+    - name: 'imageDefinitionName'
+      value: 'UbuntuPipelineHost'
+    - name: 'imageOffer'
+      value: 'Ubuntu'
+    - name: 'imageOSType'
+      value: 'linux'
+    - name: 'imageSKU'
+      value: ${{ replace(parameters.image,'Ubuntu', '') }}
+    - name: 'imageSubDirectory'
+      value: 'linux'
+  - ${{ else }}:
+    - name: 'imageDefinitionName'
+      value: 'WindowsPipelineHost'
+    - name: 'imageOffer'
+      value: 'Windows'
+    - name: 'imageOSType'
+      value: 'windows'
+    - name: 'imageSKU'
+      value: ${{ replace(parameters.image,'Windows', '') }}
+    - name: 'imageSubDirectory'
+      value: 'win'
+  - name: 'imagePublisher'
+    value: 'PrivatePipelineImages'
+  - name: 'imageRepository'
+    value: '$(Build.SourcesDirectory)/virtual-environments'
+  - name: 'imageResourceGroup' 
+    value: 'packer-$(Build.BuildId)'
+  - name: 'imageScriptDirectory'
+    value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
 
   steps:
   - checkout: self

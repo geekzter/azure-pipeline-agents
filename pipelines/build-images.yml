@@ -42,8 +42,7 @@ pr:
 schedules:
 - cron: '0 0 * * Mon,Wed,Fri'
   displayName: 'Bi-Nightly build (UTC)'
-  # Run if there are no changes
-  always: 'true'
+  always: 'true' # Run if there are no changes
   branches:
     include:
     - master

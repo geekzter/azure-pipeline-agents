@@ -96,8 +96,7 @@ if ($imageVersion) {
                               --resource-group $GalleryResourceGroupName --query "[].name" -o json `
                               | ConvertFrom-Json `
                               | ForEach-Object {[version]$_} `
-                              | Sort-Object `
-                              | Select-Object -Last 1 `
+                              | Sort-Object -Descending | Select-Object -First 1 `
                               | Set-Variable latestVersion
     # Increment version
     [version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)

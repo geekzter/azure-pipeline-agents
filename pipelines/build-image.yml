@@ -9,10 +9,6 @@ parameters:
   - Windows2019
   - Windows2022
 
-name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ parameters.image }}-$(Build.BuildId)
-
-trigger: none
-
 jobs:
 - job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'

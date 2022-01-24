@@ -12,6 +12,10 @@ parameters:
   displayName: Image Resource Group
   type: string
   default: packer
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: bool
+  default: true
 
 jobs:
 - job: '${{ parameters.image }}'
@@ -207,7 +211,8 @@ jobs:
   - task: AzureCLI@2
     name: teardown
     displayName: 'Tear down temporary resources'
-    # condition: succeededOrFailed()
+    ${{ if parameters.destroy }}:
+      condition: succeededOrFailed()
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore

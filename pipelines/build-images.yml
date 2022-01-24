@@ -9,6 +9,10 @@ parameters:
   - Ubuntu2004
   - Windows2019
   - Windows2022
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: bool
+  default: true
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
 
@@ -54,27 +58,27 @@ jobs:
 - ${{ if ne(parameters.image,'All') }}:
   - template: build-image.yml
     parameters:
+      destroy: ${{ if parameters.destroy }}
       image: ${{ parameters.image }}
       imageResourceGroup: 'packer-$(Build.BuildId)'
-      # imageResourceGroup: 'packer-11420'
 - ${{ else }}:
   - template: build-image.yml
     parameters:
+      destroy: ${{ if parameters.destroy }}
       image: Ubuntu1804
       imageResourceGroup: 'packer-$(Build.BuildId)a'
-      # imageResourceGroup: 'packer-11420'
   - template: build-image.yml
     parameters:
+      destroy: ${{ if parameters.destroy }}
       image: Ubuntu2004
       imageResourceGroup: 'packer-$(Build.BuildId)b'
-      # imageResourceGroup: 'packer-11420'
   - template: build-image.yml
     parameters:
+      destroy: ${{ if parameters.destroy }}
       image: Windows2019
       imageResourceGroup: 'packer-$(Build.BuildId)c'
-      # imageResourceGroup: 'packer-11420'
   - template: build-image.yml
     parameters:
+      destroy: ${{ if parameters.destroy }}
       image: Windows2022
       imageResourceGroup: 'packer-$(Build.BuildId)d'
-      # imageResourceGroup: 'packer-11420'

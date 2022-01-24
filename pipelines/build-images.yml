@@ -58,27 +58,27 @@ jobs:
 - ${{ if ne(parameters.image,'All') }}:
   - template: build-image.yml
     parameters:
-      destroy: ${{ if parameters.destroy }}
+      destroy: ${{ parameters.destroy }}
       image: ${{ parameters.image }}
       imageResourceGroup: 'packer-$(Build.BuildId)'
 - ${{ else }}:
   - template: build-image.yml
     parameters:
-      destroy: ${{ if parameters.destroy }}
+      destroy: ${{ parameters.destroy }}
       image: Ubuntu1804
       imageResourceGroup: 'packer-$(Build.BuildId)a'
   - template: build-image.yml
     parameters:
-      destroy: ${{ if parameters.destroy }}
+      destroy: ${{ parameters.destroy }}
       image: Ubuntu2004
       imageResourceGroup: 'packer-$(Build.BuildId)b'
   - template: build-image.yml
     parameters:
-      destroy: ${{ if parameters.destroy }}
+      destroy: ${{ parameters.destroy }}
       image: Windows2019
       imageResourceGroup: 'packer-$(Build.BuildId)c'
   - template: build-image.yml
     parameters:
-      destroy: ${{ if parameters.destroy }}
+      destroy: ${{ parameters.destroy }}
       image: Windows2022
       imageResourceGroup: 'packer-$(Build.BuildId)d'

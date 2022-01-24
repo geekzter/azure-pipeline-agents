@@ -63,25 +63,25 @@ jobs:
     parameters:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu1804
-      imageResourceGroup: 'packer-u1-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-u1'
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
   - template: build-image.yml
     parameters:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu2004
-      imageResourceGroup: 'packer-u2-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-u2'
 
 - ${{ if in(parameters.image,'All','Windows','Windows2019') }}:
   - template: build-image.yml
     parameters:
       destroy: ${{ parameters.destroy }}
       image: Windows2019
-      imageResourceGroup: 'packer-w1-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-w1'
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image.yml
     parameters:
       destroy: ${{ parameters.destroy }}
       image: Windows2022
-      imageResourceGroup: 'packer-w2-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-w2'

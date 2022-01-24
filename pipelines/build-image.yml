@@ -18,7 +18,7 @@ jobs:
   displayName: 'Build & publish ${{ parameters.image }}'
   pool:
     name: 'Azure Pipelines'
-    vmImage: windows-latest
+    vmImage: ubuntu-latest
   timeoutInMinutes: 360
 
   variables:

@@ -11,7 +11,7 @@ parameters:
   - Windows2022
 - name: destroy
   displayName: Destroy Infrastructure
-  type: bool
+  type: boolean
   default: true
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)

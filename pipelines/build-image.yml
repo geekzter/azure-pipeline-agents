@@ -14,7 +14,7 @@ parameters:
   default: packer
 - name: destroy
   displayName: Destroy Infrastructure
-  type: bool
+  type: boolean
   default: true
 
 jobs:

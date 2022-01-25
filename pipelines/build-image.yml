@@ -2,7 +2,7 @@ parameters:
 - name: image
   displayName: Image
   type: string
-  default: Ubuntu2004
+  default: Ubuntu1804
   values:
   - Ubuntu1804
   - Ubuntu2004

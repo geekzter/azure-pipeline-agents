@@ -2,10 +2,11 @@ parameters:
 - name: image
   displayName: Image
   type: string
-  default: All
+  default: Stable
   values:
   - All
   - Latest
+  - Stable
   - Ubuntu
   - Ubuntu1804
   - Ubuntu2004
@@ -58,7 +59,7 @@ variables:
 - group: 'pipeline-agents-ci'
 
 jobs:
-- ${{ if in(parameters.image,'All','Ubuntu','Ubuntu1804') }}:
+- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:
   - template: build-image.yml
     parameters:
       destroy: ${{ parameters.destroy }}
@@ -72,7 +73,7 @@ jobs:
       image: Ubuntu2004
       imageResourceGroup: 'packer-$(Build.BuildId)-u2'
 
-- ${{ if in(parameters.image,'All','Windows','Windows2019') }}:
+- ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image.yml
     parameters:
       destroy: ${{ parameters.destroy }}

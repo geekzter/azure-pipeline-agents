@@ -67,6 +67,9 @@ variable dns_host_suffix {
   default                      = "mycicd"
 }
 
+variable linux_os_image_id {
+  default                      = null
+}
 variable linux_os_offer {
   default                      = "UbuntuServer"
 }
@@ -158,6 +161,9 @@ variable windows_agent_count {
   default                      = 2
   type                         = number
 }
+variable windows_os_image_id {
+  default                      = null
+}
 # az vm image list-skus -l westeurope -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
 # az vm image list-skus -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -o table
 # az vm image list -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
@@ -176,6 +182,7 @@ variable windows_os_version {
 variable windows_os_vhd_url {
   default                      = null
 }
+
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"
 }

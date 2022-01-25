@@ -309,7 +309,7 @@ jobs:
         displayName: 'Disable Self-Hosted Agent(s)'
         name: 'agentConfig'
         condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
-        continueOnError: true # This may fail the first time it is run
+        continueOnError: false
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: 'pscore'

@@ -26,7 +26,6 @@ jobs:
   timeoutInMinutes: 360
 
   variables:
-  - group: 'pipeline-agents-ci'
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: 'agentScriptDirectory'
@@ -40,7 +39,7 @@ jobs:
   - name: 'imageConfigFile'
     value: '${{ lower(parameters.image) }}.json'
   - name: 'imageGalleryName'
-    value: 'testgal'
+    value: '$(imageGalleryName)' # From variable group 
   - name: 'imageName'
     value: '${{ parameters.image }}'
   - name: 'imageDefinitionName'
@@ -157,7 +156,7 @@ jobs:
                                   -ResourceGroupName $(imageResourceGroup) `
                                   -ImageGenerationRepositoryRoot "$(imageRepository)" `
                                   -ImageType $(imageName) `
-                                  -AzureLocation $(TF_VAR_location) `
+                                  -AzureLocation $(location) `
                                   -AzureClientId $(servicePrincipal.clientId) `
                                   -AzureClientSecret "$(servicePrincipal.clientSecret)" `
                                   -AzureTenantId $(servicePrincipal.tenantId) 

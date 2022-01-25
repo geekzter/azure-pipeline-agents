@@ -56,7 +56,7 @@ schedules:
     - master
 
 variables:
-- group: 'pipeline-agents-ci'
+  - group: 'build-images'
 
 jobs:
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:

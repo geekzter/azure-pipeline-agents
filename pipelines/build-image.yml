@@ -139,6 +139,7 @@ jobs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: inlineScript
       inline: |
+        # Diagnostics
         if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
           $DebugPreference       = "Continue"
           $InformationPreference = "Continue"
@@ -146,9 +147,10 @@ jobs:
           Set-PSDebug -Trace 2
         }
 
-        # Patch GenerateResourcesAndImage.ps1
+        # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
+        # Build
         Import-Module ./GenerateResourcesAndImage.ps1
         Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
         GenerateResourcesAndImage -SubscriptionId $subscriptionId `
@@ -173,12 +175,15 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        # Diagnostics
         if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
           $DebugPreference       = "Continue"
           $InformationPreference = "Continue"
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
+
+        # Publish
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
           hash = "$(version.shortHash)"

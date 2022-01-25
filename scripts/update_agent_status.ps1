@@ -1,6 +1,9 @@
 #!/usr/bin/env pwsh
 <#
-    Requires 'Project Collection Build Service (org)' to be added to Agent Pool ACL
+    Requires 
+    - 'Project Collection Build Service (org)' to be added to Agent Pool ACL
+    - 'Limit job authorization scope to current project for non-release pipelines' disabled
+
 #>
 param ( 
     [parameter(Mandatory=$true)][string]$AgentNamePrefix,

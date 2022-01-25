@@ -101,16 +101,12 @@ variables:
   value: '$(Build.SourcesDirectory)/terraform'
 - name: 'TF_VAR_linux_pipeline_agent_name_prefix'
   value: 'ubuntu-agent'
-- name: 'TF_VAR_linux_pipeline_agent_pool'
-  value: 'CIPool'
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
 - name: 'TF_VAR_ssh_public_key'
   value: 'id_rsa.pub' # Key will be downloaded in terraform directory
 - name: 'TF_VAR_windows_pipeline_agent_name_prefix'
   value: 'windows-agent'
-- name: 'TF_VAR_windows_pipeline_agent_pool'
-  value: 'CIPool'
 
 - name: 'resourceGroup' 
   value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'

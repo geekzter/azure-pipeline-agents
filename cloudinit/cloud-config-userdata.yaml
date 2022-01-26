@@ -1,5 +1,10 @@
 #cloud-config
 bootcmd:
+  # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts
+  - echo Detecting whether post generation should be performed (https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts)
+  - '[ -d /opt/post-generation ] && echo Post generation should be performed'
+  - '[ -d /opt/post-generation ] && sudo su -c "find /opt/post-generation -mindepth 1 -maxdepth 1 -type f -name *.sh -exec bash {} \;"'
+  - '[ -d /opt/post-generation ] && echo Post generation done'
   - sudo apt remove unattended-upgrades -y
   # Prevent race condition with VM extension provisioning
   - while ( fuser /var/lib/dpkg/lock >/dev/null 2>&1 ); do sleep 5; done;

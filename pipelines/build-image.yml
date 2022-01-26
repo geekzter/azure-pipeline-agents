@@ -196,7 +196,8 @@ jobs:
                           -Publisher $(imagePublisher) `
                           -Offer $(imageOffer) `
                           -SKU $(imageSKU) `
-                          -OsType $(imageOSType)
+                          -OsType $(imageOSType) `
+                          -TargetRegion $(targetRegions)
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'

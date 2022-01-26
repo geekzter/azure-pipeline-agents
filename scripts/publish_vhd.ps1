@@ -25,7 +25,8 @@ param (
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$Publisher,
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$Offer,
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$SKU,
-    [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$OsType
+    [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$OsType,
+    [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string[]]$TargetRegion
 ) 
 Write-Verbose $MyInvocation.line 
 
@@ -115,6 +116,7 @@ if ($imageVersion) {
                                 --gallery-name $GalleryName `
                                 --gallery-image-version $newVersionString `
                                 --resource-group $GalleryResourceGroupName `
+                                --target-regions ($TargetRegion ?? $storageAccount.primaryLocation) `
                                 --os-vhd-uri $vhdUrl `
                                 --os-vhd-storage-account $($storageAccount.name) `
                                 --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion

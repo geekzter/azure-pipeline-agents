@@ -6,6 +6,10 @@ output diagnostics_storage_sas {
   value                        = data.azurerm_storage_account_sas.diagnostics.sas
 }
 
+output linux_os_image_id {
+  value                        = local.linux_image_id
+}
+
 output log_analytics_workspace_id {
   value                        = local.log_analytics_workspace_id
 }
@@ -58,4 +62,8 @@ output user_password {
 
 output virtual_network_id {
   value                        = module.network.virtual_network_id
+}
+
+output windows_os_image_id {
+  value                        = local.windows_image_id
 }

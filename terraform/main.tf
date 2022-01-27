@@ -110,3 +110,11 @@ resource azurerm_role_assignment service_principal_contributor {
 
   count                        = var.create_contributor_service_principal ? 1 : 0
 }
+
+resource azurerm_role_assignment demo_viewer {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Reader"
+  principal_id                 = each.key
+
+  for_each                     = toset(var.demo_viewers)
+}

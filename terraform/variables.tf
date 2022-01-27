@@ -5,6 +5,7 @@ variable address_space {
 
 variable admin_ip_ranges {
   default                      = []
+  type                         = list
 }
 
 variable configure_cidr_allow_rules {
@@ -24,6 +25,13 @@ variable create_contributor_service_principal {
   default                      = false
   type                         = bool
 }
+
+variable demo_viewers {
+  description                  = "Object ID's of AAD groups/users to be granted reader access"
+  default                      = []
+  type                         = list
+}
+
 variable deploy_bastion {
   description                  = "Deploys managed bastion host"
   default                      = true

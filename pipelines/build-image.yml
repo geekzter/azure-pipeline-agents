@@ -38,8 +38,6 @@ jobs:
     value: 'Shared'
   - name: 'imageConfigFile'
     value: '${{ lower(parameters.image) }}.json'
-  - name: 'imageGalleryName'
-    value: '$(imageGalleryName)' # From variable group 
   - name: 'imageName'
     value: '${{ parameters.image }}'
   - name: 'imageDefinitionName'

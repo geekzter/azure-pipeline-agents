@@ -15,6 +15,18 @@ if (!$IsWindows -and ($PSVersionTable.PSEdition -ine "Desktop")) {
     exit 1
 }
 
+# Run post generation, of available on image
+if (Test-Path C:\post-generation) {
+    Write-Host "Running port generation..."
+    # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts
+    Get-ChildItem C:\post-generation -Filter *.ps1 | ForEach-Object { 
+        if ($_.FullName -inotmatch "VSConfig|InternetExplorer") {
+            Write-Host $_.FullName
+            & $_.FullName 
+        }
+    }
+}
+
 #$pipelineDirectory = Join-Path $env:HOME pipeline-agent
 $pipelineDirectory = Join-Path $env:ProgramFiles pipeline-agent
 $agentService = "vstsagent.${Organization}.${AgentPool}.${AgentName}"

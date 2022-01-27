@@ -99,6 +99,20 @@ resource azurerm_virtual_machine_scale_set_extension windows_watcher {
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
 
+resource azurerm_virtual_machine_scale_set_extension post_generation {
+  name                         = "PostGenerationScript"
+  virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.windows_agents.id
+  publisher                    = "Microsoft.Azure.Extensions"
+  type                         = "CustomScript"
+  type_handler_version         = "2.1"
+  auto_upgrade_minor_version   = true
+  settings                     = jsonencode({
+    "script"                   = filebase64("${path.root}/../scripts/host/post_generation.ps1")
+  })
+
+  count                        = var.prepare_host ? 1 : 0
+}
+
 resource azurerm_monitor_diagnostic_setting windows_agents {
   name                         = "${azurerm_windows_virtual_machine_scale_set.windows_agents.name}-logs"
   target_resource_id           = azurerm_windows_virtual_machine_scale_set.windows_agents.id

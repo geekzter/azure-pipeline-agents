@@ -7,6 +7,9 @@ variable devops_pat {}
 
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
+variable install_tools {
+  type                         = bool
+}
 
 variable linux_agent_count {}
 variable linux_os_offer {}

@@ -2,23 +2,45 @@ data cloudinit_config user_data {
   gzip                         = false
   base64_encode                = false
 
+  part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-post-generation.yaml",
+    {
+      user_name                = var.user_name
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
+  }
+  
   dynamic "part" {
-    for_each = range(var.prepare_host ? 1 : 0)
+    for_each = range(var.install_tools ? 1 : 0)
     content {
-      content                  = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-tools.yaml",
       {
         outbound_ip            = var.outbound_ip_address
         subnet_id              = var.subnet_id
         virtual_network_id     = local.virtual_network_id
       })
       content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
     }
+  }  
+
+  part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
+    {
+      outbound_ip              = var.outbound_ip_address
+      subnet_id                = var.subnet_id
+      user_name                = var.user_name
+      virtual_network_id       = local.virtual_network_id
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
 
   dynamic "part" {
     for_each = range(var.deploy_agent ? 1 : 0)
     content {
-      content                  = templatefile("${path.module}/cloud-config-agent.yaml",
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-agent.yaml",
       {
         agent_name             = var.pipeline_agent_name
         agent_pool             = var.pipeline_agent_pool

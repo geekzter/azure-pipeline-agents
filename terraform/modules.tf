@@ -50,6 +50,7 @@ module scale_set_linux_agents {
   linux_vm_size                = var.linux_vm_size
 
   outbound_ip_address          = module.network.outbound_ip_address
+  install_tools                = var.linux_tools
   prepare_host                 = var.prepare_host
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
@@ -142,6 +143,7 @@ module self_hosted_linux_agents {
   storage_type                 = var.linux_storage_type
   vm_size                      = var.linux_vm_size
 
+  install_tools                = var.linux_tools
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
   public_access_enabled        = !var.deploy_firewall

@@ -3,14 +3,40 @@ data cloudinit_config user_data {
   base64_encode                = false
 
   part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-post-generation.yaml",
+    {
+      user_name                = var.user_name
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
+  }
+  
+  dynamic "part" {
+    for_each = range(var.install_tools ? 1 : 0)
+    content {
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-tools.yaml",
+      {
+        outbound_ip            = var.outbound_ip_address
+        subnet_id              = var.subnet_id
+        virtual_network_id     = local.virtual_network_id
+      })
+      content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
+    }
+  }  
+
+  part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
       outbound_ip              = var.outbound_ip_address
       subnet_id                = var.subnet_id
+      user_name                = var.user_name
       virtual_network_id       = local.virtual_network_id
     })
     content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
+
 }
 
 resource azurerm_linux_virtual_machine_scale_set linux_agents {

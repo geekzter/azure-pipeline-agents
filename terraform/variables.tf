@@ -75,6 +75,11 @@ variable dns_host_suffix {
   default                      = "mycicd"
 }
 
+variable linux_tools {
+  default                      = false
+  type                         = bool
+}
+
 variable linux_os_image_id {
   default                      = null
 }

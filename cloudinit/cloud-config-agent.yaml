@@ -1,4 +1,3 @@
-#cloud-config
 packages:
   - curl 
   - dos2unix 

@@ -1,0 +1,10 @@
+# Azure Log Analytics VM extension fails on https://github.com/actions/virtual-environments
+# Pre-installing the agent, will make the VM extension install succeed
+packages:
+  - wget
+
+runcmd:
+  # Install agent if it does not yet exist
+  # https://docs.microsoft.com/en-us/azure/azure-monitor/agents/agent-linux#install-the-agent-using-wrapper-script
+  - '[ ! -d /opt/microsoft/omsagent ] && wget https://raw.githubusercontent.com/Microsoft/OMS-Agent-for-Linux/master/installer/scripts/onboard_agent.sh && sh onboard_agent.sh -w "${workspace_id}" -s "${workspace_key}"'
+  

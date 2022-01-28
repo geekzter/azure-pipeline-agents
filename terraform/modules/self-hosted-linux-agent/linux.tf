@@ -10,7 +10,6 @@ data cloudinit_config user_data {
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
-  
   dynamic "part" {
     for_each = range(var.install_tools ? 1 : 0)
     content {
@@ -24,7 +23,6 @@ data cloudinit_config user_data {
       merge_type               = "list(append)+dict(recurse_array)+str()"
     }
   }  
-
   part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
@@ -36,7 +34,20 @@ data cloudinit_config user_data {
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
-
+  # Azure Log Analytics VM extension fails on https://github.com/actions/virtual-environments
+  # Pre-installing the agent, will make the VM extension install succeed
+  dynamic "part" {
+    for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
+    content {
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-log-analytics.yaml",
+      {
+        workspace_id           = data.azurerm_log_analytics_workspace.monitor.workspace_id
+        workspace_key          = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
+      content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
+    }
+  }
   dynamic "part" {
     for_each = range(var.deploy_agent ? 1 : 0)
     content {
@@ -175,20 +186,21 @@ resource azurerm_linux_virtual_machine linux_agent {
   }  
 }
 
-resource azurerm_virtual_machine_extension post_cloud_init {
-  name                         = "PostCloudInitScript"
+resource azurerm_virtual_machine_extension cloud_config_status {
+  name                         = "CloudConfigStatusScript"
   virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
   publisher                    = "Microsoft.Azure.Extensions"
   type                         = "CustomScript"
   type_handler_version         = "2.1"
   auto_upgrade_minor_version   = true
   settings                     = jsonencode({
-    "script"                   = filebase64("${path.root}/../scripts/host/post_cloud_init.sh")
+    "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
   })
-
   tags                         = var.tags
 
-  # count                        = var.deploy_agent || var.prepare_host ? 1 : 0
+  timeouts {
+    create                     = "60m"
+  }  
 }
 
 # BUG: https://github.com/Azure/azure-linux-extensions/issues/1116
@@ -210,7 +222,7 @@ resource azurerm_virtual_machine_extension linux_log_analytics {
   tags                         = var.tags
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-  depends_on                   = [azurerm_virtual_machine_extension.post_cloud_init]
+  depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }
 resource azurerm_virtual_machine_extension linux_dependency_monitor {
   name                         = "DAExtension"
@@ -231,7 +243,7 @@ resource azurerm_virtual_machine_extension linux_dependency_monitor {
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [
-    azurerm_virtual_machine_extension.post_cloud_init,
+    azurerm_virtual_machine_extension.cloud_config_status,
     azurerm_virtual_machine_extension.linux_log_analytics
   ]
 }
@@ -247,7 +259,7 @@ resource azurerm_virtual_machine_extension linux_watcher {
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [
-    azurerm_virtual_machine_extension.post_cloud_init,
+    azurerm_virtual_machine_extension.cloud_config_status,
     azurerm_virtual_machine_extension.linux_log_analytics
   ]
 }
@@ -263,7 +275,7 @@ resource azurerm_virtual_machine_extension policy {
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [
-    azurerm_virtual_machine_extension.post_cloud_init,
+    azurerm_virtual_machine_extension.cloud_config_status,
     azurerm_virtual_machine_extension.linux_log_analytics
   ]
 }

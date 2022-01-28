@@ -96,15 +96,15 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   tags                         = var.tags
 }
 
-resource azurerm_virtual_machine_scale_set_extension post_cloud_init {
-  name                         = "PostCloudInitScript"
+resource azurerm_virtual_machine_scale_set_extension cloud_config_status {
+  name                         = "CloudConfigStatusScript"
   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   publisher                    = "Microsoft.Azure.Extensions"
   type                         = "CustomScript"
   type_handler_version         = "2.0"
   auto_upgrade_minor_version   = true
   settings                     = jsonencode({
-    "script"                   = filebase64("${path.root}/../scripts/host/post_cloud_init.sh")
+    "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
   })
 }
 
@@ -125,7 +125,7 @@ resource azurerm_virtual_machine_scale_set_extension linux_log_analytics {
 
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.post_cloud_init.name,
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name,
   ]
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
@@ -153,7 +153,7 @@ resource azurerm_virtual_machine_scale_set_extension diagnostics {
 
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.post_cloud_init.name,
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name,
     azurerm_virtual_machine_scale_set_extension.linux_log_analytics.0.name
   ]
 
@@ -176,7 +176,7 @@ resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
 
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.post_cloud_init.name
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
@@ -191,7 +191,7 @@ resource azurerm_virtual_machine_scale_set_extension linux_watcher {
 
   provision_after_extensions   = [
     # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.post_cloud_init.name
+    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
   ]
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0

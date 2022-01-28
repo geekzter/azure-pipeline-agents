@@ -85,6 +85,10 @@ resource azurerm_virtual_machine_scale_set_extension windows_dependency_monitor 
     "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
   })
 
+  provision_after_extensions   = [
+    azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
+  ]
+
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
 resource azurerm_virtual_machine_scale_set_extension windows_watcher {
@@ -95,6 +99,9 @@ resource azurerm_virtual_machine_scale_set_extension windows_watcher {
   type_handler_version         = "1.4"
   auto_upgrade_minor_version   = true
 
+  provision_after_extensions   = [
+    azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
+  ]
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
@@ -110,6 +117,11 @@ resource azurerm_virtual_machine_scale_set_extension post_generation {
     "script"                   = filebase64("${path.root}/../scripts/host/post_generation.ps1")
   })
 
+  provision_after_extensions   = [
+    azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
+    azurerm_virtual_machine_scale_set_extension.windows_dependency_monitor.0.name,
+    azurerm_virtual_machine_scale_set_extension.windows_watcher.0.name,
+  ]
   count                        = var.prepare_host ? 1 : 0
 }
 

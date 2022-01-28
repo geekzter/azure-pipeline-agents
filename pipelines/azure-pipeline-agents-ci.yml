@@ -257,21 +257,21 @@ jobs:
           failOnStandardError: true
           workingDirectory: '$(terraformDirectory)'
 
-    - task: AzureCLI@2
-      name: avoidVMImages
-      displayName: 'Avoid VM image versions with known issues'
-      continueOnError: true # Ignore if we can succeed without it this
-      inputs:
-        azureSubscription: '$(subscriptionConnection)'
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: |
-          az vm image list -l $(TF_VAR_location) -s "vs-2022-comm-latest-ws2022" -f "visualstudio2022" -p "microsoftvisualstudio" --query "max_by([?version!='2021.12.16' && version!='2022.01.14'],&version).version" --all -o tsv | Set-Item env:TF_VAR_windows_os_version
-          Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`""
-          Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`"" | Out-File ci.auto.tfvars -Append -Force
-        useGlobalConfig: true
-        failOnStandardError: true
-        workingDirectory: '$(terraformDirectory)'
+    # - task: AzureCLI@2
+    #   name: avoidVMImages
+    #   displayName: 'Avoid VM image versions with known issues'
+    #   continueOnError: true # Ignore if we can succeed without it this
+    #   inputs:
+    #     azureSubscription: '$(subscriptionConnection)'
+    #     scriptType: pscore
+    #     scriptLocation: inlineScript
+    #     inlineScript: |
+    #       az vm image list -l $(TF_VAR_location) -s "vs-2022-comm-latest-ws2022" -f "visualstudio2022" -p "microsoftvisualstudio" --query "max_by([?version!='2021.12.16' && version!='2022.01.14'],&version).version" --all -o tsv | Set-Item env:TF_VAR_windows_os_version
+    #       Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`""
+    #       Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`"" | Out-File ci.auto.tfvars -Append -Force
+    #     useGlobalConfig: true
+    #     failOnStandardError: true
+    #     workingDirectory: '$(terraformDirectory)'
 
     - pwsh: |
         if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {

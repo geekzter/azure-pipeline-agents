@@ -124,7 +124,7 @@ jobs:
           Write-Host "Extracting ${archiveFullName} to ${releaseExtractDirectory}..."
           Expand-Archive -Path $archiveFullName -DestinationPath $releaseExtractDirectory
           Get-ChildItem $releaseExtractDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
-          Get-ChildItem actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
+          Get-ChildItem -Path $releaseExtractDirectory -Filter actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
           Get-ChildItem $releaseDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
           $imageScriptDirectory = Join-Path $releaseDirectory helpers
           Get-ChildItem $imageScriptDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime

@@ -78,11 +78,11 @@ jobs:
 
   steps:
   - checkout: self
-  - checkout: virtual-environments
+  # - checkout: virtual-environments
 
   - task: AzureCLI@2
     name: download
-    displayName: 'Download latest release for ${{ parameters.imageReleaseName }}'
+    displayName: 'Download release for ${{ parameters.imageReleaseName }}'
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
@@ -202,7 +202,7 @@ jobs:
           hash = "$(download.hash)"
           versionlabel = "$(download.version)"
         }
-        $imageDefinitionVersionTags | Format-List
+        $imageDefinitionVersionTags
         # ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
         #                   -GalleryResourceGroupName $(galleryResourceGroup) `
         #                   -GalleryName $(imageGalleryName) `

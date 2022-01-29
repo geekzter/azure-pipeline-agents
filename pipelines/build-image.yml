@@ -32,9 +32,9 @@ jobs:
 
   variables:
   - name: 'agentRepository'
-    value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
+    value: '$(Build.SourcesDirectory)/'
   - name: 'agentScriptDirectory'
-    value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
+    value: '$(Build.SourcesDirectory)/scripts'
   - name: AZURE_CORE_ONLY_SHOW_ERRORS
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL

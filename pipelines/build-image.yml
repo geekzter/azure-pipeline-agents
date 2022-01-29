@@ -167,7 +167,7 @@ jobs:
         Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
         GenerateResourcesAndImage -SubscriptionId $subscriptionId `
                                   -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
+                                  -ImageGenerationRepositoryRoot "$(download.releaseDirectory)" `
                                   -ImageType $(imageName) `
                                   -AzureLocation $(location) `
                                   -AzureClientId $(servicePrincipal.clientId) `

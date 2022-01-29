@@ -162,17 +162,17 @@ jobs:
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-        # Build
-        Import-Module ./GenerateResourcesAndImage.ps1
-        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-                                  -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(download.releaseDirectory)" `
-                                  -ImageType $(imageName) `
-                                  -AzureLocation $(location) `
-                                  -AzureClientId $(servicePrincipal.clientId) `
-                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-                                  -AzureTenantId $(servicePrincipal.tenantId) 
+        # # Build
+        # Import-Module ./GenerateResourcesAndImage.ps1
+        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+        #                           -ResourceGroupName $(imageResourceGroup) `
+        #                           -ImageGenerationRepositoryRoot "$(download.releaseDirectory)" `
+        #                           -ImageType $(imageName) `
+        #                           -AzureLocation $(location) `
+        #                           -AzureClientId $(servicePrincipal.clientId) `
+        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+        #                           -AzureTenantId $(servicePrincipal.tenantId) 
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
@@ -188,6 +188,9 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        Write-Host "We are in $(Get-Item . | Select-Object -ExpandProperty FullName)"
+        Get-ChildItem -Path . -Recurse | %{$_.FullName}  
+
         # Diagnostics
         if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
           $DebugPreference       = "Continue"

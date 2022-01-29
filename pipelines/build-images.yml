@@ -20,20 +20,20 @@ parameters:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
-# resources:
-#   repositories:
-#   - repository: virtual-environments
-#     type: github
-#     endpoint: github.com # Service Connection name
-#     name: actions/virtual-environments
-#     trigger:
-#       branches:
-#         include:
-#         - main
-#       paths:
-#         include:
-#         - 'images/linux/**'
-#         - 'images/win/**'
+resources:
+  repositories:
+  - repository: virtual-environments
+    type: github
+    endpoint: github.com # Service Connection name
+    name: actions/virtual-environments
+    trigger:
+      branches:
+        include:
+        - main
+      paths:
+        include:
+        - 'images/linux/**'
+        - 'images/win/**'
 
 trigger: none
 

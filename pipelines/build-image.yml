@@ -101,15 +101,15 @@ jobs:
         $newImageVersion = !$imageVersion
         Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
         if ($newImageVersion) {
-          $releaseExtractDirectory = Join-Path $(Build.ArtifactStagingDirectory) $(imageReleaseName)
-          New-Item -ItemType Directory -Path $releaseExtractDirectory -Force -ErrorAction SilentlyContinue | Out-Null
+          # $releaseExtractDirectory = Join-Path $(Build.ArtifactStagingDirectory) $(imageReleaseName)
+          # New-Item -ItemType Directory -Path $releaseExtractDirectory -Force -ErrorAction SilentlyContinue | Out-Null
           $archiveFullName = "$(Join-Path $(Build.ArtifactStagingDirectory) $version).zip"
           Write-Host "Downloading $(imageReleaseName) version $version source archive to ${archiveFullName}..."
           Invoke-Webrequest -Uri $release.zipball_url -OutFile $archiveFullName -UseBasicParsing 
-          Write-Host "Extracting ${archiveFullName} to ${releaseExtractDirectory}..."
-          Expand-Archive -Path $archiveFullName -DestinationPath $releaseExtractDirectory
+          Write-Host "Extracting ${archiveFullName} to $(Build.ArtifactStagingDirectory)..."
+          Expand-Archive -Path $archiveFullName -DestinationPath $(Build.ArtifactStagingDirectory)
 
-          Get-ChildItem -Path $releaseExtractDirectory -Filter actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
+          Get-ChildItem -Path $(Build.ArtifactStagingDirectory) -Filter actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
           $hash = $releaseDirectory.Split("-")[-1]
           $imageScriptDirectory = Join-Path $releaseDirectory helpers
           Write-Host "##vso[task.setvariable variable=hash;isoutput=true]$hash"

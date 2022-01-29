@@ -151,28 +151,28 @@ jobs:
       inline: |
         Write-Host "We are in $(Get-Item . | Select-Object -ExpandProperty FullName)"
 
-        # # Diagnostics
-        # if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-        #   $DebugPreference       = "Continue"
-        #   $InformationPreference = "Continue"
-        #   $VerbosePreference     = "Continue"
-        #   Set-PSDebug -Trace 2
-        # }
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
 
-        # # Patch GenerateResourcesAndImage.ps1 to improve build time
-        # (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
+        # Patch GenerateResourcesAndImage.ps1 to improve build time
+        (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-        # # Build
-        # Import-Module ./GenerateResourcesAndImage.ps1
-        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-        #                           -ResourceGroupName $(imageResourceGroup) `
-        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
-        #                           -ImageType $(imageName) `
-        #                           -AzureLocation $(location) `
-        #                           -AzureClientId $(servicePrincipal.clientId) `
-        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-        #                           -AzureTenantId $(servicePrincipal.tenantId) 
+        # Build
+        Import-Module ./GenerateResourcesAndImage.ps1
+        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+                                  -ResourceGroupName $(imageResourceGroup) `
+                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
+                                  -ImageType $(imageName) `
+                                  -AzureLocation $(location) `
+                                  -AzureClientId $(servicePrincipal.clientId) `
+                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+                                  -AzureTenantId $(servicePrincipal.tenantId) 
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
@@ -203,56 +203,56 @@ jobs:
           versionlabel = "$(download.version)"
         }
         $imageDefinitionVersionTags
-        # ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
-        #                   -GalleryResourceGroupName $(galleryResourceGroup) `
-        #                   -GalleryName $(imageGalleryName) `
-        #                   -ImageDefinitionName $(imageDefinitionName) `
-        #                   -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-        #                   -Publisher $(imagePublisher) `
-        #                   -Offer $(imageOffer) `
-        #                   -SKU $(imageSKU) `
-        #                   -OsType $(imageOSType) `
-        #                   -TargetRegion $(targetRegions)
+        ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
+                          -GalleryResourceGroupName $(galleryResourceGroup) `
+                          -GalleryName $(imageGalleryName) `
+                          -ImageDefinitionName $(imageDefinitionName) `
+                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+                          -Publisher $(imagePublisher) `
+                          -Offer $(imageOffer) `
+                          -SKU $(imageSKU) `
+                          -OsType $(imageOSType) `
+                          -TargetRegion $(targetRegions)
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
 
-  # - task: AzureCLI@2
-  #   displayName: 'List published images'
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
-  #                                 -GalleryName $(imageGalleryName) `
-  #                                 -ImageDefinitionName $(imageDefinitionName)
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(agentScriptDirectory)'
+  - task: AzureCLI@2
+    displayName: 'List published images'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
+                                  -GalleryName $(imageGalleryName) `
+                                  -ImageDefinitionName $(imageDefinitionName)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
 
-  # - ${{ if parameters.destroy }}:
-  #   - task: AzureCLI@2
-  #     name: teardown
-  #     displayName: 'Tear down temporary resources'
-  #     condition: succeededOrFailed()
-  #     inputs:
-  #       azureSubscription: '$(subscriptionConnection)'
-  #       scriptType: pscore
-  #       scriptLocation: inlineScript
-  #       inlineScript: |
-  #         # Remove resource groups
-  #         $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)'].id" -o tsv)
-  #         if ($resourceGroupIDs) {
-  #           Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
-  #           &{ # az writes information to stderr
-  #             $ErrorActionPreference = 'SilentlyContinue'
-  #             az resource delete --ids $resourceGroupIDs 2>&1
-  #           }
-  #         } else {
-  #           Write-Host "No resource groups to remove"
-  #         }
-  #       addSpnToEnvironment: true
-  #       useGlobalConfig: true
-  #       failOnStandardError: true
-  #       workingDirectory: '$(agentScriptDirectory)'
+  - ${{ if parameters.destroy }}:
+    - task: AzureCLI@2
+      name: teardown
+      displayName: 'Tear down temporary resources'
+      condition: succeededOrFailed()
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Remove resource groups
+          $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)'].id" -o tsv)
+          if ($resourceGroupIDs) {
+            Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceGroupIDs 2>&1
+            }
+          } else {
+            Write-Host "No resource groups to remove"
+          }
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(agentScriptDirectory)'

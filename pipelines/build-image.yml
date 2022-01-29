@@ -189,7 +189,7 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         Write-Host "We are in $(Get-Item . | Select-Object -ExpandProperty FullName)"
-        Get-ChildItem -Path . -Recurse | %{$_.FullName}  
+        Get-ChildItem -Path $(Build.SourcesDirectory) -Recurse | %{$_.FullName}  
 
         # Diagnostics
         if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {

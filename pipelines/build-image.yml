@@ -125,8 +125,11 @@ jobs:
           Expand-Archive -Path $archiveFullName -DestinationPath $releaseExtractDirectory
           Get-ChildItem $releaseExtractDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
           Get-ChildItem actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
+          Get-ChildItem $releaseDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
+          $imageScriptDirectory = Join-Path $releaseDirectory helpers
+          Get-ChildItem $imageScriptDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
           Write-Host "##vso[task.setvariable variable=releaseDirectory;isoutput=true]$releaseDirectory"
-          Write-Host "##vso[task.setvariable variable=imageScriptDirectory;isoutput=true]$imageScriptDirectory/helpers"
+          Write-Host "##vso[task.setvariable variable=imageScriptDirectory;isoutput=true]$imageScriptDirectory"
         } else {
           Write-Warning "Image Definition '$(imageDefinitionName)' with label '$(version.shortDate)' already exists"
           Write-Warning "Build & publish will be skipped"

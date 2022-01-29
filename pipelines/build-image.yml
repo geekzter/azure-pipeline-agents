@@ -101,8 +101,6 @@ jobs:
         $newImageVersion = !$imageVersion
         Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
         if ($newImageVersion) {
-          # $releaseExtractDirectory = Join-Path $(Build.ArtifactStagingDirectory) $(imageReleaseName)
-          # New-Item -ItemType Directory -Path $releaseExtractDirectory -Force -ErrorAction SilentlyContinue | Out-Null
           $archiveFullName = "$(Join-Path $(Build.ArtifactStagingDirectory) $version).zip"
           Write-Host "Downloading $(imageReleaseName) version $version source archive to ${archiveFullName}..."
           Invoke-Webrequest -Uri $release.zipball_url -OutFile $archiveFullName -UseBasicParsing 
@@ -162,17 +160,17 @@ jobs:
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-        # # Build
-        # Import-Module ./GenerateResourcesAndImage.ps1
-        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-        #                           -ResourceGroupName $(imageResourceGroup) `
-        #                           -ImageGenerationRepositoryRoot "$(download.releaseDirectory)" `
-        #                           -ImageType $(imageName) `
-        #                           -AzureLocation $(location) `
-        #                           -AzureClientId $(servicePrincipal.clientId) `
-        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-        #                           -AzureTenantId $(servicePrincipal.tenantId) 
+        # Build
+        Import-Module ./GenerateResourcesAndImage.ps1
+        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+                                  -ResourceGroupName $(imageResourceGroup) `
+                                  -ImageGenerationRepositoryRoot "$(download.releaseDirectory)" `
+                                  -ImageType $(imageName) `
+                                  -AzureLocation $(location) `
+                                  -AzureClientId $(servicePrincipal.clientId) `
+                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+                                  -AzureTenantId $(servicePrincipal.tenantId) 
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true

@@ -32,13 +32,17 @@ Write-Verbose $MyInvocation.line
 
 az group list --query "[?name=='$PackerResourceGroupName']" | ConvertFrom-Json | Set-Variable packerResourceGroup
 if (!$packerResourceGroup) {
-    Write-Warning "`nResource group '$packerResourceGroup' does not exist, exiting"
+    Write-Warning "`nResource group '$PackerResourceGroupName' does not exist, exiting"
     exit
 }
 
 # Find VHD in Packer Resource Group
 az storage account list -g $PackerResourceGroupName --query "[0]" -o json | ConvertFrom-Json | Set-Variable storageAccount
 $vhdPath = $(az storage blob directory list -c system -d "Microsoft.Compute/Images/images" --account-name $($storageAccount.name) --query "[?ends_with(@.name, 'vhd')].name" -o tsv)
+if (!$vhdPath) {
+    Write-Warning "`nCould not find VHD in storage account ${storageAccount}, exiting"
+    exit
+}
 $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/${vhdPath}"
 Write-Host "`nVHD: $vhdUrl"
 

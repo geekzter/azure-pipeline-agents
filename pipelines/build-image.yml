@@ -80,21 +80,6 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
-  - pwsh: |
-      $packerConfigFile = "$(imageRepository)/images/$(imageSubDirectory)/$(imageConfigFile)"
-      $packerShortDate = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
-      $packerShortHash = $(git rev-parse --short HEAD)
-      $packerLongHash = $(git rev-parse HEAD)
-
-      Write-Host "$packerConfigFile was created on $packerShortDate in commit $packerShortHash"
-
-      Write-Host "##vso[task.setvariable variable=shortDate;isoutput=true]${packerShortDate}"
-      Write-Host "##vso[task.setvariable variable=shortHash;isoutput=true]${packerShortHash}"
-      Write-Host "##vso[task.setvariable variable=longHash;isoutput=true]${packerLongHash}"
-    displayName: 'Determine image definition date'
-    name: version
-    workingDirectory: '$(imageRepository)/images'
-
   - task: AzureCLI@2
     name: download
     displayName: 'Download latest release for ${{ parameters.imageReleaseName }}'
@@ -106,32 +91,33 @@ jobs:
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object -Property tag_name -Match $(imageReleaseName) `
                                                                                                     | Select-Object -First 1 `
                                                                                                     | Set-Variable release
-        $latestVersion = $release.tag_name.Split("/")[1]
+        $version = $release.tag_name.Split("/")[1]
 
         # Determine whether image with same config already exists
         az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $(imageGalleryName) `
                                   --resource-group $(galleryResourceGroup) `
-                                  --query "[?tags.versionlabel=='$latestVersion']" | ConvertFrom-Json | Set-Variable imageVersion
+                                  --query "[?tags.versionlabel=='$version']" | ConvertFrom-Json | Set-Variable imageVersion
         $newImageVersion = !$imageVersion
         Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
         if ($newImageVersion) {
-          $releaseExtractDirectory = Join-Path $(System.ArtifactsDirectory) $(imageReleaseName)
+          $releaseExtractDirectory = Join-Path $(Build.ArtifactStagingDirectory) $(imageReleaseName)
           New-Item -ItemType Directory -Path $releaseExtractDirectory -Force -ErrorAction SilentlyContinue | Out-Null
-          $archiveFullName = "$(Join-Path $(System.ArtifactsDirectory) $latestVersion).zip"
-          Write-Host "Downloading $(imageReleaseName) version $latestVersion source archive to ${archiveFullName}..."
+          $archiveFullName = "$(Join-Path $(Build.ArtifactStagingDirectory) $version).zip"
+          Write-Host "Downloading $(imageReleaseName) version $version source archive to ${archiveFullName}..."
           Invoke-Webrequest -Uri $release.zipball_url -OutFile $archiveFullName -UseBasicParsing 
           Write-Host "Extracting ${archiveFullName} to ${releaseExtractDirectory}..."
           Expand-Archive -Path $archiveFullName -DestinationPath $releaseExtractDirectory
-          Get-ChildItem $releaseExtractDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
+
           Get-ChildItem -Path $releaseExtractDirectory -Filter actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
-          Get-ChildItem $releaseDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
+          $hash = $releaseDirectory.Split("-")[-1]
           $imageScriptDirectory = Join-Path $releaseDirectory helpers
-          Get-ChildItem $imageScriptDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
-          Write-Host "##vso[task.setvariable variable=releaseDirectory;isoutput=true]$releaseDirectory"
+          Write-Host "##vso[task.setvariable variable=hash;isoutput=true]$hash"
           Write-Host "##vso[task.setvariable variable=imageScriptDirectory;isoutput=true]$imageScriptDirectory"
+          Write-Host "##vso[task.setvariable variable=releaseDirectory;isoutput=true]$releaseDirectory"
+          Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
         } else {
-          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$(version.shortDate)' already exists"
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
           Write-Warning "Build & publish will be skipped"
         }
       addSpnToEnvironment: true
@@ -163,8 +149,7 @@ jobs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: inlineScript
       inline: |
-        echo $pwd
-        ls -al
+        Write-Host "We are in $(Get-Item . | Select-Object -ExpandProperty FullName)"
 
         # # Diagnostics
         # if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
@@ -194,42 +179,43 @@ jobs:
       # workingDirectory: '$(imageScriptDirectory)'
       workingDirectory: '$(download.imageScriptDirectory)'
 
-  # - task: AzureCLI@2
-  #   name: publish
-  #   displayName: 'Publish image'
-  #   condition: eq(coalesce(variables['download.newImageVersion'],'null'),'true')
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       # Diagnostics
-  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-  #         $DebugPreference       = "Continue"
-  #         $InformationPreference = "Continue"
-  #         $VerbosePreference     = "Continue"
-  #         Set-PSDebug -Trace 2
-  #       }
+  - task: AzureCLI@2
+    name: publish
+    displayName: 'Publish image'
+    condition: eq(coalesce(variables['download.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
 
-  #       # Publish
-  #       $imageDefinitionVersionTags = @{
-  #         build = "$(Build.BuildId)"
-  #         hash = "$(version.shortHash)"
-  #         versionlabel = "$(version.shortDate)"
-  #       }
-  #       ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
-  #                         -GalleryResourceGroupName $(galleryResourceGroup) `
-  #                         -GalleryName $(imageGalleryName) `
-  #                         -ImageDefinitionName $(imageDefinitionName) `
-  #                         -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-  #                         -Publisher $(imagePublisher) `
-  #                         -Offer $(imageOffer) `
-  #                         -SKU $(imageSKU) `
-  #                         -OsType $(imageOSType) `
-  #                         -TargetRegion $(targetRegions)
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(agentScriptDirectory)'
+        # Publish
+        $imageDefinitionVersionTags = @{
+          build = "$(Build.BuildId)"
+          hash = "$(download.hash)"
+          versionlabel = "$(download.version)"
+        }
+        $imageDefinitionVersionTags | Format-List
+        # ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
+        #                   -GalleryResourceGroupName $(galleryResourceGroup) `
+        #                   -GalleryName $(imageGalleryName) `
+        #                   -ImageDefinitionName $(imageDefinitionName) `
+        #                   -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+        #                   -Publisher $(imagePublisher) `
+        #                   -Offer $(imageOffer) `
+        #                   -SKU $(imageSKU) `
+        #                   -OsType $(imageOSType) `
+        #                   -TargetRegion $(targetRegions)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
 
   # - task: AzureCLI@2
   #   displayName: 'List published images'

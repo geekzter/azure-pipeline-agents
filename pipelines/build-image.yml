@@ -80,23 +80,6 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
-  - task: AzureCLI@2
-    name: servicePrincipal
-    displayName: 'Fetch credentials'
-    inputs:
-      azureSubscription: '$(subscriptionConnection)'
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
-
-        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
-        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
-        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
-      addSpnToEnvironment: true
-      useGlobalConfig: true
-      failOnStandardError: true
-
   - pwsh: |
       $packerConfigFile = "$(imageRepository)/images/$(imageSubDirectory)/$(imageConfigFile)"
       $packerShortDate = $(git log -1 --format=%cs $packerConfigFile) -replace "-",""
@@ -114,7 +97,7 @@ jobs:
 
   - task: AzureCLI@2
     name: imageVersionCheck
-    displayName: 'Image version check'
+    displayName: 'Download latest release for ${{ parameters.imageReleaseName }}'
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
@@ -140,7 +123,7 @@ jobs:
           Invoke-Webrequest -Uri $release.zipball_url -OutFile $archiveFullName -UseBasicParsing 
           Write-Host "Extracting ${archiveFullName} to ${releaseExtractDirectory}..."
           Expand-Archive -Path $archiveFullName -DestinationPath $releaseExtractDirectory
-          Get-ChildItem $releaseExtractDirectory | Format-Table
+          Get-ChildItem $releaseExtractDirectory | Format-Table -Property Name, Mode, Length, LastWriteTime
         } else {
           Write-Warning "Image Definition '$(imageDefinitionName)' with label '$(version.shortDate)' already exists"
           Write-Warning "Build & publish will be skipped"
@@ -148,6 +131,23 @@ jobs:
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
+
+  # - task: AzureCLI@2
+  #   name: servicePrincipal
+  #   displayName: 'Fetch credentials'
+  #   inputs:
+  #     azureSubscription: '$(subscriptionConnection)'
+  #     scriptType: pscore
+  #     scriptLocation: inlineScript
+  #     inlineScript: |
+  #       az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
+
+  #       Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
+  #       Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+  #       Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
+  #     addSpnToEnvironment: true
+  #     useGlobalConfig: true
+  #     failOnStandardError: true
 
   # - task: AzurePowerShell@5
   #   name: build

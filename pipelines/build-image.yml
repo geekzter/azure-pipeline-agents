@@ -80,6 +80,7 @@ jobs:
   - checkout: self
   # - checkout: virtual-environments
   - checkout: github://actions/virtual-environments@refs/tags/win19/20220123.1
+    endpoint: github.com # Service Connection name
 
   # - task: AzureCLI@2
   #   name: download

@@ -21,7 +21,7 @@ function List-ImageVersions (
     az sig image-version list --gallery-image-definition $ImageDefinitionName `
                               --gallery-name $GalleryName `
                               --resource-group $GalleryResourceGroupName `
-                              --query "[].{Name:'$ImageDefinitionName', Version:name, Build:tags.build, Label:tags.versionlabel, Hash:tags.hash, Date:publishingProfile.publishedDate, Regions:publishingProfile.targetRegions[*].name}" `
+                              --query "[].{Name:'$ImageDefinitionName', Version:name, Build:tags.build, Label:tags.versionlabel, Commit:tags.commit, Date:publishingProfile.publishedDate, Regions:publishingProfile.targetRegions[*].name}" `
                               -o json | ConvertFrom-Json `
                               | Sort-Object -Property Date -Descending
 }
@@ -58,13 +58,15 @@ if ($ImageDefinitionName) {
                                  --query "[].name" `
                                  -o tsv | Set-Variable imageDefinitionNames
                                  
-    [System.Collections.arraylist]$imageVersions = @()
+    [System.Collections.ArrayList]$imageVersions = @()
     foreach ($imageDefinitionName in $imageDefinitionNames) {
         List-ImageVersions -GalleryResourceGroupName $GalleryResourceGroupName `
                            -GalleryName $GalleryName `
                            -ImageDefinitionName $ImageDefinitionName | Set-Variable specificImageVersions
-        $imageVersions.Add($specificImageVersions) | Out-Null
+        foreach ($specificImageVersion in $specificImageVersions) {
+            $imageVersions.Add($specificImageVersion) | Out-Null
+        }
         Write-Host "." -NoNewline
     }
 }
-$imageVersions | Sort-Object -Property Date -Descending | Format-Table -Property Name, Version, Build, Label, Date, Hash, Regions
+$imageVersions | Sort-Object -Property Date -Descending | Format-Table -Property Name, Version, Build, Label, Date, Commit, Regions

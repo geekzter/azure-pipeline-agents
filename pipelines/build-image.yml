@@ -32,9 +32,9 @@ jobs:
 
   variables:
   - name: 'agentRepository'
-    value: '$(Build.SourcesDirectory)/'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: 'agentScriptDirectory'
-    value: '$(Build.SourcesDirectory)/scripts'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
   - name: AZURE_CORE_ONLY_SHOW_ERRORS
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
@@ -78,178 +78,180 @@ jobs:
 
   steps:
   - checkout: self
-  # - checkout: virtual-environments
-  - checkout: github://actions/virtual-environments@refs/tags/win19/20220123.1
-    endpoint: github.com # Service Connection name
+  - checkout: virtual-environments
 
-  # - task: AzureCLI@2
-  #   name: download
-  #   displayName: 'Download release for ${{ parameters.imageReleaseName }}'
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object -Property tag_name -Match $(imageReleaseName) `
-  #                                                                                                   | Select-Object -First 1 `
-  #                                                                                                   | Set-Variable release
-  #       $version = $release.tag_name.Split("/")[1]
+  - task: AzureCLI@2
+    name: getRelease
+    displayName: 'Download release for ${{ parameters.imageReleaseName }}'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object -Property tag_name -Match $(imageReleaseName) `
+                                                                                                    | Select-Object -First 1 `
+                                                                                                    | Set-Variable release
+        $version = $release.tag_name.Split("/")[1]
 
-  #       # Determine whether image with same config already exists
-  #       az sig image-version list --gallery-image-definition $(imageDefinitionName) `
-  #                                 --gallery-name $(imageGalleryName) `
-  #                                 --resource-group $(galleryResourceGroup) `
-  #                                 --query "[?tags.versionlabel=='$version']" | ConvertFrom-Json | Set-Variable imageVersion
-  #       $newImageVersion = !$imageVersion
-  #       Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
-  #       if ($newImageVersion) {
-  #         $archiveFullName = "$(Join-Path $(Build.ArtifactStagingDirectory) $version).zip"
-  #         Write-Host "Downloading $(imageReleaseName) version $version source archive to ${archiveFullName}..."
-  #         Invoke-Webrequest -Uri $release.zipball_url -OutFile $archiveFullName -UseBasicParsing 
-  #         Write-Host "Extracting ${archiveFullName} to $(Build.ArtifactStagingDirectory)..."
-  #         Expand-Archive -Path $archiveFullName -DestinationPath $(Build.ArtifactStagingDirectory)
+        # Determine whether image with same config already exists
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $(imageGalleryName) `
+                                  --resource-group $(galleryResourceGroup) `
+                                  --query "[?tags.versionlabel=='$version']" | ConvertFrom-Json | Set-Variable imageVersion
+        $newImageVersion = !$imageVersion
+        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
+        if ($newImageVersion) {
+          # $archiveFullName = "$(Join-Path $(Build.ArtifactStagingDirectory) $version).zip"
+          # Write-Host "Downloading $(imageReleaseName) version $version source archive to ${archiveFullName}..."
+          # Invoke-Webrequest -Uri $release.zipball_url -OutFile $archiveFullName -UseBasicParsing 
+          # Write-Host "Extracting ${archiveFullName} to $(Build.ArtifactStagingDirectory)..."
+          # Expand-Archive -Path $archiveFullName -DestinationPath $(Build.ArtifactStagingDirectory)
 
-  #         Get-ChildItem -Path $(Build.ArtifactStagingDirectory) -Filter actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
-  #         $hash = $releaseDirectory.Split("-")[-1]
-  #         $imageScriptDirectory = Join-Path $releaseDirectory helpers
-  #         Write-Host "##vso[task.setvariable variable=hash;isoutput=true]$hash"
-  #         Write-Host "##vso[task.setvariable variable=imageScriptDirectory;isoutput=true]$imageScriptDirectory"
-  #         Write-Host "##vso[task.setvariable variable=releaseDirectory;isoutput=true]$releaseDirectory"
-  #         Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
-  #       } else {
-  #         Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
-  #         Write-Warning "Build & publish will be skipped"
-  #       }
-  #     addSpnToEnvironment: true
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
+          # Get-ChildItem -Path $(Build.ArtifactStagingDirectory) -Filter actions-virtual-environments-* | Select-Object -First 1 -ExpandProperty FullName | Set-Variable releaseDirectory
+          # $hash = $releaseDirectory.Split("-")[-1]
+          # $imageScriptDirectory = Join-Path $releaseDirectory helpers
+          Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
+          Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
+          # Write-Host "##vso[task.setvariable variable=imageScriptDirectory;isoutput=true]$imageScriptDirectory"
+          # Write-Host "##vso[task.setvariable variable=releaseDirectory;isoutput=true]$releaseDirectory"
+          Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
+        } else {
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
+          Write-Warning "Build & publish will be skipped"
+        }
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
 
-  # - task: AzureCLI@2
-  #   name: servicePrincipal
-  #   displayName: 'Fetch credentials'
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
+  - task: AzureCLI@2
+    name: servicePrincipal
+    displayName: 'Fetch credentials'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
 
-  #       Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
-  #       Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
-  #       Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
-  #     addSpnToEnvironment: true
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
+        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
+        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
 
-  # - task: AzurePowerShell@5
-  #   name: build
-  #   displayName: 'Build image'
-  #   condition: eq(coalesce(variables['download.newImageVersion'],'null'),'true')
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: inlineScript
-  #     inline: |
-  #       # Diagnostics
-  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-  #         $DebugPreference       = "Continue"
-  #         $InformationPreference = "Continue"
-  #         $VerbosePreference     = "Continue"
-  #         Set-PSDebug -Trace 2
-  #       }
+  - task: AzurePowerShell@5
+    name: build
+    displayName: 'Build image'
+    condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: inlineScript
+      inline: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
 
-  #       # Patch GenerateResourcesAndImage.ps1 to improve build time
-  #       (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
+        # Checkout source pertaining to release
+        git checkout $(getRelease.commit)
 
-  #       # Build
-  #       Import-Module ./GenerateResourcesAndImage.ps1
-  #       Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-  #       GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-  #                                 -ResourceGroupName $(imageResourceGroup) `
-  #                                 -ImageGenerationRepositoryRoot "$(download.releaseDirectory)" `
-  #                                 -ImageType $(imageName) `
-  #                                 -AzureLocation $(location) `
-  #                                 -AzureClientId $(servicePrincipal.clientId) `
-  #                                 -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-  #                                 -AzureTenantId $(servicePrincipal.tenantId) 
-  #     azurePowerShellVersion: 'latestVersion'
-  #     pwsh: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(download.imageScriptDirectory)'
+        # Patch GenerateResourcesAndImage.ps1 to improve build time
+        (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-  # - task: AzureCLI@2
-  #   name: publish
-  #   displayName: 'Publish image'
-  #   condition: eq(coalesce(variables['download.newImageVersion'],'null'),'true')
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       # Diagnostics
-  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-  #         $DebugPreference       = "Continue"
-  #         $InformationPreference = "Continue"
-  #         $VerbosePreference     = "Continue"
-  #         Set-PSDebug -Trace 2
-  #       }
+        # # Build
+        # Import-Module ./GenerateResourcesAndImage.ps1
+        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+        #                           -ResourceGroupName $(imageResourceGroup) `
+        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
+        #                           -ImageType $(imageName) `
+        #                           -AzureLocation $(location) `
+        #                           -AzureClientId $(servicePrincipal.clientId) `
+        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+        #                           -AzureTenantId $(servicePrincipal.tenantId) 
+      azurePowerShellVersion: 'latestVersion'
+      pwsh: true
+      failOnStandardError: true
+      workingDirectory: '$(imageScriptDirectory)'
 
-  #       # Publish
-  #       $imageDefinitionVersionTags = @{
-  #         build = "$(Build.BuildId)"
-  #         hash = "$(download.hash)"
-  #         versionlabel = "$(download.version)"
-  #       }
-  #       $imageDefinitionVersionTags
-  #       ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
-  #                         -GalleryResourceGroupName $(galleryResourceGroup) `
-  #                         -GalleryName $(imageGalleryName) `
-  #                         -ImageDefinitionName $(imageDefinitionName) `
-  #                         -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-  #                         -Publisher $(imagePublisher) `
-  #                         -Offer $(imageOffer) `
-  #                         -SKU $(imageSKU) `
-  #                         -OsType $(imageOSType) `
-  #                         -TargetRegion $(targetRegions)
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(agentScriptDirectory)'
+  - task: AzureCLI@2
+    name: publish
+    displayName: 'Publish image'
+    condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
 
-  # - task: AzureCLI@2
-  #   displayName: 'List published images'
-  #   inputs:
-  #     azureSubscription: '$(subscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
-  #                                 -GalleryName $(imageGalleryName) `
-  #                                 -ImageDefinitionName $(imageDefinitionName)
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(agentScriptDirectory)'
+        # Publish
+        $imageDefinitionVersionTags = @{
+          build = "$(Build.BuildId)"
+          hash = "$(download.hash)"
+          versionlabel = "$(download.version)"
+        }
+        $imageDefinitionVersionTags
+        ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
+                          -GalleryResourceGroupName $(galleryResourceGroup) `
+                          -GalleryName $(imageGalleryName) `
+                          -ImageDefinitionName $(imageDefinitionName) `
+                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+                          -Publisher $(imagePublisher) `
+                          -Offer $(imageOffer) `
+                          -SKU $(imageSKU) `
+                          -OsType $(imageOSType) `
+                          -TargetRegion $(targetRegions)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
 
-  # - ${{ if parameters.destroy }}:
-  #   - task: AzureCLI@2
-  #     name: teardown
-  #     displayName: 'Tear down temporary resources'
-  #     condition: succeededOrFailed()
-  #     inputs:
-  #       azureSubscription: '$(subscriptionConnection)'
-  #       scriptType: pscore
-  #       scriptLocation: inlineScript
-  #       inlineScript: |
-  #         # Remove resource groups
-  #         $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)'].id" -o tsv)
-  #         if ($resourceGroupIDs) {
-  #           Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
-  #           &{ # az writes information to stderr
-  #             $ErrorActionPreference = 'SilentlyContinue'
-  #             az resource delete --ids $resourceGroupIDs 2>&1
-  #           }
-  #         } else {
-  #           Write-Host "No resource groups to remove"
-  #         }
-  #       addSpnToEnvironment: true
-  #       useGlobalConfig: true
-  #       failOnStandardError: true
-  #       workingDirectory: '$(agentScriptDirectory)'
+  - task: AzureCLI@2
+    displayName: 'List published images'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
+                                  -GalleryName $(imageGalleryName) `
+                                  -ImageDefinitionName $(imageDefinitionName)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
+
+  - ${{ if parameters.destroy }}:
+    - task: AzureCLI@2
+      name: teardown
+      displayName: 'Tear down temporary resources'
+      condition: succeededOrFailed()
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Remove resource groups
+          $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)'].id" -o tsv)
+          if ($resourceGroupIDs) {
+            Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceGroupIDs 2>&1
+            }
+          } else {
+            Write-Host "No resource groups to remove"
+          }
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(agentScriptDirectory)'

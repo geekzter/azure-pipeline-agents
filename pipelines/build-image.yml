@@ -157,7 +157,7 @@ jobs:
         }
 
         # Checkout source pertaining to release
-        git checkout $(getRelease.commit)
+        #git checkout $(getRelease.commit)
 
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
@@ -198,8 +198,8 @@ jobs:
         # Publish
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
-          hash = "$(download.hash)"
-          versionlabel = "$(download.version)"
+          commit = "$(getRelease.commit)"
+          versionlabel = "$(getRelease.version)"
         }
         $imageDefinitionVersionTags
         ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `

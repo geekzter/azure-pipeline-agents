@@ -82,7 +82,7 @@ jobs:
 
   - task: AzureCLI@2
     name: getRelease
-    displayName: 'Download release for ${{ parameters.imageReleaseName }}'
+    displayName: 'Get release for ${{ parameters.imageReleaseName }}'
     inputs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
@@ -91,6 +91,7 @@ jobs:
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object -Property tag_name -Match $(imageReleaseName) `
                                                                                                     | Select-Object -First 1 `
                                                                                                     | Set-Variable release
+        $release | Format-List
         $version = $release.tag_name.Split("/")[1]
 
         # Determine whether image with same config already exists

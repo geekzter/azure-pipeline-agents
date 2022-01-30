@@ -157,7 +157,7 @@ jobs:
         }
 
         # Checkout source pertaining to release
-        git checkout $(getRelease.commit)
+        git checkout $(getRelease.commit) 2>&1
 
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1

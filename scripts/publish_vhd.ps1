@@ -134,7 +134,7 @@ if ($imageVersion) {
     Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
     azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 
 
-    Write-Host "`nCreating Image version ${newVersionString} for Image Definition '$ImageDefinitionName'..."
+    Write-Host "`nCreating Image version ${newVersionString} of Image Definition '$ImageDefinitionName'..."
     az sig image-version create --gallery-image-definition $ImageDefinitionName `
                                 --gallery-name $GalleryName `
                                 --gallery-image-version $newVersionString `

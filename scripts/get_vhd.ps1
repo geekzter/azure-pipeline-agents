@@ -25,6 +25,7 @@ $packerResourceGroupName = $PackerResourceGroupId.Split("/")[-1]
 $packerSubscriptionId = $PackerResourceGroupId.Split("/")[2]
 $storageContainerName = "system"
 
+Write-Debug "az group list --subscription $packerSubscriptionId --query `"[?name=='$packerResourceGroupName']`""
 az group list --subscription $packerSubscriptionId --query "[?name=='$packerResourceGroupName']" | ConvertFrom-Json | Set-Variable packerResourceGroup
 if (!$packerResourceGroup) {
     Write-Warning "`nResource group '$packerResourceGroupName' does not exist in subscription '$packerSubscriptionId', exiting"

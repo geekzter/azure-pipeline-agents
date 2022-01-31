@@ -61,7 +61,7 @@ variables:
 jobs:
   - template: build-image.yml
     parameters:
-      destroy: ${{ parameters.destroy }}
+      destroy: false
       image: Ubuntu1804
       imageReleaseName: ubuntu18
       imageResourceGroup: 'packer-$(Build.BuildId)-u18'

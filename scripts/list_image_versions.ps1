@@ -21,7 +21,7 @@ function List-ImageVersions (
     az sig image-version list --gallery-image-definition $ImageDefinitionName `
                               --gallery-name $GalleryName `
                               --resource-group $GalleryResourceGroupName `
-                              --query "[].{Name:'$ImageDefinitionName', Version:name, Build:tags.build, Label:tags.versionlabel, Commit:tags.commit, Date:publishingProfile.publishedDate, Regions:publishingProfile.targetRegions[*].name}" `
+                              --query "[].{Name:'$ImageDefinitionName', Version:name, Build:tags.build, Label:tags.versionlabel, Commit:tags.commit, Date:publishingProfile.publishedDate, Regions:publishingProfile.targetRegions[*].name, Status:provisioningState}" `
                               -o json | ConvertFrom-Json `
                               | Sort-Object -Property Date -Descending
 }
@@ -69,4 +69,4 @@ if ($ImageDefinitionName) {
         Write-Host "." -NoNewline
     }
 }
-$imageVersions | Sort-Object -Property Date -Descending | Format-Table -Property Name, Version, Build, Label, Date, Commit, Regions
+$imageVersions | Sort-Object -Property Date -Descending | Format-Table -Property Name, Version, Build, Label, Date, Status, Commit, Regions

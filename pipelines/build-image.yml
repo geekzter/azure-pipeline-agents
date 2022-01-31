@@ -153,21 +153,46 @@ jobs:
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-        # Build
-        Import-Module ./GenerateResourcesAndImage.ps1
-        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-                                  -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
-                                  -ImageType $(imageName) `
-                                  -AzureLocation $(location) `
-                                  -AzureClientId $(servicePrincipal.clientId) `
-                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-                                  -AzureTenantId $(servicePrincipal.tenantId) 
+        # # Build
+        # Import-Module ./GenerateResourcesAndImage.ps1
+        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+        #                           -ResourceGroupName $(imageResourceGroup) `
+        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
+        #                           -ImageType $(imageName) `
+        #                           -AzureLocation $(location) `
+        #                           -AzureClientId $(servicePrincipal.clientId) `
+        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+        #                           -AzureTenantId $(servicePrincipal.tenantId) 
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
       workingDirectory: '$(imageScriptDirectory)'
+
+  - task: AzureCLI@2
+    name: vhd
+    displayName: 'Get VHD url'
+    condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
+
+        $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
+        ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+                      -VHDUrlEnvironmentVariableName VHD_URL
+        Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
 
   - task: AzureCLI@2
     name: publish
@@ -193,8 +218,9 @@ jobs:
           versionlabel = "$(getRelease.version)"
         }
         $imageDefinitionVersionTags
-        ./publish_vhd.ps1 -PackerResourceGroupName $(imageResourceGroup) `
-                          -GalleryResourceGroupName $(galleryResourceGroup) `
+        $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
+        ./publish_vhd.ps1 -VHDUrl "$(vhd.sasUrl)" `
+                          -GalleryResourceGroupId $galleryResourceGroupId `
                           -GalleryName $(imageGalleryName) `
                           -ImageDefinitionName $(imageDefinitionName) `
                           -ImageDefinitionVersionTags $imageDefinitionVersionTags `

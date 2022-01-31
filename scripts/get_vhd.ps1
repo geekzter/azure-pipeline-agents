@@ -1,0 +1,50 @@
+#!/usr/bin/env pwsh
+
+<# 
+.SYNOPSIS 
+    Finds VHD in given Resource Group
+ 
+.DESCRIPTION 
+    The image build script (https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1)
+    creates a storage account, storage container and VHD. 
+    This scipt finds the VHD based on the Resource Group name that is created by aforementioned script.
+
+.EXAMPLE
+    ./publish_vhd.ps1 -PackerResourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Packer"
+#> 
+#Requires -Version 7
+
+### Arguments
+param ( 
+    [parameter(Mandatory=$true)][string]$PackerResourceGroupId,
+    [parameter(Mandatory=$false)][string]$VHDUrlEnvironmentVariableName="IMAGE_VHD_URL"
+) 
+Write-Verbose $MyInvocation.line 
+
+$packerResourceGroupName = $PackerResourceGroupId.Split("/")[-1]
+$packerSubscriptionId = $PackerResourceGroupId.Split("/")[2]
+$storageContainerName = "system"
+
+az group list --subscription $packerSubscriptionId --query "[?name=='$packerResourceGroupName']" | ConvertFrom-Json | Set-Variable packerResourceGroup
+if (!$packerResourceGroup) {
+    Write-Warning "`nResource group '$packerResourceGroupName' does not exist in subscription '$packerSubscriptionId', exiting"
+    exit
+}
+
+# Find VHD in Packer Resource Group
+az storage account list -g $packerResourceGroupName --subscription $packerSubscriptionId --query "[0]" -o json | ConvertFrom-Json | Set-Variable storageAccount
+$vhdPath = $(az storage blob directory list -c $storageContainerName -d "Microsoft.Compute/Images/images" --account-name $($storageAccount.name) --subscription $packerSubscriptionId --query "[?ends_with(@.name, 'vhd')].name" -o tsv)
+if (!$vhdPath) {
+    Write-Warning "`nCould not find VHD in storage account ${storageAccount}, exiting"
+    exit
+}
+
+Write-Debug "az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString(`"yyyy-MM-dd`") --subscription $packerSubscriptionId -o tsv"
+$sasToken=$(az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
+$vhdUrl = "$($storageAccount.primaryEndpoints.blob)${storageContainerName}/${vhdPath}"
+$vhdSASUrl = "${vhdUrl}?${sasToken}"
+Write-Host "`nVHD: $vhdSASUrl"
+if ($VHDUrlEnvironmentVariableName) {
+    Set-Item env:${VHDUrlEnvironmentVariableName} $vhdSASUrl
+}
+

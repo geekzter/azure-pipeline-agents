@@ -98,7 +98,7 @@ jobs:
         az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $(imageGalleryName) `
                                   --resource-group $(galleryResourceGroup) `
-                                  --query "[?tags.versionlabel=='$version']" | ConvertFrom-Json | Set-Variable imageVersion
+                                  --query "[?tags.versionlabel=='$version' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
         $newImageVersion = !$imageVersion
         Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
         if ($newImageVersion) {

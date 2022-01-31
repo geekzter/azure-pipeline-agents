@@ -87,7 +87,7 @@ az sig image-version list --gallery-image-definition $ImageDefinitionName `
                           --gallery-name $GalleryName `
                           --resource-group $galleryResourceGroupName `
                           --subscription $gallerySubscriptionId `
-                          --query "[?tags.versionlabel=='$imageDefinitionVersionLabel']" | ConvertFrom-Json | Set-Variable imageVersion
+                          --query "[?tags.versionlabel=='$imageDefinitionVersionLabel' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
 
 if ($imageVersion) {
     Write-Warning "`nImage Definition '$ImageDefinitionName' with tag versionlabel='$imageDefinitionVersionLabel' already exists"

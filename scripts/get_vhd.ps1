@@ -36,7 +36,7 @@ if (!$packerResourceGroup) {
 Write-Debug "az storage account list -g $packerResourceGroupName --subscription $packerSubscriptionId --query `"[0]`" -o json"
 az storage account list -g $packerResourceGroupName --subscription $packerSubscriptionId --query "[0]" -o json | ConvertFrom-Json | Set-Variable storageAccount
 if (!$storageAccount) {
-    Write-Warning "`nResource group '$packerResourceGroupName' in '$packerSubscriptionId' does not contain a storage account, do you have data plane access? Exiting"
+    Write-Warning "`nResource group '$packerResourceGroupName' in subscription '$packerSubscriptionId' does not contain a storage account, do you have data plane access? Exiting"
     exit
 }
 $vhdPath = $(az storage blob directory list -c $storageContainerName -d "Microsoft.Compute/Images/images" --account-name $($storageAccount.name) --subscription $packerSubscriptionId --query "[?ends_with(@.name, 'vhd')].name" -o tsv)

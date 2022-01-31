@@ -39,8 +39,12 @@ $gallerySubscriptionId = $GalleryResourceGroupId.Split("/")[2]
 $tags=@("application=Pipeline Agents","provisioner=azure-cli")
 
 # Input validation
-if (!$galleryResourceGroupName -or !$GalleryName) {
+if (!$GalleryName) {
     Write-Warning "`nShared Image Gallery not specified, exiting"
+    exit
+}
+if (!$SourceVHDUrl) {
+    Write-Warning "`nSourceVHDUrl not specified, exiting"
     exit
 }
 az group list --subscription $gallerySubscriptionId --query "[?name=='$galleryResourceGroupName']" -o json | ConvertFrom-Json | Set-Variable galleryResourceGroup

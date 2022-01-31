@@ -17,7 +17,9 @@
 
 ### Arguments
 param ( 
+    # [parameter(Mandatory=$true)][string]$PackerResourceGroupId,
     [parameter(Mandatory=$true)][string]$PackerResourceGroupName,
+    # [parameter(Mandatory=$false)][string]$GalleryResourceGroupId,
     [parameter(Mandatory=$false)][string]$GalleryResourceGroupName,
     [parameter(Mandatory=$false)][string]$GalleryName,
     [parameter(Mandatory=$false)][string]$ImageDefinitionName,

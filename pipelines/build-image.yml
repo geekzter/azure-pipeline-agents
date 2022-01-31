@@ -84,7 +84,7 @@ jobs:
     name: getRelease
     displayName: 'Get release for ${{ parameters.imageReleaseName }}'
     inputs:
-      azureSubscription: '$(subscriptionConnection)'
+      azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -115,9 +115,9 @@ jobs:
 
   - task: AzureCLI@2
     name: servicePrincipal
-    displayName: 'Fetch credentials'
+    displayName: 'Fetch build credentials'
     inputs:
-      azureSubscription: '$(subscriptionConnection)'
+      azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -135,7 +135,7 @@ jobs:
     displayName: 'Build image'
     condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
     inputs:
-      azureSubscription: '$(subscriptionConnection)'
+      azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
       inline: |
         # Diagnostics
@@ -174,7 +174,7 @@ jobs:
     displayName: 'Publish image'
     condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
     inputs:
-      azureSubscription: '$(subscriptionConnection)'
+      azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -210,7 +210,7 @@ jobs:
   - task: AzureCLI@2
     displayName: 'List published images'
     inputs:
-      azureSubscription: '$(subscriptionConnection)'
+      azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -227,7 +227,7 @@ jobs:
       displayName: 'Tear down temporary resources'
       condition: succeededOrFailed()
       inputs:
-        azureSubscription: '$(subscriptionConnection)'
+        azureSubscription: '$(packerSubscriptionConnection)'
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |

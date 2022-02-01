@@ -88,7 +88,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object -Property tag_name -Match $(imageReleaseName) `
+        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
                                                                                                     | Select-Object -First 1 `
                                                                                                     | Set-Variable release
         $release | Format-List

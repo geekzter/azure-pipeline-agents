@@ -80,6 +80,13 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
+  - pwsh: |
+      $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
+      $vmMetadata
+      $vmMetadata | Format-List
+      Write-Host "hostname: $([System.Net.Dns]::GetHostName())"
+    displayName: 'Retrieve agent information'
+
   - task: AzureCLI@2
     name: getRelease
     displayName: 'Get release for ${{ parameters.imageReleaseName }}'

@@ -11,6 +11,6 @@
     $_ | Add-Member -NotePropertyName Image   -NotePropertyValue $_.tag_name.Split("/")[0]
     $_ | Add-Member -NotePropertyName Preview -NotePropertyValue (($_.draft -ieq "true") -or ($_.prerelease -ieq "true"))
     $_ | Add-Member -NotePropertyName Version -NotePropertyValue $_.tag_name.Split("/")[1]
-    $_ | Add-Member -NotePropertyName Commit -NotePropertyValue $_.target_commitish
+    $_ | Add-Member -NotePropertyName Commit  -NotePropertyValue $_.target_commitish
     $_
 } | Select-Object -Property Name, id, Image, Version, Preview, Commit | Format-Table

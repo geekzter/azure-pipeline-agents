@@ -86,8 +86,77 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
       sku                      = var.linux_os_sku
       version                  = var.linux_os_version
     }
-  }    
+  }  
 
+  extension {
+    name                       = "CloudConfigStatusScript"
+    publisher                  = "Microsoft.Azure.Extensions"
+    type                       = "CustomScript"
+    type_handler_version       = "2.0"
+    auto_upgrade_minor_version = true
+    settings                   = jsonencode({
+      "commandToExecute"       = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
+    })
+  }
+
+  dynamic "extension" {
+    for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
+    content {
+      name                     = "OmsAgentForLinux"
+      publisher                = "Microsoft.EnterpriseCloud.Monitoring"
+      type                     = "OmsAgentForLinux"
+      type_handler_version     = "1.7"
+      auto_upgrade_minor_version= true
+
+      settings                 = jsonencode({
+        "workspaceId"          = data.azurerm_log_analytics_workspace.monitor.workspace_id
+      })
+      protected_settings       = jsonencode({
+        "workspaceKey"         = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
+
+      provision_after_extensions= [
+        # Wait for cloud-init to complete before provisioning extensions
+        "CloudConfigStatusScript"
+      ]
+    }
+  }  
+
+  dynamic "extension" {
+    for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
+    content {
+      name                     = "DAExtension"
+      publisher                = "Microsoft.Azure.Monitoring.DependencyAgent"
+      type                     = "DependencyAgentLinux"
+      type_handler_version     = "9.5"
+      auto_upgrade_minor_version= true
+
+      settings                 = jsonencode({
+        "workspaceId"          = data.azurerm_log_analytics_workspace.monitor.workspace_id
+      })
+      protected_settings       = jsonencode({
+        "workspaceKey"         = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
+
+      provision_after_extensions = [
+        "CloudConfigStatusScript",
+      ]
+    }
+  } 
+  dynamic "extension" {
+    for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
+    content {
+      name                     = "AzureNetworkWatcherExtension"
+      publisher                = "Microsoft.Azure.NetworkWatcher"
+      type                     = "NetworkWatcherAgentLinux"
+      type_handler_version     = "1.4"
+      auto_upgrade_minor_version= true
+
+      provision_after_extensions= [
+        "CloudConfigStatusScript",
+      ]
+    }
+  } 
   lifecycle {
     ignore_changes             = [
       instances,
@@ -96,106 +165,32 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   tags                         = var.tags
 }
 
-resource azurerm_virtual_machine_scale_set_extension cloud_config_status {
-  name                         = "CloudConfigStatusScript"
-  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-  publisher                    = "Microsoft.Azure.Extensions"
-  type                         = "CustomScript"
-  type_handler_version         = "2.0"
-  auto_upgrade_minor_version   = true
-  settings                     = jsonencode({
-    "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
-  })
-}
+# # TODO: Replace with Azure Monitoring Agent, does not work with python 3
+# # https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/diagnostics-linux?tabs=azcli#python-requirement
+# resource azurerm_virtual_machine_scale_set_extension diagnostics {
+#   name                         = "LinuxDiagnostic"
+#   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+#   publisher                    = "Microsoft.Azure.Diagnostics"
+#   type                         = "LinuxDiagnostic"
+#   type_handler_version         = "3.0"
+#   auto_upgrade_minor_version   = true
 
-resource azurerm_virtual_machine_scale_set_extension linux_log_analytics {
-  name                         = "OmsAgentForLinux"
-  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-  publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
-  type                         = "OmsAgentForLinux"
-  type_handler_version         = "1.7"
-  auto_upgrade_minor_version   = true
+#   settings                     = templatefile("${path.module}/linuxdiagnostics.json", { 
+#     storage_account_name       = data.azurerm_storage_account.diagnostics.name, 
+#     virtual_machine_id         = azurerm_linux_virtual_machine_scale_set.linux_agents.id
+#   })
+#   protected_settings           = jsonencode({
+#     "storageAccountName"       = data.azurerm_storage_account.diagnostics.name
+#     "storageAccountSasToken"   = trimprefix(var.diagnostics_storage_sas,"?")
+#   })
 
-  settings                     = jsonencode({
-    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
-  })
-  protected_settings           = jsonencode({
-    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-  })
+#   provision_after_extensions   = [
+#     "CloudConfigStatusScript",
+#     "OmsAgentForLinux"
+#   ]
 
-  provision_after_extensions   = [
-    # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name,
-  ]
-
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-}
-resource azurerm_virtual_machine_scale_set_extension diagnostics {
-  name                         = "LinuxDiagnostic"
-  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-  publisher                    = "Microsoft.Azure.Diagnostics"
-  type                         = "LinuxDiagnostic"
-  type_handler_version         = "3.0"
-  auto_upgrade_minor_version   = true
-
-  settings                     = templatefile("${path.module}/linuxdiagnostics.json", { 
-    storage_account_name       = data.azurerm_storage_account.diagnostics.name, 
-    virtual_machine_id         = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-  })
-  protected_settings           = jsonencode({
-    "storageAccountName"       = data.azurerm_storage_account.diagnostics.name
-    "storageAccountSasToken"   = trimprefix(var.diagnostics_storage_sas,"?")
-  })
-
-  depends_on                   = [
-    azurerm_virtual_machine_scale_set_extension.linux_log_analytics
-  ]
-
-  provision_after_extensions   = [
-    # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name,
-    azurerm_virtual_machine_scale_set_extension.linux_log_analytics.0.name
-  ]
-
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-}
-resource azurerm_virtual_machine_scale_set_extension linux_dependency_monitor {
-  name                         = "DAExtension"
-  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-  publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
-  type                         = "DependencyAgentLinux"
-  type_handler_version         = "9.5"
-  auto_upgrade_minor_version   = true
-
-  settings                     = jsonencode({
-    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
-  })
-  protected_settings           = jsonencode({
-    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-  })
-
-  provision_after_extensions   = [
-    # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
-  ]
-
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-}
-resource azurerm_virtual_machine_scale_set_extension linux_watcher {
-  name                         = "AzureNetworkWatcherExtension"
-  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-  publisher                    = "Microsoft.Azure.NetworkWatcher"
-  type                         = "NetworkWatcherAgentLinux"
-  type_handler_version         = "1.4"
-  auto_upgrade_minor_version   = true
-
-  provision_after_extensions   = [
-    # Wait for cloud-init to complete before provisioning extensions
-    azurerm_virtual_machine_scale_set_extension.cloud_config_status.name
-  ]
-
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-}
+#   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+# }
 
 resource azurerm_monitor_diagnostic_setting linux_agents {
   name                         = "${azurerm_linux_virtual_machine_scale_set.linux_agents.name}-logs"

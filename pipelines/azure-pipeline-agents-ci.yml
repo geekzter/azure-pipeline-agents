@@ -87,6 +87,8 @@ variables:
   value: 'true'
 - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
   value: 'yes_without_prompt'
+- name: 'substituteAlternateVariables'
+  value: 'false'
 - name: 'TF_IN_AUTOMATION'
   value: 'true'
 - name: 'TF_INPUT'
@@ -139,13 +141,15 @@ jobs:
   ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual')) }}:
     strategy:
       matrix:
-        ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}_${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}:
+        primary:
           publishTerraformArtifact: true
+          substituteAlternateVariables: false
           TF_VAR_resource_suffix: '$(Build.BuildId)a'
           TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
           unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
-        ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}_${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
+        alternate:
           publishTerraformArtifact: false
+          substituteAlternateVariables: true
           TF_VAR_resource_suffix: '$(Build.BuildId)b'
           TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
           unpinTerraformProviders: ${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
@@ -257,26 +261,39 @@ jobs:
           failOnStandardError: true
           workingDirectory: '$(terraformDirectory)'
 
-    # - task: AzureCLI@2
-    #   name: avoidVMImages
-    #   displayName: 'Avoid VM image versions with known issues'
-    #   continueOnError: true # Ignore if we can succeed without it this
-    #   inputs:
-    #     azureSubscription: '$(subscriptionConnection)'
-    #     scriptType: pscore
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az vm image list -l $(TF_VAR_location) -s "vs-2022-comm-latest-ws2022" -f "visualstudio2022" -p "microsoftvisualstudio" --query "max_by([?version!='2021.12.16' && version!='2022.01.14'],&version).version" --all -o tsv | Set-Item env:TF_VAR_windows_os_version
-    #       Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`""
-    #       Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`"" | Out-File ci.auto.tfvars -Append -Force
-    #     useGlobalConfig: true
-    #     failOnStandardError: true
-    #     workingDirectory: '$(terraformDirectory)'
+    - task: AzureCLI@2
+      name: avoidVMImages
+      displayName: 'Avoid VM image versions with known issues'
+      condition: startsWith(coalesce(variables['TF_VAR_windows_os_version'],'vs-2022-comm-latest-win11-n'), 'vs-2022-comm')
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          az vm image list -l $(TF_VAR_location) -s "vs-2022-comm-latest-ws2022" -f "visualstudio2022" -p "microsoftvisualstudio" --query "max_by([?version!='2021.12.16' && version!='2022.01.14'],&version).version" --all -o tsv | Set-Item env:TF_VAR_windows_os_version
+          Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`""
+          Write-Output "windows_os_version = `"${env:TF_VAR_windows_os_version}`"" | Out-File ci.auto.tfvars -Append -Force
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(terraformDirectory)'
 
     - pwsh: |
         if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
           $env:TF_VAR_RESOURCE_SUFFIX = $null
           $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
+        }
+
+        # Parse alternate strategy variables
+        if ($$(substituteAlternateVariables)) {
+          foreach ($alternateVar in $(Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_TF_VAR_*)) {
+            $primaryTerraformVariableName = $alternateVar.Name.Substring(17).ToLowerInvariant()
+            $primaryVariableName = "TF_VAR_${primaryTerraformVariableName}"
+            $variableValue = $alternateVar.Value
+
+            # Replace primary value with alternate
+            Get-ChildItem -path env: -Recurse -Include $primaryVariableName | Remove-Item
+            Set-Item env:${primaryVariableName} -Value $variableValue
+          } 
         }
 
         # List environment variables
@@ -437,7 +454,7 @@ jobs:
 
     variables:
       terraformDirectory: $(Pipeline.Workspace)/$(terraformArtifactName)
-      terraformVersion: 'latest' # Use the latest version so we don't need a depencency
+      terraformVersion: 'latest' # Use the latest version so we don't need a dependency
 
     pool:
       name: '$(pool)'
@@ -455,7 +472,7 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resoyrce group fails
+          $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resource group fails
           # Build JMESPath expression
           $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '${env:TF_WORKSPACE}' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
           Write-Host "Removing resources identified by `"$tagQuery`"..."

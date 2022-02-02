@@ -151,6 +151,7 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
+        $ProgressPreference = 'SilentlyContinue'
 
         # Checkout source pertaining to release
         git checkout $(getRelease.commit) --quiet
@@ -191,6 +192,7 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
+        $ProgressPreference = 'SilentlyContinue'
 
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
@@ -216,6 +218,7 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
+        $ProgressPreference = 'SilentlyContinue'
 
         # Publish
         $imageDefinitionVersionTags = @{
@@ -259,7 +262,7 @@ jobs:
     - task: AzureCLI@2
       name: teardown
       displayName: 'Tear down temporary resources'
-      condition: succeededOrFailed()
+      condition: always() # succeededOrFailed()
       inputs:
         azureSubscription: '$(packerSubscriptionConnection)'
         scriptType: pscore

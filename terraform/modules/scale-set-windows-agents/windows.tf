@@ -70,60 +70,60 @@ resource azurerm_virtual_machine_scale_set_extension windows_log_analytics {
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
 }
-resource azurerm_virtual_machine_scale_set_extension windows_dependency_monitor {
-  name                         = "DAExtension"
-  virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.windows_agents.id
-  publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
-  type                         = "DependencyAgentWindows"
-  type_handler_version         = "9.5"
-  auto_upgrade_minor_version   = true
+# resource azurerm_virtual_machine_scale_set_extension windows_dependency_monitor {
+#   name                         = "DAExtension"
+#   virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.windows_agents.id
+#   publisher                    = "Microsoft.Azure.Monitoring.DependencyAgent"
+#   type                         = "DependencyAgentWindows"
+#   type_handler_version         = "9.5"
+#   auto_upgrade_minor_version   = true
 
-  settings                     = jsonencode({
-    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
-  })
-  protected_settings           = jsonencode({
-    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-  })
+#   settings                     = jsonencode({
+#     "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
+#   })
+#   protected_settings           = jsonencode({
+#     "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+#   })
 
-  provision_after_extensions   = [
-    azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
-  ]
+#   provision_after_extensions   = [
+#     # azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
+#   ]
 
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-}
-resource azurerm_virtual_machine_scale_set_extension windows_watcher {
-  name                         = "AzureNetworkWatcherExtension"
-  virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.windows_agents.id
-  publisher                    = "Microsoft.Azure.NetworkWatcher"
-  type                         = "NetworkWatcherAgentWindows"
-  type_handler_version         = "1.4"
-  auto_upgrade_minor_version   = true
+#   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+# }
+# resource azurerm_virtual_machine_scale_set_extension windows_watcher {
+#   name                         = "AzureNetworkWatcherExtension"
+#   virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.windows_agents.id
+#   publisher                    = "Microsoft.Azure.NetworkWatcher"
+#   type                         = "NetworkWatcherAgentWindows"
+#   type_handler_version         = "1.4"
+#   auto_upgrade_minor_version   = true
 
-  provision_after_extensions   = [
-    azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
-  ]
+#   provision_after_extensions   = [
+#     # azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
+#   ]
 
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-}
+#   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+# }
 
-resource azurerm_virtual_machine_scale_set_extension post_generation {
-  name                         = "PostGenerationScript"
-  virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.windows_agents.id
-  publisher                    = "Microsoft.Azure.Extensions"
-  type                         = "CustomScript"
-  type_handler_version         = "2.1"
-  auto_upgrade_minor_version   = true
-  settings                     = jsonencode({
-    "script"                   = filebase64("${path.root}/../scripts/host/post_generation.ps1")
-  })
+# resource azurerm_virtual_machine_scale_set_extension post_generation {
+#   name                         = "PostGenerationScript"
+#   virtual_machine_scale_set_id = azurerm_windows_virtual_machine_scale_set.windows_agents.id
+#   publisher                    = "Microsoft.Azure.Extensions"
+#   type                         = "CustomScript"
+#   type_handler_version         = "2.1"
+#   auto_upgrade_minor_version   = true
+#   settings                     = jsonencode({
+#     "script"                   = filebase64("${path.root}/../scripts/host/post_generation.ps1")
+#   })
 
-  provision_after_extensions   = [
-    azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
-    azurerm_virtual_machine_scale_set_extension.windows_dependency_monitor.0.name,
-    azurerm_virtual_machine_scale_set_extension.windows_watcher.0.name,
-  ]
-  count                        = var.prepare_host ? 1 : 0
-}
+#   provision_after_extensions   = [
+#     # azurerm_virtual_machine_scale_set_extension.windows_log_analytics.0.name,
+#     azurerm_virtual_machine_scale_set_extension.windows_dependency_monitor.0.name,
+#     azurerm_virtual_machine_scale_set_extension.windows_watcher.0.name,
+#   ]
+#   count                        = var.prepare_host ? 1 : 0
+# }
 
 resource azurerm_monitor_diagnostic_setting windows_agents {
   name                         = "${azurerm_windows_virtual_machine_scale_set.windows_agents.name}-logs"

@@ -122,6 +122,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
 
   lifecycle {
     ignore_changes             = [
+      extension,
       instances,
     ]
   }

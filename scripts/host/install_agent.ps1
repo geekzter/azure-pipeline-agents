@@ -9,6 +9,7 @@ param (
     [parameter(Mandatory=$true)][string]$Organization,
     [parameter(Mandatory=$true)][string]$PAT
 ) 
+$ProgressPreference = 'SilentlyContinue' # Improves batch performance in Windows PowerShell
 
 if (!$IsWindows -and ($PSVersionTable.PSEdition -ine "Desktop")) {
     Write-Error "This only runs on Windows..."

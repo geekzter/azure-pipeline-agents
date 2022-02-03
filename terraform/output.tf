@@ -23,6 +23,11 @@ output resource_suffix {
 output scale_set_agents_subnet_id {
   value                        = module.network.scale_set_agents_subnet_id
 }
+output scale_set_linux_cloud_config {
+  sensitive                    = true
+  value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
+}
+
 output self_hosted_agents_subnet_id {
   value                        = module.network.self_hosted_agents_subnet_id
 }

@@ -8,6 +8,7 @@ cask "powershell"
 # Visual Studio Code
 cask "visual-studio-code"
 
-# Terraform
+# Infrastructure as code
+brew "packer"
 #brew "terraform" 
 brew "tfenv" 

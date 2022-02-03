@@ -87,7 +87,7 @@ jobs:
     displayName: 'Retrieve agent information'
 
   - task: AzureCLI@2
-    name: getRelease
+    name: githubRelease
     displayName: 'Get release for ${{ parameters.imageReleaseName }}'
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
@@ -139,7 +139,7 @@ jobs:
   - task: AzurePowerShell@5
     name: build
     displayName: 'Build image'
-    condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
+    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
@@ -154,7 +154,7 @@ jobs:
         $ProgressPreference = 'SilentlyContinue'
 
         # Checkout source pertaining to release
-        git checkout $(getRelease.commit) --quiet
+        git checkout $(githubRelease.commit) --quiet
         git log -1 2>&1
 
         # Patch GenerateResourcesAndImage.ps1 to improve build time
@@ -179,7 +179,7 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
+    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -205,7 +205,7 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: eq(coalesce(variables['getRelease.newImageVersion'],'null'),'true')
+    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -223,8 +223,8 @@ jobs:
         # Publish
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
-          commit = "$(getRelease.commit)"
-          versionlabel = "$(getRelease.version)"
+          commit = "$(githubRelease.commit)"
+          versionlabel = "$(githubRelease.version)"
         }
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 

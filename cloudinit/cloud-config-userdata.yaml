@@ -1,9 +1,8 @@
 write_files:
 - path: /etc/environment
-  content: |
-    GEEKZTER_AGENT_SUBNET_ID="${subnet_id}"
-    GEEKZTER_AGENT_VIRTUAL_NETWORK_ID="${virtual_network_id}"
-    GEEKZTER_AGENT_OUTBOUND_IP="${outbound_ip}"
+  content: |%{ for name, value in environment }
+    ${name}="${value}"%{ endfor ~}
+
   append: true
 
 runcmd:

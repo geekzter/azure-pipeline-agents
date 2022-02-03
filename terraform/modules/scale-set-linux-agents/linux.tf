@@ -28,15 +28,20 @@ data cloudinit_config user_data {
   part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
+      agent_subnet_id          = var.subnet_id
       outbound_ip              = var.outbound_ip_address
-      subnet_id                = var.subnet_id
+      packer_subnet_name       = "Packer"
+      resource_group_name      = var.resource_group_name
       user_name                = var.user_name
       virtual_network_id       = local.virtual_network_id
+      virtual_network_name     = split("/",local.virtual_network_id)[8]
+      environment              = var.environment_variables
     })
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
 
+  count                        = var.prepare_host ? 1 : 0
 }
 
 resource azurerm_linux_virtual_machine_scale_set linux_agents {
@@ -45,7 +50,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   resource_group_name          = var.resource_group_name
 
   admin_username               = var.user_name
-  custom_data                  = var.prepare_host ? base64encode(data.cloudinit_config.user_data.rendered) : null
+  custom_data                  = var.prepare_host ? base64encode(data.cloudinit_config.user_data.0.rendered) : null
   instances                    = var.linux_agent_count
   overprovision                = false
   sku                          = var.linux_vm_size
@@ -159,6 +164,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   } 
   lifecycle {
     ignore_changes             = [
+      #custom_data,
       extension,
       instances,
     ]

@@ -1,6 +1,6 @@
 variable address_space {
   # Use Class C segment, to minimize conflict with networks provisioned from pipelines
-  default                      = "192.168.0.0/24"
+  default                      = "192.168.0.0/22"
 }
 
 variable admin_ip_ranges {

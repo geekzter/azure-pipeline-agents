@@ -1,0 +1,269 @@
+parameters:
+- name: image
+  displayName: Image
+  type: string
+  default: Ubuntu1804
+  values:
+  - Ubuntu1804
+  - Ubuntu2004
+  - Windows2019
+  - Windows2022
+- name: imageReleaseName
+# Image Release Name as defined in GitHUb release feed
+# https://api.github.com/repos/actions/virtual-environments/releases
+  displayName: Image Release Name
+  type: string
+- name: imageResourceGroup
+  displayName: Image Resource Group
+  type: string
+  default: packer
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: boolean
+  default: true
+
+jobs:
+- job: '${{ parameters.image }}'
+  displayName: 'Build & publish ${{ parameters.image }}'
+  pool:
+    name: '$(pool)'
+    vmImage: $(vmImage)
+  timeoutInMinutes: 360
+
+  variables:
+  - name: 'agentRepository'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
+  - name: 'agentScriptDirectory'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
+  - name: AZURE_CORE_ONLY_SHOW_ERRORS
+    value: 'true'
+  - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
+    value: 'yes_without_prompt'
+  - name: 'galleryResourceGroup' 
+    value: 'Shared'
+  - name: 'imageConfigFile'
+    value: '${{ lower(parameters.image) }}.json'
+  - name: 'imageName'
+    value: '${{ parameters.image }}'
+  - name: 'imageDefinitionName'
+    value: '${{ parameters.image }}'
+  - ${{ if contains(parameters.image,'buntu') }}:
+    - name: 'imageOffer'
+      value: 'Ubuntu'
+    - name: 'imageOSType'
+      value: 'linux'
+    - name: 'imageSKU'
+      value: ${{ replace(parameters.image,'Ubuntu', '') }}
+    - name: 'imageSubDirectory'
+      value: 'linux'
+  - ${{ else }}:
+    - name: 'imageOffer'
+      value: 'Windows'
+    - name: 'imageOSType'
+      value: 'windows'
+    - name: 'imageSKU'
+      value: ${{ replace(parameters.image,'Windows', '') }}
+    - name: 'imageSubDirectory'
+      value: 'win'
+  - name: 'imagePublisher'
+    value: 'PrivatePipelineImages'
+  - name: 'imageRepository'
+    value: '$(Build.SourcesDirectory)/virtual-environments'
+  - name: 'imageReleaseName' 
+    value: '${{ parameters.imageReleaseName }}'
+  - name: 'imageResourceGroup' 
+    value: '${{ parameters.imageResourceGroup }}'
+  - name: 'imageScriptDirectory'
+    value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
+
+  steps:
+  - checkout: self
+  - checkout: virtual-environments
+
+  - pwsh: |
+      $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
+      $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
+      $vmMetadata | Format-List
+    displayName: 'Retrieve agent information'
+
+  - task: AzureCLI@2
+    name: githubRelease
+    displayName: 'Get release for ${{ parameters.imageReleaseName }}'
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
+                                                                                                    | Select-Object -First 1 `
+                                                                                                    | Set-Variable release
+        $release | Format-List
+        $version = $release.tag_name.Split("/")[1]
+
+        # Determine whether image with same config already exists
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $(imageGalleryName) `
+                                  --resource-group $(galleryResourceGroup) `
+                                  --query "[?tags.versionlabel=='$version' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
+        $newImageVersion = !$imageVersion
+        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
+        if ($newImageVersion) {
+          Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
+          Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
+          Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
+        } else {
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
+          Write-Warning "Build & publish will be skipped"
+        }
+      useGlobalConfig: true
+      failOnStandardError: true
+
+  - task: AzureCLI@2
+    name: build
+    displayName: 'Build image'
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
+        $ProgressPreference = 'SilentlyContinue'
+
+        # Checkout source pertaining to release
+        git checkout $(githubRelease.commit) --quiet
+        git log -1 2>&1
+        
+        # Build
+        $env:RUN_VALIDATION_FLAG = 'false'
+        ./build-image.ps1 -TemplatePath ../../images/linux/$(imageReleaseName).json `
+                          -ClientId $env:servicePrincipalId `
+                          -ClientSecret $env:servicePrincipalKey `
+                          -ResourcesNamePrefix tmpew `
+                          -Location $(location) `
+                          -ResourceGroup $(imageResourceGroup) `
+                          -StorageAccount $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME `
+                          -SubscriptionId $(az account show --query id -o tsv) `
+                          -TenantId $env:tenantId `
+                          -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `
+                          -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
+                          -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
+
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(imageScriptDirectory)'
+
+
+  # - task: AzureCLI@2
+  #   name: vhd
+  #   displayName: 'Get VHD url'
+  #   condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+  #   inputs:
+  #     azureSubscription: '$(packerSubscriptionConnection)'
+  #     scriptType: pscore
+  #     scriptLocation: inlineScript
+  #     inlineScript: |
+  #       # Diagnostics
+  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+  #         $DebugPreference       = "Continue"
+  #         $InformationPreference = "Continue"
+  #         $VerbosePreference     = "Continue"
+  #         Set-PSDebug -Trace 2
+  #       }
+  #       $ProgressPreference = 'SilentlyContinue'
+
+  #       $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
+  #       ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+  #                     -VHDUrlEnvironmentVariableName VHD_URL
+  #       Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
+  #     useGlobalConfig: true
+  #     failOnStandardError: true
+  #     workingDirectory: '$(agentScriptDirectory)'
+
+  # - task: AzureCLI@2
+  #   name: publish
+  #   displayName: 'Publish image'
+  #   condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+  #   inputs:
+  #     azureSubscription: '$(gallerySubscriptionConnection)'
+  #     scriptType: pscore
+  #     scriptLocation: inlineScript
+  #     inlineScript: |
+  #       # Diagnostics
+  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+  #         $DebugPreference       = "Continue"
+  #         $InformationPreference = "Continue"
+  #         $VerbosePreference     = "Continue"
+  #         Set-PSDebug -Trace 2
+  #       }
+  #       $ProgressPreference = 'SilentlyContinue'
+
+  #       # Publish
+  #       $imageDefinitionVersionTags = @{
+  #         build = "$(Build.BuildId)"
+  #         commit = "$(githubRelease.commit)"
+  #         versionlabel = "$(githubRelease.version)"
+  #       }
+  #       $imageDefinitionVersionTags
+  #       $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
+  #       ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.sasUrl)" `
+  #                         -TargetVHDStorageAccountName $(imageStorageAccountName) `
+  #                         -TargetVHDStorageContainerName $(imageStorageContainerName) `
+  #                         -GalleryResourceGroupId $galleryResourceGroupId `
+  #                         -GalleryName $(imageGalleryName) `
+  #                         -ImageDefinitionName $(imageDefinitionName) `
+  #                         -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+  #                         -Publisher $(imagePublisher) `
+  #                         -Offer $(imageOffer) `
+  #                         -SKU $(imageSKU) `
+  #                         -OsType $(imageOSType) `
+  #                         -TargetRegion $(targetRegions)
+  #     useGlobalConfig: true
+  #     failOnStandardError: true
+  #     workingDirectory: '$(agentScriptDirectory)'
+
+  # - task: AzureCLI@2
+  #   displayName: 'List published images'
+  #   inputs:
+  #     azureSubscription: '$(gallerySubscriptionConnection)'
+  #     scriptType: pscore
+  #     scriptLocation: inlineScript
+  #     inlineScript: |
+  #       ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
+  #                                 -GalleryName $(imageGalleryName) `
+  #                                 -ImageDefinitionName $(imageDefinitionName)
+  #     useGlobalConfig: true
+  #     failOnStandardError: true
+  #     workingDirectory: '$(agentScriptDirectory)'
+
+  # - ${{ if parameters.destroy }}:
+  #   - task: AzureCLI@2
+  #     name: teardown
+  #     displayName: 'Tear down temporary resources'
+  #     condition: always() # succeededOrFailed()
+  #     inputs:
+  #       azureSubscription: '$(packerSubscriptionConnection)'
+  #       scriptType: pscore
+  #       scriptLocation: inlineScript
+  #       inlineScript: |
+  #         # Remove resource groups
+  #         $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)'].id" -o tsv)
+  #         if ($resourceGroupIDs) {
+  #           Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+  #           &{ # az writes information to stderr
+  #             $ErrorActionPreference = 'SilentlyContinue'
+  #             az resource delete --ids $resourceGroupIDs 2>&1
+  #           }
+  #         } else {
+  #           Write-Host "No resource groups to remove"
+  #         }
+  #       addSpnToEnvironment: true
+  #       useGlobalConfig: true
+  #       failOnStandardError: true
+  #       workingDirectory: '$(agentScriptDirectory)'

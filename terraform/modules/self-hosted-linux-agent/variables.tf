@@ -20,6 +20,9 @@ variable devops_pat {}
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 
+variable environment_variables {
+    type = map
+}
 
 variable computer_name {}
 variable disk_access_name {}

@@ -36,6 +36,7 @@ module scale_set_linux_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
@@ -127,6 +128,7 @@ module self_hosted_linux_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
@@ -210,6 +212,20 @@ module self_hosted_windows_agents {
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
     azurerm_private_endpoint.disk_access_endpoint,
+    module.network
+  ]
+}
+
+module packer {
+  source                       = "./modules/packer"
+
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  tags                         = local.tags
+  blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
+  subnet_id                    = module.network.private_endpoint_subnet_id
+
+  depends_on                   = [
     module.network
   ]
 }

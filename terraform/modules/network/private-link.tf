@@ -31,7 +31,6 @@ resource azurerm_private_dns_zone blob {
   resource_group_name          = var.resource_group_name
 
   tags                         = var.tags
-  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_private_dns_zone_virtual_network_link monitor {
@@ -73,21 +72,18 @@ resource azurerm_private_dns_zone_virtual_network_link agentsvc {
 resource azurerm_private_dns_zone_virtual_network_link blob {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-dns-blob"
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
-  private_dns_zone_name        = azurerm_private_dns_zone.blob.0.name
+  private_dns_zone_name        = azurerm_private_dns_zone.blob.name
   virtual_network_id           = azurerm_virtual_network.pipeline_network.id
 
   tags                         = var.tags
-  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_subnet private_endpoint_subnet {
   name                         = "PrivateEndpointSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],3,3)]
+  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,5)]
   enforce_private_link_endpoint_network_policies = true
-
-  count                        = var.deploy_firewall ? 1 : 0
 }
 
 resource azurerm_monitor_private_link_scope monitor {
@@ -111,7 +107,7 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   location                     = azurerm_virtual_network.pipeline_network.location
   
-  subnet_id                    = azurerm_subnet.private_endpoint_subnet.0.id
+  subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
 
   private_dns_zone_group {
     name                       = "azure-monitor-zones"
@@ -120,7 +116,7 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
       azurerm_private_dns_zone.oms.0.id,
       azurerm_private_dns_zone.ods.0.id,
       azurerm_private_dns_zone.agentsvc.0.id,
-      azurerm_private_dns_zone.blob.0.id,
+      azurerm_private_dns_zone.blob.id,
     ]
   }
   

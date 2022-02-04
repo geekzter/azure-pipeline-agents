@@ -145,7 +145,10 @@ jobs:
         
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
-        ./build-image.ps1 -TemplatePath $(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/$(imageReleaseName).json `
+        $templatePath = "$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/$(imageReleaseName).json"
+        Write-Host $templatePath
+        dir $templatePath
+        ./build-image.ps1 -TemplatePath $templatePath `
                           -ClientId $env:servicePrincipalId `
                           -ClientSecret $env:servicePrincipalKey `
                           -ResourcesNamePrefix $(imageResourcePrefix) `

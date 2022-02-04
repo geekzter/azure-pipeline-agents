@@ -92,6 +92,9 @@ jobs:
       $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
       $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
       $vmMetadata | Format-List
+
+      Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
+    name: agent
     displayName: 'Retrieve agent information'
 
   - task: AzureCLI@2
@@ -148,8 +151,8 @@ jobs:
         git log -1 2>&1
 
         # Create resources
-        az group create -l $(location) -n $(imageResourceGroup)
-        az storage account create -n $(storageAccountName) -g $(imageResourceGroup) -l $(location) --sku Premium_LRS
+        az group create -l $(agent.location) -n $(imageResourceGroup)
+        az storage account create -n $(storageAccountName) -g $(imageResourceGroup) -l $(agent.location) --sku Premium_LRS
         
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
@@ -157,7 +160,7 @@ jobs:
                           -ClientId $env:servicePrincipalId `
                           -ClientSecret $env:servicePrincipalKey `
                           -ResourcesNamePrefix $(imageResourcePrefix) `
-                          -Location $(location) `
+                          -Location $(agent.location) `
                           -ResourceGroup $(imageResourceGroup) `
                           -StorageAccount $(storageAccountName) `
                           -SubscriptionId $(az account show --query id -o tsv) `

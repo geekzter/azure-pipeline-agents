@@ -40,7 +40,7 @@ locals {
     "GEEKZTER_AGENT_SUBNET_ID"= module.network.scale_set_agents_subnet_id
     "GEEKZTER_AGENT_OUTBOUND_IP"= module.network.outbound_ip_address
     "GEEKZTER_AGENT_VIRTUAL_NETWORK_ID"=module.network.virtual_network_id
-    "GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME"=module.packer.storage_account_name
+    # "GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME"=module.packer.storage_account_name
     "GEEKZTER_PACKER_SUBNET_NAME"="Packer"
     "GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME"=split("/",module.network.virtual_network_id)[8]
     "GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME"=azurerm_resource_group.rg.name

@@ -216,16 +216,16 @@ module self_hosted_windows_agents {
   ]
 }
 
-module packer {
-  source                       = "./modules/packer"
+# module packer {
+#   source                       = "./modules/packer"
 
-  location                     = var.location
-  resource_group_name          = azurerm_resource_group.rg.name
-  tags                         = local.tags
-  blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
-  subnet_id                    = module.network.private_endpoint_subnet_id
+#   location                     = var.location
+#   resource_group_name          = azurerm_resource_group.rg.name
+#   tags                         = local.tags
+#   blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
+#   subnet_id                    = module.network.private_endpoint_subnet_id
 
-  depends_on                   = [
-    module.network
-  ]
-}
+#   depends_on                   = [
+#     module.network
+#   ]
+# }

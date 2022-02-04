@@ -120,7 +120,7 @@ variable linux_vm_size {
 }
 
 variable location {
-  default                      = "westeurope"
+  default                      = "centralus"
 }
 
 variable log_analytics_workspace_id {

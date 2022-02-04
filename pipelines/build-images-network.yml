@@ -66,6 +66,7 @@ jobs:
       image: Ubuntu1804
       imageReleaseName: ubuntu18
       imageResourceGroup: 'packer-$(Build.BuildId)-u18'
+      imageResourcePrefix: '$(Build.BuildId)-u18'
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
   - template: build-image-network.yml
@@ -74,6 +75,7 @@ jobs:
       image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'packer-$(Build.BuildId)-u20'
+      imageResourcePrefix: '$(Build.BuildId)-u20'
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-network.yml
@@ -82,6 +84,7 @@ jobs:
       image: Windows2019
       imageReleaseName: win19
       imageResourceGroup: 'packer-$(Build.BuildId)-w19'
+      imageResourcePrefix: '$(Build.BuildId)-w19'
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-network.yml
@@ -90,3 +93,4 @@ jobs:
       image: Windows2022
       imageReleaseName: win22
       imageResourceGroup: 'packer-$(Build.BuildId)-w22'
+      imageResourcePrefix: '$(Build.BuildId)-w22'

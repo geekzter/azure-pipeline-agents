@@ -2,7 +2,6 @@ parameters:
 - name: image
   displayName: Image
   type: string
-  default: Ubuntu1804
   values:
   - Ubuntu1804
   - Ubuntu2004
@@ -17,6 +16,9 @@ parameters:
   displayName: Image Resource Group
   type: string
   default: packer
+- name: imageResourcePrefix
+  displayName: Image Resource Prefix
+  type: string
 - name: destroy
   displayName: Destroy Infrastructure
   type: boolean
@@ -73,6 +75,8 @@ jobs:
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourceGroup' 
     value: '${{ parameters.imageResourceGroup }}'
+  - name: 'imageResourcePrefix' 
+    value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageScriptDirectory'
     value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
 
@@ -144,7 +148,7 @@ jobs:
         ./build-image.ps1 -TemplatePath ../../images/linux/$(imageReleaseName).json `
                           -ClientId $env:servicePrincipalId `
                           -ClientSecret $env:servicePrincipalKey `
-                          -ResourcesNamePrefix tmpew `
+                          -ResourcesNamePrefix $(imageResourcePrefix) `
                           -Location $(location) `
                           -ResourceGroup $(imageResourceGroup) `
                           -StorageAccount $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME `

@@ -26,13 +26,7 @@ data cloudinit_config user_data {
   part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
-      agent_subnet_id          = var.subnet_id
-      outbound_ip              = var.outbound_ip_address
-      packer_subnet_name       = "Packer"
-      resource_group_name      = var.resource_group_name
       user_name                = var.user_name
-      virtual_network_id       = local.virtual_network_id
-      virtual_network_name     = split("/",local.virtual_network_id)[8]
       environment              = var.environment_variables
     })
     content_type               = "text/cloud-config"

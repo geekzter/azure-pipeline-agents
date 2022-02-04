@@ -23,7 +23,7 @@ parameters:
   default: true
 - name: retryCount
   displayName: Build task retry count
-  type: int
+  type: number
   default: 1
 
 jobs:

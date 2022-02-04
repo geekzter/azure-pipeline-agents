@@ -10,7 +10,9 @@ bootcmd:
   - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
   - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
   - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
-
+  # https://learn.hashicorp.com/tutorials/packer/get-started-install-cli
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -           # Hashicorp
+  - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 apt:
   sources:
     git-core:
@@ -38,6 +40,7 @@ packages:
   - ansible
   - coreutils
   - docker
+  - packer
   - python-minimal
   - unixodbc-dev
   - unzip

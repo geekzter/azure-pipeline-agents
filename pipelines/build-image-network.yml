@@ -145,7 +145,7 @@ jobs:
         
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
-        $templatePath = "$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/$(imageReleaseName).json"
+        $templatePath = "$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/$(imageName).json"
         Write-Host $templatePath
         dir $templatePath
         ./build-image.ps1 -TemplatePath $templatePath `

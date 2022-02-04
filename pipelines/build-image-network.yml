@@ -81,6 +81,8 @@ jobs:
     value: '$(Build.SourcesDirectory)/virtual-environments/images.CI/linux-and-win'
   - name: 'imageTemplate'
     value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+  - name: 'storageAccountName' 
+    value: '${{ replace(parameters.imageResourcePrefix,"-","") }}packerstore'
 
   steps:
   - checkout: self
@@ -145,8 +147,9 @@ jobs:
         git checkout $(githubRelease.commit) --quiet
         git log -1 2>&1
 
-        # Create resource group
+        # Create resources
         az group create -l $(location) -n $(imageResourceGroup)
+        az storage account create -n $(storageAccountName) -g $(imageResourceGroup) -l $(location) --sku Premium_LRS
         
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
@@ -156,7 +159,7 @@ jobs:
                           -ResourcesNamePrefix $(imageResourcePrefix) `
                           -Location $(location) `
                           -ResourceGroup $(imageResourceGroup) `
-                          -StorageAccount $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME `
+                          -StorageAccount $(storageAccountName) `
                           -SubscriptionId $(az account show --query id -o tsv) `
                           -TenantId $env:tenantId `
                           -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `

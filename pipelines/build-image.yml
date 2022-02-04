@@ -30,7 +30,8 @@ jobs:
 - job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'
   pool:
-    name: '$(pool)'
+    # name: '$(pool)'
+    name: 'Azure Pipelines'
     vmImage: $(vmImage)
   timeoutInMinutes: 360
 

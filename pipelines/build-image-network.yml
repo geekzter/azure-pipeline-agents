@@ -249,28 +249,28 @@ jobs:
   #     failOnStandardError: true
   #     workingDirectory: '$(agentScriptDirectory)'
 
-  # - ${{ if parameters.destroy }}:
-  #   - task: AzureCLI@2
-  #     name: teardown
-  #     displayName: 'Tear down temporary resources'
-  #     condition: always() # succeededOrFailed()
-  #     inputs:
-  #       azureSubscription: '$(packerSubscriptionConnection)'
-  #       scriptType: pscore
-  #       scriptLocation: inlineScript
-  #       inlineScript: |
-  #         # Remove resource groups
-  #         $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)'].id" -o tsv)
-  #         if ($resourceGroupIDs) {
-  #           Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
-  #           &{ # az writes information to stderr
-  #             $ErrorActionPreference = 'SilentlyContinue'
-  #             az resource delete --ids $resourceGroupIDs 2>&1
-  #           }
-  #         } else {
-  #           Write-Host "No resource groups to remove"
-  #         }
-  #       addSpnToEnvironment: true
-  #       useGlobalConfig: true
-  #       failOnStandardError: true
-  #       workingDirectory: '$(agentScriptDirectory)'
+  - ${{ if parameters.destroy }}:
+    - task: AzureCLI@2
+      name: teardown
+      displayName: 'Tear down temporary resources'
+      condition: always() # succeededOrFailed()
+      inputs:
+        azureSubscription: '$(packerSubscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Remove resource groups
+          $resourceGroupIDs = $(az group list --query "[?name=='$(imageResourceGroup)' || starts_with(name,'$(imageResourcePrefix)')].id" -o tsv)
+          if ($resourceGroupIDs) {
+            Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceGroupIDs 2>&1
+            }
+          } else {
+            Write-Host "No resource groups to remove"
+          }
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(agentScriptDirectory)'

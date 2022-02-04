@@ -82,7 +82,7 @@ jobs:
   - name: 'imageTemplate'
     value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
   - name: 'storageAccountName' 
-    value: ${{ replace(parameters.imageResourcePrefix,'-','') }}packerstore
+    value: ${{ replace(parameters.imageResourcePrefix,'-','') }}store
 
   steps:
   - checkout: self
@@ -172,87 +172,87 @@ jobs:
       workingDirectory: '$(imageScriptDirectory)'
 
 
-  # - task: AzureCLI@2
-  #   name: vhd
-  #   displayName: 'Get VHD url'
-  #   condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
-  #   inputs:
-  #     azureSubscription: '$(packerSubscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       # Diagnostics
-  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-  #         $DebugPreference       = "Continue"
-  #         $InformationPreference = "Continue"
-  #         $VerbosePreference     = "Continue"
-  #         Set-PSDebug -Trace 2
-  #       }
-  #       $ProgressPreference = 'SilentlyContinue'
+  - task: AzureCLI@2
+    name: vhd
+    displayName: 'Get VHD url'
+    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
+        $ProgressPreference = 'SilentlyContinue'
 
-  #       $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
-  #       ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
-  #                     -VHDUrlEnvironmentVariableName VHD_URL
-  #       Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(agentScriptDirectory)'
+        $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
+        ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+                      -VHDUrlEnvironmentVariableName VHD_URL
+        Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
 
-  # - task: AzureCLI@2
-  #   name: publish
-  #   displayName: 'Publish image'
-  #   condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
-  #   inputs:
-  #     azureSubscription: '$(gallerySubscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       # Diagnostics
-  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-  #         $DebugPreference       = "Continue"
-  #         $InformationPreference = "Continue"
-  #         $VerbosePreference     = "Continue"
-  #         Set-PSDebug -Trace 2
-  #       }
-  #       $ProgressPreference = 'SilentlyContinue'
+  - task: AzureCLI@2
+    name: publish
+    displayName: 'Publish image'
+    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
+        $ProgressPreference = 'SilentlyContinue'
 
-  #       # Publish
-  #       $imageDefinitionVersionTags = @{
-  #         build = "$(Build.BuildId)"
-  #         commit = "$(githubRelease.commit)"
-  #         versionlabel = "$(githubRelease.version)"
-  #       }
-  #       $imageDefinitionVersionTags
-  #       $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
-  #       ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.sasUrl)" `
-  #                         -TargetVHDStorageAccountName $(imageStorageAccountName) `
-  #                         -TargetVHDStorageContainerName $(imageStorageContainerName) `
-  #                         -GalleryResourceGroupId $galleryResourceGroupId `
-  #                         -GalleryName $(imageGalleryName) `
-  #                         -ImageDefinitionName $(imageDefinitionName) `
-  #                         -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-  #                         -Publisher $(imagePublisher) `
-  #                         -Offer $(imageOffer) `
-  #                         -SKU $(imageSKU) `
-  #                         -OsType $(imageOSType) `
-  #                         -TargetRegion $(targetRegions)
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(agentScriptDirectory)'
+        # Publish
+        $imageDefinitionVersionTags = @{
+          build = "$(Build.BuildId)"
+          commit = "$(githubRelease.commit)"
+          versionlabel = "$(githubRelease.version)"
+        }
+        $imageDefinitionVersionTags
+        $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
+        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.sasUrl)" `
+                          -TargetVHDStorageAccountName $(imageStorageAccountName) `
+                          -TargetVHDStorageContainerName $(imageStorageContainerName) `
+                          -GalleryResourceGroupId $galleryResourceGroupId `
+                          -GalleryName $(imageGalleryName) `
+                          -ImageDefinitionName $(imageDefinitionName) `
+                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+                          -Publisher $(imagePublisher) `
+                          -Offer $(imageOffer) `
+                          -SKU $(imageSKU) `
+                          -OsType $(imageOSType) `
+                          -TargetRegion $(targetRegions)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
 
-  # - task: AzureCLI@2
-  #   displayName: 'List published images'
-  #   inputs:
-  #     azureSubscription: '$(gallerySubscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
-  #                                 -GalleryName $(imageGalleryName) `
-  #                                 -ImageDefinitionName $(imageDefinitionName)
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
-  #     workingDirectory: '$(agentScriptDirectory)'
+  - task: AzureCLI@2
+    displayName: 'List published images'
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
+                                  -GalleryName $(imageGalleryName) `
+                                  -ImageDefinitionName $(imageDefinitionName)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
 
   - ${{ if parameters.destroy }}:
     - task: AzureCLI@2

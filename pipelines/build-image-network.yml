@@ -78,7 +78,7 @@ jobs:
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageScriptDirectory'
-    value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
+    value: '$(Build.SourcesDirectory)/virtual-environments/images.CI/linux-and-win'
 
   steps:
   - checkout: self

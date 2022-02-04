@@ -188,7 +188,8 @@ jobs:
     displayName: 'Get VHD url'
     condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
     inputs:
-      azureSubscription: '$(packerSubscriptionConnection)'
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      # azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -271,7 +272,8 @@ jobs:
       displayName: 'Tear down temporary resources'
       condition: always() # succeededOrFailed()
       inputs:
-        azureSubscription: '$(packerSubscriptionConnection)'
+        azureSubscription: '$(gallerySubscriptionConnection)'
+        # azureSubscription: '$(packerSubscriptionConnection)'
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |

@@ -23,6 +23,10 @@ parameters:
   displayName: Destroy Infrastructure
   type: boolean
   default: true
+- name: retryCount
+  displayName: Build task retry count
+  type: int
+  default: 1
 
 jobs:
 - job: '${{ parameters.image }}'
@@ -83,6 +87,8 @@ jobs:
     value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
   - name: 'storageAccountName' 
     value: ${{ replace(parameters.imageResourcePrefix,'-','') }}store
+  - name: 'retryCount' 
+    value: ${{ parameters.retryCount }}
 
   steps:
   - checkout: self
@@ -128,6 +134,7 @@ jobs:
         }
       useGlobalConfig: true
       failOnStandardError: true
+      workingDirectory: '$(imageRepository)'
 
   - task: AzureCLI@2
     name: build
@@ -172,6 +179,7 @@ jobs:
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
+      retryCountOnTaskFailure: $(retryCount)
       workingDirectory: '$(imageScriptDirectory)'
 
 

@@ -21,6 +21,10 @@ parameters:
   displayName: Destroy Infrastructure
   type: boolean
   default: true
+- name: retryCount
+  displayName: Build task retry count
+  type: int
+  default: 1
 
 jobs:
 - job: '${{ parameters.image }}'
@@ -75,6 +79,8 @@ jobs:
     value: '${{ parameters.imageResourceGroup }}'
   - name: 'imageScriptDirectory'
     value: '$(Build.SourcesDirectory)/virtual-environments/helpers'
+  - name: 'retryCount' 
+    value: ${{ parameters.retryCount }}
 
   steps:
   - checkout: self
@@ -157,7 +163,8 @@ jobs:
         $ProgressPreference = 'SilentlyContinue'
 
         # Checkout source pertaining to release
-        git checkout $(githubRelease.commit) --quiet
+        # https://github.com/actions/virtual-environments/issues/4238#issuecomment-939732274
+        # git checkout $(githubRelease.commit) --quiet
         git log -1 2>&1
 
         # Patch GenerateResourcesAndImage.ps1 to improve build time
@@ -177,6 +184,7 @@ jobs:
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
+      retryCountOnTaskFailure: $(retryCount)
       workingDirectory: '$(imageScriptDirectory)'
 
   - task: AzureCLI@2

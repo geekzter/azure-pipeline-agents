@@ -17,6 +17,10 @@ parameters:
   displayName: Destroy Infrastructure
   type: boolean
   default: true
+- name: retryCount
+  displayName: Build task retry count
+  type: int
+  default: 1
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -66,6 +70,7 @@ jobs:
       image: Ubuntu1804
       imageReleaseName: ubuntu18
       imageResourceGroup: 'packer-$(Build.BuildId)-u18'
+      retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
   - template: build-image.yml
@@ -74,6 +79,7 @@ jobs:
       image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'packer-$(Build.BuildId)-u20'
+      retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image.yml
@@ -82,6 +88,7 @@ jobs:
       image: Windows2019
       imageReleaseName: win19
       imageResourceGroup: 'packer-$(Build.BuildId)-w19'
+      retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image.yml
@@ -90,3 +97,4 @@ jobs:
       image: Windows2022
       imageReleaseName: win22
       imageResourceGroup: 'packer-$(Build.BuildId)-w22'
+      retryCount: ${{ parameters.retryCount }}

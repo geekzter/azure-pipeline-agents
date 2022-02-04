@@ -7,16 +7,17 @@ bootcmd:
   # Get apt repository signing keys
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
   - sudo apt-add-repository https://cli.github.com/packages
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -           # Hashicorp
   - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
   - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
   - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
-  # https://learn.hashicorp.com/tutorials/packer/get-started-install-cli
-  - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -           # Hashicorp
-  - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
 apt:
   sources:
     git-core:
       source: "ppa:git-core/ppa"
+    hashicorp:
+      source: "deb [trusted=yes] https://apt.releases.hashicorp.com bionic main"
     helm-stable-debian.list:
       source: "deb https://baltocdn.com/helm/stable/debian/ all main"
     kubernetes.list:
@@ -64,5 +65,6 @@ runcmd:
   - sudo ACCEPT_EULA=Y apt install mssql-tools -y
   # Automatic updates: re-enable them
   - sudo apt install unattended-upgrades -y
+  - sudo pwsh -NoProfile -NonInteractive -Command 'Install-Module -Name Az,AzureAD,SqlServer -Scope AllUsers -Repository PSGallery -Force'
 
-final_message: "Base cloud init done after $UPTIME seconds"
+final_message: "Tools installed after $UPTIME seconds"

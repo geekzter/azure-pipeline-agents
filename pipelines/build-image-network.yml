@@ -82,7 +82,7 @@ jobs:
   - name: 'imageTemplate'
     value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
   - name: 'storageAccountName' 
-    value: '${{ replace(parameters.imageResourcePrefix,"-","") }}packerstore'
+    value: ${{ replace(parameters.imageResourcePrefix,'-','') }}packerstore
 
   steps:
   - checkout: self

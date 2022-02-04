@@ -16,6 +16,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
   }
 
   network_interface {
+    enable_accelerated_networking = var.vm_accelerated_networking
     name                       = "${var.resource_group_name}-windows-agents-nic"
     primary                    = true
 

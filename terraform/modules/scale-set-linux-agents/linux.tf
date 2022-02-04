@@ -60,6 +60,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   }
 
   network_interface {
+    enable_accelerated_networking = var.vm_accelerated_networking
     name                       = "${var.resource_group_name}-linux-agents-nic"
     primary                    = true
 

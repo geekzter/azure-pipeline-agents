@@ -79,6 +79,8 @@ jobs:
     value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageScriptDirectory'
     value: '$(Build.SourcesDirectory)/virtual-environments/images.CI/linux-and-win'
+  - name: 'imageTemplate'
+    value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
 
   steps:
   - checkout: self
@@ -146,6 +148,7 @@ jobs:
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
         $templatePath = "$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/$(imageName).json"
+        $templatePath = "$(imageTemplate)"
         Write-Host $templatePath
         dir $templatePath
         ./build-image.ps1 -TemplatePath $templatePath `

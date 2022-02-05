@@ -44,7 +44,7 @@ if (!$GalleryName) {
     exit
 }
 if (!$SourceVHDUrl) {
-    Write-Warning "`nSourceVHDUrl not specified, exiting"
+    Write-Error "`nSourceVHDUrl not specified, exiting"
     exit
 }
 az group list --subscription $gallerySubscriptionId --query "[?name=='$galleryResourceGroupName']" -o json | ConvertFrom-Json | Set-Variable galleryResourceGroup

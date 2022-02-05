@@ -153,8 +153,10 @@ jobs:
         }
         $ProgressPreference = 'SilentlyContinue'
 
-        # Checkout source pertaining to release
-        git checkout $(githubRelease.commit) --quiet
+        # Checkout source pertaining to release is not recommended
+        # https://github.com/actions/virtual-environments/issues/4238#issuecomment-939732274
+        # git checkout $(githubRelease.commit) --quiet
+        # TODO: Can we assume main branch is the latest released version?
         git log -1 2>&1
 
         # Create resources
@@ -234,6 +236,7 @@ jobs:
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
           commit = "$(githubRelease.commit)"
+          pipeline = "$(Build.DefinitionName)"
           versionlabel = "$(githubRelease.version)"
         }
         $imageDefinitionVersionTags

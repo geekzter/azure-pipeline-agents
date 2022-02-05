@@ -238,7 +238,6 @@ jobs:
         # Publish
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
-          # commit = "$(githubRelease.commit)"
           commit = "$(imageBuild.commit)"
           pipeline = "$(Build.DefinitionName)"
           versionlabel = "$(githubRelease.version)"

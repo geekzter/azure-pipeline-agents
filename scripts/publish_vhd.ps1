@@ -78,7 +78,7 @@ if (!$imageDefinition) {
     Write-Host "`nImage Definition '$ImageDefinitionName' (${Publisher}/${Offer}/${SKU}) does not exist yet, creating it..."
     az sig image-definition create --gallery-image-definition $ImageDefinitionName `
                                    --gallery-name $GalleryName `
-                                   --location $galleryResourceGroup.location `
+                                   --location $gallery.location `
                                    --resource-group $galleryResourceGroupName `
                                    --subscription $gallerySubscriptionId `
                                    --publisher $Publisher --offer $Offer --sku $SKU `
@@ -155,10 +155,10 @@ if ($imageVersion) {
     az sig image-version create --gallery-image-definition $ImageDefinitionName `
                                 --gallery-name $GalleryName `
                                 --gallery-image-version $newVersionString `
-                                --location $galleryResourceGroup.location `
+                                --location $gallery.location `
                                 --resource-group $galleryResourceGroupName `
                                 --subscription $gallerySubscriptionId `
-                                --target-regions ($TargetRegion ?? $galleryResourceGroup.location) `
+                                --target-regions ($TargetRegion ?? $gallery.location) `
                                 --os-vhd-uri "${vhdGalleryImportUrl}" `
                                 --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
                                 --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion

@@ -137,7 +137,7 @@ jobs:
       workingDirectory: '$(imageRepository)'
 
   - task: AzureCLI@2
-    name: build
+    name: imageBuild
     displayName: 'Build image'
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
@@ -155,6 +155,7 @@ jobs:
 
         # Checkout source pertaining to release is not recommended
         # https://github.com/actions/virtual-environments/issues/4238#issuecomment-939732274
+        # https://github.com/actions/virtual-environments/discussions/4362
         # git checkout $(githubRelease.commit) --quiet
         # TODO: Can we assume main branch is the latest released version?
         git log -1 2>&1
@@ -179,6 +180,8 @@ jobs:
                           -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
                           -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
 
+        Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
+        Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
@@ -235,7 +238,8 @@ jobs:
         # Publish
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
-          commit = "$(githubRelease.commit)"
+          # commit = "$(githubRelease.commit)"
+          commit = "$(imageBuild.commit)"
           pipeline = "$(Build.DefinitionName)"
           versionlabel = "$(githubRelease.version)"
         }

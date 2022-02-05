@@ -19,6 +19,9 @@ variable devops_pat {}
 
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
+variable environment_variables {
+    type = map
+}
 
 variable computer_name {}
 variable disk_access_name {}
@@ -48,6 +51,7 @@ variable suffix {}
 variable tags {
     type    = map
 }
+variable user_assigned_identity_id {}
 variable user_name {}
 variable user_password {}
 variable vm_accelerated_networking {}

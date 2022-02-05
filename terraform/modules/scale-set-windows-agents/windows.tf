@@ -15,6 +15,17 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
+  custom_data                  = var.prepare_host ? base64encode(templatefile("${path.root}/../scripts/host/host_configuration.ps1",
+    {
+      environment              = var.environment_variables
+    })
+  ) : null
+
+  identity {
+    type                       = "SystemAssigned, UserAssigned"
+    identity_ids               = [var.user_assigned_identity_id]
+  }
+  
   network_interface {
     enable_accelerated_networking = var.vm_accelerated_networking
     name                       = "${var.resource_group_name}-windows-agents-nic"
@@ -100,7 +111,8 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
   dynamic "extension" {
     for_each = range(var.prepare_host ? 1 : 0)
     content {
-      name                     = "PostGenerationScript"
+      # name                     = "PostGenerationScript"
+      name                     = "HostConfigurationScript"
       publisher                = "Microsoft.Compute"
       type                     = "CustomScriptExtension"
       type_handler_version     = "1.10"
@@ -110,7 +122,8 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
       auto_upgrade_minor_version= true
       protected_settings       = jsonencode({
         # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts
-        "commandToExecute"     = "powershell.exe -ExecutionPolicy Unrestricted -Command \"if (Test-Path C:/post-generation) {Get-ChildItem C:/post-generation -Filter *.ps1 | ForEach-Object { & $_.FullName }}\""
+        # "commandToExecute"     = "powershell.exe -ExecutionPolicy Unrestricted -Command \"if (Test-Path C:/post-generation) {Get-ChildItem C:/post-generation -Filter *.ps1 | ForEach-Object { & $_.FullName }}\""
+        "commandToExecute"     = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./host_configuration.ps1 -Force;./host_configuration.ps1\""
       })
 
       provision_after_extensions= [

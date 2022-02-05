@@ -58,6 +58,7 @@ module scale_set_linux_agents {
   tags                         = local.tags
   subnet_id                    = module.network.scale_set_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -81,6 +82,7 @@ module scale_set_windows_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
@@ -100,6 +102,7 @@ module scale_set_windows_agents {
   tags                         = local.tags
   subnet_id                    = module.network.scale_set_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -154,6 +157,7 @@ module self_hosted_linux_agents {
   tags                         = local.tags
   subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -182,6 +186,7 @@ module self_hosted_windows_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
@@ -203,6 +208,7 @@ module self_hosted_windows_agents {
   tags                         = local.tags
   subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -216,16 +222,18 @@ module self_hosted_windows_agents {
   ]
 }
 
-# module packer {
-#   source                       = "./modules/packer"
+module packer {
+  source                       = "./modules/packer"
 
-#   location                     = var.location
-#   resource_group_name          = azurerm_resource_group.rg.name
-#   tags                         = local.tags
-#   blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
-#   subnet_id                    = module.network.private_endpoint_subnet_id
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  tags                         = local.tags
+  blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
+  shared_image_gallery_id      = var.shared_image_gallery_id
+  storage_account_tier         = var.vhd_storage_account_tier
+  subnet_id                    = module.network.private_endpoint_subnet_id
 
-#   depends_on                   = [
-#     module.network
-#   ]
-# }
+  depends_on                   = [
+    module.network
+  ]
+}

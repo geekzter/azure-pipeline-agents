@@ -147,6 +147,11 @@ resource azurerm_linux_virtual_machine linux_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
+  identity {
+    type                       = "SystemAssigned, UserAssigned"
+    identity_ids               = [var.user_assigned_identity_id]
+  }
+  
   os_disk {
     name                       = "${var.name}-osdisk"
     caching                    = "ReadWrite"

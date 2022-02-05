@@ -58,6 +58,7 @@ variable tags {
   type                         = map
 }
 variable ssh_public_key {}
+variable user_assigned_identity_id {}
 variable user_name {}
 variable user_password {}
 variable vm_accelerated_networking {}

@@ -59,6 +59,11 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
+  identity {
+    type                       = "SystemAssigned, UserAssigned"
+    identity_ids               = [var.user_assigned_identity_id]
+  }
+
   network_interface {
     enable_accelerated_networking = var.vm_accelerated_networking
     name                       = "${var.resource_group_name}-linux-agents-nic"
@@ -159,7 +164,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   } 
   lifecycle {
     ignore_changes             = [
-      #custom_data,
+      custom_data,
       extension,
       instances,
     ]

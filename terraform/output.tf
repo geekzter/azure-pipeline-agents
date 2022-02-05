@@ -1,9 +1,23 @@
+output agent_identity_name {
+  value                        = azurerm_user_assigned_identity.agents.name
+}
+output agent_identity_client_id {
+  value                        = azurerm_user_assigned_identity.agents.client_id
+}
+output agent_identity_object_id {
+  value                        = azurerm_user_assigned_identity.agents.principal_id
+}
+
 output diagnostics_storage_account {
   value                        = azurerm_storage_account.diagnostics.name
 }
 output diagnostics_storage_sas {
   sensitive                    = true
   value                        = data.azurerm_storage_account_sas.diagnostics.sas
+}
+
+output environment_variables {
+  value                        = local.environment_variables
 }
 
 output linux_os_image_id {
@@ -13,6 +27,7 @@ output linux_os_image_id {
 output log_analytics_workspace_id {
   value                        = local.log_analytics_workspace_id
 }
+
 output resource_group_name {
   value                        = azurerm_resource_group.rg.name
 }

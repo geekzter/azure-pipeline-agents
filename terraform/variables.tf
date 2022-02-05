@@ -75,6 +75,13 @@ variable dns_host_suffix {
   default                      = "mycicd"
 }
 
+variable environment_variables {
+  type                         = map
+  default = {
+    FOO                        = "bar"
+  }  
+} 
+
 variable linux_tools {
   default                      = false
   type                         = bool
@@ -149,6 +156,10 @@ variable script_wrapper_check {
   default                      = false
 }
 
+variable shared_image_gallery_id {
+  description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
+  default                      = null
+}
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }
@@ -166,6 +177,9 @@ variable user_name {
   default                      = "devopsadmin"
 }
 
+variable vhd_storage_account_tier {
+  default                      = "Standard"
+}
 variable vm_accelerated_networking {
   default                      = false
 }

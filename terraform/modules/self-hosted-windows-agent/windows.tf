@@ -91,9 +91,9 @@ resource azurerm_windows_virtual_machine windows_agent {
     }
   }    
 
-  # Required for AAD Login
   identity {
-    type                       = "SystemAssigned"
+    type                       = "SystemAssigned, UserAssigned"
+    identity_ids               = [var.user_assigned_identity_id]
   }
 
   lifecycle {

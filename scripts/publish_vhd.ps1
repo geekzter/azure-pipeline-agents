@@ -152,13 +152,14 @@ if ($imageVersion) {
     }
 
     Write-Host "`nCreating Image version ${newVersionString} of Image Definition '$ImageDefinitionName'..."
+    $TargetRegion ??=  ((@($gallery.location,$galleryResourceGroup.location) | Get-Unique) -join ",")
     az sig image-version create --gallery-image-definition $ImageDefinitionName `
                                 --gallery-name $GalleryName `
                                 --gallery-image-version $newVersionString `
                                 --location $gallery.location `
                                 --resource-group $galleryResourceGroupName `
                                 --subscription $gallerySubscriptionId `
-                                --target-regions ($TargetRegion ?? $gallery.location) `
+                                --target-regions $TargetRegion `
                                 --os-vhd-uri "${vhdGalleryImportUrl}" `
                                 --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
                                 --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion

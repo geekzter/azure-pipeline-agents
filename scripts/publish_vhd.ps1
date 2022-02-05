@@ -32,6 +32,7 @@ param (
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$OsType,
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string[]]$TargetRegion
 ) 
+$stopwatch = [system.diagnostics.stopwatch]::StartNew()
 Write-Verbose $MyInvocation.line 
 
 $galleryResourceGroupName = $GalleryResourceGroupId.Split("/")[-1]
@@ -45,6 +46,12 @@ if (!$GalleryName) {
 }
 if (!$SourceVHDUrl) {
     Write-Error "`nSourceVHDUrl not specified, exiting"
+    exit
+}
+if ($SourceVHDUrl -match "^https://(?<account>[\w]+)\.") {
+    $sourceVHDStorageAccountName = $matches["account"]
+} else {
+    Write-Warning "`nCould not parse storage account name from VHD url, exiting"
     exit
 }
 az group list --subscription $gallerySubscriptionId --query "[?name=='$galleryResourceGroupName']" -o json | ConvertFrom-Json | Set-Variable galleryResourceGroup
@@ -76,6 +83,7 @@ if (!$imageDefinition) {
                                    --publisher $Publisher --offer $Offer --sku $SKU `
                                    --os-type $OsType --os-state Generalized `
                                    --tags $tags | ConvertFrom-Json | Set-Variable imageDefinition
+    Write-Host "`nImage Definition '$ImageDefinitionName' (${Publisher}/${Offer}/${SKU}) does not exist yet, created after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 }
 
 if (!$ImageDefinitionVersionTags -or !$ImageDefinitionVersionTags.ContainsKey("versionlabel")) {
@@ -92,13 +100,6 @@ az sig image-version list --gallery-image-definition $ImageDefinitionName `
 if ($imageVersion) {
     Write-Warning "`nImage Definition '$ImageDefinitionName' with tag versionlabel='$imageDefinitionVersionLabel' already exists"
 } else {
-
-    # Images cannot be created from Shared Access Signature (SAS) URI blobs
-    if ("${VHDUrl}" -match "sig=") {
-        Write-Warning "Images cannot be created from Shared Access Signature (SAS) URI blobs"
-        exit
-    }
-
     az sig image-version list --gallery-image-definition $ImageDefinitionName `
                               --gallery-name $GalleryName `
                               --resource-group $galleryResourceGroupName --query "[].name" -o json `
@@ -119,20 +120,35 @@ if ($imageVersion) {
     Write-Host "`nTags that will be applied to version ${newVersionString} of Image Definition '$ImageDefinitionName':"
     $imageTags.GetEnumerator() | Sort-Object -Property Name | Format-Table
 
-    $targetVHDPath = "${Publisher}/${Offer}/${SKU}/${newVersionString}.vhd"
-    $targetVHDUrl = "https://${TargetVHDStorageAccountName}.blob.core.windows.net/${TargetVHDStorageContainerName}/${targetVHDPath}"
-    az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $galleryResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
-                                    --account-name $TargetVHDStorageAccountName `
-                                    --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
-                                    --permissions "lracuw"`
-                                    --resource-types co `
-                                    --services b `
-                                    --subscription $gallerySubscriptionId `
-                                    --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `
-                                    -o tsv | Set-Variable targetSASToken    
-    $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
-    Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
-    azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 
+    if ($TargetVHDStorageAccountName -and $TargetVHDStorageContainerName) {
+        # Use intermediate storage account (e.g. in different tenant from source storage account)
+        $targetVHDPath = "${Publisher}/${Offer}/${SKU}/${newVersionString}.vhd"
+        $targetVHDUrl = "https://${TargetVHDStorageAccountName}.blob.core.windows.net/${TargetVHDStorageContainerName}/${targetVHDPath}"
+        az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $galleryResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
+                                        --account-name $TargetVHDStorageAccountName `
+                                        --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
+                                        --permissions "lracuw"`
+                                        --resource-types co `
+                                        --services b `
+                                        --subscription $gallerySubscriptionId `
+                                        --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `
+                                        -o tsv | Set-Variable targetSASToken    
+        $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
+        Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
+        azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 
+        Write-Host "Copy '$SourceVHDUrl' to '$targetVHDUrlWithToken' completed after $($stopwatch.Elapsed.ToString("m'm's's'"))"
+
+        $vhdGalleryImportUrl = $targetVHDUrl
+        $vhdGalleryImportStorageAccountName = $TargetVHDStorageAccountName
+    } else {
+        # Images cannot be created from Shared Access Signature (SAS) URI blobs
+        if ("${SourceVHDUrl}" -match "\.vhd\?") {
+            Write-Warning "Images cannot be created from Shared Access Signature (SAS) URI blobs, exiting"
+            exit
+        }
+        $vhdGalleryImportUrl = $SourceVHDUrl
+        $vhdGalleryImportStorageAccountName = $sourceVHDStorageAccountName
+    }
 
     Write-Host "`nCreating Image version ${newVersionString} of Image Definition '$ImageDefinitionName'..."
     az sig image-version create --gallery-image-definition $ImageDefinitionName `
@@ -141,9 +157,10 @@ if ($imageVersion) {
                                 --resource-group $galleryResourceGroupName `
                                 --subscription $gallerySubscriptionId `
                                 --target-regions ($TargetRegion ?? $galleryResourceGroup.location) `
-                                --os-vhd-uri "${targetVHDUrl}" `
-                                --os-vhd-storage-account $TargetVHDStorageAccountName `
+                                --os-vhd-uri "${vhdGalleryImportUrl}" `
+                                --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
                                 --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
+    Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' created after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 }
 
 $imageVersion | Format-List

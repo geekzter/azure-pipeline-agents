@@ -160,6 +160,7 @@ jobs:
         # Create resources
         az group create -l $(agent.location) -n $(imageResourceGroup)
         az storage account create -n $(storageAccountName) -g $(imageResourceGroup) -l $(agent.location) --sku Premium_LRS
+        # TODO: Create private endpoint, lock down storage firewall
         
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
@@ -203,6 +204,7 @@ jobs:
         $ProgressPreference = 'SilentlyContinue'
 
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
+        # TODO: Take storage account as argument
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
                       -VHDUrlEnvironmentVariableName VHD_URL
         Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
@@ -237,8 +239,6 @@ jobs:
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.sasUrl)" `
-                          -TargetVHDStorageAccountName $(imageStorageAccountName) `
-                          -TargetVHDStorageContainerName $(imageStorageContainerName) `
                           -GalleryResourceGroupId $galleryResourceGroupId `
                           -GalleryName $(imageGalleryName) `
                           -ImageDefinitionName $(imageDefinitionName) `

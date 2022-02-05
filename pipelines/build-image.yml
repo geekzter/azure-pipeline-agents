@@ -207,6 +207,7 @@ jobs:
 
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+                      -GenerateSAS `
                       -VHDUrlEnvironmentVariableName VHD_URL
         Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
       useGlobalConfig: true

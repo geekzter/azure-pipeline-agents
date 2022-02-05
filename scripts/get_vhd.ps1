@@ -17,6 +17,7 @@
 ### Arguments
 param ( 
     [parameter(Mandatory=$true)][string]$PackerResourceGroupId,
+    [parameter][switch]$GenerateSAS,
     [parameter(Mandatory=$false)][string]$VHDUrlEnvironmentVariableName="IMAGE_VHD_URL"
 ) 
 Write-Verbose $MyInvocation.line 
@@ -45,12 +46,16 @@ if (!$vhdPath) {
     exit
 }
 
-Write-Debug "az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString(`"yyyy-MM-dd`") --subscription $packerSubscriptionId -o tsv"
-$sasToken=$(az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
 $vhdUrl = "$($storageAccount.primaryEndpoints.blob)${storageContainerName}/${vhdPath}"
-$vhdSASUrl = "${vhdUrl}?${sasToken}"
-Write-Host "`nVHD: $vhdSASUrl"
+$vhdUrlResult = $vhdUrl
+if ($GenerateSAS) {
+    Write-Debug "az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString(`"yyyy-MM-dd`") --subscription $packerSubscriptionId -o tsv"
+    $sasToken=$(az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
+    $vhdUrlResult = "${vhdUrl}?${sasToken}"
+}
+
+Write-Host "`nVHD: $vhdUrlResult"
 if ($VHDUrlEnvironmentVariableName) {
-    Set-Item env:${VHDUrlEnvironmentVariableName} $vhdSASUrl
+    Set-Item env:${VHDUrlEnvironmentVariableName} $vhdUrlResult
 }
 

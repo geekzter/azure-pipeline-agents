@@ -17,7 +17,7 @@
 ### Arguments
 param ( 
     [parameter(Mandatory=$true)][string]$PackerResourceGroupId,
-    [parameter][switch]$GenerateSAS,
+    [parameter(Mandatory=$false)][switch]$GenerateSAS,
     [parameter(Mandatory=$false)][string]$VHDUrlEnvironmentVariableName="IMAGE_VHD_URL"
 ) 
 Write-Verbose $MyInvocation.line 

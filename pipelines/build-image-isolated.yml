@@ -204,6 +204,19 @@ jobs:
         #                   -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
         #                   -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
 
+        Write-Host ./build-image.ps1 -TemplatePath $(imageTemplate) `
+                          -ClientId $(servicePrincipal.clientId) `
+                          -ClientSecret "$(servicePrincipal.clientSecret)" `
+                          -ResourcesNamePrefix $(imageResourcePrefix) `
+                          -Location $(agent.location) `
+                          -ResourceGroup $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
+                          -StorageAccount $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME `
+                          -SubscriptionId $(az account show --query id -o tsv) `
+                          -TenantId $(servicePrincipal.tenantId) `
+                          -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `
+                          -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
+                          -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
+
         ./build-image.ps1 -TemplatePath $(imageTemplate) `
                           -ClientId $(servicePrincipal.clientId) `
                           -ClientSecret "$(servicePrincipal.clientSecret)" `

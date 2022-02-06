@@ -27,7 +27,7 @@ resource azurerm_network_security_rule packer_ssh {
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_range       = "22"
-  source_address_prefixes      = var.admin_cidr_ranges
+  source_address_prefix        = "VirtualNetwork"
   destination_address_prefix   = "*"
   resource_group_name          = azurerm_network_security_group.packer_nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.packer_nsg.name
@@ -40,7 +40,7 @@ resource azurerm_network_security_rule packer_rdp {
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_range       = "5986"
-  source_address_prefixes      = var.admin_cidr_ranges
+  source_address_prefix        = "VirtualNetwork"
   destination_address_prefix   = "*"
   resource_group_name          = azurerm_network_security_group.packer_nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.packer_nsg.name

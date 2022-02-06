@@ -144,8 +144,8 @@ if ($imageVersion) {
     } else {
         # Images cannot be created from Shared Access Signature (SAS) URI blobs
         if ("${SourceVHDUrl}" -match "\.vhd\?") {
-            Write-Warning "Images cannot be created from Shared Access Signature (SAS) URI blobs, exiting"
-            exit
+            Write-Warning "Images cannot be created from Shared Access Signature (SAS) URI blobs, removing SAS"
+            $SourceVHDUrl = ($SourceVHDUrl -replace "\?.*$","")
         }
         $vhdGalleryImportUrl = $SourceVHDUrl
         $vhdGalleryImportStorageAccountName = $sourceVHDStorageAccountName

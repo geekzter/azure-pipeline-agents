@@ -137,10 +137,28 @@ jobs:
       workingDirectory: '$(imageRepository)'
 
   - task: AzureCLI@2
+    name: servicePrincipal
+    displayName: 'Fetch build credentials'
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
+
+        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
+        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+
+  - task: AzureCLI@2
     name: imageBuild
     displayName: 'Build image'
     inputs:
-      azureSubscription: '$(gallerySubscriptionConnection)'
+      azureSubscription: '$(packerSubscriptionConnection)'
+      # azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -165,17 +183,33 @@ jobs:
         az storage account create -n $(storageAccountName) -g $(imageResourceGroup) -l $(agent.location) --sku Premium_LRS
         # TODO: Create private endpoint, lock down storage firewall
         
+        # TODO: Create VNet in different subscription/tenant
+        # https://docs.microsoft.com/en-us/azure/virtual-network/create-peering-different-subscriptions#cli
+
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
+        # ./build-image.ps1 -TemplatePath $(imageTemplate) `
+        #                   -ClientId $env:servicePrincipalId `
+        #                   -ClientSecret $env:servicePrincipalKey `
+        #                   -ResourcesNamePrefix $(imageResourcePrefix) `
+        #                   -Location $(agent.location) `
+        #                   -ResourceGroup $(imageResourceGroup) `
+        #                   -StorageAccount $(storageAccountName) `
+        #                   -SubscriptionId $(az account show --query id -o tsv) `
+        #                   -TenantId $env:tenantId `
+        #                   -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `
+        #                   -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
+        #                   -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
+
         ./build-image.ps1 -TemplatePath $(imageTemplate) `
-                          -ClientId $env:servicePrincipalId `
-                          -ClientSecret $env:servicePrincipalKey `
+                          -ClientId $(servicePrincipal.clientId) `
+                          -ClientSecret "$(servicePrincipal.clientSecret)" `
                           -ResourcesNamePrefix $(imageResourcePrefix) `
                           -Location $(agent.location) `
                           -ResourceGroup $(imageResourceGroup) `
                           -StorageAccount $(storageAccountName) `
                           -SubscriptionId $(az account show --query id -o tsv) `
-                          -TenantId $env:tenantId `
+                          -TenantId $(servicePrincipal.tenantId) `
                           -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `
                           -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
                           -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
@@ -194,8 +228,8 @@ jobs:
     displayName: 'Get VHD url'
     condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
     inputs:
-      azureSubscription: '$(gallerySubscriptionConnection)'
-      # azureSubscription: '$(packerSubscriptionConnection)'
+      # azureSubscription: '$(gallerySubscriptionConnection)'
+      azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -211,6 +245,7 @@ jobs:
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
         # TODO: Take storage account as argument
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+                      -GenerateSAS `
                       -VHDUrlEnvironmentVariableName VHD_URL
         Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
       useGlobalConfig: true
@@ -278,8 +313,8 @@ jobs:
       displayName: 'Tear down temporary resources'
       condition: always() # succeededOrFailed()
       inputs:
-        azureSubscription: '$(gallerySubscriptionConnection)'
-        # azureSubscription: '$(packerSubscriptionConnection)'
+        # azureSubscription: '$(gallerySubscriptionConnection)'
+        azureSubscription: '$(packerSubscriptionConnection)'
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |

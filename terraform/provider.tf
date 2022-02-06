@@ -27,3 +27,8 @@ provider azurerm {
     }
   }
 }
+
+# TODO: Multi-tenant multi-provider
+# https://github.com/hashicorp/terraform-provider-azurerm/issues/4378#issuecomment-537948435
+# https://github.com/geekzter/azure-minecraft-docker/blob/main/terraform/provider.tf
+# https://docs.microsoft.com/en-us/azure/virtual-network/create-peering-different-subscriptions#cli

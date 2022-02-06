@@ -99,6 +99,9 @@ jobs:
       $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
       $vmMetadata | Format-List
 
+      # List environment variables
+      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
+
       Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
     name: agent
     displayName: 'Retrieve agent information'

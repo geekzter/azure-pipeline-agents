@@ -164,7 +164,7 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   } 
   lifecycle {
     ignore_changes             = [
-      custom_data,
+      # custom_data,
       extension,
       instances,
     ]

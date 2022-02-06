@@ -209,8 +209,8 @@ jobs:
                           -ClientSecret "$(servicePrincipal.clientSecret)" `
                           -ResourcesNamePrefix $(imageResourcePrefix) `
                           -Location $(agent.location) `
-                          -ResourceGroup $(imageResourceGroup) `
-                          -StorageAccount $(storageAccountName) `
+                          -ResourceGroup $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
+                          -StorageAccount $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME `
                           -SubscriptionId $(az account show --query id -o tsv) `
                           -TenantId $(servicePrincipal.tenantId) `
                           -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `

@@ -135,6 +135,27 @@ variable log_analytics_workspace_id {
   default                      = ""
 }
 
+variable packer_client_id {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
+}
+variable packer_client_secret {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
+}
+variable packer_address_space {
+  # Use Class C segment, to minimize conflict with networks provisioned from pipelines
+  default                      = "192.168.4.0/22"
+}
+variable packer_subscription_id {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
+}
+variable packer_tenant_id {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
+}
+
 variable prepare_host {
   type                         = bool
   default                      = true

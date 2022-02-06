@@ -38,3 +38,14 @@ resource azurerm_monitor_diagnostic_setting pipeline_network {
     }
   }
 }
+
+resource azurerm_virtual_network_peering agents_to_packer {
+  name                         = "${azurerm_virtual_network.pipeline_network.name}-peering"
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+  virtual_network_name         = azurerm_virtual_network.pipeline_network.name
+  remote_virtual_network_id    = var.peer_virtual_network_id
+  allow_virtual_network_access = true
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = false
+  use_remote_gateways          = false
+}

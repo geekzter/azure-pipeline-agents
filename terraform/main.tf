@@ -41,10 +41,15 @@ locals {
       "GEEKZTER_AGENT_SUBNET_ID"= module.network.scale_set_agents_subnet_id
       "GEEKZTER_AGENT_OUTBOUND_IP"= module.network.outbound_ip_address
       "GEEKZTER_AGENT_VIRTUAL_NETWORK_ID"=module.network.virtual_network_id
-      "GEEKZTER_COMPUTE_GALLERY_ID"=module.packer.shared_image_gallery_id
+      "GEEKZTER_COMPUTE_GALLERY_ID"=module.gallery.shared_image_gallery_id
+      "GEEKZTER_COMPUTE_GALLERY_NAME"=split("/",module.gallery.shared_image_gallery_id)[8]
+      "GEEKZTER_COMPUTE_GALLERY_RESOURCE_GROUP_ID"=split("/",module.gallery.shared_image_gallery_id)[4]
+      "GEEKZTER_VHD_STORAGE_ACCOUNT_ID"=module.gallery.storage_account_id
+      "GEEKZTER_VHD_STORAGE_ACCOUNT_NAME"=module.gallery.storage_account_name
+      "GEEKZTER_VHD_STORAGE_CONTAINER_NAME"=module.gallery.storage_container_name
       "GEEKZTER_PACKER_STORAGE_ACCOUNT_ID"=module.packer.storage_account_id
       "GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME"=module.packer.storage_account_name
-      "GEEKZTER_PACKER_SUBNET_NAME"="Packer"
+      "GEEKZTER_PACKER_SUBNET_NAME"=module.packer.packer_subnet_name
       "GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME"=split("/",module.network.virtual_network_id)[8]
       "GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME"=azurerm_resource_group.rg.name
     },
@@ -57,8 +62,8 @@ locals {
       application              = "Pipeline Agents"
       environment              = local.environment
       provisioner              = "terraform"
-      provisioner-client-id    = data.azurerm_client_config.current.client_id
-      provisioner-object-id    = data.azurerm_client_config.current.object_id
+      provisioner-client-id    = data.azurerm_client_config.default.client_id
+      provisioner-object-id    = data.azurerm_client_config.default.object_id
       repository               = "azure-pipeline-agents"
       runid                    = var.run_id
       shutdown                 = "false"
@@ -73,8 +78,6 @@ locals {
   ipprefix                     = jsondecode(chomp(data.http.local_public_prefix.body)).data.prefix
   admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.ipprefix])))) # Make sure ranges have correct base address
 }
-
-data azurerm_client_config current {}
 
 data http local_public_ip {
 # Get public IP address of the machine running this terraform template
@@ -115,6 +118,12 @@ resource azurerm_resource_group rg {
   tags                         = local.tags
 
   depends_on                   = [time_sleep.script_wrapper_check]
+}
+
+resource azurerm_role_assignment terraform_storage_owner {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Storage Blob Data Contributor"
+  principal_id                 = data.azurerm_client_config.default.object_id
 }
 
 resource azurerm_role_assignment service_principal_contributor {

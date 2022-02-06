@@ -26,9 +26,35 @@ provider azurerm {
       roll_instances_when_required = true
     }
   }
+
+# Requires admin consent:
+# https://login.microsoftonline.com/${data.azurerm_subscription.default.tenant_id}/adminconsent?client_id=${var.packer_tenant_id}
+  auxiliary_tenant_ids         = local.use_peer && var.packer_tenant_id != null && var.packer_tenant_id != "" ? [var.packer_tenant_id] : []
 }
 
-# TODO: Multi-tenant multi-provider
-# https://github.com/hashicorp/terraform-provider-azurerm/issues/4378#issuecomment-537948435
-# https://github.com/geekzter/azure-minecraft-docker/blob/main/terraform/provider.tf
-# https://docs.microsoft.com/en-us/azure/virtual-network/create-peering-different-subscriptions#cli
+# Multi-tenant multi-provider
+# https://medium.com/microsoftazure/configure-azure-virtual-network-peerings-with-terraform-762b708a28d4
+locals {
+  use_peer                     = var.packer_subscription_id != null && var.packer_subscription_id != ""
+}
+provider azurerm {
+  alias                        = "default"
+  features {}
+}
+data azurerm_subscription default {
+  provider                     = azurerm.default
+}
+data azurerm_client_config default {
+  provider                     = azurerm.default
+}
+provider azurerm {
+  alias                        = "peer"
+  client_id                    = local.use_peer && var.packer_client_id != null && var.packer_client_id != "" ? var.packer_client_id : null
+  client_secret                = local.use_peer && var.packer_client_secret != null && var.packer_client_secret != "" ? var.packer_client_secret : null
+  features {}
+  subscription_id              = local.use_peer ? var.packer_subscription_id : data.azurerm_subscription.default.subscription_id
+  tenant_id                    = local.use_peer && var.packer_tenant_id != null && var.packer_tenant_id != "" ? var.packer_tenant_id : data.azurerm_subscription.default.tenant_id
+# Requires admin consent:
+# https://login.microsoftonline.com/${var.packer_tenant_id}/adminconsent?client_id=${data.azurerm_client_config.default.client_id}
+  auxiliary_tenant_ids         = local.use_peer && var.packer_tenant_id != null && var.packer_tenant_id != "" ? [data.azurerm_subscription.default.tenant_id] : []
+}

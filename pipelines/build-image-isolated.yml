@@ -250,7 +250,7 @@ jobs:
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
                       -GenerateSAS `
                       -VHDUrlEnvironmentVariableName VHD_URL
-        Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
+        Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
@@ -282,9 +282,11 @@ jobs:
         }
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
-        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.sasUrl)" `
-                          -GalleryResourceGroupId $galleryResourceGroupId `
-                          -GalleryName $(imageGalleryName) `
+        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
+                          -TargetVHDStorageAccountName $env:GEEKZTER_VHD_STORAGE_ACCOUNT_NAME `
+                          -TargetVHDStorageContainerName $env:GEEKZTER_VHD_STORAGE_CONTAINER_NAME `
+                          -GalleryResourceGroupId $env:GEEKZTER_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
+                          -GalleryName $(imageGalleryName) $env:GEEKZTER_COMPUTE_GALLERY_NAME `
                           -ImageDefinitionName $(imageDefinitionName) `
                           -ImageDefinitionVersionTags $imageDefinitionVersionTags `
                           -Publisher $(imagePublisher) `

@@ -40,16 +40,18 @@ if (!$storageAccount) {
     Write-Warning "`nResource group '$packerResourceGroupName' in subscription '$packerSubscriptionId' does not contain a storage account, do you have data plane access? Exiting"
     exit
 }
-$vhdPath = $(az storage blob directory list -c $storageContainerName -d "Microsoft.Compute/Images/images" --account-name $($storageAccount.name) --subscription $packerSubscriptionId --query "[?ends_with(@.name, 'vhd')].name" -o tsv)
+$storageAccountName = $storageAccount.name
+$vhdPath = $(az storage blob directory list -c $storageContainerName -d "Microsoft.Compute/Images/images" --account-name $storageAccountName --subscription $packerSubscriptionId --query "[?ends_with(@.name, 'vhd')].name" -o tsv)
 if (!$vhdPath) {
-    Write-Warning "`nCould not find VHD in storage account $($storageAccount.name), exiting"
+    Write-Warning "`nCould not find VHD in storage account ${storageAccountName}, exiting"
     exit
 }
 
 $vhdUrl = "$($storageAccount.primaryEndpoints.blob)${storageContainerName}/${vhdPath}"
 $vhdUrlResult = $vhdUrl
 if ($GenerateSAS) {
-    $sasToken=$(az storage blob generate-sas -c $storageContainerName -n $vhdPath --as-user --auth-mode login --account-name $storageAccount.name --permissions r --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
+    Write-Host "az storage blob generate-sas -c $storageContainerName -n $vhdPath --as-user --auth-mode login --account-name $storageAccountName --permissions r --expiry (Get-Date).AddDays(7).ToString(`"yyyy-MM-dd`") --subscription $packerSubscriptionId -o tsv"
+    $sasToken=$(az storage blob generate-sas -c $storageContainerName -n $vhdPath --as-user --auth-mode login --account-name $storageAccountName --permissions r --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
     $vhdUrlResult = "${vhdUrl}?${sasToken}"
 }
 

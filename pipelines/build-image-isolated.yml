@@ -102,7 +102,7 @@ jobs:
       $vmMetadata | Format-List
 
       # List environment variables
-      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
+      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,SELF_HOSTED_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
 
       Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
     name: agent
@@ -163,7 +163,6 @@ jobs:
     displayName: 'Build image'
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
-      # azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
@@ -185,39 +184,25 @@ jobs:
 
         # Pre-create temporary resource group, so we can assign policy
         az group create -n $(imageBuildResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageBuildResourceGroupId
-        az policy assignment create --scope $imageBuildResourceGroupId --policy $env:GEEKZTER_PACKER_VM_EXTENSION_POLICY_NAME
+        az policy assignment create --scope $imageBuildResourceGroupId --policy $env:SELF_HOSTED_DEMO_PACKER_VM_EXTENSION_POLICY_NAME
 
         # Build
-        # $env:RUN_VALIDATION_FLAG = 'false'
-        # ./build-image.ps1 -TemplatePath $(imageTemplate) `
-        #                   -ClientId $(servicePrincipal.clientId) `
-        #                   -ClientSecret "$(servicePrincipal.clientSecret)" `
-        #                   -ResourcesNamePrefix $(imageResourcePrefix) `
-        #                   -Location $(agent.location) `
-        #                   -ResourceGroup $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
-        #                   -StorageAccount $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME `
-        #                   -SubscriptionId $(az account show --query id -o tsv) `
-        #                   -TenantId $(servicePrincipal.tenantId) `
-        #                   -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `
-        #                   -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
-        #                   -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
-
         # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity
         # TODO: Specify azure_tags, so we can clen up temporary resource that way
-        packer build -var "allowed_inbound_ip_addresses=${env:GEEKZTER_AGENT_OUTBOUND_IP}"
+        packer build -var "allowed_inbound_ip_addresses=${env:SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP}"
                      -var "build_resource_group_name=$(imageBuildResourceGroup)" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
                      -var "client_id=${env:servicePrincipalId}" `
                      -var "client_secret=${env:servicePrincipalKey}" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
                      -var "location=$(agent.location)" `
-                     -var "resource_group=${env:GEEKZTER_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
-                     -var "storage_account=${env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME}" `
+                     -var "resource_group=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
+                     -var "storage_account=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
                      -var "subscription_id=$(az account show --query id -o tsv)" `
                      -var "tenant_id=${env:tenantId}" `
-                     -var "virtual_network_name=${env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME}" `
-                     -var "virtual_network_resource_group_name=${env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
-                     -var "virtual_network_subnet_name=${env:GEEKZTER_PACKER_SUBNET_NAME}" `
+                     -var "virtual_network_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
+                     -var "virtual_network_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
+                     -var "virtual_network_subnet_name=${env:SELF_HOSTED_DEMO_PACKER_SUBNET_NAME}" `
                      $(imageTemplate) # TODO: Filter sensitive content        
 
         Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
@@ -234,9 +219,8 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    condition: ne(length(variables['imageBuild.commit']),0)
     inputs:
-      # azureSubscription: '$(gallerySubscriptionConnection)'
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
@@ -263,7 +247,7 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    condition: ne(length(variables['vhd.url']),0)
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -288,10 +272,10 @@ jobs:
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
-                          -TargetVHDStorageAccountName $env:GEEKZTER_VHD_STORAGE_ACCOUNT_NAME `
-                          -TargetVHDStorageContainerName $env:GEEKZTER_VHD_STORAGE_CONTAINER_NAME `
-                          -GalleryResourceGroupId $env:GEEKZTER_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
-                          -GalleryName $(imageGalleryName) $env:GEEKZTER_COMPUTE_GALLERY_NAME `
+                          -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
+                          -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
+                          -GalleryResourceGroupId $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
+                          -GalleryName $(imageGalleryName) $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
                           -ImageDefinitionName $(imageDefinitionName) `
                           -ImageDefinitionVersionTags $imageDefinitionVersionTags `
                           -Publisher $(imagePublisher) `
@@ -323,7 +307,6 @@ jobs:
       displayName: 'Tear down temporary resources'
       condition: always() # succeededOrFailed()
       inputs:
-        # azureSubscription: '$(gallerySubscriptionConnection)'
         azureSubscription: '$(packerSubscriptionConnection)'
         scriptType: pscore
         scriptLocation: inlineScript

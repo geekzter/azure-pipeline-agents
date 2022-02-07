@@ -38,24 +38,24 @@ locals {
   environment                  = "dev"
   environment_variables        = merge(
     {
-      GEEKZTER_AGENT_SUBNET_ID                            = module.network.scale_set_agents_subnet_id
-      GEEKZTER_AGENT_OUTBOUND_IP                          = module.network.outbound_ip_address
-      GEEKZTER_AGENT_VIRTUAL_NETWORK_ID                   = module.network.virtual_network_id
-      GEEKZTER_COMPUTE_GALLERY_ID                         = module.gallery.shared_image_gallery_id
-      GEEKZTER_COMPUTE_GALLERY_NAME                       = split("/",module.gallery.shared_image_gallery_id)[8]
-      GEEKZTER_COMPUTE_GALLERY_RESOURCE_GROUP_ID          = split("/",module.gallery.shared_image_gallery_id)[4]
-      GEEKZTER_VHD_STORAGE_ACCOUNT_ID                     = module.gallery.storage_account_id
-      GEEKZTER_VHD_STORAGE_ACCOUNT_NAME                   = module.gallery.storage_account_name
-      GEEKZTER_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME    = split("/",module.gallery.storage_account_id)[4]
-      GEEKZTER_VHD_STORAGE_CONTAINER_NAME                 = module.gallery.storage_container_name
-      GEEKZTER_PACKER_STORAGE_ACCOUNT_ID                  = module.packer.storage_account_id
-      GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME                = module.packer.storage_account_name
-      GEEKZTER_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME = split("/",module.packer.storage_account_id)[4]
-      GEEKZTER_PACKER_SUBNET_NAME                         = module.packer.packer_subnet_name
-      GEEKZTER_PACKER_VIRTUAL_NETWORK_ID                  = module.packer.virtual_network_id
-      GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME                = split("/",module.packer.virtual_network_id)[8]
-      GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME = split("/",module.packer.virtual_network_id)[4]
-      GEEKZTER_PACKER_VM_EXTENSION_POLICY_NAME            = module.packer.vm_extension_policy_name
+      SELF_HOSTED_DEMO_AGENT_SUBNET_ID                            = module.network.scale_set_agents_subnet_id
+      SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP                          = module.network.outbound_ip_address
+      SELF_HOSTED_DEMO_AGENT_VIRTUAL_NETWORK_ID                   = module.network.virtual_network_id
+      SELF_HOSTED_DEMO_COMPUTE_GALLERY_ID                         = module.gallery.shared_image_gallery_id
+      SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME                       = split("/",module.gallery.shared_image_gallery_id)[8]
+      SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID          = split("/",module.gallery.shared_image_gallery_id)[4]
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_ID                     = module.gallery.storage_account_id
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME                   = module.gallery.storage_account_name
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME    = split("/",module.gallery.storage_account_id)[4]
+      SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME                 = module.gallery.storage_container_name
+      SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_ID                  = module.packer.storage_account_id
+      SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME                = module.packer.storage_account_name
+      SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME = split("/",module.packer.storage_account_id)[4]
+      SELF_HOSTED_DEMO_PACKER_SUBNET_NAME                         = module.packer.packer_subnet_name
+      SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_ID                  = module.packer.virtual_network_id
+      SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME                = split("/",module.packer.virtual_network_id)[8]
+      SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME = split("/",module.packer.virtual_network_id)[4]
+      SELF_HOSTED_DEMO_PACKER_VM_EXTENSION_POLICY_NAME            = module.packer.vm_extension_policy_name
     },
     var.environment_variables
   )

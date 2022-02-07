@@ -92,7 +92,7 @@ jobs:
       $vmMetadata | Format-List
 
       # List environment variables
-      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
+      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,SELF_HOSTED_DEMO_*,TF_*,SYSTEM_* | Sort-Object -Property Name
 
       Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
     name: agent
@@ -168,10 +168,10 @@ jobs:
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
         # Override Packer settings with environment variables
-        $env:AGENT_IP            = $env:GEEKZTER_AGENT_OUTBOUND_IP # Should not be needed if VNet is also specified
-        $env:VNET_NAME           = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME
-        $env:VNET_RESOURCE_GROUP = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
-        $env:VNET_SUBNET         = $env:GEEKZTER_PACKER_SUBNET_NAME
+        $env:AGENT_IP            = $env:SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP # Should not be needed if VNet is also specified
+        $env:VNET_NAME           = $env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME
+        $env:VNET_RESOURCE_GROUP = $env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
+        $env:VNET_SUBNET         = $env:SELF_HOSTED_DEMO_PACKER_SUBNET_NAME
 
         # Build
         Import-Module ./GenerateResourcesAndImage.ps1
@@ -196,7 +196,7 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    condition: ne(length(variables['imageBuild.commit']),0)
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -222,7 +222,7 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    condition: ne(length(variables['vhd.url']),0)
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

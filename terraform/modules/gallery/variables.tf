@@ -4,6 +4,7 @@ variable resource_group_name {}
 variable shared_image_gallery_id {}
 variable storage_account_tier {}
 variable subnet_id {}
+variable suffix {}
 variable tags {
     type = map
 }

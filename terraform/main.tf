@@ -49,6 +49,7 @@ locals {
       SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME                   = module.gallery.storage_account_name
       SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_ID      = join("/",slice(split("/",module.gallery.storage_account_id),0,5))
       SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME    = split("/",module.gallery.storage_account_id)[4]
+      SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_ID                   = module.gallery.storage_container_id
       SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME                 = module.gallery.storage_container_name
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_ID                  = module.packer.storage_account_id
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME                = module.packer.storage_account_name
@@ -121,7 +122,7 @@ resource time_sleep script_wrapper_check {
 }
 
 resource azurerm_resource_group rg {
-  name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-agents-${terraform.workspace}-${local.suffix}"
+  name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-${terraform.workspace}-agents-${local.suffix}"
   location                     = var.location
   tags                         = local.tags
 

@@ -1,5 +1,5 @@
 resource azurerm_storage_account images {
-  name                         = "${substr(lower(replace(azurerm_resource_group.peer_rg.name,"/a|e|i|o|u|y|-/","")),0,15)}packer"
+  name                         = "${substr(lower(replace(azurerm_resource_group.peer_rg.name,"/a|e|i|o|u|y|-/","")),0,14)}${var.suffix}packer"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.peer_rg.name
   account_kind                 = "StorageV2"

@@ -24,6 +24,7 @@ param (
     [parameter(Mandatory=$false)][string]$GalleryName,
     [parameter(Mandatory=$false,HelpMessage="VHD's are copied here")][string]$TargetVHDStorageAccountName,
     [parameter(Mandatory=$false,HelpMessage="VHD's are copied here")][string]$TargetVHDStorageContainerName,
+    [parameter(Mandatory=$false,HelpMessage="VHD's are copied here")][string]$TargetVHDStorageResourceGroupName,
     [parameter(Mandatory=$true)][string]$ImageDefinitionName,
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][hashtable]$ImageDefinitionVersionTags,
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$Publisher,
@@ -121,11 +122,11 @@ if ($imageVersion) {
     Write-Host "`nTags that will be applied to version ${newVersionString} of Image Definition '$ImageDefinitionName':"
     $imageTags.GetEnumerator() | Sort-Object -Property Name | Format-Table
 
-    if ($TargetVHDStorageAccountName -and $TargetVHDStorageContainerName) {
+    if ($TargetVHDStorageAccountName -and $TargetVHDStorageContainerName -and $TargetVHDStorageResourceGroupName) {
         # Use intermediate storage account (e.g. in different tenant from source storage account)
         $targetVHDPath = "${Publisher}/${Offer}/${SKU}/${newVersionString}.vhd"
         $targetVHDUrl = "https://${TargetVHDStorageAccountName}.blob.core.windows.net/${TargetVHDStorageContainerName}/${targetVHDPath}"
-        az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $galleryResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
+        az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $TargetVHDStorageResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
                                         --account-name $TargetVHDStorageAccountName `
                                         --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
                                         --permissions "lracuw"`

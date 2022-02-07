@@ -255,6 +255,7 @@ module gallery {
   shared_image_gallery_id      = var.shared_image_gallery_id
   storage_account_tier         = var.vhd_storage_account_tier
   subnet_id                    = module.network.private_endpoint_subnet_id
+  suffix                       = local.suffix
 
   depends_on                   = [
     module.network,

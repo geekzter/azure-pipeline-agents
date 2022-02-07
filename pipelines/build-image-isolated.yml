@@ -173,7 +173,7 @@ jobs:
         # Build
         # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity
         # TODO: Specify azure_tags, so we can clean up temporary resource that way
-        packer build -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`"}" `
+        packer build -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`",shutdown=`"false`"}" `
                      -var "build_resource_group_name=$(imageBuildResourceGroup)" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
                      -var "client_id=${env:servicePrincipalId}" `
@@ -220,6 +220,7 @@ jobs:
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
         # TODO: Take storage account as argument
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+                      -BlobPrefix $(imageResourcePrefix) `
                       -GenerateSAS `
                       -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
         Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:IMAGE_VHD_URL}"

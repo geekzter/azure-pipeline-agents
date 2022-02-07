@@ -86,17 +86,17 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
-  # - pwsh: |
-  #     $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
-  #     $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
-  #     $vmMetadata | Format-List
+  - pwsh: |
+      $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
+      $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
+      $vmMetadata | Format-List
 
-  #     # List environment variables
-  #     Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
+      # List environment variables
+      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,GEEKZTER_*,TF_*,SYSTEM_* | Sort-Object -Property Name
 
-  #     Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
-  #   name: agent
-  #   displayName: 'Retrieve agent information'
+      Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
+    name: agent
+    displayName: 'Retrieve agent information'
 
   - task: AzureCLI@2
     name: githubRelease
@@ -131,67 +131,67 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
 
-  # - task: AzureCLI@2
-  #   name: servicePrincipal
-  #   displayName: 'Fetch build credentials'
-  #   inputs:
-  #     azureSubscription: '$(packerSubscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
+  - task: AzureCLI@2
+    name: servicePrincipal
+    displayName: 'Fetch build credentials'
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
 
-  #       Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
-  #       Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
-  #       Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
-  #     addSpnToEnvironment: true
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
+        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
+        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
 
-  # - task: AzurePowerShell@5
-  #   name: imageBuild
-  #   displayName: 'Build image'
-  #   condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
-  #   inputs:
-  #     azureSubscription: '$(packerSubscriptionConnection)'
-  #     scriptType: inlineScript
-  #     inline: |
-  #       # Diagnostics
-  #       if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-  #         $DebugPreference       = "Continue"
-  #         $InformationPreference = "Continue"
-  #         $VerbosePreference     = "Continue"
-  #         Set-PSDebug -Trace 2
-  #       }
+  - task: AzurePowerShell@5
+    name: imageBuild
+    displayName: 'Build image'
+    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: inlineScript
+      inline: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
 
-  #       # Patch GenerateResourcesAndImage.ps1 to improve build time
-  #       (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
+        # Patch GenerateResourcesAndImage.ps1 to improve build time
+        (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-  #       # Override Packer settings with environment variables
-  #       $env:AGENT_IP            = $env:GEEKZTER_AGENT_OUTBOUND_IP # Should not be needed if VNet is also specified
-  #       $env:VNET_NAME           = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME
-  #       $env:VNET_RESOURCE_GROUP = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
-  #       $env:VNET_SUBNET         = $env:GEEKZTER_PACKER_SUBNET_NAME
+        # Override Packer settings with environment variables
+        $env:AGENT_IP            = $env:GEEKZTER_AGENT_OUTBOUND_IP # Should not be needed if VNet is also specified
+        $env:VNET_NAME           = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME
+        $env:VNET_RESOURCE_GROUP = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
+        $env:VNET_SUBNET         = $env:GEEKZTER_PACKER_SUBNET_NAME
 
-  #       # Build
-  #       Import-Module ./GenerateResourcesAndImage.ps1
-  #       Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-  #       GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-  #                                 -ResourceGroupName $(imageResourceGroup) `
-  #                                 -ImageGenerationRepositoryRoot "$(imageRepository)" `
-  #                                 -ImageType $(imageName) `
-  #                                 -AzureLocation $(agent.location) `
-  #                                 -AzureClientId $(servicePrincipal.clientId) `
-  #                                 -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-  #                                 -AzureTenantId $(servicePrincipal.tenantId) 
+        # Build
+        Import-Module ./GenerateResourcesAndImage.ps1
+        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+        #                           -ResourceGroupName $(imageResourceGroup) `
+        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
+        #                           -ImageType $(imageName) `
+        #                           -AzureLocation $(agent.location) `
+        #                           -AzureClientId $(servicePrincipal.clientId) `
+        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+        #                           -AzureTenantId $(servicePrincipal.tenantId) 
 
-  #       Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
-  #       Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
-  #     azurePowerShellVersion: 'latestVersion'
-  #     pwsh: true
-  #     failOnStandardError: true
-  #     retryCountOnTaskFailure: $(retryCount)
-  #     workingDirectory: '$(imageScriptDirectory)'
+        Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
+        Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
+      azurePowerShellVersion: 'latestVersion'
+      pwsh: true
+      failOnStandardError: true
+      retryCountOnTaskFailure: $(retryCount)
+      workingDirectory: '$(imageScriptDirectory)'
 
   - task: AzureCLI@2
     name: vhd

@@ -215,8 +215,8 @@ jobs:
                       -GenerateSAS `
                       -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
         # ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName IMAGE_VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20
-        Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:IMAGE_VHD_URL}"
-        # Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:IMAGE_VHD_URL}"
+        # Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:IMAGE_VHD_URL}"
+        Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:IMAGE_VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
@@ -261,7 +261,7 @@ jobs:
         #                   -OsType $(imageOSType) `
         #                   -TargetRegion $(targetRegions)"
 
-        ./publish_vhd.ps1 -SourceVHDUrl "${env:IMAGE_VHD_URL}" `
+        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $(imageStorageAccountName) `
                           -TargetVHDStorageContainerName $(imageStorageContainerName) `
                           -GalleryResourceGroupId $galleryResourceGroupId `
@@ -291,8 +291,6 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
-    env:
-      IMAGE_VHD_URL: variables['vhd.url']
 
   - task: AzureCLI@2
     displayName: 'List published images'

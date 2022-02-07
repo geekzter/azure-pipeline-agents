@@ -51,7 +51,7 @@ if (!$SourceVHDUrl) {
 if ($SourceVHDUrl -match "^https://(?<account>[\w]+)\.") {
     $sourceVHDStorageAccountName = $matches["account"]
 } else {
-    Write-Warning "`nCould not parse storage account name from SourceVHDUrl '$SourceVHDUrl', exiting"
+    Write-Warning "`nCould not parse storage account name from SourceVHDUrl $SourceVHDUrl, exiting"
     exit
 }
 az group list --subscription $gallerySubscriptionId --query "[?name=='$galleryResourceGroupName']" -o json | ConvertFrom-Json | Set-Variable galleryResourceGroup

@@ -189,8 +189,7 @@ jobs:
         # Build
         # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity
         # TODO: Specify azure_tags, so we can clean up temporary resource that way
-        packer build -var "allowed_inbound_ip_addresses=${env:SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP}" `
-                     -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`"}" `
+        packer build -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`"}" `
                      -var "build_resource_group_name=$(imageBuildResourceGroup)" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
                      -var "client_id=${env:servicePrincipalId}" `

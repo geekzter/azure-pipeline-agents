@@ -175,6 +175,12 @@ jobs:
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
+        # Override Packer settings with environment variables
+        $env:AGENT_IP            = $env:GEEKZTER_AGENT_OUTBOUND_IP
+        $env:VNET_NAME           = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME
+        $env:VNET_RESOURCE_GROUP = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
+        $env:VNET_SUBNET         = $env:GEEKZTER_PACKER_SUBNET_NAME
+
         # Build
         Import-Module ./GenerateResourcesAndImage.ps1
         Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId

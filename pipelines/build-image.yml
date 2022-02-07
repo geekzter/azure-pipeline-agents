@@ -251,6 +251,7 @@ jobs:
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
                           -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
+                          -TargetVHDStorageResourceGroupName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
                           -GalleryResourceGroupId $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
                           -GalleryName $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
                           -ImageDefinitionName $(imageDefinitionName) `

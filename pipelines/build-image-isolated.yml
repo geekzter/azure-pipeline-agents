@@ -142,23 +142,6 @@ jobs:
       workingDirectory: '$(imageRepository)'
 
   - task: AzureCLI@2
-    name: servicePrincipal
-    displayName: 'Fetch build credentials'
-    inputs:
-      azureSubscription: '$(packerSubscriptionConnection)'
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
-
-        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
-        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
-        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
-      addSpnToEnvironment: true
-      useGlobalConfig: true
-      failOnStandardError: true
-
-  - task: AzureCLI@2
     name: imageBuild
     displayName: 'Build image'
     inputs:
@@ -274,6 +257,7 @@ jobs:
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
                           -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
+                          -TargetVHDStorageResourceGroupName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
                           -GalleryResourceGroupId $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
                           -GalleryName $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
                           -ImageDefinitionName $(imageDefinitionName) `
@@ -322,7 +306,6 @@ jobs:
           } else {
             Write-Host "No resource groups to remove"
           }
-        addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true
         workingDirectory: '$(agentScriptDirectory)'

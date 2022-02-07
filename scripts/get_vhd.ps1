@@ -42,7 +42,7 @@ if (!$storageAccount) {
 }
 $vhdPath = $(az storage blob directory list -c $storageContainerName -d "Microsoft.Compute/Images/images" --account-name $($storageAccount.name) --subscription $packerSubscriptionId --query "[?ends_with(@.name, 'vhd')].name" -o tsv)
 if (!$vhdPath) {
-    Write-Warning "`nCould not find VHD in storage account ${storageAccount}, exiting"
+    Write-Warning "`nCould not find VHD in storage account $($storageAccount.name), exiting"
     exit
 }
 

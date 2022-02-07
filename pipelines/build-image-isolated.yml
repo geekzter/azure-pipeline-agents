@@ -181,42 +181,8 @@ jobs:
         # TODO: Can we assume main branch is the latest released version?
         git log -1 2>&1
 
-        # Create resources
-        az group create -l $(agent.location) -n $(imageResourceGroup)
-        az storage account create -n $(storageAccountName) -g $(imageResourceGroup) -l $(agent.location) --sku Premium_LRS
-        # TODO: Create private endpoint, lock down storage firewall
-        
-        # TODO: Create VNet in different subscription/tenant
-        # https://docs.microsoft.com/en-us/azure/virtual-network/create-peering-different-subscriptions#cli
-
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
-        # ./build-image.ps1 -TemplatePath $(imageTemplate) `
-        #                   -ClientId $env:servicePrincipalId `
-        #                   -ClientSecret $env:servicePrincipalKey `
-        #                   -ResourcesNamePrefix $(imageResourcePrefix) `
-        #                   -Location $(agent.location) `
-        #                   -ResourceGroup $(imageResourceGroup) `
-        #                   -StorageAccount $(storageAccountName) `
-        #                   -SubscriptionId $(az account show --query id -o tsv) `
-        #                   -TenantId $env:tenantId `
-        #                   -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `
-        #                   -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
-        #                   -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
-
-        Write-Host ./build-image.ps1 -TemplatePath $(imageTemplate) `
-                          -ClientId $(servicePrincipal.clientId) `
-                          -ClientSecret "$(servicePrincipal.clientSecret)" `
-                          -ResourcesNamePrefix $(imageResourcePrefix) `
-                          -Location $(agent.location) `
-                          -ResourceGroup $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
-                          -StorageAccount $env:GEEKZTER_PACKER_STORAGE_ACCOUNT_NAME `
-                          -SubscriptionId $(az account show --query id -o tsv) `
-                          -TenantId $(servicePrincipal.tenantId) `
-                          -VirtualNetworkName $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME `
-                          -VirtualNetworkRG $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME `
-                          -VirtualNetworkSubnet $env:GEEKZTER_PACKER_SUBNET_NAME
-
         ./build-image.ps1 -TemplatePath $(imageTemplate) `
                           -ClientId $(servicePrincipal.clientId) `
                           -ClientSecret "$(servicePrincipal.clientSecret)" `

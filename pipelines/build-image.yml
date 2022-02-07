@@ -214,7 +214,7 @@ jobs:
         # ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
         #               -GenerateSAS `
         #               -VHDUrlEnvironmentVariableName VHD_URL
-        ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20                      
+        ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20
         # Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:VHD_URL}"
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:VHD_URL}"
       useGlobalConfig: true
@@ -237,6 +237,7 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
+        $ProgressPreference = 'SilentlyContinue'
 
         # Publish
         $imageDefinitionVersionTags = @{
@@ -273,6 +274,7 @@ jobs:
         #                   -OsType $(imageOSType) `
         #                   -TargetRegion $(targetRegions)
 
+        ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20
         ./publish_vhd.ps1 -SourceVHDUrl "${env:VHD_URL}" `
                   -TargetVHDStorageAccountName geekztervhds `
                   -TargetVHDStorageContainerName vhd `
@@ -288,8 +290,8 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
-    env:
-      VHD_URL: variables['vhd.url']
+    # env:
+    #   VHD_URL: variables['vhd.url']
 
   - task: AzureCLI@2
     displayName: 'List published images'

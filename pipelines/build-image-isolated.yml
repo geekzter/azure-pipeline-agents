@@ -184,7 +184,8 @@ jobs:
         git log -1 2>&1
 
         # Pre-create temporary resource group, so we can assign policy
-        az group create -n $(imageTempResourceGroup) -l $(agent.location)
+        az group create -n $(imageTempResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageTempResourceGroupId
+        az policy assignment create --scope $imageTempResourceGroupId --policy $env:GEEKZTER_PACKER_VM_EXTENSION_POLICY_NAME
 
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'

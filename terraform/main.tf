@@ -55,6 +55,7 @@ locals {
       GEEKZTER_PACKER_VIRTUAL_NETWORK_ID                  = module.packer.virtual_network_id
       GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME                = split("/",module.packer.virtual_network_id)[8]
       GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME = split("/",module.packer.virtual_network_id)[4]
+      GEEKZTER_PACKER_VM_EXTENSION_POLICY_NAME            = module.packer.vm_extension_policy_name
     },
     var.environment_variables
   )

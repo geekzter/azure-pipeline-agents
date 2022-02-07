@@ -81,6 +81,8 @@ jobs:
     value: '${{ parameters.imageResourceGroup }}'
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
+  - name: 'imageTempResourceGroup' 
+    value: '${{ parameters.imageResourcePrefix }}_${{ lower(parameters.image) }}'
   - name: 'imageScriptDirectory'
     value: '$(Build.SourcesDirectory)/virtual-environments/images.CI/linux-and-win'
   - name: 'imageTemplate'
@@ -180,6 +182,9 @@ jobs:
         # git checkout $(githubRelease.commit) --quiet
         # TODO: Can we assume main branch is the latest released version?
         git log -1 2>&1
+
+        # Pre-create temporary resource group, so we can assign policy
+        az group create -n $(imageTempResourceGroup) -l $(agent.location)
 
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'

@@ -211,9 +211,10 @@ jobs:
         }
 
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
-        ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
-                      -GenerateSAS `
-                      -VHDUrlEnvironmentVariableName VHD_URL
+        # ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+        #               -GenerateSAS `
+        #               -VHDUrlEnvironmentVariableName VHD_URL
+        ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20                      
         # Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:VHD_URL}"
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:VHD_URL}"
       useGlobalConfig: true
@@ -246,34 +247,49 @@ jobs:
         }
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
-        Write-Debug "./publish_vhd.ps1 -SourceVHDUrl `"$(vhd.url)`" `
-                          -TargetVHDStorageAccountName $(imageStorageAccountName) `
-                          -TargetVHDStorageContainerName $(imageStorageContainerName) `
-                          -GalleryResourceGroupId $galleryResourceGroupId `
-                          -GalleryName $(imageGalleryName) `
-                          -ImageDefinitionName $(imageDefinitionName) `
-                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-                          -Publisher $(imagePublisher) `
-                          -Offer $(imageOffer) `
-                          -SKU $(imageSKU) `
-                          -OsType $(imageOSType) `
-                          -TargetRegion $(targetRegions)"
+        # Write-Debug "./publish_vhd.ps1 -SourceVHDUrl `"$(vhd.url)`" `
+        #                   -TargetVHDStorageAccountName $(imageStorageAccountName) `
+        #                   -TargetVHDStorageContainerName $(imageStorageContainerName) `
+        #                   -GalleryResourceGroupId $galleryResourceGroupId `
+        #                   -GalleryName $(imageGalleryName) `
+        #                   -ImageDefinitionName $(imageDefinitionName) `
+        #                   -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+        #                   -Publisher $(imagePublisher) `
+        #                   -Offer $(imageOffer) `
+        #                   -SKU $(imageSKU) `
+        #                   -OsType $(imageOSType) `
+        #                   -TargetRegion $(targetRegions)"
 
-        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
-                          -TargetVHDStorageAccountName $(imageStorageAccountName) `
-                          -TargetVHDStorageContainerName $(imageStorageContainerName) `
-                          -GalleryResourceGroupId $galleryResourceGroupId `
-                          -GalleryName $(imageGalleryName) `
-                          -ImageDefinitionName $(imageDefinitionName) `
-                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-                          -Publisher $(imagePublisher) `
-                          -Offer $(imageOffer) `
-                          -SKU $(imageSKU) `
-                          -OsType $(imageOSType) `
-                          -TargetRegion $(targetRegions)
+        # ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
+        #                   -TargetVHDStorageAccountName $(imageStorageAccountName) `
+        #                   -TargetVHDStorageContainerName $(imageStorageContainerName) `
+        #                   -GalleryResourceGroupId $galleryResourceGroupId `
+        #                   -GalleryName $(imageGalleryName) `
+        #                   -ImageDefinitionName $(imageDefinitionName) `
+        #                   -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+        #                   -Publisher $(imagePublisher) `
+        #                   -Offer $(imageOffer) `
+        #                   -SKU $(imageSKU) `
+        #                   -OsType $(imageOSType) `
+        #                   -TargetRegion $(targetRegions)
+
+        ./publish_vhd.ps1 -SourceVHDUrl "${env:VHD_URL}" `
+                  -TargetVHDStorageAccountName geekztervhds `
+                  -TargetVHDStorageContainerName vhd `
+                  -GalleryResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/Shared `
+                  -GalleryName SharedImages `
+                  -ImageDefinitionName Ubuntu2004 `
+                  -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+                  -Publisher PrivatePipelineImages `
+                  -Offer Ubuntu `
+                  -SKU 2004 `
+                  -OsType linux `
+                  -TargetRegion westeurope,northeurope,centralus
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
+    env:
+      VHD_URL: variables['vhd.url']
 
   - task: AzureCLI@2
     displayName: 'List published images'

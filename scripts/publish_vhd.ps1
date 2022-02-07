@@ -88,7 +88,7 @@ if (!$imageDefinition) {
 }
 
 if (!$ImageDefinitionVersionTags -or !$ImageDefinitionVersionTags.ContainsKey("versionlabel")) {
-    Write-Warning "`nImageDefinitionVersionTags not specified, exiting"
+    Write-Warning "`nImageDefinitionVersionTags not specified with versionlabel, exiting"
     exit
 }
 $imageDefinitionVersionLabel = $ImageDefinitionVersionTags["versionlabel"]
@@ -136,7 +136,7 @@ if ($imageVersion) {
                                         -o tsv | Set-Variable targetSASToken    
         $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
         Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
-        Write-Debug "azcopy copy `"${SourceVHDUrl}`" `"${targetVHDUrlWithToken}`" --overwrite true "
+        Write-Host "azcopy copy `"${SourceVHDUrl}`" `"${targetVHDUrlWithToken}`" --overwrite true "
         azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 
         Write-Host "Copy '$SourceVHDUrl' to '$targetVHDUrlWithToken' completed after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 

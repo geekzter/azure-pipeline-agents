@@ -124,9 +124,9 @@ jobs:
 
         # Determine whether image with same config already exists
         az sig image-version list --gallery-image-definition $(imageDefinitionName) `
-                                  --gallery-name $(imageGalleryName) `
-                                  --resource-group $(galleryResourceGroup) `
-                                  --query "[?tags.versionlabel=='$version' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
+                                  --gallery-name $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "[?tags.versionlabel=='$version' && provisioningState!='Deleting' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
         $newImageVersion = !$imageVersion
         Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
         if ($newImageVersion) {
@@ -188,14 +188,14 @@ jobs:
 
         # Build
         # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity
-        # TODO: Specify azure_tags, so we can clen up temporary resource that way
-        packer build -var "allowed_inbound_ip_addresses=${env:SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP}"
+        # TODO: Specify azure_tags, so we can clean up temporary resource that way
+        packer build -var "allowed_inbound_ip_addresses=${env:SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP}" `
+                     -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`"}" `
                      -var "build_resource_group_name=$(imageBuildResourceGroup)" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
                      -var "client_id=${env:servicePrincipalId}" `
                      -var "client_secret=${env:servicePrincipalKey}" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
-                     -var "location=$(agent.location)" `
                      -var "resource_group=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
                      -var "storage_account=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
                      -var "subscription_id=$(az account show --query id -o tsv)" `
@@ -238,8 +238,8 @@ jobs:
         # TODO: Take storage account as argument
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
                       -GenerateSAS `
-                      -VHDUrlEnvironmentVariableName VHD_URL
-        Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:VHD_URL}"
+                      -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
+        Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:IMAGE_VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
@@ -275,7 +275,7 @@ jobs:
                           -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
                           -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
                           -GalleryResourceGroupId $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
-                          -GalleryName $(imageGalleryName) $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
+                          -GalleryName $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
                           -ImageDefinitionName $(imageDefinitionName) `
                           -ImageDefinitionVersionTags $imageDefinitionVersionTags `
                           -Publisher $(imagePublisher) `

@@ -43,17 +43,21 @@ locals {
       SELF_HOSTED_DEMO_AGENT_VIRTUAL_NETWORK_ID                   = module.network.virtual_network_id
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_ID                         = module.gallery.shared_image_gallery_id
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME                       = split("/",module.gallery.shared_image_gallery_id)[8]
-      SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID          = split("/",module.gallery.shared_image_gallery_id)[4]
+      SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID          = join("/",slice(split("/",module.gallery.shared_image_gallery_id),0,5))
+      SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME        = split("/",module.gallery.shared_image_gallery_id)[4]
       SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_ID                     = module.gallery.storage_account_id
       SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME                   = module.gallery.storage_account_name
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_ID      = join("/",slice(split("/",module.gallery.storage_account_id),0,5))
       SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME    = split("/",module.gallery.storage_account_id)[4]
       SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME                 = module.gallery.storage_container_name
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_ID                  = module.packer.storage_account_id
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME                = module.packer.storage_account_name
+      SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID   = join("/",slice(split("/",module.packer.storage_account_id),0,5))
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME = split("/",module.packer.storage_account_id)[4]
       SELF_HOSTED_DEMO_PACKER_SUBNET_NAME                         = module.packer.packer_subnet_name
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_ID                  = module.packer.virtual_network_id
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME                = split("/",module.packer.virtual_network_id)[8]
+      SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID   = join("/",slice(split("/",module.packer.virtual_network_id),0,5))
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME = split("/",module.packer.virtual_network_id)[4]
       SELF_HOSTED_DEMO_PACKER_VM_EXTENSION_POLICY_NAME            = module.packer.vm_extension_policy_name
     },

@@ -49,8 +49,7 @@ if (!$vhdPath) {
 $vhdUrl = "$($storageAccount.primaryEndpoints.blob)${storageContainerName}/${vhdPath}"
 $vhdUrlResult = $vhdUrl
 if ($GenerateSAS) {
-    Write-Debug "az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString(`"yyyy-MM-dd`") --subscription $packerSubscriptionId -o tsv"
-    $sasToken=$(az storage container generate-sas -n $storageContainerName --as-user --auth-mode login --account-name $storageAccount.name --permissions acdlrw --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
+    $sasToken=$(az storage blob generate-sas -c $storageContainerName -n $vhdPath --as-user --auth-mode login --account-name $storageAccount.name --permissions r --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
     $vhdUrlResult = "${vhdUrl}?${sasToken}"
 }
 

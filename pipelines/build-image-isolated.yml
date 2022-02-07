@@ -186,6 +186,7 @@ jobs:
         # Pre-create temporary resource group, so we can assign policy
         az group create -n $(imageTempResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageTempResourceGroupId
         az policy assignment create --scope $imageTempResourceGroupId --policy $env:GEEKZTER_PACKER_VM_EXTENSION_POLICY_NAME
+        $env:BUILD_RESOURCE_GROUP_NAME = "$(imageTempResourceGroup)"
 
         # Build
         $env:RUN_VALIDATION_FLAG = 'false'
@@ -209,7 +210,9 @@ jobs:
       failOnStandardError: true
       retryCountOnTaskFailure: $(retryCount)
       workingDirectory: '$(imageScriptDirectory)'
-
+    env:
+      PACKER_LOG: 1
+      PACKER_LOG_PATH: $(Build.ArtifactStagingDirectory)/packer-log.txt
 
   - task: AzureCLI@2
     name: vhd

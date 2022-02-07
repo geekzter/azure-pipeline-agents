@@ -274,8 +274,21 @@ jobs:
         #                   -OsType $(imageOSType) `
         #                   -TargetRegion $(targetRegions)
 
-        ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName IMAGE_VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20
-        ./publish_vhd.ps1 -SourceVHDUrl "${env:IMAGE_VHD_URL}" `
+        # ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName IMAGE_VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20
+        
+        # ./publish_vhd.ps1 -SourceVHDUrl "${env:IMAGE_VHD_URL}" `
+        #           -TargetVHDStorageAccountName geekztervhds `
+        #           -TargetVHDStorageContainerName vhd `
+        #           -GalleryResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/Shared `
+        #           -GalleryName SharedImages `
+        #           -ImageDefinitionName Ubuntu2004 `
+        #           -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+        #           -Publisher PrivatePipelineImages `
+        #           -Offer Ubuntu `
+        #           -SKU 2004 `
+        #           -OsType linux `
+        #           -TargetRegion westeurope,northeurope,centralus
+        ./publish_vhd.ps1 -SourceVHDUrl "https://packer11990u20001.blob.core.windows.net/system/Microsoft.Compute/Images/images/packer-osDisk.f11df47e-644a-4332-9c47-8aa5bd147b18.vhd?se=2022-02-14&sp=r&sv=2018-11-09&sr=b&skoid=115c3ab3-943b-4e0c-96ed-1a1763fbaa44&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2022-02-07T13%3A26%3A05Z&ske=2022-02-14T00%3A00%3A00Z&sks=b&skv=2018-11-09&sig=bZ93Eg0vyxhbPQe3alZ7xexyQWBMQuaeB%2BOyc44ziSA%3D" `
                   -TargetVHDStorageAccountName geekztervhds `
                   -TargetVHDStorageContainerName vhd `
                   -GalleryResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/Shared `

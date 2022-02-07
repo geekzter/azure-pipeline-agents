@@ -176,14 +176,14 @@ jobs:
         # Build
         Import-Module ./GenerateResourcesAndImage.ps1
         Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-        #                           -ResourceGroupName $(imageResourceGroup) `
-        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
-        #                           -ImageType $(imageName) `
-        #                           -AzureLocation $(agent.location) `
-        #                           -AzureClientId $(servicePrincipal.clientId) `
-        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-        #                           -AzureTenantId $(servicePrincipal.tenantId) 
+        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+                                  -ResourceGroupName $(imageResourceGroup) `
+                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
+                                  -ImageType $(imageName) `
+                                  -AzureLocation $(agent.location) `
+                                  -AzureClientId $(servicePrincipal.clientId) `
+                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+                                  -AzureTenantId $(servicePrincipal.tenantId) 
 
         Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
         Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
@@ -214,8 +214,6 @@ jobs:
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
                       -GenerateSAS `
                       -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
-        # ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName IMAGE_VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20
-        # Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:IMAGE_VHD_URL}"
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:IMAGE_VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
@@ -248,19 +246,6 @@ jobs:
         }
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
-        # Write-Debug "./publish_vhd.ps1 -SourceVHDUrl `"$(vhd.url)`" `
-        #                   -TargetVHDStorageAccountName $(imageStorageAccountName) `
-        #                   -TargetVHDStorageContainerName $(imageStorageContainerName) `
-        #                   -GalleryResourceGroupId $galleryResourceGroupId `
-        #                   -GalleryName $(imageGalleryName) `
-        #                   -ImageDefinitionName $(imageDefinitionName) `
-        #                   -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-        #                   -Publisher $(imagePublisher) `
-        #                   -Offer $(imageOffer) `
-        #                   -SKU $(imageSKU) `
-        #                   -OsType $(imageOSType) `
-        #                   -TargetRegion $(targetRegions)"
-
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $(imageStorageAccountName) `
                           -TargetVHDStorageContainerName $(imageStorageContainerName) `
@@ -274,20 +259,6 @@ jobs:
                           -OsType $(imageOSType) `
                           -TargetRegion $(targetRegions)
 
-        # ./get_vhd.ps1 -GenerateSAS -VHDUrlEnvironmentVariableName IMAGE_VHD_URL -PackerResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/packer-11990-u20
-        
-        # ./publish_vhd.ps1 -SourceVHDUrl "${env:IMAGE_VHD_URL}" `
-        #           -TargetVHDStorageAccountName geekztervhds `
-        #           -TargetVHDStorageContainerName vhd `
-        #           -GalleryResourceGroupId /subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/Shared `
-        #           -GalleryName SharedImages `
-        #           -ImageDefinitionName Ubuntu2004 `
-        #           -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-        #           -Publisher PrivatePipelineImages `
-        #           -Offer Ubuntu `
-        #           -SKU 2004 `
-        #           -OsType linux `
-        #           -TargetRegion westeurope,northeurope,centralus
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'

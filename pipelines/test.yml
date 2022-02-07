@@ -1,3 +1,9 @@
+parameters:
+- name: retryCount
+  displayName: Build task retry count
+  type: number
+  default: 0
+  
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
 
 resources:
@@ -46,4 +52,4 @@ jobs:
     image: Ubuntu2004
     imageReleaseName: ubuntu20
     imageResourceGroup: 'packer-11990-u20'
-    retryCount: 0
+    retryCount: ${{ parameters.retryCount }}

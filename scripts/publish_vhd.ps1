@@ -136,8 +136,8 @@ if ($imageVersion) {
                                         -o tsv | Set-Variable targetSASToken    
         $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
         Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
-        Write-Debug "azcopy copy '${SourceVHDUrl}' '${targetVHDUrlWithToken}' --overwrite true"
-        azcopy copy '$SourceVHDUrl' '$targetVHDUrlWithToken' --overwrite true 
+        Write-Debug "azcopy copy `"${SourceVHDUrl}`" `"${targetVHDUrlWithToken}`" --overwrite true "
+        azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 
         Write-Host "Copy '$SourceVHDUrl' to '$targetVHDUrlWithToken' completed after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 
         $vhdGalleryImportUrl = $targetVHDUrl

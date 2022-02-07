@@ -61,7 +61,8 @@ schedules:
 
 variables:
   - group: 'build-images'
-
+  - name: SYSTEM_DEBUG
+    value: 'true'
 jobs:
 - template: build-image.yml
   parameters:

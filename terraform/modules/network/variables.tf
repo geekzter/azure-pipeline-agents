@@ -31,9 +31,8 @@ variable location {}
 variable log_analytics_workspace_resource_id {}
 variable peer_virtual_network_id {}
 variable resource_group_name {}
-variable storage_blob_dns_records {
-    type = map
-}
+variable packer_storage_account_name {}
+variable packer_storage_ip_address {}
 variable tags {
     type = map
 }

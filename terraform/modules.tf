@@ -17,9 +17,8 @@ module network {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   peer_virtual_network_id      = module.packer.virtual_network_id
   resource_group_name          = azurerm_resource_group.rg.name
-  storage_blob_dns_records     = {
-    "${module.packer.storage_account_name}" = module.packer.storage_blob_ip_address
-  }
+  packer_storage_account_name  = module.packer.storage_account_name
+  packer_storage_ip_address    = module.packer.storage_blob_ip_address
   tags                         = local.tags
 }
 

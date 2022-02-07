@@ -246,6 +246,19 @@ jobs:
         }
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
+        Write-Debug "./publish_vhd.ps1 -SourceVHDUrl `"$(vhd.url)`" `
+                          -TargetVHDStorageAccountName $(imageStorageAccountName) `
+                          -TargetVHDStorageContainerName $(imageStorageContainerName) `
+                          -GalleryResourceGroupId $galleryResourceGroupId `
+                          -GalleryName $(imageGalleryName) `
+                          -ImageDefinitionName $(imageDefinitionName) `
+                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+                          -Publisher $(imagePublisher) `
+                          -Offer $(imageOffer) `
+                          -SKU $(imageSKU) `
+                          -OsType $(imageOSType) `
+                          -TargetRegion $(targetRegions)"
+
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $(imageStorageAccountName) `
                           -TargetVHDStorageContainerName $(imageStorageContainerName) `

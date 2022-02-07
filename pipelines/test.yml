@@ -1,28 +1,4 @@
-parameters:
-- name: image
-  displayName: Image
-  type: string
-  default: Stable
-  values:
-  - All
-  - Latest
-  - Stable
-  - Ubuntu
-  - Ubuntu1804
-  - Ubuntu2004
-  - Windows
-  - Windows2019
-  - Windows2022
-- name: destroy
-  displayName: Destroy Infrastructure
-  type: boolean
-  default: true
-- name: retryCount
-  displayName: Build task retry count
-  type: number
-  default: 1
-
-name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
 
 resources:
   repositories:

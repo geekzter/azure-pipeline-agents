@@ -98,38 +98,38 @@ jobs:
   #   name: agent
   #   displayName: 'Retrieve agent information'
 
-  # - task: AzureCLI@2
-  #   name: githubRelease
-  #   displayName: 'Get release for ${{ parameters.imageReleaseName }}'
-  #   inputs:
-  #     azureSubscription: '$(gallerySubscriptionConnection)'
-  #     scriptType: pscore
-  #     scriptLocation: inlineScript
-  #     inlineScript: |
-  #       (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
-  #                                                                                                   | Select-Object -First 1 `
-  #                                                                                                   | Set-Variable release
-  #       $release | Format-List
-  #       $version = $release.tag_name.Split("/")[1]
+  - task: AzureCLI@2
+    name: githubRelease
+    displayName: 'Get release for ${{ parameters.imageReleaseName }}'
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
+                                                                                                    | Select-Object -First 1 `
+                                                                                                    | Set-Variable release
+        $release | Format-List
+        $version = $release.tag_name.Split("/")[1]
 
-  #       # Determine whether image with same config already exists
-  #       az sig image-version list --gallery-image-definition $(imageDefinitionName) `
-  #                                 --gallery-name $(imageGalleryName) `
-  #                                 --resource-group $(galleryResourceGroup) `
-  #                                 --query "[?tags.versionlabel=='$version' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
-  #       $newImageVersion = !$imageVersion
-  #       Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
-  #       if ($newImageVersion) {
-  #         Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
-  #         Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
-  #         Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
-  #       } else {
-  #         Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
-  #         Write-Warning "Build & publish will be skipped"
-  #       }
-  #     addSpnToEnvironment: true
-  #     useGlobalConfig: true
-  #     failOnStandardError: true
+        # Determine whether image with same config already exists
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $(imageGalleryName) `
+                                  --resource-group $(galleryResourceGroup) `
+                                  --query "[?tags.versionlabel=='$version' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
+        $newImageVersion = !$imageVersion
+        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
+        if ($newImageVersion) {
+          Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
+          Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
+          Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
+        } else {
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
+          Write-Warning "Build & publish will be skipped"
+        }
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
 
   # - task: AzureCLI@2
   #   name: servicePrincipal

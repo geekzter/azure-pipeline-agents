@@ -142,3 +142,13 @@ resource time_sleep diag_blob_storage_endpoint_destroy_race_condition {
   depends_on                   = [azurerm_private_endpoint.diag_blob_storage_endpoint]
   destroy_duration             = "${var.destroy_wait_minutes}m"
 }
+
+resource azurerm_private_dns_a_record additional_blob_record {
+  name                         = each.key
+  zone_name                    = azurerm_private_dns_zone.blob.name
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+  ttl                          = 300
+  records                      = [each.value]
+
+  for_each                     = var.storage_blob_dns_records
+}

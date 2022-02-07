@@ -182,8 +182,9 @@ jobs:
         # TODO: Can we assume main branch is the latest released version?
         git log -1 2>&1
 
-        # Pre-create temporary resource group, so we can assign policy
+        # Pre-create image build resource group, so we can assign policy
         az group create -n $(imageBuildResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageBuildResourceGroupId
+        # This policy prevents VM extension installation e.g. through other policies
         az policy assignment create --scope $imageBuildResourceGroupId --policy $env:SELF_HOSTED_DEMO_PACKER_VM_EXTENSION_POLICY_NAME
 
         # Build

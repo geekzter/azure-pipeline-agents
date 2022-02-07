@@ -148,6 +148,8 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
 
+
+  # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md
   - task: AzurePowerShell@5
     name: imageBuild
     displayName: 'Build image'

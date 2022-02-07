@@ -163,20 +163,12 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
-        $ProgressPreference = 'SilentlyContinue'
-
-        # Checkout source pertaining to release is not recommended
-        # https://github.com/actions/virtual-environments/issues/4238#issuecomment-939732274
-        # https://github.com/actions/virtual-environments/discussions/4362
-        # git checkout $(githubRelease.commit) --quiet
-        # TODO: Can we assume main branch is the latest released version?
-        git log -1 2>&1
 
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
         # Override Packer settings with environment variables
-        $env:AGENT_IP            = $env:GEEKZTER_AGENT_OUTBOUND_IP
+        $env:AGENT_IP            = $env:GEEKZTER_AGENT_OUTBOUND_IP # Should not be needed if VNet is also specified
         $env:VNET_NAME           = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_NAME
         $env:VNET_RESOURCE_GROUP = $env:GEEKZTER_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
         $env:VNET_SUBNET         = $env:GEEKZTER_PACKER_SUBNET_NAME
@@ -217,13 +209,13 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
-        $ProgressPreference = 'SilentlyContinue'
 
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
                       -GenerateSAS `
                       -VHDUrlEnvironmentVariableName VHD_URL
-        Write-Host "##vso[task.setvariable variable=sasUrl;isoutput=true;issecret=true]${env:VHD_URL}"
+        # Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:VHD_URL}"
+        Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
@@ -244,7 +236,6 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
-        $ProgressPreference = 'SilentlyContinue'
 
         # Publish
         $imageDefinitionVersionTags = @{
@@ -255,7 +246,7 @@ jobs:
         }
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
-        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.sasUrl)" `
+        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $(imageStorageAccountName) `
                           -TargetVHDStorageContainerName $(imageStorageContainerName) `
                           -GalleryResourceGroupId $galleryResourceGroupId `

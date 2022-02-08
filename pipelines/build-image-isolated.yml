@@ -169,6 +169,8 @@ jobs:
         az group create -n $(imageBuildResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageBuildResourceGroupId
         # This policy prevents VM extension installation e.g. through other policies
         az policy assignment create --scope $imageBuildResourceGroupId --policy $env:SELF_HOSTED_DEMO_PACKER_VM_EXTENSION_POLICY_NAME
+        # TODO: add shutdown tag and policy to inherit installation
+        # https://docs.microsoft.com/en-us/azure/governance/policy/tutorials/govern-tags#modify-resources-to-inherit-the-costcenter-tag-when-missing
 
         # Build
         # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity

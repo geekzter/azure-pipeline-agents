@@ -52,7 +52,7 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 0 * * Mon,Wed,Fri'
+- cron: '0 12 * * Mon,Wed,Fri'
   displayName: 'Bi-Nightly build (UTC)'
   always: 'true' # Run if there are no changes
   branches:
@@ -69,7 +69,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu1804
       imageReleaseName: ubuntu18
-      imageResourceGroup: 'azure-pipelines-images-build-u18-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-u18'
       retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
@@ -78,7 +78,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu2004
       imageReleaseName: ubuntu20
-      imageResourceGroup: 'azure-pipelines-images-build-u20-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-u20'
       retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
@@ -87,7 +87,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Windows2019
       imageReleaseName: win19
-      imageResourceGroup: 'azure-pipelines-images-build-w19-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-w19'
       retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
@@ -96,5 +96,5 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Windows2022
       imageReleaseName: win22
-      imageResourceGroup: 'azure-pipelines-images-build-w22-$(Build.BuildId)'
+      imageResourceGroup: 'packer-$(Build.BuildId)-w22'
       retryCount: ${{ parameters.retryCount }}

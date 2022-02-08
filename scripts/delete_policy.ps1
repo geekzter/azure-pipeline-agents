@@ -5,12 +5,16 @@
 
 ### Arguments
 param ( 
-    [parameter(Mandatory=$false)][string]$Workspace
+    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE,
+    [parameter(Mandatory=$false)][string]$Suffix
 ) 
 
 $policyNamePrefix = "no-vm-extension-policy"
 if ($Workspace) {
     $policyNamePrefix += "-${Workspace}"
+}
+if ($Suffix) {
+    $policyNamePrefix += "-${Suffix}"
 }
 
 az policy definition list --query "[?starts_with(name,'$policyNamePrefix')]" -o json | ConvertFrom-Json | Set-Variable policies

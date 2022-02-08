@@ -500,6 +500,9 @@ jobs:
           } else {
             Write-Host "No resources to remove"
           }
+
+          # Remove policy definition
+          ./delete_policy -Suffix $(TF_VAR_resource_suffix) -Workspace $(TF_WORKSPACE)
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true

@@ -44,15 +44,24 @@ if (!$storageAccount) {
 $storageAccountName = $storageAccount.name
 $jmesQuery = "?ends_with(@.name, 'vhd')"
 if ($BlobPrefix) {
-    $jmesQuery += "||contains(@.name, '$BlobPrefix')"
+    $jmesQuery += "&&contains(@.name, '$BlobPrefix')"
 }
-$jmesPath = "[${jmesQuery}].name"
-$vhdPath = $(az storage blob directory list -c $storageContainerName -d "Microsoft.Compute/Images/images" --account-name $storageAccountName --subscription $packerSubscriptionId --query $jmesPath -o tsv)
-if (!$vhdPath) {
+$jmesPath = "[${jmesQuery}]"
+Write-Debug "az storage blob directory list -c $storageContainerName -d `"Microsoft.Compute/Images/images`" --account-name $storageAccountName --subscription $packerSubscriptionId --query `"${jmesPath}`""
+az storage blob directory list -c $storageContainerName -d "Microsoft.Compute/Images/images" --account-name $storageAccountName --subscription $packerSubscriptionId --query "${jmesPath}" | ConvertFrom-Json | Set-Variable vhdBlob
+$vhdBlob | Format-List | Out-String | Write-Debug
+$vhdBlob.metadata | Format-List | Out-String | Write-Debug
+$vhdBlob.properties | Format-List | Out-String | Write-Debug
+if (!$vhdBlob) {
     Write-Error "`nCould not find VHD in storage account ${storageAccountName}, exiting"
     exit
 }
-
+$vhdPath = $vhdBlob.name
+if ($BlobPrefix -and !$vhdPath.Contains($BlobPrefix)) {
+    # Double check
+    Write-Error "`n${vhdPath} does not contain $BlobPrefix. Wrong blob, exiting"
+    exit
+}
 $vhdUrl = "$($storageAccount.primaryEndpoints.blob)${storageContainerName}/${vhdPath}"
 $vhdUrlResult = $vhdUrl
 if ($GenerateSAS) {

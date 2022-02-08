@@ -502,7 +502,7 @@ jobs:
           }
 
           # Remove policy definition
-          ./delete_policy -Suffix $(TF_VAR_resource_suffix) -Workspace $(TF_WORKSPACE)
+          ./delete_policy.ps1 -Suffix $(TF_VAR_resource_suffix) -Workspace $(TF_WORKSPACE)
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true

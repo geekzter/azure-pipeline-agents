@@ -122,7 +122,7 @@ resource time_sleep script_wrapper_check {
 }
 
 resource azurerm_resource_group rg {
-  name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-${terraform.workspace}-agents-${local.suffix}"
+  name                         = terraform.workspace == "default" ? "pipeline-agents-${local.suffix}" : "pipeline-${terraform.workspace}-agents-${local.suffix}"
   location                     = var.location
   tags                         = local.tags
 

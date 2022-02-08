@@ -69,7 +69,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu1804
       imageReleaseName: ubuntu18
-      imageResourceGroup: 'azure-pipelines-images-build-u18-$(Build.BuildId)'
+      imageResourceGroup: 'pipeline-image-build-ubuntu1804-$(Build.BuildId)'
       imageResourcePrefix: 'packer-$(Build.BuildId)-u18'
       retryCount: ${{ parameters.retryCount }}
 
@@ -79,7 +79,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu2004
       imageReleaseName: ubuntu20
-      imageResourceGroup: 'azure-pipelines-images-build-u20-$(Build.BuildId)'
+      imageResourceGroup: 'pipeline-image-build-ubuntu2004-$(Build.BuildId)'
       imageResourcePrefix: 'packer-$(Build.BuildId)-u20'
       retryCount: ${{ parameters.retryCount }}
 
@@ -89,7 +89,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Windows2019
       imageReleaseName: win19
-      imageResourceGroup: 'azure-pipelines-images-build-w19-$(Build.BuildId)'
+      imageResourceGroup: 'pipeline-image-build-windows2019-$(Build.BuildId)'
       imageResourcePrefix: 'packer-$(Build.BuildId)-w19'
       retryCount: ${{ parameters.retryCount }}
 
@@ -99,6 +99,6 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Windows2022
       imageReleaseName: win22
-      imageResourceGroup: 'azure-pipelines-images-build-w22-$(Build.BuildId)'
+      imageResourceGroup: 'pipeline-image-build-windows2022-$(Build.BuildId)'
       imageResourcePrefix: 'packer-$(Build.BuildId)-w22'
       retryCount: ${{ parameters.retryCount }}

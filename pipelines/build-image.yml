@@ -248,7 +248,8 @@ jobs:
         }
         $imageDefinitionVersionTags
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
-        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
+        ./publish_vhd.ps1 -ExcludeFromLatest `
+                          -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
                           -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
                           -TargetVHDStorageResourceGroupName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `

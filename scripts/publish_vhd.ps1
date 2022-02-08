@@ -31,7 +31,8 @@ param (
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$Offer,
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$SKU,
     [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string]$OsType,
-    [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string[]]$TargetRegion
+    [parameter(Mandatory=$false,HelpMessage="Only required to create image version")][string[]]$TargetRegion,
+    [parameter(Mandatory=$false,HelpMessage="Only use to create image version")][switch]$ExcludeFromLatest
 ) 
 $stopwatch = [system.diagnostics.stopwatch]::StartNew()
 Write-Verbose $MyInvocation.line 
@@ -155,7 +156,8 @@ if ($imageVersion) {
 
     Write-Host "`nCreating Image version ${newVersionString} of Image Definition '$ImageDefinitionName'..."
     $TargetRegion ??=  ((@($gallery.location,$galleryResourceGroup.location) | Get-Unique) -join ",")
-    az sig image-version create --gallery-image-definition $ImageDefinitionName `
+    az sig image-version create --exclude-from-latest $ExcludeFromLatest.ToString().ToLower() `
+                                --gallery-image-definition $ImageDefinitionName `
                                 --gallery-name $GalleryName `
                                 --gallery-image-version $newVersionString `
                                 --location $gallery.location `

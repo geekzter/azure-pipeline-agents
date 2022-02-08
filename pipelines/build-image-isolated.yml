@@ -48,7 +48,7 @@ jobs:
   - name: 'galleryResourceGroup' 
     value: 'Shared'
   - name: 'imageBuildResourceGroup' 
-    value: '${{ parameters.imageResourcePrefix }}_${{ lower(parameters.image) }}'
+    value: '${{ parameters.imageResourceGroup }}'
   - name: 'imageConfigFile'
     value: '${{ lower(parameters.image) }}.json'
   - name: 'imageName'
@@ -219,7 +219,7 @@ jobs:
         }
         $ProgressPreference = 'SilentlyContinue'
 
-        $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
+        $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageBuildResourceGroup)" 
         # TODO: Take storage account as argument
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
                       -BlobPrefix $(imageResourcePrefix) `

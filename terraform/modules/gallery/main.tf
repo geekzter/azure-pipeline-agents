@@ -4,7 +4,7 @@ locals {
 }
 
 resource azurerm_storage_account vhds {
-  name                         = "${substr(lower(replace(var.resource_group_name,"/a|e|i|o|u|y|-/","")),0,16)}${var.suffix}vhds"
+  name                         = "${substr(lower(replace(var.resource_group_name,"/a|e|i|o|u|y|-/","")),0,15)}${var.suffix}vhds"
   location                     = var.location
   resource_group_name          = var.resource_group_name
   account_kind                 = "StorageV2"

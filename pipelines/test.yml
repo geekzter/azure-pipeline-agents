@@ -1,10 +1,4 @@
-parameters:
-- name: retryCount
-  displayName: Build task retry count
-  type: number
-  default: 0
-  
-name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-ubuntu2004-$(Build.BuildId)
 
 resources:
   repositories:
@@ -23,33 +17,15 @@ resources:
 
 trigger: none
 
-pr:
-  branches:
-    include:
-    - '*'
-  paths:
-    exclude:
-    - '.devcontainer/**'  
-    - 'visuals/**'  
-    - '*.md'  
-
-schedules:
-- cron: '0 0 * * Mon,Wed,Fri'
-  displayName: 'Bi-Nightly build (UTC)'
-  always: 'true' # Run if there are no changes
-  branches:
-    include:
-    - master
-
 variables:
   - group: 'build-images'
-  - name: SYSTEM_DEBUG
-    value: 'true'
+
 jobs:
-- template: build-image.yml
-  parameters:
-    destroy: false
-    image: Ubuntu2004
-    imageReleaseName: ubuntu20
-    imageResourceGroup: 'packer-11990-u20'
-    retryCount: ${{ parameters.retryCount }}
+  - template: build-image-isolated.yml
+    parameters:
+      destroy: false
+      image: Ubuntu2004
+      imageReleaseName: ubuntu20
+      imageResourceGroup: 'pipeline-image-build-ubuntu2004-12035'
+      imageResourcePrefix: 'packer-12035-u20'
+      retryCount: 0

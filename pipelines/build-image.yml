@@ -148,7 +148,6 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
 
-
   # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md
   - task: AzurePowerShell@5
     name: imageBuild
@@ -158,18 +157,10 @@ jobs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
       inline: |
-        # Diagnostics
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
-
         # Patch GenerateResourcesAndImage.ps1 to improve build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-        # Override Packer settings with environment variables
+        # Override Packer settings with environment variables. Use either AGENT_IP or VNET_*.
         #$env:AGENT_IP            = $env:SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP # Redundant if VNet is also specified
         $env:VNET_NAME           = $env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME
         $env:VNET_RESOURCE_GROUP = $env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
@@ -204,14 +195,6 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        # Diagnostics
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
-
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
                       -GenerateSAS `
@@ -230,15 +213,6 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        # Diagnostics
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
-        $ProgressPreference = 'SilentlyContinue'
-
         # Publish
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
@@ -262,7 +236,6 @@ jobs:
                           -SKU $(imageSKU) `
                           -OsType $(imageOSType) `
                           -TargetRegion $(targetRegions)
-
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'

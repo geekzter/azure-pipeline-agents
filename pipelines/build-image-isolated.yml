@@ -157,43 +157,15 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
-        $ProgressPreference = 'SilentlyContinue'
 
         # Checkout source pertaining to release is not recommended
         # https://github.com/actions/virtual-environments/issues/4238#issuecomment-939732274
         # https://github.com/actions/virtual-environments/discussions/4362
         # git checkout $(githubRelease.commit) --quiet
-        # TODO: Can we assume main branch is the latest released version?
-        git log -1 2>&1
-
-        # # Pre-create image build resource group, so we can assign policy
-        # az group create -n $(imageBuildResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageBuildResourceGroupId
-        # # Policy prevents VM shutdown and extension installation
-        # az policy assignment create --name $env:SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME `
-        #                             --scope $imageBuildResourceGroupId `
-        #                             --policy-set-definition $env:SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME `
-        #                             --mi-system-assigned --location $(agent.location)
-
-        # # Build
-        # # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
-        # packer build -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`",shutdown=`"false`"}" `
-        #              -var "build_resource_group_name=$(imageBuildResourceGroup)" `
-        #              -var "capture_name_prefix=$(imageResourcePrefix)" `
-        #              -var "client_id=${env:servicePrincipalId}" `
-        #              -var "client_secret=${env:servicePrincipalKey}" `
-        #              -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
-        #              -var "resource_group=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
-        #              -var "storage_account=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
-        #              -var "subscription_id=$(az account show --query id -o tsv)" `
-        #              -var "tenant_id=${env:tenantId}" `
-        #              -var "virtual_network_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
-        #              -var "virtual_network_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
-        #              -var "virtual_network_subnet_name=${env:SELF_HOSTED_DEMO_PACKER_SUBNET_NAME}" `
-        #              $(imageTemplate) # TODO: Filter sensitive content        
+        # We assume main branch is the latest released version
 
         # Update template to inject resource tags
         Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
-        # $packerTemplate.variables["azure_tags"] = @{
         $packerTemplate.builders[0]["azure_tags"] = @{
           application = "Pipeline Agents"
           build = "$(Build.BuildId)"
@@ -202,18 +174,12 @@ jobs:
           shutdown = "false"
           versionlabel = "$(githubRelease.version)"
         }
-        # $packerTemplate.builders[0]["azure_tags"] = "{{user ``azure_tags``}}"
-        # $packerTemplate.builders[0]["temp_compute_name"] = "packer$(Build.BuildId)vm"
-        # $packerTemplate.builders[0]["temp_nic_name"] = "packer$(Build.BuildId)nic"
-        $packerTemplate.variables 
-        $packerTemplate.builders[0]
         $packerTemplate | ConvertTo-Json -Depth 5
         $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
 
         # Build
         # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
-        packer build -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`",shutdown=`"false`"}" `
-                     -var "build_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
+        packer build -var "build_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
                      -var "client_id=${env:servicePrincipalId}" `
                      -var "client_secret=${env:servicePrincipalKey}" `
@@ -254,7 +220,6 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
-        $ProgressPreference = 'SilentlyContinue'
 
         # TODO: Take storage account as argument
         ./get_vhd.ps1 -PackerResourceGroupId $env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID `
@@ -282,7 +247,6 @@ jobs:
           $VerbosePreference     = "Continue"
           Set-PSDebug -Trace 2
         }
-        $ProgressPreference = 'SilentlyContinue'
 
         # Publish
         $imageDefinitionVersionTags = @{
@@ -328,7 +292,7 @@ jobs:
     - task: AzureCLI@2
       name: teardown
       displayName: 'Tear down temporary resources'
-      condition: always() # succeededOrFailed()
+      condition: always()
       inputs:
         azureSubscription: '$(packerSubscriptionConnection)'
         scriptType: pscore

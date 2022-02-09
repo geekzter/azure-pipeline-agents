@@ -174,36 +174,20 @@ jobs:
           shutdown = "false"
           versionlabel = "$(githubRelease.version)"
         }
-        # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
-        # az account show --query name -o tsv
-        $packerTemplate.builders[0]["client_jwt"] = "$(az account get-access-token --scope $env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID --tenant $env:tenantId --query accessToken -o tsv)"
-
         Write-Host "`nTags that will be applied to build resources:"
         $packerTemplate.builders[0]["azure_tags"] | Format-Table
-
         Write-Host "`nPacker template:"
         $packerTemplate | ConvertTo-Json -Depth 5
         $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
 
-        # # Build
-        # packer build -var "build_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
-        #              -var "capture_name_prefix=$(imageResourcePrefix)" `
-        #              -var "client_id=${env:servicePrincipalId}" `
-        #              -var "client_secret=${env:servicePrincipalKey}" `
-        #              -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
-        #              -var "resource_group=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
-        #              -var "storage_account=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
-        #              -var "subscription_id=$(az account show --query id -o tsv)" `
-        #              -var "tenant_id=${env:tenantId}" `
-        #              -var "virtual_network_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
-        #              -var "virtual_network_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
-        #              -var "virtual_network_subnet_name=${env:SELF_HOSTED_DEMO_PACKER_SUBNET_NAME}" `
-        #              $(imageTemplate) # TODO: Filter sensitive content        
+        # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
+        # https://www.packer.io/plugins/builders/azure#azure-managed-identity
 
         # Build
         packer build -var "build_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
                      -var "client_id=${env:servicePrincipalId}" `
+                     -var "client_secret=${env:servicePrincipalKey}" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
                      -var "resource_group=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
                      -var "storage_account=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `

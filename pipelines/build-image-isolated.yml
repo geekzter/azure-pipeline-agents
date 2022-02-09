@@ -175,11 +175,11 @@ jobs:
           versionlabel = "$(githubRelease.version)"
         }
         # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
-        az account show 
-        $packerTemplate.builders[0]["client_jwt"] = "$(az account get-access-token --query accessToken -o tsv)"
+        # az account show --query name -o tsv
+        $packerTemplate.builders[0]["client_jwt"] = "$(az account get-access-token --scope $env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID --tenant $env:tenantId --query accessToken -o tsv)"
 
         Write-Host "`nTags that will be applied to build resources:"
-        $packerTemplate.builders[0]["azure_tags"] | Format-List
+        $packerTemplate.builders[0]["azure_tags"] | Format-Table
 
         Write-Host "`nPacker template:"
         $packerTemplate | ConvertTo-Json -Depth 5
@@ -277,7 +277,7 @@ jobs:
           versionlabel = "$(githubRelease.version)"
         }
         Write-Host "`nTags that will be applied to image version:"
-        $imageDefinitionVersionTags | Format-List
+        $imageDefinitionVersionTags | Format-Table
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
                           -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `

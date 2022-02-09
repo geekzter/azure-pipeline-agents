@@ -173,7 +173,7 @@ jobs:
         az policy assignment create --name $env:SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME `
                                     --scope $imageBuildResourceGroupId `
                                     --policy-set-definition $env:SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME `
-                                    --mi-user-assigned $env:SELF_HOSTED_DEMO_PACKER_POLICY_MANAGED_IDENTITY_RESOURCE_ID
+                                    --mi-user-assigned "${env:SELF_HOSTED_DEMO_PACKER_POLICY_MANAGED_IDENTITY_RESOURCE_ID}"
 
         # # Build
         # # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity

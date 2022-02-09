@@ -144,6 +144,7 @@ jobs:
   - task: AzureCLI@2
     name: imageBuild
     displayName: 'Build image'
+    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'null'),'null')
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore

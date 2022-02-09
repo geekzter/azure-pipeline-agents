@@ -152,7 +152,7 @@ jobs:
   - task: AzurePowerShell@5
     name: imageBuild
     displayName: 'Build image'
-    condition: eq(coalesce(variables['githubRelease.newImageVersion'],'null'),'true')
+    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'null'),'null')
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript

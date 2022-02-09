@@ -198,8 +198,8 @@ jobs:
                      -var "virtual_network_subnet_name=${env:SELF_HOSTED_DEMO_PACKER_SUBNET_NAME}" `
                      $(imageTemplate) # TODO: Filter sensitive content        
 
-        # Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
-        # Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
+        Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
+        Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true

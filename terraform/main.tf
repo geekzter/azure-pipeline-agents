@@ -38,8 +38,10 @@ locals {
   environment                  = "dev"
   environment_variables        = merge(
     {
-      SELF_HOSTED_DEMO_AGENT_SUBNET_ID                            = module.network.scale_set_agents_subnet_id
       SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP                          = module.network.outbound_ip_address
+      SELF_HOSTED_DEMO_AGENT_SUBNET_ID                            = module.network.scale_set_agents_subnet_id
+      SELF_HOSTED_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID     = azurerm_user_assigned_identity.agents.application_id
+      SELF_HOSTED_DEMO_AGENT_USER_ASSIGNED_IDENTITY_RESOURCE_ID   = azurerm_user_assigned_identity.agents.id
       SELF_HOSTED_DEMO_AGENT_VIRTUAL_NETWORK_ID                   = module.network.virtual_network_id
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_ID                         = module.gallery.shared_image_gallery_id
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME                       = split("/",module.gallery.shared_image_gallery_id)[8]

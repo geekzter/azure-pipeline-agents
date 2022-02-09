@@ -9,3 +9,7 @@ resource azurerm_resource_group build {
   location                     = var.location
   tags                         = var.tags
 }
+
+data azurerm_resources build_resources {
+  resource_group_name          = azurerm_resource_group.build.name
+}

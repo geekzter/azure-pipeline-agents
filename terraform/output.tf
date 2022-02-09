@@ -8,6 +8,16 @@ output agent_identity_object_id {
   value                        = azurerm_user_assigned_identity.agents.principal_id
 }
 
+output build_network_resource_group_id {
+  value                        = module.packer.network_resource_group_id
+}
+output build_resource_group_id {
+  value                        = module.packer.build_resource_group_id
+}
+output build_resource_ids {
+  value                        = module.packer.build_resource_ids
+}
+
 output diagnostics_storage_account {
   value                        = azurerm_storage_account.diagnostics.name
 }

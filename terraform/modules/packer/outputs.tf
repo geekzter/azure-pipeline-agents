@@ -2,6 +2,10 @@ output build_resource_group_id {
   value                        = azurerm_resource_group.build.id
 }
 
+output build_resource_ids {
+  value                        = data.azurerm_resources.build_resources.resources[*].id
+}
+
 output network_resource_group_id {
   value                        = azurerm_resource_group.network.id
 }

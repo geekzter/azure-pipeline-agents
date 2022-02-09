@@ -112,3 +112,7 @@ err.out
 
 # Ignore generated files
 **/data/*
+data/
+data/*
+data/**
+*/data/**

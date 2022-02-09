@@ -206,6 +206,7 @@ jobs:
         # $packerTemplate.builders[0]["temp_nic_name"] = "packer$(Build.BuildId)nic"
         $packerTemplate.variables 
         $packerTemplate.builders[0]
+        $packerTemplate | ConvertTo-Json
         $packerTemplate | ConvertTo-Json | Set-Content $(imageTemplate)
 
         # # Build
@@ -333,7 +334,10 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: |
           # Remove resources
-          $resourceIDs = $(az resource list --query "[?name=='$(imageResourceGroup)' || starts_with(name,'$(imageResourcePrefix)')].id" -o tsv)
+          az resource list -g $env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME `
+                           --query "[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)')].id" `
+                           -o tsv | Set-Variable resourceIDs
+          # $resourceIDs = $(az resource list --query "[?name=='$(imageResourceGroup)' || starts_with(name,'$(imageResourcePrefix)')].id" -o tsv)
           if ($resourceIDs) {
             Write-Host "Removing resource group(s) `"${resourceIDs}`"..."
             &{ # az writes information to stderr

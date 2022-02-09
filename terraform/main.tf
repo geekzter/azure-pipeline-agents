@@ -51,6 +51,7 @@ locals {
       SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME    = split("/",module.gallery.storage_account_id)[4]
       SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_ID                   = module.gallery.storage_container_id
       SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME                 = module.gallery.storage_container_name
+      SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME                     = module.packer.policy_set_name
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_ID                  = module.packer.storage_account_id
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME                = module.packer.storage_account_name
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID   = join("/",slice(split("/",module.packer.storage_account_id),0,5))
@@ -60,7 +61,6 @@ locals {
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME                = split("/",module.packer.virtual_network_id)[8]
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID   = join("/",slice(split("/",module.packer.virtual_network_id),0,5))
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME = split("/",module.packer.virtual_network_id)[4]
-      SELF_HOSTED_DEMO_PACKER_VM_EXTENSION_POLICY_NAME            = module.packer.vm_extension_policy_name
     },
     var.environment_variables
   )

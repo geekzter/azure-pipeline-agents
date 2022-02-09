@@ -168,14 +168,11 @@ jobs:
 
         # Pre-create image build resource group, so we can assign policy
         az group create -n $(imageBuildResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageBuildResourceGroupId
-        # This policy prevents VM extension installation e.g. through other policies
-        az policy assignment create --scope $imageBuildResourceGroupId --policy $env:SELF_HOSTED_DEMO_PACKER_VM_EXTENSION_POLICY_NAME
-        # TODO: add shutdown tag and policy to inherit installation
-        # https://docs.microsoft.com/en-us/azure/governance/policy/tutorials/govern-tags#modify-resources-to-inherit-the-costcenter-tag-when-missing
+        # This policy prevents VM shutdown and extension installation
+        az policy assignment create --scope $imageBuildResourceGroupId --policy-set-definition $env:SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME
 
         # Build
         # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity
-        # TODO: Specify azure_tags, so we can clean up temporary resource that way
         packer build -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`",shutdown=`"false`"}" `
                      -var "build_resource_group_name=$(imageBuildResourceGroup)" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `

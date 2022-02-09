@@ -9,15 +9,26 @@ param (
     [parameter(Mandatory=$false)][string]$Suffix
 ) 
 
-$policyNamePrefix = "no-vm-extension-policy"
+
+$jmesQuery = "starts_with(name,'pipeline-build-')"
 if ($Workspace) {
-    $policyNamePrefix += "-${Workspace}"
+    $jmesQuery += " && contains(name,'$Workspace')"
 }
 if ($Suffix) {
-    $policyNamePrefix += "-${Suffix}"
+    $jmesQuery += " && ends_with(name,'-${Suffix}')"
 }
 
-az policy definition list --query "[?starts_with(name,'$policyNamePrefix')]" -o json | ConvertFrom-Json | Set-Variable policies
+$jmesPath = "[?${jmesQuery}]"
+Write-Debug $jmesPath
+
+az policy definition list --query "${jmesPath}" -o json | ConvertFrom-Json | Set-Variable policies
 foreach ($policy in $policies) {
+    Write-Host "Deleting policy '$($policy.name)'..."
     az policy definition delete --name $policy.name
+}
+
+az policy set-definition list --query "${jmesPath}" -o json | ConvertFrom-Json | Set-Variable policySets
+foreach ($policySet in $policySets) {
+    Write-Host "Deleting policy set '$($policySet.name)'..."
+    az policy set-definition delete --name $policy.name
 }

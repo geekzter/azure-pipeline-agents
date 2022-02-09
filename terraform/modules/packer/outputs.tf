@@ -16,6 +16,6 @@ output virtual_network_id {
   value                        = azurerm_virtual_network.packer.id
 }
 
-output vm_extension_policy_name {
-  value                        = azurerm_policy_definition.no_vm_extension.name
+output policy_set_name {
+  value                        = azurerm_policy_set_definition.build_policies.name
 }

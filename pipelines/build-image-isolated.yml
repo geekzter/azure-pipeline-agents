@@ -193,7 +193,8 @@ jobs:
 
         # Update template to inject resource tags
         Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
-        $packerTemplate.variables["azure_tags"] = @{
+        # $packerTemplate.variables["azure_tags"] = @{
+        $packerTemplate.builders[0]["azure_tags"] = @{
           application = "Pipeline Agents"
           build = "$(Build.BuildId)"
           commit = "$(git rev-parse HEAD)"
@@ -201,13 +202,13 @@ jobs:
           shutdown = "false"
           versionlabel = "$(githubRelease.version)"
         }
-        $packerTemplate.builders[0]["azure_tags"] = "{{user ``azure_tags``}}"
+        # $packerTemplate.builders[0]["azure_tags"] = "{{user ``azure_tags``}}"
         # $packerTemplate.builders[0]["temp_compute_name"] = "packer$(Build.BuildId)vm"
         # $packerTemplate.builders[0]["temp_nic_name"] = "packer$(Build.BuildId)nic"
         $packerTemplate.variables 
         $packerTemplate.builders[0]
-        $packerTemplate | ConvertTo-Json
-        $packerTemplate | ConvertTo-Json | Set-Content $(imageTemplate)
+        $packerTemplate | ConvertTo-Json -Depth 5
+        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
 
         # Build
         # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity

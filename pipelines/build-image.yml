@@ -189,7 +189,7 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: ne(length(coalesce(variables['imageBuild.commit'],0)),0)
+    condition: ne(coalesce(variables['imageBuild.commit'],'null'),'null')
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -207,7 +207,7 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: ne(length(coalesce(variables['vhd.url'],0)),0)
+    condition: ne(coalesce(variables['vhd.url'],'null'),'null')
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

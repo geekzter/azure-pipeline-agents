@@ -43,3 +43,15 @@ resource azurerm_user_assigned_identity policy {
   resource_group_name          = azurerm_resource_group.peer_rg.name
   location                     = azurerm_resource_group.peer_rg.location
 }
+
+resource azurerm_resource_group_policy_assignment vm_policies {
+  name                         = azurerm_policy_set_definition.build_policies.name
+  location                     = azurerm_resource_group.peer_rg.location
+  resource_group_id            = azurerm_resource_group.peer_rg.id
+  policy_definition_id         = azurerm_policy_set_definition.build_policies.id
+
+  identity {
+    # Does not support user assigned identity!
+    type                       = "SystemAssigned"
+  }
+}

@@ -49,10 +49,6 @@ locals {
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME                        = split("/",module.gallery.shared_image_gallery_id)[8]
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID           = join("/",slice(split("/",module.gallery.shared_image_gallery_id),0,5))
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME         = split("/",module.gallery.shared_image_gallery_id)[4]
-      SELF_HOSTED_DEMO_PACKER_POLICY_MANAGED_IDENTITY_CLIENT_ID    = module.packer.policy_identity_client_id
-      SELF_HOSTED_DEMO_PACKER_POLICY_MANAGED_IDENTITY_NAME         = module.packer.policy_identity_name
-      SELF_HOSTED_DEMO_PACKER_POLICY_MANAGED_IDENTITY_PRINCIPAL_ID = module.packer.policy_identity_principal_id
-      SELF_HOSTED_DEMO_PACKER_POLICY_MANAGED_IDENTITY_RESOURCE_ID  = module.packer.policy_identity_id
       SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME                      = module.packer.policy_set_name
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_ID                   = module.packer.storage_account_id
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME                 = module.packer.storage_account_name

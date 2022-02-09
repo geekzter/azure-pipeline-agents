@@ -38,12 +38,6 @@ resource azurerm_policy_set_definition build_policies {
   }
 }
 
-resource azurerm_user_assigned_identity policy {
-  name                         = "${azurerm_resource_group.peer_rg.name}-policy-identity"
-  resource_group_name          = azurerm_resource_group.peer_rg.name
-  location                     = azurerm_resource_group.peer_rg.location
-}
-
 resource azurerm_resource_group_policy_assignment vm_policies {
   name                         = azurerm_policy_set_definition.build_policies.name
   location                     = azurerm_resource_group.peer_rg.location
@@ -51,7 +45,6 @@ resource azurerm_resource_group_policy_assignment vm_policies {
   policy_definition_id         = azurerm_policy_set_definition.build_policies.id
 
   identity {
-    # Does not support user assigned identity!
     type                       = "SystemAssigned"
   }
 }

@@ -21,7 +21,7 @@
                 {
                     "operation": "add",
                     "field": "tags['shutdown']",
-                    "value": "'false'"
+                    "value": "false"
                 }
             ]
         }

@@ -2,6 +2,13 @@ output packer_subnet_name {
   value                        = azurerm_subnet.packer.name
 }
 
+output policy_identity_id {
+  value                        = azurerm_user_assigned_identity.policy.id
+}
+
+output policy_identity_client_id {
+  value                        = azurerm_user_assigned_identity.policy.client_id
+}
 output storage_account_id {
   value                        = azurerm_storage_account.images.id
 }

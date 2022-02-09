@@ -40,19 +40,15 @@ locals {
     {
       SELF_HOSTED_DEMO_AGENT_OUTBOUND_IP                          = module.network.outbound_ip_address
       SELF_HOSTED_DEMO_AGENT_SUBNET_ID                            = module.network.scale_set_agents_subnet_id
-      SELF_HOSTED_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID     = azurerm_user_assigned_identity.agents.application_id
+      SELF_HOSTED_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID     = azurerm_user_assigned_identity.agents.client_id
       SELF_HOSTED_DEMO_AGENT_USER_ASSIGNED_IDENTITY_RESOURCE_ID   = azurerm_user_assigned_identity.agents.id
       SELF_HOSTED_DEMO_AGENT_VIRTUAL_NETWORK_ID                   = module.network.virtual_network_id
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_ID                         = module.gallery.shared_image_gallery_id
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME                       = split("/",module.gallery.shared_image_gallery_id)[8]
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID          = join("/",slice(split("/",module.gallery.shared_image_gallery_id),0,5))
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME        = split("/",module.gallery.shared_image_gallery_id)[4]
-      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_ID                     = module.gallery.storage_account_id
-      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME                   = module.gallery.storage_account_name
-      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_ID      = join("/",slice(split("/",module.gallery.storage_account_id),0,5))
-      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME    = split("/",module.gallery.storage_account_id)[4]
-      SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_ID                   = module.gallery.storage_container_id
-      SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME                 = module.gallery.storage_container_name
+      SELF_HOSTED_DEMO_PACKER_POLICY_MANAGEED_IDENTITY_CLIENT_ID  = module.packer.policy_identity_client_id
+      SELF_HOSTED_DEMO_PACKER_POLICY_MANAGEED_IDENTITY_RESOURCE_ID= module.packer.policy_identity_id
       SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME                     = module.packer.policy_set_name
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_ID                  = module.packer.storage_account_id
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME                = module.packer.storage_account_name
@@ -63,6 +59,12 @@ locals {
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME                = split("/",module.packer.virtual_network_id)[8]
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID   = join("/",slice(split("/",module.packer.virtual_network_id),0,5))
       SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME = split("/",module.packer.virtual_network_id)[4]
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_ID                     = module.gallery.storage_account_id
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME                   = module.gallery.storage_account_name
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_ID      = join("/",slice(split("/",module.gallery.storage_account_id),0,5))
+      SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME    = split("/",module.gallery.storage_account_id)[4]
+      SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_ID                   = module.gallery.storage_container_id
+      SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME                 = module.gallery.storage_container_name
     },
     var.environment_variables
   )

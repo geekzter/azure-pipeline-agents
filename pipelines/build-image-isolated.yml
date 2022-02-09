@@ -168,11 +168,12 @@ jobs:
 
         # Pre-create image build resource group, so we can assign policy
         az group create -n $(imageBuildResourceGroup) -l $(agent.location) --query "id" -o tsv | Set-Variable imageBuildResourceGroupId
-        # This policy prevents VM shutdown and extension installation
-        az policy assignment create --scope $imageBuildResourceGroupId `
+        # Policy prevents VM shutdown and extension installation
+        az role assignment create --assignee $env:SELF_HOSTED_DEMO_PACKER_POLICY_MANAGEED_IDENTITY_CLIENT_ID --role "Contributor" --scope $imageBuildResourceGroupId
+        az policy assignment create --name $env:SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME `
+                                    --scope $imageBuildResourceGroupId `
                                     --policy-set-definition $env:SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME `
-                                    --mi-user-assigned "23e7b64e-0e47-448f-8c3e-7e5b4c595f19" # $env:SELF_HOSTED_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID
-
+                                    --mi-user-assigned $env:SELF_HOSTED_DEMO_PACKER_POLICY_MANAGEED_IDENTITY_RESOURCE_ID
         # Build
         # TODO: Use Managed Identity? Packer does not work with a User Assigned Managed Identity
         packer build -var "azure_tags={application=`"Pipeline Agents`",build=`"$(Build.BuildId)`",pipeline=`"$(Build.DefinitionName)`",provisioner=`"packer`",shutdown=`"false`"}" `

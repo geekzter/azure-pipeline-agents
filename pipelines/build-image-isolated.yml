@@ -128,7 +128,7 @@ jobs:
                                   --resource-group $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[?tags.versionlabel=='$version' && provisioningState!='Deleting' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
         $newImageVersion = !$imageVersion
-        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$newImageVersion"
+        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$($newImageVersion.ToString())"
         if ($newImageVersion) {
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
@@ -144,7 +144,7 @@ jobs:
   - task: AzureCLI@2
     name: imageBuild
     displayName: 'Build image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'null'),'null')
+    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore

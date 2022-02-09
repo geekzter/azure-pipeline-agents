@@ -164,7 +164,7 @@ jobs:
         # git checkout $(githubRelease.commit) --quiet
         # We assume main branch is the latest released version
 
-        # Update template to inject resource tags
+        # Update template to override configuration not accessible as variables
         Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
         $packerTemplate.builders[0]["azure_tags"] = @{
           application = "Pipeline Agents"
@@ -174,15 +174,37 @@ jobs:
           shutdown = "false"
           versionlabel = "$(githubRelease.version)"
         }
+
+        # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
+        $packerTemplate.builders[0]["use_azure_cli_auth"] = "true"
+        # $packerTemplate.builders[0]["client_id"] = ""
+        # $packerTemplate.builders[0]["client_secret"] = ""
+
+        Write-Host "`nTags that will be applied to build resources:"
+        $packerTemplate.builders[0]["azure_tags"] | Format-List
+
+        Write-Host "`nPacker template:"
         $packerTemplate | ConvertTo-Json -Depth 5
         $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
 
+        # # Build
+        # packer build -var "build_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
+        #              -var "capture_name_prefix=$(imageResourcePrefix)" `
+        #              -var "client_id=${env:servicePrincipalId}" `
+        #              -var "client_secret=${env:servicePrincipalKey}" `
+        #              -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
+        #              -var "resource_group=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
+        #              -var "storage_account=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
+        #              -var "subscription_id=$(az account show --query id -o tsv)" `
+        #              -var "tenant_id=${env:tenantId}" `
+        #              -var "virtual_network_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
+        #              -var "virtual_network_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
+        #              -var "virtual_network_subnet_name=${env:SELF_HOSTED_DEMO_PACKER_SUBNET_NAME}" `
+        #              $(imageTemplate) # TODO: Filter sensitive content        
+
         # Build
-        # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
         packer build -var "build_resource_group_name=${env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
-                     -var "client_id=${env:servicePrincipalId}" `
-                     -var "client_secret=${env:servicePrincipalKey}" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
                      -var "resource_group=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
                      -var "storage_account=${env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
@@ -195,7 +217,7 @@ jobs:
 
         # Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
         # Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
-      addSpnToEnvironment: true
+      # addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true
       retryCountOnTaskFailure: $(retryCount)
@@ -255,8 +277,8 @@ jobs:
           pipeline = "$(Build.DefinitionName)"
           versionlabel = "$(githubRelease.version)"
         }
-        $imageDefinitionVersionTags
-        $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
+        Write-Host "`nTags that will be applied to image version:"
+        $imageDefinitionVersionTags | Format-List
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
                           -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
@@ -302,7 +324,6 @@ jobs:
           az resource list -g $env:SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME `
                            --query "[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)'].id" `
                            -o tsv | Set-Variable resourceIDs
-          # $resourceIDs = $(az resource list --query "[?name=='$(imageResourceGroup)' || starts_with(name,'$(imageResourcePrefix)')].id" -o tsv)
           if ($resourceIDs) {
             Write-Host "Removing resource group(s) `"${resourceIDs}`"..."
             &{ # az writes information to stderr

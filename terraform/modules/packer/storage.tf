@@ -1,7 +1,7 @@
 resource azurerm_storage_account images {
-  name                         = "${substr(lower(replace(azurerm_resource_group.peer_rg.name,"/a|e|i|o|u|y|-/","")),0,14)}${var.suffix}pckr"
+  name                         = "${substr(lower(replace(azurerm_resource_group.network.name,"/a|e|i|o|u|y|-/","")),0,14)}${var.suffix}pckr"
   location                     = var.location
-  resource_group_name          = azurerm_resource_group.peer_rg.name
+  resource_group_name          = azurerm_resource_group.network.name
   account_kind                 = "StorageV2"
   account_tier                 = "Premium"
   account_replication_type     = "LRS"
@@ -13,13 +13,13 @@ resource azurerm_storage_account images {
 
 resource azurerm_private_dns_zone blob {
   name                         = "privatelink.blob.core.windows.net"
-  resource_group_name          = azurerm_resource_group.peer_rg.name
+  resource_group_name          = azurerm_resource_group.network.name
 
   tags                         = var.tags
 }
 resource azurerm_private_dns_zone_virtual_network_link blob {
   name                         = "${azurerm_virtual_network.packer.name}-dns-blob"
-  resource_group_name          = azurerm_resource_group.peer_rg.name
+  resource_group_name          = azurerm_resource_group.network.name
   private_dns_zone_name        = azurerm_private_dns_zone.blob.name
   virtual_network_id           = azurerm_virtual_network.packer.id
 
@@ -29,7 +29,7 @@ resource azurerm_private_dns_zone_virtual_network_link blob {
 resource azurerm_private_endpoint images_blob_storage_endpoint {
   name                         = "${azurerm_storage_account.images.name}-blob-endpoint"
   location                     = var.location
-  resource_group_name          = azurerm_resource_group.peer_rg.name
+  resource_group_name          = azurerm_resource_group.network.name
   
   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
 

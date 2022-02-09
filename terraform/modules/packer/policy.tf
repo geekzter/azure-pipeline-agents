@@ -40,8 +40,8 @@ resource azurerm_policy_set_definition build_policies {
 
 resource azurerm_resource_group_policy_assignment vm_policies {
   name                         = azurerm_policy_set_definition.build_policies.name
-  location                     = azurerm_resource_group.peer_rg.location
-  resource_group_id            = azurerm_resource_group.peer_rg.id
+  location                     = azurerm_resource_group.build.location
+  resource_group_id            = azurerm_resource_group.build.id
   policy_definition_id         = azurerm_policy_set_definition.build_policies.id
 
   identity {

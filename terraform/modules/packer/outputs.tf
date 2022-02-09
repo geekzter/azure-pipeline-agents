@@ -1,3 +1,11 @@
+output build_resource_group_id {
+  value                        = azurerm_resource_group.build.id
+}
+
+output network_resource_group_id {
+  value                        = azurerm_resource_group.network.id
+}
+
 output packer_subnet_name {
   value                        = azurerm_subnet.packer.name
 }

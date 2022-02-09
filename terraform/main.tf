@@ -49,6 +49,8 @@ locals {
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME                        = split("/",module.gallery.shared_image_gallery_id)[8]
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID           = join("/",slice(split("/",module.gallery.shared_image_gallery_id),0,5))
       SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME         = split("/",module.gallery.shared_image_gallery_id)[4]
+      SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID              = join("/",slice(split("/",module.packer.build_resource_group_id),0,5))
+      SELF_HOSTED_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME            = split("/",module.packer.build_resource_group_id)[4]
       SELF_HOSTED_DEMO_PACKER_POLICY_SET_NAME                      = module.packer.policy_set_name
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_ID                   = module.packer.storage_account_id
       SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_NAME                 = module.packer.storage_account_name
@@ -155,8 +157,23 @@ resource azurerm_role_assignment service_principal_contributor {
   count                        = var.create_contributor_service_principal ? 1 : 0
 }
 
-resource azurerm_role_assignment demo_viewer {
+resource azurerm_role_assignment agent_viewer {
   scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Reader"
+  principal_id                 = each.key
+
+  for_each                     = toset(var.demo_viewers)
+}
+
+resource azurerm_role_assignment build_viewer {
+  scope                        = module.packer.build_resource_group_id
+  role_definition_name         = "Reader"
+  principal_id                 = each.key
+
+  for_each                     = toset(var.demo_viewers)
+}
+resource azurerm_role_assignment network_viewer {
+  scope                        = module.packer.network_resource_group_id
   role_definition_name         = "Reader"
   principal_id                 = each.key
 

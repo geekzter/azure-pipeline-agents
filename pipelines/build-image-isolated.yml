@@ -196,7 +196,7 @@ jobs:
         $packerTemplate.variables["azure_tags"] = @{
           application = "Pipeline Agents"
           build = "$(Build.BuildId)"
-          commit = "$(imageBuild.commit)"
+          commit = "$(git rev-parse HEAD)"
           pipeline = "$(Build.DefinitionName)"
           shutdown = "false"
           versionlabel = "$(githubRelease.version)"

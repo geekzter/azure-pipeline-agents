@@ -47,3 +47,14 @@ resource azurerm_private_endpoint images_blob_storage_endpoint {
 
   tags                         = var.tags
 }
+
+resource azurerm_storage_account_network_rules images {
+  storage_account_id           = azurerm_storage_account.images.id
+
+  default_action               = "Deny"
+  ip_rules                     = var.admin_cidr_ranges
+  bypass                       = [
+                                  # "AzureServices", # required for azcopy (direct copy between storage accounts)
+                                  "Metrics"
+  ]
+}

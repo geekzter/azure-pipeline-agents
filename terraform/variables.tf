@@ -185,6 +185,12 @@ variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }
 
+variable storage_contributors {
+  description                  = "Object ID's of AAD groups/users to be granted reader access e.g. Packer build identity"
+  default                      = []
+  type                         = list
+}
+
 variable tags {
   description                  = "A map of the tags to use for the resources that are deployed"
   type                         = map

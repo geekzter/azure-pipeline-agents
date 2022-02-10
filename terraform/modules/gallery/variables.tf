@@ -1,3 +1,6 @@
+variable admin_cidr_ranges {
+    type                       = list
+}
 variable location {}
 variable blob_private_dns_zone_id {}
 variable resource_group_name {}

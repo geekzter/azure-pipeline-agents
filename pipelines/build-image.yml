@@ -197,7 +197,6 @@ jobs:
       inlineScript: |
         $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
         ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
-                      -GenerateSAS `
                       -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:IMAGE_VHD_URL}"
       useGlobalConfig: true
@@ -224,9 +223,6 @@ jobs:
         $galleryResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(galleryResourceGroup)" 
         ./publish_vhd.ps1 -ExcludeFromLatest `
                           -SourceVHDUrl "$(vhd.url)" `
-                          -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
-                          -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
-                          -TargetVHDStorageResourceGroupName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
                           -GalleryResourceGroupId $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
                           -GalleryName $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
                           -ImageDefinitionName $(imageDefinitionName) `

@@ -44,6 +44,17 @@ resource azurerm_private_endpoint vhds_blob_storage_endpoint {
   tags                         = var.tags
 }
 
+resource azurerm_storage_account_network_rules vhds {
+  storage_account_id           = azurerm_storage_account.vhds.id
+
+  default_action               = "Deny"
+  ip_rules                     = var.admin_cidr_ranges
+  bypass                       = [
+                                  # "AzureServices", # required for azcopy (direct copy between storage accounts)
+                                  "Metrics"
+  ]
+}
+
 resource azurerm_shared_image_gallery compute_gallery {
   name                         = replace("${var.resource_group_name}-gallery","-",".")
   location                     = var.location

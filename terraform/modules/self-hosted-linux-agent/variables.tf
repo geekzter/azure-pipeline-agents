@@ -2,7 +2,6 @@ variable admin_cidr_ranges {
   type                         = list
   default                      = []
 }
-variable terraform_cidr {}
 
 variable create_public_ip_address {
   type                         = bool

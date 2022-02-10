@@ -143,7 +143,6 @@ module self_hosted_linux_agents {
   source                       = "./modules/self-hosted-linux-agent"
 
   admin_cidr_ranges            = local.admin_cidr_ranges
-  terraform_cidr               = local.ipprefix
 
   create_public_ip_address     = !var.deploy_firewall
   deploy_agent                 = var.deploy_self_hosted_vm_agents
@@ -198,7 +197,6 @@ module self_hosted_windows_agents {
   source                       = "./modules/self-hosted-windows-agent"
 
   admin_cidr_ranges            = local.admin_cidr_ranges
-  terraform_cidr               = local.ipprefix
 
   create_public_ip_address     = !var.deploy_firewall
   deploy_agent_vm_extension    = var.deploy_self_hosted_vm_agents
@@ -251,6 +249,7 @@ module gallery {
   location                     = var.location
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
+  admin_cidr_ranges            = local.admin_cidr_ranges
   blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
   shared_image_gallery_id      = var.shared_image_gallery_id
   storage_account_tier         = var.vhd_storage_account_tier

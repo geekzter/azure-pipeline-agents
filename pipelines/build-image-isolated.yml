@@ -227,10 +227,6 @@ jobs:
         }
 
         # TODO: Take storage account as argument
-        # ./get_vhd.ps1 -PackerResourceGroupId $env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID `
-        #               -BlobPrefix $(imageResourcePrefix) `
-        #               -GenerateSAS `
-        #               -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
         ./get_vhd.ps1 -PackerResourceGroupId $env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID `
                       -BlobPrefix $(imageResourcePrefix) `
                       -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
@@ -256,11 +252,6 @@ jobs:
           Set-PSDebug -Trace 2
         }
 
-        # # AzCopy AuthN
-        # $env:AZCOPY_SPA_CLIENT_SECRET  = $env:servicePrincipalKey
-        # azcopy login --service-principal --application-id $env:servicePrincipalId --tenant-id $env:tenantId
-        # $env:AZCOPY_SPA_CLIENT_SECRET  = $null
-
         # Publish
         $imageDefinitionVersionTags = @{
           build = "$(Build.BuildId)"
@@ -270,19 +261,6 @@ jobs:
         }
         Write-Host "`nTags that will be applied to image version:"
         $imageDefinitionVersionTags | Format-Table
-        # ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
-        #                   -TargetVHDStorageAccountName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_NAME `
-        #                   -TargetVHDStorageContainerName $env:SELF_HOSTED_DEMO_VHD_STORAGE_CONTAINER_NAME `
-        #                   -TargetVHDStorageResourceGroupName $env:SELF_HOSTED_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME `
-        #                   -GalleryResourceGroupId $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
-        #                   -GalleryName $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
-        #                   -ImageDefinitionName $(imageDefinitionName) `
-        #                   -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-        #                   -Publisher $(imagePublisher) `
-        #                   -Offer $(imageOffer) `
-        #                   -SKU $(imageSKU) `
-        #                   -OsType $(imageOSType) `
-        #                   -TargetRegion $(targetRegions)
         ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
                           -GalleryResourceGroupId $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
                           -GalleryName $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `

@@ -1,3 +1,13 @@
+data http terraform_ip_address {
+# Get public IP address of the machine running this terraform template
+  url                          = "https://ipinfo.io/ip"
+}
+
+data http terraform_ip_prefix {
+# Get public IP prefix of the machine running this terraform template
+  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.terraform_ip_address.body)}"
+}
+
 # Random resource suffix, this will prevent name collisions when creating resources in parallel
 resource random_string suffix {
   length                       = 4
@@ -88,20 +98,11 @@ locals {
     },
     var.tags
   )  
+  terraform_ip_address         = data.http.terraform_ip_address.body
+  terraform_ip_prefix          = jsondecode(chomp(data.http.terraform_ip_prefix.body)).data.prefix
 
   # Networking
-  ipprefix                     = jsondecode(chomp(data.http.local_public_prefix.body)).data.prefix
-  admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.ipprefix])))) # Make sure ranges have correct base address
-}
-
-data http local_public_ip {
-# Get public IP address of the machine running this terraform template
-  url                          = "https://ipinfo.io/ip"
-}
-
-data http local_public_prefix {
-# Get public IP prefix of the machine running this terraform template
-  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.local_public_ip.body)}"
+  admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.terraform_ip_prefix])))) # Make sure ranges have correct base address
 }
 
 resource null_resource script_wrapper_check {
@@ -141,47 +142,4 @@ resource azurerm_resource_group rg {
   tags                         = local.tags
 
   depends_on                   = [time_sleep.script_wrapper_check]
-}
-
-resource azurerm_role_assignment terraform_storage_owner {
-  scope                        = azurerm_resource_group.rg.id
-  role_definition_name         = "Storage Blob Data Contributor"
-  principal_id                 = data.azurerm_client_config.default.object_id
-}
-
-resource azurerm_role_assignment service_principal_contributor {
-  scope                        = azurerm_resource_group.rg.id
-  role_definition_name         = "Contributor"
-  principal_id                 = module.service_principal.0.principal_id
-
-  count                        = var.create_contributor_service_principal ? 1 : 0
-}
-
-resource azurerm_role_assignment agent_viewer {
-  scope                        = azurerm_resource_group.rg.id
-  role_definition_name         = "Reader"
-  principal_id                 = each.key
-
-  for_each                     = toset(var.demo_viewers)
-}
-
-resource azurerm_role_assignment build_viewer {
-  scope                        = module.packer.build_resource_group_id
-  role_definition_name         = "Reader"
-  principal_id                 = each.key
-
-  for_each                     = toset(var.demo_viewers)
-}
-resource azurerm_role_assignment network_viewer {
-  scope                        = module.packer.network_resource_group_id
-  role_definition_name         = "Reader"
-  principal_id                 = each.key
-
-  for_each                     = toset(var.demo_viewers)
-}
-
-resource azurerm_user_assigned_identity agents {
-  name                         = "${azurerm_resource_group.rg.name}-agent-identity"
-  resource_group_name          = azurerm_resource_group.rg.name
-  location                     = azurerm_resource_group.rg.location
 }

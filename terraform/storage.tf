@@ -121,7 +121,7 @@ resource azurerm_storage_blob terraform_backend_configuration {
   source                       = "${path.root}/backend.tf"
 
   count                        = fileexists("${path.root}/backend.tf") ? 1 : 0
-  depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
+  depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 resource azurerm_storage_blob terraform_auto_vars_configuration {
   name                         = "${local.config_directory}/config.auto.tfvars"
@@ -131,7 +131,7 @@ resource azurerm_storage_blob terraform_auto_vars_configuration {
   source                       = "${path.root}/config.auto.tfvars"
 
   count                        = fileexists("${path.root}/config.auto.tfvars") ? 1 : 0
-  depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
+  depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 resource azurerm_storage_blob terraform_workspace_vars_configuration {
   name                         = "${local.config_directory}/${terraform.workspace}.tfvars"
@@ -141,7 +141,7 @@ resource azurerm_storage_blob terraform_workspace_vars_configuration {
   source                       = "${path.root}/${terraform.workspace}.tfvars"
 
   count                        = fileexists("${path.root}/${terraform.workspace}.tfvars") ? 1 : 0
-  depends_on                   = [azurerm_role_assignment.terraform_storage_owner]
+  depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 
 resource azurerm_disk_access disk_access {

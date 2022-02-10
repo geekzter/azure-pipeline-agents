@@ -19,11 +19,24 @@ resource azurerm_ip_group agents {
   count                        = var.deploy_firewall ? 1 : 0
 }
 
-resource azurerm_ip_group vnet {
-  name                         = "${azurerm_virtual_network.pipeline_network.name}-ip-group"
+resource azurerm_ip_group packer {
+  name                         = "packer-ip-group"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
+  cidrs                        = [var.packer_address_space]
+
+  tags                         = var.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
+}
+
+resource azurerm_ip_group vnet {
+  name                         = "vnets-ip-group"
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
+
+  # cidrs                        = concat(azurerm_virtual_network.pipeline_network.address_space,[var.packer_address_space])
   cidrs                        = azurerm_virtual_network.pipeline_network.address_space
 
   tags                         = var.tags
@@ -82,6 +95,12 @@ resource azurerm_public_ip firewall {
   tags                         = var.tags
 
   count                        = var.deploy_firewall ? 1 : 0
+
+  provisioner local-exec {
+    # BUG: https://github.com/hashicorp/terraform-provider-azurerm/issues/14966
+    when                       = destroy
+    command                    = "az network firewall delete --ids ${self.id}"
+  }
 }
 
 resource azurerm_firewall firewall {
@@ -110,8 +129,8 @@ resource azurerm_virtual_network_dns_servers dns_proxy {
 }
 
 # Outbound domain whitelisting
-resource azurerm_firewall_application_rule_collection fw_app_rules {
-  name                         = "${azurerm_firewall.firewall.0.name}-app-rules"
+resource azurerm_firewall_application_rule_collection agent_app_rules {
+  name                         = "${azurerm_firewall.firewall.0.name}-agent-app-rules"
   azure_firewall_name          = azurerm_firewall.firewall.0.name
   resource_group_name          = var.resource_group_name
   priority                     = 200
@@ -541,7 +560,39 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   count                        = var.deploy_firewall ? 1 : 0
 } 
 
-resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
+resource azurerm_firewall_application_rule_collection packer_app_rules {
+  name                         = "${azurerm_firewall.firewall.0.name}-packer-app-rules"
+  azure_firewall_name          = azurerm_firewall.firewall.0.name
+  resource_group_name          = var.resource_group_name
+  priority                     = 201
+  action                       = "Allow"
+
+  rule {
+    name                       = "Allow HTTP"
+
+    source_ip_groups           = [
+      azurerm_ip_group.packer.0.id
+    ]
+
+    target_fqdns               = [
+      "*"
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+
+  count                        = var.deploy_firewall ? 1 : 0
+} 
+
+resource azurerm_firewall_network_rule_collection vnet_net_outbound_rules {
   name                         = "${azurerm_firewall.firewall.0.name}-net-out-rules"
   azure_firewall_name          = azurerm_firewall.firewall.0.name
   resource_group_name          = var.resource_group_name
@@ -695,8 +746,8 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
 
 
 /*
-resource azurerm_firewall_network_rule_collection fw_net_outbound_debug_rules {
-  name                         = "${azurerm_firewall.firewall.0.name}-net-out-debug-rules"
+resource azurerm_firewall_network_rule_collection agent_allow_all_outbound {
+  name                         = "${azurerm_firewall.firewall.0.name}-agent-net-out-debug-rules"
   azure_firewall_name          = azurerm_firewall.firewall.0.name
   resource_group_name          = var.resource_group_name
   priority                     = 999
@@ -725,6 +776,36 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_debug_rules {
   count                        = var.deploy_firewall ? 1 : 0
 }
 */
+
+resource azurerm_firewall_network_rule_collection packer_allow_all_outbound {
+  name                         = "${azurerm_firewall.firewall.0.name}-packer-net-out-debug-rules"
+  azure_firewall_name          = azurerm_firewall.firewall.0.name
+  resource_group_name          = var.resource_group_name
+  priority                     = 998
+  action                       = "Allow"
+
+
+  rule {
+    name                       = "Allow All Outbound (DEBUG) (config:${var.configuration_name})"
+
+    source_ip_groups           = [
+      azurerm_ip_group.packer.0.id
+    ]
+
+    destination_ports          = [
+      "*"
+    ]
+    destination_addresses      = [
+      "*", 
+    ]
+
+    protocols                  = [
+      "Any"
+    ]
+  }
+
+  count                        = var.deploy_firewall ? 1 : 0
+}
 
 resource azurerm_monitor_diagnostic_setting firewall_ip_logs {
   name                         = "${azurerm_public_ip.firewall.0.name}-logs"
@@ -856,9 +937,11 @@ resource azurerm_subnet_route_table_association scale_set_agents {
 
   count                        = var.deploy_firewall ? 1 : 0
   depends_on                   = [
-    azurerm_firewall_application_rule_collection.fw_app_rules,
-    azurerm_firewall_network_rule_collection.fw_net_outbound_rules,
-    # azurerm_firewall_network_rule_collection.fw_net_outbound_debug_rules,
+    azurerm_firewall_application_rule_collection.agent_app_rules,
+    azurerm_firewall_application_rule_collection.packer_app_rules,
+    azurerm_firewall_network_rule_collection.vnet_net_outbound_rules,
+    # azurerm_firewall_network_rule_collection.agent_allow_all_outbound,
+    azurerm_firewall_network_rule_collection.packer_allow_all_outbound,
     azurerm_monitor_diagnostic_setting.firewall_logs,
   ]
 }
@@ -868,9 +951,11 @@ resource azurerm_subnet_route_table_association self_hosted_agents {
 
   count                        = var.deploy_firewall ? 1 : 0
   depends_on                   = [
-    azurerm_firewall_application_rule_collection.fw_app_rules,
-    azurerm_firewall_network_rule_collection.fw_net_outbound_rules,
-    # azurerm_firewall_network_rule_collection.fw_net_outbound_debug_rules,
+    azurerm_firewall_application_rule_collection.agent_app_rules,
+    azurerm_firewall_application_rule_collection.packer_app_rules,
+    azurerm_firewall_network_rule_collection.vnet_net_outbound_rules,
+    # azurerm_firewall_network_rule_collection.agent_allow_all_outbound,
+    azurerm_firewall_network_rule_collection.packer_allow_all_outbound,
     azurerm_monitor_diagnostic_setting.firewall_logs,
   ]
 }

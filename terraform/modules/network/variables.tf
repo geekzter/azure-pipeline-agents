@@ -29,6 +29,7 @@ variable diagnostics_storage_id {}
 variable dns_host_suffix {}
 variable location {}
 variable log_analytics_workspace_resource_id {}
+variable packer_address_space {}
 variable peer_virtual_network_id {}
 variable resource_group_name {}
 variable packer_storage_account_name {}

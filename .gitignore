@@ -36,4 +36,6 @@ data/
 data/*
 data/**
 */data/**
+data/test/*
+**/data/test/*
 set_environment_variables.ps1

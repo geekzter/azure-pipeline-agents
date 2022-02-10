@@ -15,6 +15,7 @@ module network {
   dns_host_suffix              = var.dns_host_suffix
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+  packer_address_space         = var.packer_address_space
   peer_virtual_network_id      = module.packer.virtual_network_id
   resource_group_name          = azurerm_resource_group.rg.name
   packer_storage_account_name  = module.packer.storage_account_name
@@ -31,11 +32,12 @@ module packer {
 
   address_space                = var.packer_address_space
   admin_cidr_ranges            = local.admin_cidr_ranges
+  deploy_nat_gateway           = !var.deploy_firewall
+  gateway_ip_address           = module.network.gateway_ip_address
   peer_virtual_network_id      = module.network.virtual_network_id
   location                     = var.location
   suffix                       = local.suffix
   tags                         = local.tags
-  use_remote_gateway           = false
 
   depends_on                   = [
     time_sleep.script_wrapper_check

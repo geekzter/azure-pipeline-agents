@@ -66,5 +66,5 @@ resource azurerm_virtual_network_peering packer_to_agents {
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
-  use_remote_gateways          = var.use_remote_gateway
+  use_remote_gateways          = false
 }

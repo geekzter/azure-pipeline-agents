@@ -8,6 +8,10 @@ output azurerm_private_dns_zone_blob_name {
   value                        = azurerm_private_dns_zone.blob.name
 }
 
+output gateway_ip_address {
+  value                        = var.deploy_firewall ? azurerm_firewall.firewall.0.ip_configuration.0.private_ip_address : null
+}
+
 output scale_set_agents_subnet_id {
   value                        = azurerm_subnet.scale_set_agents.id
 }

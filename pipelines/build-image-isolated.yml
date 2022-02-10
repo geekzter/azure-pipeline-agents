@@ -234,7 +234,7 @@ jobs:
         ./get_vhd.ps1 -PackerResourceGroupId $env:SELF_HOSTED_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID `
                       -BlobPrefix $(imageResourcePrefix) `
                       -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
-        Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=true]${env:IMAGE_VHD_URL}"
+        Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=false]${env:IMAGE_VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
@@ -261,6 +261,7 @@ jobs:
         $env:AZCOPY_SPA_CLIENT_SECRET  = $env:servicePrincipalKey
         # $env:AZCOPY_TENANT_ID          = $env:tenantId
         azcopy login --service-principal --application-id $env:servicePrincipalId --tenant-id $env:tenantId
+        $env:AZCOPY_SPA_CLIENT_SECRET  = $null
 
         # Publish
         $imageDefinitionVersionTags = @{

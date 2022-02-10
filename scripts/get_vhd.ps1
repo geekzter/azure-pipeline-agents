@@ -66,7 +66,7 @@ $vhdUrl = "$($storageAccount.primaryEndpoints.blob)${storageContainerName}/${vhd
 $vhdUrlResult = $vhdUrl
 if ($GenerateSAS) {
     # $sasToken=$(az storage blob generate-sas -c $storageContainerName -n $vhdPath --account-name $storageAccountName --permissions r --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") --subscription $packerSubscriptionId -o tsv)
-    az storage account generate-sas --account-key $(az storage account keys list -n $storageContainerName -g $packerResourceGroupName --subscription $packerSubscriptionId --query "[0].value" -o tsv) `
+    az storage account generate-sas --account-key $(az storage account keys list -n $storageAccountName -g $packerResourceGroupName --subscription $packerSubscriptionId --query "[0].value" -o tsv) `
                                     --account-name $storageContainerName `
                                     --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
                                     --permissions "lracuw"`

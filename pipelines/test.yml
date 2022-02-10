@@ -26,6 +26,6 @@ jobs:
       destroy: false
       image: Ubuntu2004
       imageReleaseName: ubuntu20
-      imageResourceGroup: 'pipeline-image-build-ubuntu2004-12035'
-      imageResourcePrefix: 'packer-12035-u20'
+      imageResourceGroup: 'pipeline-image-build-ubuntu2004-12128'
+      imageResourcePrefix: 'packer-12128-u20'
       retryCount: 0

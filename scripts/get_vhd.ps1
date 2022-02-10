@@ -69,6 +69,7 @@ if ($GenerateSAS) {
     az storage blob generate-sas -c $storageContainerName `
                                  -n $vhdPath `
                                  --account-name $storageAccountName `
+                                 --account-key $(az storage account keys list -n $storageAccountName -g $packerResourceGroupName --subscription $packerSubscriptionId --query "[0].value" -o tsv) `
                                  --permissions acdrw `
                                  --expiry (Get-Date).AddDays(7).ToString("yyyy-MM-dd") `
                                  --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `

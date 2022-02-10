@@ -35,7 +35,7 @@ module packer {
   location                     = var.location
   suffix                       = local.suffix
   tags                         = local.tags
-  use_remote_gateway           = var.deploy_firewall
+  use_remote_gateway           = false
 
   depends_on                   = [
     time_sleep.script_wrapper_check

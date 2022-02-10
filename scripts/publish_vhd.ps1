@@ -40,6 +40,7 @@ Write-Verbose $MyInvocation.line
 $galleryResourceGroupName = $GalleryResourceGroupId.Split("/")[-1]
 $gallerySubscriptionId = $GalleryResourceGroupId.Split("/")[2]
 $tags=@("application=Pipeline Agents","provisioner=azure-cli")
+$createSAS = !((Test-Path env:AZCOPY_SPA_*) -or (Test-Path env:AZCOPY_MSI_*))
 
 # Input validation
 if (!$GalleryName) {
@@ -127,16 +128,20 @@ if ($imageVersion) {
         # Use intermediate storage account (e.g. in different tenant from source storage account)
         $targetVHDPath = "${Publisher}/${Offer}/${SKU}/${newVersionString}.vhd"
         $targetVHDUrl = "https://${TargetVHDStorageAccountName}.blob.core.windows.net/${TargetVHDStorageContainerName}/${targetVHDPath}"
-        az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $TargetVHDStorageResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
-                                        --account-name $TargetVHDStorageAccountName `
-                                        --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
-                                        --permissions "lracuw"`
-                                        --resource-types co `
-                                        --services b `
-                                        --subscription $gallerySubscriptionId `
-                                        --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `
-                                        -o tsv | Set-Variable targetSASToken    
-        $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
+        if ($createSAS) {
+            az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $TargetVHDStorageResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
+                                            --account-name $TargetVHDStorageAccountName `
+                                            --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
+                                            --permissions "lracuw"`
+                                            --resource-types co `
+                                            --services b `
+                                            --subscription $gallerySubscriptionId `
+                                            --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `
+                                            -o tsv | Set-Variable targetSASToken    
+            $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
+        } else {
+            $targetVHDUrlWithToken = "${targetVHDUrl}"
+        }
         Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
         Write-Host "azcopy copy `"${SourceVHDUrl}`" `"${targetVHDUrlWithToken}`" --overwrite true "
         azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 

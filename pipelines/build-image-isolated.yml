@@ -257,9 +257,10 @@ jobs:
         }
 
         # Prepare azcopy AuthN
-        $env:AZCOPY_SPA_APPLICATION_ID = $env:servicePrincipalId
+        # $env:AZCOPY_SPA_APPLICATION_ID = $env:servicePrincipalId
         $env:AZCOPY_SPA_CLIENT_SECRET  = $env:servicePrincipalKey
-        $env:AZCOPY_TENANT_ID          = $env:tenantId
+        # $env:AZCOPY_TENANT_ID          = $env:tenantId
+        azcopy login --service-principal --application-id $env:servicePrincipalId --tenant-id $env:tenantId
 
         # Publish
         $imageDefinitionVersionTags = @{

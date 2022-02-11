@@ -242,8 +242,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        ./list_image_versions.ps1 -GalleryResourceGroupName $(galleryResourceGroup) `
-                                  -GalleryName $(imageGalleryName) `
+        ./list_image_versions.ps1 -GalleryResourceGroupName $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
+                                  -GalleryName $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   -ImageDefinitionName $(imageDefinitionName)
       useGlobalConfig: true
       failOnStandardError: true

@@ -2,7 +2,7 @@
 
 [![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/azure-pipeline-agents-ci?branchName=master)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=135&branchName=master)
 
-Virtual Network integrated Azure Pipeline Scale set agents that can build the VM images it itself uses. Can be used to deploy workloads that are fully isolated e.g. [geekzter/azure-aks](https://github.com/geekzter/azure-aks).
+Virtual Network integrated [Azure Pipeline Scale set agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) and [self-hosted agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) that can build the VM images it itself uses. Can be used to deploy workloads that are fully isolated e.g. [geekzter/azure-aks](https://github.com/geekzter/azure-aks).
 
 # Architecture description
 

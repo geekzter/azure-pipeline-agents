@@ -34,7 +34,17 @@ Note that when you build an image this way you are accepting the licenses pertai
 ## Agent lifecycle
 <p align="center">
 <img src="visuals/agent-lifecycle.png" width="640">
-</p>
+</p>     
+
+With the aforementioned image template created by [actions/virtual-environments](https://github.com/actions/virtual-environments/), or even a Marketplace image, you can make sure you're always on the latest version. Instead of post deployment patching, an immutable infrastructure approach is taken when new versions of the image are built.
+
+Lifecycle steps are:
+- A Virtual Machine Scale Set (VMSS) is created with the (at that time) latest versions of an image
+- Adding the VMSS has a [Scale Set agent pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) ensures the Azure Pipelines agent is installed
+- When pipeline job needs to be run, an VMMS is assigned to run the job
+- When the pipeline completes, the VMSS instance is destroyed
+- When Virtual Machine Scale Set needs a new instance (which will deplete as they are destroyed after use), an instance is created from the latest VM image version
+The above ensures VM instances re kept up to date. The speed of this is con trolled by the minimum and maximum number of instances if the Scale set gents pool (as configured in Azure DevOps)
 
 # Infrastructure Provisioning
 To customize provisioning, see [configuration](#configuration).

@@ -2,6 +2,8 @@
 
 [![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/azure-pipeline-agents-ci?branchName=master)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=135&branchName=master)
 
+Virtual Network integrated Azure Pipeline Scale set agents that can build the VM images it itself uses. Can be used to deploy workloads that are fully isolated e.g. [geekzter/azure-aks](https://github.com/geekzter/azure-aks).
+
 # Architecture description
 
 Azure Pipelines includes [Microsoft-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml) provided by the platform. If you can use these agents I recommend you do so as they provide a complete managed experience.
@@ -24,12 +26,12 @@ This repo will provision an Azure Virtual Machine Scale Set in a virtual network
 <img src="visuals/image-lifecycle.png" width="640">
 </p>      
 
-The [build-image.yml](pipelines/build-images.yml) uses the [method and scripts described on the actions/virtual-environments GitHub repo](https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer.
+The [build-image.yml](pipelines/build-images.yml) uses the [method and scripts described on the actions/virtual-environments GitHub repo](https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
 
-In Enterprise you will have isolation requirements e.g. no public endpoints and build in a virtual network, protect the identity used for the build, etc. To accomodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/virtual-environments/tree/main/images/linux) and provides the variables required to customize the build VM. 
+In Enterprise you will have isolation requirements e.g. no public endpoints and build in a virtual network, protect the identity used for the build, etc. To accomodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/virtual-environments/tree/main/images/linux) and provides the variables required to customize the build VM. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
 
 ### Licensing
-Note that when you build an image this way you are accepting the licenses pertaining to the software installed at build time.
+Note that when you build an image this way you are accepting licenses pertaining to the software at installation (i.e. build) time.
 
 ## Agent lifecycle
 <p align="center">

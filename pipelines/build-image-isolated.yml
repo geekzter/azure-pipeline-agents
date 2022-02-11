@@ -278,6 +278,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Check image version of $(imageDefinitionName)'
+    condition: ne(coalesce(variables['githubRelease.version'],'null'),'null')
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

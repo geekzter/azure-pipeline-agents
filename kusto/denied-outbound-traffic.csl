@@ -6,6 +6,7 @@ AzureDiagnostics
 | parse msg_s with Protocol2 " request from " SourceIP2 " to " TargetIP2 ". Action: " Action2
 | extend SourcePort = tostring(SourcePortInt),Port = tostring(TargetPortInt)
 | extend Action = case(Action1a == "", case(Action1b == "",Action2,Action1b), Action1a),Protocol = case(Protocol == "", Protocol2, Protocol),SourceIP = case(SourceIP == "", SourceIP2, SourceIP),TargetIP = case(TargetIP == "", TargetIP2, TargetIP),SourcePort = case(SourcePort == "", "N/A", SourcePort),Port = case(Port == "", "N/A", Port),NatDestination = case(NatDestination == "", "N/A", NatDestination)
+| extend Action = trim(@"[^\w]+",Action)
 | where Action == "Deny"
 | order by TimeGenerated desc
 | project TimeGenerated, Protocol, SourceIP,TargetIP,Port

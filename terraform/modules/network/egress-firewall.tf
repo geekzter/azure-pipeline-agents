@@ -36,8 +36,10 @@ resource azurerm_ip_group vnet {
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
-  # cidrs                        = concat(azurerm_virtual_network.pipeline_network.address_space,[var.packer_address_space])
-  cidrs                        = azurerm_virtual_network.pipeline_network.address_space
+  cidrs                        = [
+    var.address_space,
+    var.packer_address_space
+  ]
 
   tags                         = var.tags
 
@@ -570,29 +572,7 @@ resource azurerm_firewall_application_rule_collection packer_app_rules {
   action                       = "Allow"
 
   rule {
-    name                       = "Allow All HTTP (config:${var.configuration_name})"
-
-    source_ip_groups           = [
-      azurerm_ip_group.packer.0.id
-    ]
-
-    target_fqdns               = [
-      "*"
-    ]
-
-    protocol {
-      port                     = "80"
-      type                     = "Http"
-    }
-
-    protocol {
-      port                     = "443"
-      type                     = "Https"
-    }
-  }
-
-  rule {
-    name                       = "Allow Known HTTP (config:${var.configuration_name})"
+    name                       = "Allow Known HTTPS (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.packer.0.id
@@ -651,6 +631,7 @@ resource azurerm_firewall_application_rule_collection packer_app_rules {
       "go.microsoft.com",
       "jfrog-prod-usw2-shared-oregon-main.s3.amazonaws.com",
       "julialang-s3.julialang.org",
+      "keyserver.ubuntu.com",
       "launchpad.net",
       "mirror.openshift.com",
       "mirrorcache-us.opensuse.org",
@@ -669,7 +650,13 @@ resource azurerm_firewall_application_rule_collection packer_app_rules {
       "provo-mirror.opensuse.org",
       "psg-prod-eastus.azureedge.net",
       "pypi.org",
+      "pypi.python.org",
       "raw.githubusercontent.com",
+      "rdfepirv2dm1prdstr01.blob.core.windows.net",
+      "rdfepirv2dm1prdstr03.blob.core.windows.net",
+      "rdfepirv2dm1prdstr04.blob.core.windows.net",
+      "rdfepirv2dm1prdstr07.blob.core.windows.net",
+      "rdfepirv2dm1prdstr08.blob.core.windows.net",
       "registry-1.docker.io",
       "registry.npmjs.org",
       "releases.bazel.build",
@@ -678,6 +665,7 @@ resource azurerm_firewall_application_rule_collection packer_app_rules {
       "repo.continuum.io",
       "repo.mongodb.org",
       "repo1.maven.org",
+      "repos.azul.com",
       "rubygems.org",
       "s3.amazonaws.com",
       "services.gradle.org",
@@ -695,6 +683,44 @@ resource azurerm_firewall_application_rule_collection packer_app_rules {
       "www.powershellgallery.com",
       "www.pulumi.com",
       "www.swift.org",
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+
+rule {
+    name                       = "Allow Known HTTP (config:${var.configuration_name})"
+
+    source_ip_groups           = [
+      azurerm_ip_group.packer.0.id
+    ]
+
+    target_fqdns               = [
+      "azure.archive.ubuntu.com",
+      "keyserver.ubuntu.com",
+      "ppa.launchpad.net",
+      "security.ubuntu.com",
+      "www.cpan.org"
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+  }
+
+  rule {
+    name                       = "Allow All HTTP(S) (config:${var.configuration_name})"
+
+    source_ip_groups           = [
+      azurerm_ip_group.packer.0.id
+    ]
+
+    target_fqdns               = [
+      "*"
     ]
 
     protocol {

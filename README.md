@@ -27,7 +27,7 @@ Set Terraform variable `use_scale_set` to `true` to provision scale set agents.
 
 The software in the scale set (I use Ubuntu only), is installed using [cloud-init](cloudinit/cloud-config-userdata.yaml). 
 
-Note this also sets up some environment variables on the agent e.g. `SELF_HOSTED_DEMO_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
+Note this also sets up some environment variables on the agent e.g. `PIPELINE_DEMO_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
 ## Infrastructure Provisioning
 To customize provisioning, see [configuration](#configuration).
 ### Codespace
@@ -86,9 +86,9 @@ pool:
 steps:
 - pwsh: |
     # Use pipeline agent virtual network as VNet to peer from
-    $env:TF_VAR_peer_network_id = $env:SELF_HOSTED_DEMO_AGENT_VIRTUAL_NETWORK_ID
+    $env:TF_VAR_peer_network_id = $env:PIPELINE_DEMO_AGENT_VIRTUAL_NETWORK_ID
 
-    # Terraform will use $env:SELF_HOSTED_DEMO_AGENT_VIRTUAL_NETWORK_ID as value for input variable 'peer_network_id' 
+    # Terraform will use $env:PIPELINE_DEMO_AGENT_VIRTUAL_NETWORK_ID as value for input variable 'peer_network_id' 
     # Create on-demand peering... (e.g. https://github.com/geekzter/azure-aks)
 ```
 

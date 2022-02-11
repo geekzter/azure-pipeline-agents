@@ -297,7 +297,7 @@ jobs:
         }
 
         # List environment variables
-        Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,SELF_HOSTED_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
+        Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
 
         # Convert uppercased Terraform environment variables to .auto.tfvars file
         foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
@@ -502,7 +502,7 @@ jobs:
           }
 
           # Remove policy definition
-          ./delete_policy.ps1 -Suffix $(TF_VAR_resource_suffix) -Workspace $(TF_WORKSPACE)
+          ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true

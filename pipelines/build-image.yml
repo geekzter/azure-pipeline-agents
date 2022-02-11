@@ -100,7 +100,7 @@ jobs:
 
   - task: AzureCLI@2
     name: githubRelease
-    displayName: 'Get release for ${{ parameters.imageReleaseName }}'
+    displayName: 'Get release for $(imageDefinitionName)'
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

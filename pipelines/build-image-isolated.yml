@@ -289,7 +289,7 @@ jobs:
                                   --gallery-name $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[?tags.versionlabel=='$(githubRelease.version)' && provisioningState=='Succeeded']" | ConvertFrom-Json | Set-Variable imageVersion
-        Write-Host $imageVersion
+        $imageVersion | Format-Table
         $success = ($imageVersion -ne $null)
         if (!$success) {
           Write-Error "Could not find $(imageDefinitionName) version $(githubRelease.version), build failed!"

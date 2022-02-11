@@ -110,7 +110,7 @@ jobs:
 
   - task: AzureCLI@2
     name: githubRelease
-    displayName: 'Get release for ${{ parameters.imageReleaseName }}'
+    displayName: 'Get release for $(imageDefinitionName)'
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -275,6 +275,27 @@ jobs:
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
+
+  - task: AzureCLI@2
+    displayName: 'Check image version of $(imageDefinitionName)'
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Determine whether image with same config already exists
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:SELF_HOSTED_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "[?tags.versionlabel=='$(githubRelease.version)' && provisioningState=='Succeeded']" | ConvertFrom-Json | Set-Variable imageVersion
+        Write-Host $imageVersion
+        $success = ($imageVersion -ne $null)
+        if (!$success) {
+          Write-Error "Could not find $(imageDefinitionName) version $(githubRelease.version), build failed!"
+        }
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(imageRepository)'
 
   - task: AzureCLI@2
     displayName: 'List published images'

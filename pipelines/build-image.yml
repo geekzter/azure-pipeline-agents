@@ -240,7 +240,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        ./list_image_versions.ps1 -GalleryResourceGroupName $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
+        ./list_image_versions.ps1 -GalleryResourceGroupName $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   -GalleryName $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   -ImageDefinitionName $(imageDefinitionName)
       useGlobalConfig: true

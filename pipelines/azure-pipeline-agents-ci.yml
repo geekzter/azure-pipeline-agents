@@ -474,7 +474,7 @@ jobs:
         inlineScript: |
           $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resource group fails
           # Build JMESPath expression
-          $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '${env:TF_WORKSPACE}' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
+          $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '$(TF_WORKSPACE)' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
           Write-Host "Removing resources identified by `"$tagQuery`"..."
 
           # Remove resource groups
@@ -506,7 +506,7 @@ jobs:
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true
-        workingDirectory: '$(terraformDirectory)'
+        workingDirectory: '$(scriptDirectory)'
 
     - ${{ if eq(parameters.clear, true) }}: # Only works if we can identity the suffix and therefore the resource group name
       - task: AzureResourceManagerTemplateDeployment@3

@@ -8,8 +8,8 @@
 
 ### Arguments
 param ( 
-    [parameter(Mandatory=$false)][string]$GalleryResourceGroupName,
-    [parameter(Mandatory=$false)][string]$GalleryName,
+    [parameter(Mandatory=$false)][string]$GalleryResourceGroupName=$env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME,
+    [parameter(Mandatory=$false)][string]$GalleryName=$env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME,
     [parameter(Mandatory=$false)][string]$ImageDefinitionName
 ) 
 

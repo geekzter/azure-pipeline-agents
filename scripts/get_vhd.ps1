@@ -16,7 +16,7 @@
 
 ### Arguments
 param ( 
-    [parameter(Mandatory=$true)][string]$PackerResourceGroupId,
+    [parameter(Mandatory=$true)][string]$PackerResourceGroupId=$env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID,
     [parameter(Mandatory=$false)][string]$BlobPrefix,
     [parameter(Mandatory=$false)][switch]$GenerateSAS,
     [parameter(Mandatory=$false)][string]$VHDUrlEnvironmentVariableName="IMAGE_VHD_URL"

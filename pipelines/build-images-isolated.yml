@@ -2,7 +2,7 @@ parameters:
 - name: image
   displayName: Image
   type: string
-  default: Stable
+  default: All
   values:
   - All
   - Latest

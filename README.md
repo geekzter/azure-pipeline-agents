@@ -2,24 +2,42 @@
 
 [![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/azure-pipeline-agents-ci?branchName=master)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=135&branchName=master)
 
-Virtual Network integrated [Azure Pipeline Scale set agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) and [self-hosted agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) that can build the VM images it itself uses. Can be used to deploy workloads that are fully isolated e.g. [geekzter/azure-aks](https://github.com/geekzter/azure-aks).
-
-# Architecture description
-
-Azure Pipelines includes [Microsoft-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml) provided by the platform. If you can use these agents I recommend you do so as they provide a complete managed experience.
+Azure Pipelines includes [Microsoft-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml) provided by the service. If you can use these agents I recommend you do so as they provide a complete managed experience.
 
 However, there may be scenarios where you need to manage your own agents:
-- Private network access
+- Network access to your private resources e.g. [geekzter/azure-aks](https://github.com/geekzter/azure-aks)
 - Configuration can't be met with any of the hosted agents (e.g. Linux distribution, Windows version)
 - Improve build times by caching artifacts
 
-The first point is probably the most common reason to set up your own agents. With the advent of Private Link it is more common to deploy Azure Services so that they can only be access from a virtual network. Hence you need an agent hosting model that fits that requirement. 
+The first point is probably the most common reason to set up your own agents. With the advent of Private Link it is more common to deploy Azure Services so that they can only be access from a virtual network. This requires an agent hosting model that fits that constraint. 
+
+# Architecture description
+This repository contains Virtual Network integrated [Azure Pipeline Scale set agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) and [self-hosted agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) that can build the VM images it itself uses. 
+
+Azure services used include:
+- Bastion
+- Firewall
+- NAT Gateway 
+- Pipelines
+- Virtual Network 
+
+
+Tools used are:
+- Azure CLI 
+- clound-init
+- Packer
+- PowerShell
+- Terraform
+
+
 ## Infrastructure
 <p align="center">
-<img src="visuals/diagram.png" width="640">
+<img src="visuals/diagram.png" width="800">
 </p>
 
-This repo will provision an Azure Virtual Machine Scale Set in a virtual network. It will provision an egress device (Firewall or NAT Gateway) and remote access (Bastion). To enable virtual network integrated image builds with [build-image-isolated.yml](pipelines/build-image-isolated.yml), a separate virtual network (and resource group) to be used by Packer is created. For the VM's used to build images, yet another resource is created and assigned policy to prevent image build time VM extension installation.
+This repo will provision an Azure Virtual Machine Scale Set in a Virtual Network. It will provision an egress device (Firewall or NAT Gateway) and remote access (Bastion). A choice can be made between a NAT Gateway (optimize cost) or Azure Firewall (optimize control) depending on the `deploy_firewall` Terraform variable. This also impacts the extend to which resources are connected via Private Endpoints.
+
+To enable Virtual Network integrated image builds with [build-image-isolated.yml](pipelines/build-image-isolated.yml), a separate Virtual Network (and resource group, potentially in a different subscription) to be used by Packer is created. For the VM's used to build images, yet another resource group is created and assigned policy to prevent image build time VM extension installation which would render the image unusable.
 
 ## Image lifecycle
 <p align="center">
@@ -28,7 +46,7 @@ This repo will provision an Azure Virtual Machine Scale Set in a virtual network
 
 The [build-image.yml](pipelines/build-images.yml) uses the [method and scripts described on the actions/virtual-environments GitHub repo](https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
 
-In Enterprise you will have isolation requirements e.g. no public endpoints and build in a virtual network, protect the identity used for the build, etc. To accomodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/virtual-environments/tree/main/images/linux) and provides the variables required to customize the build VM. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
+In Enterprise you will have isolation requirements e.g. no public endpoints and build in a Virtual Network, protect the identity used for the build, etc. To accomodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/virtual-environments/tree/main/images/linux) and provides the variables required to customize the build VM. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
 
 ### Licensing
 Note that when you build an image this way you are accepting licenses pertaining to the software at installation (i.e. build) time.
@@ -104,7 +122,7 @@ Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and 
 |`configure_wildcard_allow_rules`|Configure generic wildcard FQDN rules e.g. *.blob.core.windows.net.|
 |`create_contributor_service_principal`|Create Service Principal that can be used as Service Connection from the Azure DevOps portal.|
 |`deploy_bastion`|Deploy [managed bastion host](https://docs.microsoft.com/en-us/azure/bastion/).|
-|`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it.|
+|`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it. Setting this value to `true` will also create private endpoints for storage used, Azure Monitor, etc.|
 |`deploy_non_essential_vm_extensions`|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |
 |`deploy_scale_set`|Deploy Scale Set agents.|
 |`deploy_self_hosted_vms`|Deploy Self-Hosted agent VMs.|
@@ -112,7 +130,7 @@ Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and 
 |`linux_tools`|Uses [cloudinit](https://cloudinit.readthedocs.io/) to instal tools (e.g. AzCopy, Packer, PowerShell, PowerShell Azure modules). Should not be used when using a pre-baked image.|
 |`linux_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Ubuntu1804/versions/latest|
 |`log_analytics_workspace_id`|Providing a value of an existing Log Analytics workspace allows you to retain logs after infrasructure is destroyed.|
-|`winddows_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Windows2022/versions/latest|
+|`windows_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Windows2022/versions/latest|
 
 ## Pipeline use
 This yaml snippet shows how to reference the scale set pool and use the environment variables set by the agent:

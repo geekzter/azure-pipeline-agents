@@ -119,6 +119,7 @@ jobs:
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[?tags.versionlabel=='$version' && provisioningState!='Deleting' && provisioningState!='Failed' && publishingProfile.excludeFromLatest!=true]" | ConvertFrom-Json | Set-Variable imageVersion
+        $imageVersion | Format-List
         $newImageVersion = !$imageVersion
         Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$($newImageVersion.ToString())"
         if ($newImageVersion) {

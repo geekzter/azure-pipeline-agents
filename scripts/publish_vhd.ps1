@@ -94,85 +94,75 @@ if (!$ImageDefinitionVersionTags -or !$ImageDefinitionVersionTags.ContainsKey("v
     Write-Warning "`nImageDefinitionVersionTags not specified with versionlabel, exiting"
     exit
 }
-$imageDefinitionVersionLabel = $ImageDefinitionVersionTags["versionlabel"]
+
 az sig image-version list --gallery-image-definition $ImageDefinitionName `
-                          --gallery-name $GalleryName `
-                          --resource-group $galleryResourceGroupName `
-                          --subscription $gallerySubscriptionId `
-                          --query "[?tags.versionlabel=='$imageDefinitionVersionLabel' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
+                            --gallery-name $GalleryName `
+                            --resource-group $galleryResourceGroupName --query "[].name" -o json `
+                            --subscription $gallerySubscriptionId `
+                            | ConvertFrom-Json `
+                            | ForEach-Object {[version]$_} `
+                            | Sort-Object -Descending | Select-Object -First 1 `
+                            | Set-Variable latestVersion
+# Increment version
+[version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
+$newVersionString = $newVersion.ToString()
 
-if ($imageVersion) {
-    Write-Warning "`nImage Definition '$ImageDefinitionName' with tag versionlabel='$imageDefinitionVersionLabel' already exists"
-} else {
-    az sig image-version list --gallery-image-definition $ImageDefinitionName `
-                              --gallery-name $GalleryName `
-                              --resource-group $galleryResourceGroupName --query "[].name" -o json `
-                              --subscription $gallerySubscriptionId `
-                              | ConvertFrom-Json `
-                              | ForEach-Object {[version]$_} `
-                              | Sort-Object -Descending | Select-Object -First 1 `
-                              | Set-Variable latestVersion
-    # Increment version
-    [version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
-    $newVersionString = $newVersion.ToString()
-
-    [System.Collections.ArrayList]$imageTags = $tags.Clone()
-    foreach ($tagName in $ImageDefinitionVersionTags.Keys) {
-        $tagValue = $ImageDefinitionVersionTags[$tagName]
-        $imageTags.Add("${tagName}=${tagValue}") | Out-Null
-    }
-    Write-Host "`nTags that will be applied to version ${newVersionString} of Image Definition '$ImageDefinitionName':"
-    $imageTags.GetEnumerator() | Sort-Object -Property Name | Format-Table
-
-    if ($TargetVHDStorageAccountName -and $TargetVHDStorageContainerName -and $TargetVHDStorageResourceGroupName) {
-        # Use intermediate storage account (e.g. in different tenant from source storage account)
-        $targetVHDPath = "${Publisher}/${Offer}/${SKU}/${newVersionString}.vhd"
-        $targetVHDUrl = "https://${TargetVHDStorageAccountName}.blob.core.windows.net/${TargetVHDStorageContainerName}/${targetVHDPath}"
-        # if ($createSAS) {
-            az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $TargetVHDStorageResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
-                                            --account-name $TargetVHDStorageAccountName `
-                                            --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
-                                            --permissions "lracuw"`
-                                            --resource-types co `
-                                            --services b `
-                                            --subscription $gallerySubscriptionId `
-                                            --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `
-                                            -o tsv | Set-Variable targetSASToken    
-            $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
-        # } else {
-        #     $targetVHDUrlWithToken = "${targetVHDUrl}"
-        # }
-        Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
-        Write-Host "azcopy copy `"${SourceVHDUrl}`" `"${targetVHDUrlWithToken}`" --overwrite true "
-        azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 
-        Write-Host "Copy '$SourceVHDUrl' to '$targetVHDUrlWithToken' completed after $($stopwatch.Elapsed.ToString("m'm's's'"))"
-
-        $vhdGalleryImportUrl = $targetVHDUrl
-        $vhdGalleryImportStorageAccountName = $TargetVHDStorageAccountName
-    } else {
-        # Images cannot be created from Shared Access Signature (SAS) URI blobs
-        if ("${SourceVHDUrl}" -match "\.vhd\?") {
-            Write-Warning "Images cannot be created from Shared Access Signature (SAS) URI blobs, removing SAS"
-            $SourceVHDUrl = ($SourceVHDUrl -replace "\?.*$","")
-        }
-        $vhdGalleryImportUrl = $SourceVHDUrl
-        $vhdGalleryImportStorageAccountName = $sourceVHDStorageAccountName
-    }
-
-    Write-Host "`nCreating Image version ${newVersionString} of Image Definition '$ImageDefinitionName'..."
-    $TargetRegion ??=  ((@($gallery.location,$galleryResourceGroup.location) | Get-Unique) -join ",")
-    az sig image-version create --exclude-from-latest $ExcludeFromLatest.ToString().ToLower() `
-                                --gallery-image-definition $ImageDefinitionName `
-                                --gallery-name $GalleryName `
-                                --gallery-image-version $newVersionString `
-                                --location $gallery.location `
-                                --resource-group $galleryResourceGroupName `
-                                --subscription $gallerySubscriptionId `
-                                --target-regions $TargetRegion `
-                                --os-vhd-uri "${vhdGalleryImportUrl}" `
-                                --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
-                                --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
-    Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' created after $($stopwatch.Elapsed.ToString("m'm's's'"))"
+[System.Collections.ArrayList]$imageTags = $tags.Clone()
+foreach ($tagName in $ImageDefinitionVersionTags.Keys) {
+    $tagValue = $ImageDefinitionVersionTags[$tagName]
+    $imageTags.Add("${tagName}=${tagValue}") | Out-Null
 }
+Write-Host "`nTags that will be applied to version ${newVersionString} of Image Definition '$ImageDefinitionName':"
+$imageTags.GetEnumerator() | Sort-Object -Property Name | Format-Table
+
+if ($TargetVHDStorageAccountName -and $TargetVHDStorageContainerName -and $TargetVHDStorageResourceGroupName) {
+    # Use intermediate storage account (e.g. in different tenant from source storage account)
+    $targetVHDPath = "${Publisher}/${Offer}/${SKU}/${newVersionString}.vhd"
+    $targetVHDUrl = "https://${TargetVHDStorageAccountName}.blob.core.windows.net/${TargetVHDStorageContainerName}/${targetVHDPath}"
+    # if ($createSAS) {
+        az storage account generate-sas --account-key $(az storage account keys list -n $TargetVHDStorageAccountName -g $TargetVHDStorageResourceGroupName --subscription $gallerySubscriptionId --query "[0].value" -o tsv) `
+                                        --account-name $TargetVHDStorageAccountName `
+                                        --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
+                                        --permissions "lracuw"`
+                                        --resource-types co `
+                                        --services b `
+                                        --subscription $gallerySubscriptionId `
+                                        --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `
+                                        -o tsv | Set-Variable targetSASToken    
+        $targetVHDUrlWithToken = "${targetVHDUrl}?${targetSASToken}"
+    # } else {
+    #     $targetVHDUrlWithToken = "${targetVHDUrl}"
+    # }
+    Write-Host "`nCopying '$SourceVHDUrl' to '$targetVHDUrlWithToken'..."
+    Write-Host "azcopy copy `"${SourceVHDUrl}`" `"${targetVHDUrlWithToken}`" --overwrite true "
+    azcopy copy "${SourceVHDUrl}" "${targetVHDUrlWithToken}" --overwrite true 
+    Write-Host "Copy '$SourceVHDUrl' to '$targetVHDUrlWithToken' completed after $($stopwatch.Elapsed.ToString("m'm's's'"))"
+
+    $vhdGalleryImportUrl = $targetVHDUrl
+    $vhdGalleryImportStorageAccountName = $TargetVHDStorageAccountName
+} else {
+    # Images cannot be created from Shared Access Signature (SAS) URI blobs
+    if ("${SourceVHDUrl}" -match "\.vhd\?") {
+        Write-Warning "Images cannot be created from Shared Access Signature (SAS) URI blobs, removing SAS"
+        $SourceVHDUrl = ($SourceVHDUrl -replace "\?.*$","")
+    }
+    $vhdGalleryImportUrl = $SourceVHDUrl
+    $vhdGalleryImportStorageAccountName = $sourceVHDStorageAccountName
+}
+
+Write-Host "`nCreating Image version ${newVersionString} of Image Definition '$ImageDefinitionName'..."
+$TargetRegion ??=  ((@($gallery.location,$galleryResourceGroup.location) | Get-Unique) -join ",")
+az sig image-version create --exclude-from-latest $ExcludeFromLatest.ToString().ToLower() `
+                            --gallery-image-definition $ImageDefinitionName `
+                            --gallery-name $GalleryName `
+                            --gallery-image-version $newVersionString `
+                            --location $gallery.location `
+                            --resource-group $galleryResourceGroupName `
+                            --subscription $gallerySubscriptionId `
+                            --target-regions $TargetRegion `
+                            --os-vhd-uri "${vhdGalleryImportUrl}" `
+                            --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
+                            --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
+Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' created after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 
 $imageVersion | Format-List

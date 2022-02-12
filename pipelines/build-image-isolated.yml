@@ -12,10 +12,6 @@ parameters:
 # https://api.github.com/repos/actions/virtual-environments/releases
   displayName: Image Release Name
   type: string
-- name: imageResourceGroup
-  displayName: Image Resource Group
-  type: string
-  default: packer
 - name: imageResourcePrefix
   displayName: Image Resource Prefix
   type: string
@@ -47,8 +43,6 @@ jobs:
     value: 'yes_without_prompt'
   - name: 'galleryResourceGroup' 
     value: 'Shared'
-  - name: 'imageBuildResourceGroup' 
-    value: '${{ parameters.imageResourceGroup }}'
   - name: 'imageConfigFile'
     value: '${{ lower(parameters.image) }}.json'
   - name: 'imageName'
@@ -79,8 +73,6 @@ jobs:
     value: '$(Build.SourcesDirectory)/virtual-environments'
   - name: 'imageReleaseName' 
     value: '${{ parameters.imageReleaseName }}'
-  - name: 'imageResourceGroup' 
-    value: '${{ parameters.imageResourceGroup }}'
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageScriptDirectory'

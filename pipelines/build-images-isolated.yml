@@ -69,8 +69,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu1804
       imageReleaseName: ubuntu18
-      imageResourceGroup: 'pipeline-image-build-ubuntu1804-$(Build.BuildId)'
-      imageResourcePrefix: 'packer-$(Build.BuildId)-u18'
+      imageResourcePrefix: 'packer$(Build.BuildId)u18'
       retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
@@ -79,8 +78,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Ubuntu2004
       imageReleaseName: ubuntu20
-      imageResourceGroup: 'pipeline-image-build-ubuntu2004-$(Build.BuildId)'
-      imageResourcePrefix: 'packer-$(Build.BuildId)-u20'
+      imageResourcePrefix: 'packer$(Build.BuildId)u20'
       retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
@@ -89,8 +87,7 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Windows2019
       imageReleaseName: win19
-      imageResourceGroup: 'pipeline-image-build-windows2019-$(Build.BuildId)'
-      imageResourcePrefix: 'packer-$(Build.BuildId)-w19'
+      imageResourcePrefix: 'packer$(Build.BuildId)w19'
       retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
@@ -99,6 +96,5 @@ jobs:
       destroy: ${{ parameters.destroy }}
       image: Windows2022
       imageReleaseName: win22
-      imageResourceGroup: 'pipeline-image-build-windows2022-$(Build.BuildId)'
-      imageResourcePrefix: 'packer-$(Build.BuildId)-w22'
+      imageResourcePrefix: 'packer$(Build.BuildId)w22'
       retryCount: ${{ parameters.retryCount }}

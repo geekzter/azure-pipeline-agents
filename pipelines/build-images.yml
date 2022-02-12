@@ -42,6 +42,7 @@ resources:
 trigger: none
 
 pr:
+  autoCancel: false
   branches:
     include:
     - '*'

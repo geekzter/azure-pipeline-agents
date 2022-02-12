@@ -18,12 +18,20 @@ function List-ImageVersions (
     [parameter(Mandatory=$true)][string]$GalleryName,
     [parameter(Mandatory=$true)][string]$ImageDefinitionName
 ) {
+    Write-Host "az sig image-version list --gallery-image-definition $ImageDefinitionName --gallery-name $GalleryName --resource-group $GalleryResourceGroupName"
+    az sig image-version list --gallery-image-definition $ImageDefinitionName `
+                              --gallery-name $GalleryName `
+                              --resource-group $GalleryResourceGroupName `
+                              -o json
+
+    exit
     az sig image-version list --gallery-image-definition $ImageDefinitionName `
                               --gallery-name $GalleryName `
                               --resource-group $GalleryResourceGroupName `
                               --query "[].{Name:'$ImageDefinitionName', Version:name, Build:tags.build, Label:tags.versionlabel, Commit:tags.commit, Date:publishingProfile.publishedDate, Regions:publishingProfile.targetRegions[*].name, Status:provisioningState}" `
                               -o json | ConvertFrom-Json `
                               | Sort-Object -Property Date -Descending
+
 }
 
 if (!$GalleryName) {
@@ -47,7 +55,7 @@ if (!$GalleryName) {
 }
 
 
-Write-Host "Retrieving image versions in Shared Image Gallery '$GalleryName'..." -NoNewline
+Write-Host "Retrieving image versions from Shared Image Gallery '$GalleryName'..." -NoNewline
 if ($ImageDefinitionName) {
     List-ImageVersions -GalleryResourceGroupName $GalleryResourceGroupName `
                        -GalleryName $GalleryName `

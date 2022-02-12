@@ -11,19 +11,6 @@ resource azurerm_policy_definition no_vm_extension {
   policy_type                  = "Custom"
 }
 
-resource azurerm_policy_definition tags {
-  name                         = "pipeline-build-tags-policy-${terraform.workspace}-${var.suffix}"
-
-  description                  = "Set shutdown tag"
-  display_name                 = "Set shutdown tag"
-  metadata                     = jsonencode({
-    "category"                 = "demo"
-  })
-  mode                         = "Indexed"
-  policy_rule                  = file("${path.module}/tags-policy.json")
-  policy_type                  = "Custom"
-}
-
 resource azurerm_policy_set_definition build_policies {
   name                         = "pipeline-build-policies-${terraform.workspace}-${var.suffix}"
   policy_type                  = "Custom"
@@ -31,10 +18,6 @@ resource azurerm_policy_set_definition build_policies {
 
   policy_definition_reference {
     policy_definition_id       = azurerm_policy_definition.no_vm_extension.id
-  }
-
-  policy_definition_reference {
-    policy_definition_id       = azurerm_policy_definition.tags.id
   }
 }
 

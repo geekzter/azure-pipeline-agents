@@ -167,19 +167,20 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
       # custom_data,
       extension,
       instances,
+      tags # Modified by Azure Pipelines
     ]
   }
   tags                         = var.tags
 }
 
-# # TODO: Replace with Azure Monitoring Agent, does not work with python 3
+# # TODO: Replace with Azure Monitoring Agent, does not work properly with Python 3
 # # https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/diagnostics-linux?tabs=azcli#python-requirement
 # resource azurerm_virtual_machine_scale_set_extension diagnostics {
 #   name                         = "LinuxDiagnostic"
 #   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
 #   publisher                    = "Microsoft.Azure.Diagnostics"
 #   type                         = "LinuxDiagnostic"
-#   type_handler_version         = "3.0"
+#   type_handler_version         = "3.0" # 4.0 doesn't support Python 3
 #   auto_upgrade_minor_version   = true
 
 #   settings                     = templatefile("${path.module}/linuxdiagnostics.json", { 

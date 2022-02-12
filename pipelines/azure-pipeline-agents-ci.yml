@@ -59,9 +59,11 @@ name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$
 trigger: none
 
 pr:
+  autoCancel: false
   branches:
     include:
     - '*'
+  drafts: false
   paths:
     exclude:
     - '.devcontainer/**'  

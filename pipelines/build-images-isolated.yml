@@ -122,7 +122,7 @@ jobs:
     - task: AzureCLI@2
       name: teardown
       displayName: 'Tear down temporary resources'
-      condition: always()
+      condition: or(always(),canceled())
       inputs:
         azureSubscription: '$(packerSubscriptionConnection)'
         scriptType: pscore
@@ -133,13 +133,14 @@ jobs:
                            --query "[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)'].id" `
                            -o tsv | Set-Variable resourceIDs
           if ($resourceIDs) {
-            Write-Host "Removing resource group(s) `"${resourceIDs}`"..."
+            Write-Host "Removing resources:"
+            $resourceIDs
             &{ # az writes information to stderr
               $ErrorActionPreference = 'SilentlyContinue'
               az resource delete --ids $resourceIDs 2>&1
             }
           } else {
-            Write-Host "No resource groups to remove"
+            Write-Host "No resources to remove"
           }
           Write-Host "az resource list -g ${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME} --query `"[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)'].id`"" 
         useGlobalConfig: true

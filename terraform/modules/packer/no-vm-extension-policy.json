@@ -1,0 +1,13 @@
+{
+	"if": {
+		"allOf": [
+			{
+				"field": "type",
+				"equals": "Microsoft.Compute/virtualMachines/extensions"
+			}
+		]
+	},
+	"then": {
+		"effect": "deny"
+	}
+}

@@ -1,10 +1,11 @@
 variable address_space {
   # Use Class C segment, to minimize conflict with networks provisioned from pipelines
-  default                      = "192.168.0.0/24"
+  default                      = "192.168.0.0/22"
 }
 
 variable admin_ip_ranges {
   default                      = []
+  type                         = list
 }
 
 variable configure_cidr_allow_rules {
@@ -24,6 +25,13 @@ variable create_contributor_service_principal {
   default                      = false
   type                         = bool
 }
+
+variable demo_viewers {
+  description                  = "Object ID's of AAD groups/users to be granted reader access"
+  default                      = []
+  type                         = list
+}
+
 variable deploy_bastion {
   description                  = "Deploys managed bastion host"
   default                      = true
@@ -67,6 +75,21 @@ variable dns_host_suffix {
   default                      = "mycicd"
 }
 
+variable environment_variables {
+  type                         = map
+  default = {
+    FOO                        = "bar"
+  }  
+} 
+
+variable linux_tools {
+  default                      = false
+  type                         = bool
+}
+
+variable linux_os_image_id {
+  default                      = null
+}
 variable linux_os_offer {
   default                      = "UbuntuServer"
 }
@@ -78,6 +101,9 @@ variable linux_os_sku {
 }
 variable linux_os_version {
   default                      = "latest"
+}
+variable linux_os_vhd_url {
+  default                      = null
 }
 variable linux_pipeline_agent_name_prefix {
   default                      = "ubuntu-agent"
@@ -101,12 +127,33 @@ variable linux_vm_size {
 }
 
 variable location {
-  default                      = "westeurope"
+  default                      = "centralus"
 }
 
 variable log_analytics_workspace_id {
   description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
   default                      = ""
+}
+
+variable packer_client_id {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
+}
+variable packer_client_secret {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
+}
+variable packer_address_space {
+  # Use Class C segment, to minimize conflict with networks provisioned from pipelines
+  default                      = "192.168.4.0/22"
+}
+variable packer_subscription_id {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
+}
+variable packer_tenant_id {
+  description                  = "When building images in a cross-tenant peered virtual network, this is needed"
+  default                      = null
 }
 
 variable prepare_host {
@@ -130,8 +177,18 @@ variable script_wrapper_check {
   default                      = false
 }
 
+variable shared_image_gallery_id {
+  description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
+  default                      = null
+}
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
+}
+
+variable storage_contributors {
+  description                  = "Object ID's of AAD groups/users to be granted reader access e.g. Packer build identity"
+  default                      = []
+  type                         = list
 }
 
 variable tags {
@@ -147,6 +204,9 @@ variable user_name {
   default                      = "devopsadmin"
 }
 
+variable vhd_storage_account_tier {
+  default                      = "Standard"
+}
 variable vm_accelerated_networking {
   default                      = false
 }
@@ -155,7 +215,12 @@ variable windows_agent_count {
   default                      = 2
   type                         = number
 }
+variable windows_os_image_id {
+  default                      = null
+}
 # az vm image list-skus -l westeurope -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -o table
+# az vm image list -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
 variable windows_os_offer {
   default                      = "visualstudio2022"
 }
@@ -168,6 +233,10 @@ variable windows_os_sku {
 variable windows_os_version {
   default                      = "latest"
 }
+variable windows_os_vhd_url {
+  default                      = null
+}
+
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"
 }

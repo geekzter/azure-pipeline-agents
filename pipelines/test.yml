@@ -1,0 +1,31 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-ubuntu2004-$(Build.BuildId)
+
+resources:
+  repositories:
+  - repository: virtual-environments
+    type: github
+    endpoint: github.com # Service Connection name
+    name: actions/virtual-environments
+    trigger:
+      branches:
+        include:
+        - main
+      paths:
+        include:
+        - 'images/linux/**'
+        - 'images/win/**'
+
+trigger: none
+
+variables:
+  - group: 'build-images'
+
+jobs:
+  - template: build-image-isolated.yml
+    parameters:
+      destroy: false
+      image: Ubuntu2004
+      imageReleaseName: ubuntu20
+      imageResourceGroup: 'pipeline-image-build-ubuntu2004-12128'
+      imageResourcePrefix: 'packer-12128-u20'
+      retryCount: 0

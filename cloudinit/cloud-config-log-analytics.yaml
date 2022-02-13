@@ -1,0 +1,20 @@
+# packages:
+  # - python2 # This can cause issues, assume python2 is already installed
+  # - wget
+
+# runcmd:
+  # Configure python2 as default. This should no longer be needed, but still resolves issues.
+  # https://docs.microsoft.com/en-us/azure/azure-monitor/agents/agent-linux#python-requirement
+  # - PYTHON_VERSION_MAJOR=$(python -c 'import sys; print(sys.version_info[0])')
+  # - '[ "$PYTHON_VERSION_MAJOR" != "2" ] && sudo update-alternatives --remove-all python 2>/dev/null'
+  # - '[ "$PYTHON_VERSION_MAJOR" != "2" ] && sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1'
+  # - unset PYTHON_VERSION_MAJOR
+  # Install agent if it does not yet exist
+  # https://docs.microsoft.com/en-us/azure/azure-monitor/agents/agent-linux#install-the-agent-using-wrapper-script
+  # FIX: https://github.com/Azure/azure-linux-extensions/issues/1116
+  # Remove agent if it is present on the base image
+  # - '[ -f /opt/microsoft/omsagent/bin/purge_omsagent.sh ] && sudo sh /opt/microsoft/omsagent/bin/purge_omsagent.sh'
+  # - 'sudo [ -f /etc/opt/microsoft/omsagent/conf/.azure_extension_marker ] && sudo rm /etc/opt/microsoft/omsagent/conf/.azure_extension_marker'
+  # - 'wget https://raw.githubusercontent.com/microsoft/OMS-Agent-for-Linux/master/tools/purge_omsagent.sh && sudo sh purge_omsagent.sh'
+  # - 'wget https://raw.githubusercontent.com/Microsoft/OMS-Agent-for-Linux/master/installer/scripts/onboard_agent.sh && sh onboard_agent.sh -w "${workspace_id}" -s "${workspace_key}"'
+  

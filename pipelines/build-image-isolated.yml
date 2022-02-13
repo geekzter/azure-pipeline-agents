@@ -1,0 +1,335 @@
+parameters:
+- name: image
+  displayName: Image
+  type: string
+  values:
+  - Ubuntu1804
+  - Ubuntu2004
+  - Windows2019
+  - Windows2022
+- name: imageReleaseName
+# Image Release Name as defined in GitHUb release feed
+# https://api.github.com/repos/actions/virtual-environments/releases
+  displayName: Image Release Name
+  type: string
+- name: imageResourcePrefix
+  displayName: Image Resource Prefix
+  type: string
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: boolean
+  default: true
+- name: retryCount
+  displayName: Build task retry count
+  type: number
+  default: 1
+
+jobs:
+- job: '${{ parameters.image }}'
+  displayName: 'Build & publish ${{ parameters.image }}'
+  pool:
+    name: '$(pool)'
+    vmImage: $(vmImage)
+  timeoutInMinutes: 1430
+
+  variables:
+  - name: 'agentRepository'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
+  - name: 'agentScriptDirectory'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
+  - name: AZURE_CORE_ONLY_SHOW_ERRORS
+    value: 'true'
+  - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
+    value: 'yes_without_prompt'
+  - name: 'galleryResourceGroup' 
+    value: 'Shared'
+  - name: 'imageConfigFile'
+    value: '${{ lower(parameters.image) }}.json'
+  - name: 'imageName'
+    value: '${{ parameters.image }}'
+  - name: 'imageDefinitionName'
+    value: '${{ parameters.image }}'
+  - ${{ if contains(parameters.image,'buntu') }}:
+    - name: 'imageOffer'
+      value: 'Ubuntu'
+    - name: 'imageOSType'
+      value: 'linux'
+    - name: 'imageSKU'
+      value: ${{ replace(parameters.image,'Ubuntu', '') }}
+    - name: 'imageSubDirectory'
+      value: 'linux'
+  - ${{ else }}:
+    - name: 'imageOffer'
+      value: 'Windows'
+    - name: 'imageOSType'
+      value: 'windows'
+    - name: 'imageSKU'
+      value: ${{ replace(parameters.image,'Windows', '') }}
+    - name: 'imageSubDirectory'
+      value: 'win'
+  - name: 'imagePublisher'
+    value: 'PrivatePipelineImages'
+  - name: 'imageRepository'
+    value: '$(Build.SourcesDirectory)/virtual-environments'
+  - name: 'imageReleaseName' 
+    value: '${{ parameters.imageReleaseName }}'
+  - name: 'imageResourcePrefix' 
+    value: '${{ parameters.imageResourcePrefix }}'
+  - name: 'imageScriptDirectory'
+    value: '$(Build.SourcesDirectory)/virtual-environments/images.CI/linux-and-win'
+  - name: 'imageTemplate'
+    value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+  - name: 'storageAccountName' 
+    value: ${{ replace(parameters.imageResourcePrefix,'-','') }}store
+  - name: 'retryCount' 
+    value: ${{ parameters.retryCount }}
+
+  steps:
+  - checkout: self
+  - checkout: virtual-environments
+
+  - pwsh: |
+      $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
+      $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
+      $vmMetadata | Format-List
+
+      # List environment variables
+      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
+
+      Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
+    name: agent
+    displayName: 'Retrieve agent information'
+
+  - task: AzureCLI@2
+    name: githubRelease
+    displayName: 'Get release for $(imageDefinitionName)'
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
+                                                                                                    | Select-Object -First 1 `
+                                                                                                    | Set-Variable release
+        $release | Format-List
+        $version = $release.tag_name.Split("/")[1]
+
+        # Determine whether image with same config already exists
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "[?tags.versionlabel=='$version' && provisioningState!='Deleting' && provisioningState!='Failed' && !(publishingProfile.excludeFromLatest)]" | ConvertFrom-Json | Set-Variable imageVersion
+        $imageVersion | Format-List
+        $newImageVersion = !$imageVersion
+        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$($newImageVersion.ToString())"
+        if ($newImageVersion) {
+          Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
+          Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
+          Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
+        } else {
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
+          Write-Warning "Build & publish will be skipped"
+        }
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(imageRepository)'
+
+  - task: AzureCLI@2
+    name: imageBuild
+    displayName: 'Build image'
+    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
+
+        # Checkout source pertaining to release is not recommended
+        # https://github.com/actions/virtual-environments/issues/4238#issuecomment-939732274
+        # https://github.com/actions/virtual-environments/discussions/4362
+        # git checkout $(githubRelease.commit) --quiet
+        # We assume main branch is the latest released version
+
+        # Update template to override configuration not accessible as variables
+        Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
+        $packerTemplate.builders[0]["azure_tags"] = @{
+          application = "Pipeline Agents"
+          build = "$(Build.BuildId)"
+          commit = "$(git rev-parse HEAD)"
+          image = "$(imageName)"
+          pipeline = "$(Build.DefinitionName)"
+          shutdown = "false"
+          versionlabel = "$(githubRelease.version)"
+        }
+        Write-Host "`nTags that will be applied to build resources:"
+        $packerTemplate.builders[0]["azure_tags"] | Format-Table
+        Write-Host "`nPacker template:"
+        $packerTemplate | ConvertTo-Json -Depth 5
+        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
+
+        # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
+        # https://www.packer.io/plugins/builders/azure#azure-managed-identity
+
+        # Build
+        packer build -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
+                     -var "capture_name_prefix=$(imageResourcePrefix)" `
+                     -var "client_id=${env:servicePrincipalId}" `
+                     -var "client_secret=${env:servicePrincipalKey}" `
+                     -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
+                     -var "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
+                     -var "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
+                     -var "subscription_id=$(az account show --query id -o tsv)" `
+                     -var "tenant_id=${env:tenantId}" `
+                     -var "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
+                     -var "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
+                     -var "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" `
+                     $(imageTemplate) # TODO: Filter sensitive content        
+
+        Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
+        Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      retryCountOnTaskFailure: $(retryCount)
+      workingDirectory: '$(imageScriptDirectory)'
+    env:
+      PACKER_LOG: 1
+      PACKER_LOG_PATH: $(Build.ArtifactStagingDirectory)/packer-log.txt
+
+  - task: AzureCLI@2
+    name: vhd
+    displayName: 'Get VHD url'
+    condition: ne(coalesce(variables['imageBuild.commit'],'null'),'null')
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
+
+        # TODO: Take storage account as argument
+        ./get_vhd.ps1 -PackerResourceGroupId $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID `
+                      -BlobPrefix $(imageResourcePrefix) `
+                      -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
+        Write-Host "##vso[task.setvariable variable=url;isoutput=true;issecret=false]${env:IMAGE_VHD_URL}"
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
+
+  - task: AzureCLI@2
+    name: publish
+    displayName: 'Publish image'
+    condition: ne(coalesce(variables['vhd.url'],'null'),'null')
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Diagnostics
+        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+          Set-PSDebug -Trace 2
+        }
+
+        # Publish
+        $imageDefinitionVersionTags = @{
+          build = "$(Build.BuildId)"
+          commit = "$(imageBuild.commit)"
+          pipeline = "$(Build.DefinitionName)"
+          versionlabel = "$(githubRelease.version)"
+        }
+        Write-Host "`nTags that will be applied to image version:"
+        $imageDefinitionVersionTags | Format-Table
+        ./publish_vhd.ps1 -SourceVHDUrl "$(vhd.url)" `
+                          -GalleryResourceGroupId $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
+                          -GalleryName $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                          -ImageDefinitionName $(imageDefinitionName) `
+                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
+                          -Publisher $(imagePublisher) `
+                          -Offer $(imageOffer) `
+                          -SKU $(imageSKU) `
+                          -OsType $(imageOSType) `
+                          -TargetRegion $(targetRegions)
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
+
+  - task: AzureCLI@2
+    displayName: 'Check image version of $(imageDefinitionName)'
+    condition: ne(coalesce(variables['githubRelease.version'],'null'),'null')
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Determine whether image with same config already exists
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "[?tags.versionlabel=='$(githubRelease.version)' && provisioningState=='Succeeded']" | ConvertFrom-Json | Set-Variable imageVersion
+        if ($imageVersion) {
+          $imageVersion | Format-Table
+        } else {
+          Write-Error "$(imageDefinitionName) version $(githubRelease.version) was not published!"
+        }
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(imageRepository)'
+
+  - task: AzureCLI@2
+    displayName: 'List published images'
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        ./list_image_versions.ps1 -GalleryResourceGroupName $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  -GalleryName $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  -ImageDefinitionName $(imageDefinitionName)
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
+
+  - ${{ if parameters.destroy }}:
+    - task: AzureCLI@2
+      name: teardown
+      displayName: 'Tear down temporary resources'
+      condition: or(always(),canceled())
+      inputs:
+        azureSubscription: '$(packerSubscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Remove resources
+          az resource list -g $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME `
+                           --query "[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)' && tags.image=='$(imageName)'].id" `
+                           -o tsv | Set-Variable resourceIDs
+          if ($resourceIDs) {
+            Write-Host "Removing resources:"
+            $resourceIDs
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceIDs 2>&1
+            }
+          } else {
+            Write-Host "No resources to remove"
+          }
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(agentScriptDirectory)'

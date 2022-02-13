@@ -1,11 +1,15 @@
 output private_endpoint_subnet_id {
-  value                        = var.deploy_firewall ? azurerm_subnet.private_endpoint_subnet.0.id : null
+  value                        = azurerm_subnet.private_endpoint_subnet.id
 }
 output azurerm_private_dns_zone_blob_id {
-  value                        = var.deploy_firewall ? azurerm_private_dns_zone.blob.0.id : null
+  value                        = azurerm_private_dns_zone.blob.id
 }
 output azurerm_private_dns_zone_blob_name {
-  value                        = var.deploy_firewall ? azurerm_private_dns_zone.blob.0.name : null
+  value                        = azurerm_private_dns_zone.blob.name
+}
+
+output gateway_ip_address {
+  value                        = var.deploy_firewall ? azurerm_firewall.firewall.0.ip_configuration.0.private_ip_address : null
 }
 
 output scale_set_agents_subnet_id {

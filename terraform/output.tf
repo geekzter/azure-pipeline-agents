@@ -1,3 +1,23 @@
+output agent_identity_name {
+  value                        = azurerm_user_assigned_identity.agents.name
+}
+output agent_identity_client_id {
+  value                        = azurerm_user_assigned_identity.agents.client_id
+}
+output agent_identity_object_id {
+  value                        = azurerm_user_assigned_identity.agents.principal_id
+}
+
+output build_network_resource_group_id {
+  value                        = module.packer.network_resource_group_id
+}
+output build_resource_group_id {
+  value                        = module.packer.build_resource_group_id
+}
+output build_resource_ids {
+  value                        = module.packer.build_resource_ids
+}
+
 output diagnostics_storage_account {
   value                        = azurerm_storage_account.diagnostics.name
 }
@@ -6,9 +26,18 @@ output diagnostics_storage_sas {
   value                        = data.azurerm_storage_account_sas.diagnostics.sas
 }
 
+output environment_variables {
+  value                        = local.environment_variables
+}
+
+output linux_os_image_id {
+  value                        = local.linux_image_id
+}
+
 output log_analytics_workspace_id {
   value                        = local.log_analytics_workspace_id
 }
+
 output resource_group_name {
   value                        = azurerm_resource_group.rg.name
 }
@@ -19,6 +48,11 @@ output resource_suffix {
 output scale_set_agents_subnet_id {
   value                        = module.network.scale_set_agents_subnet_id
 }
+output scale_set_linux_cloud_config {
+  sensitive                    = true
+  value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
+}
+
 output self_hosted_agents_subnet_id {
   value                        = module.network.self_hosted_agents_subnet_id
 }
@@ -58,4 +92,8 @@ output user_password {
 
 output virtual_network_id {
   value                        = module.network.virtual_network_id
+}
+
+output windows_os_image_id {
+  value                        = local.windows_image_id
 }

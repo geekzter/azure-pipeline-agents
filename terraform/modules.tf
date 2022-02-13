@@ -15,8 +15,33 @@ module network {
   dns_host_suffix              = var.dns_host_suffix
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+  packer_address_space         = var.packer_address_space
+  peer_virtual_network_id      = module.packer.virtual_network_id
   resource_group_name          = azurerm_resource_group.rg.name
+  packer_storage_account_name  = module.packer.storage_account_name
+  packer_storage_ip_address    = module.packer.storage_blob_ip_address
   tags                         = local.tags
+}
+
+module packer {
+  source                       = "./modules/packer"
+
+  providers                    = {
+    azurerm                    = azurerm.peer
+  }
+
+  address_space                = var.packer_address_space
+  admin_cidr_ranges            = local.admin_cidr_ranges
+  deploy_nat_gateway           = !var.deploy_firewall
+  gateway_ip_address           = module.network.gateway_ip_address
+  peer_virtual_network_id      = module.network.virtual_network_id
+  location                     = var.location
+  suffix                       = local.suffix
+  tags                         = local.tags
+
+  depends_on                   = [
+    time_sleep.script_wrapper_check
+  ]
 }
 
 module service_principal {
@@ -36,10 +61,12 @@ module scale_set_linux_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   linux_agent_count            = var.linux_scale_set_agent_count
+  linux_os_image_id            = local.linux_image_id
   linux_os_offer               = var.linux_os_offer
   linux_os_publisher           = var.linux_os_publisher
   linux_os_sku                 = var.linux_os_sku
@@ -49,12 +76,14 @@ module scale_set_linux_agents {
   linux_vm_size                = var.linux_vm_size
 
   outbound_ip_address          = module.network.outbound_ip_address
+  install_tools                = var.linux_tools
   prepare_host                 = var.prepare_host
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
   subnet_id                    = module.network.scale_set_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -78,10 +107,12 @@ module scale_set_windows_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   windows_agent_count          = var.windows_scale_set_agent_count
+  windows_os_image_id          = local.windows_image_id
   windows_os_offer             = var.windows_os_offer
   windows_os_publisher         = var.windows_os_publisher
   windows_os_sku               = var.windows_os_sku
@@ -96,6 +127,7 @@ module scale_set_windows_agents {
   tags                         = local.tags
   subnet_id                    = module.network.scale_set_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -113,7 +145,6 @@ module self_hosted_linux_agents {
   source                       = "./modules/self-hosted-linux-agent"
 
   admin_cidr_ranges            = local.admin_cidr_ranges
-  terraform_cidr               = local.ipprefix
 
   create_public_ip_address     = !var.deploy_firewall
   deploy_agent                 = var.deploy_self_hosted_vm_agents
@@ -124,12 +155,14 @@ module self_hosted_linux_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   computer_name                = "linuxagent${count.index+1}"
   disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-linux-agent${count.index+1}"
+  os_image_id                  = local.linux_image_id
   os_offer                     = var.linux_os_offer
   os_publisher                 = var.linux_os_publisher
   os_sku                       = var.linux_os_sku
@@ -139,6 +172,7 @@ module self_hosted_linux_agents {
   storage_type                 = var.linux_storage_type
   vm_size                      = var.linux_vm_size
 
+  install_tools                = var.linux_tools
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
   public_access_enabled        = !var.deploy_firewall
@@ -147,6 +181,7 @@ module self_hosted_linux_agents {
   tags                         = local.tags
   subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -164,7 +199,6 @@ module self_hosted_windows_agents {
   source                       = "./modules/self-hosted-windows-agent"
 
   admin_cidr_ranges            = local.admin_cidr_ranges
-  terraform_cidr               = local.ipprefix
 
   create_public_ip_address     = !var.deploy_firewall
   deploy_agent_vm_extension    = var.deploy_self_hosted_vm_agents
@@ -175,12 +209,14 @@ module self_hosted_windows_agents {
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
+  environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
   computer_name                = "windowsagent${count.index+1}"
   disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-windows-agent${count.index+1}"
+  os_image_id                  = local.windows_image_id
   os_offer                     = var.windows_os_offer
   os_publisher                 = var.windows_os_publisher
   os_sku                       = var.windows_os_sku
@@ -195,6 +231,7 @@ module self_hosted_windows_agents {
   tags                         = local.tags
   subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
   vm_accelerated_networking    = var.vm_accelerated_networking
@@ -205,5 +242,24 @@ module self_hosted_windows_agents {
     azurerm_private_endpoint.diag_blob_storage_endpoint,
     azurerm_private_endpoint.disk_access_endpoint,
     module.network
+  ]
+}
+
+module gallery {
+  source                       = "./modules/gallery"
+
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  tags                         = local.tags
+  admin_cidr_ranges            = local.admin_cidr_ranges
+  blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
+  shared_image_gallery_id      = var.shared_image_gallery_id
+  storage_account_tier         = var.vhd_storage_account_tier
+  subnet_id                    = module.network.private_endpoint_subnet_id
+  suffix                       = local.suffix
+
+  depends_on                   = [
+    module.network,
+    module.packer
   ]
 }

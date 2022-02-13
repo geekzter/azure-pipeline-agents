@@ -1,0 +1,73 @@
+#cloud-config
+bootcmd:
+  - sudo apt remove unattended-upgrades -y
+  # Prevent race condition with VM extension provisioning
+  # - while ( fuser /var/lib/dpkg/lock >/dev/null 2>&1 ); do sleep 5; done;
+  # - while ( fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ); do sleep 5; done;
+  # Get apt repository signing keys
+  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
+  - sudo apt-add-repository https://cli.github.com/packages
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -           # Hashicorp
+  - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
+  - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
+  - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
+
+apt:
+  sources:
+    git-core:
+      source: "ppa:git-core/ppa"
+    hashicorp:
+      source: "deb [trusted=yes] https://apt.releases.hashicorp.com bionic main"
+    helm-stable-debian.list:
+      source: "deb https://baltocdn.com/helm/stable/debian/ all main"
+    kubernetes.list:
+      source: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    azure-cli.list:
+      source: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ bionic main"
+    microsoft-prod.list:
+      source: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main"
+
+package_update: true
+packages:
+  # Core
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  - wget
+  # Tools
+  - ansible
+  - coreutils
+  - docker
+  - packer
+  - python-minimal
+  - unixodbc-dev
+  - unzip
+  # GitHub
+  # - gh
+  # Kubernetes
+  - helm
+  - kubectl
+  # Microsoft
+  - azure-cli
+  - azure-functions-core-tools
+  # - blobfuse
+  - dotnet-sdk-3.1
+  - dotnet-sdk-6.0
+  - powershell
+
+runcmd:
+  - sudo ACCEPT_EULA=Y apt install msodbcsql17 -y
+  - sudo ACCEPT_EULA=Y apt install mssql-tools -y
+  - echo Installing PowerShell modules...
+  - sudo pwsh -NoProfile -NonInteractive -Command 'Install-Module -Name Az,AzureAD,SqlServer -Scope AllUsers -Repository PSGallery -Force'
+  - echo Installing azcopy...
+  - 'wget -O - https://aka.ms/downloadazcopy-v10-linux | tar xzf - --strip-components=1 -C /tmp'
+  - mv /tmp/azcopy /usr/local/bin/azcopy
+  - chmod +x /usr/local/bin/azcopy
+  # https://aka.ms/downloadazcopy-v10-linux
+  - sudo apt install unattended-upgrades -y
+
+final_message: "Tools installed after $UPTIME seconds"

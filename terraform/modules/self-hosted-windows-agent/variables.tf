@@ -2,7 +2,6 @@ variable admin_cidr_ranges {
     type                       = list
     default                    = []
 }
-variable terraform_cidr {}
 
 variable create_public_ip_address {
   type                         = bool
@@ -19,6 +18,9 @@ variable devops_pat {}
 
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
+variable environment_variables {
+    type = map
+}
 
 variable computer_name {}
 variable disk_access_name {}
@@ -27,6 +29,10 @@ variable os_offer {}
 variable os_publisher {}
 variable os_sku {}
 variable os_version {}
+variable os_image_id {
+  default                      = null
+}
+
 variable pipeline_agent_name {}
 variable pipeline_agent_pool {}
 variable storage_type {}
@@ -44,6 +50,7 @@ variable suffix {}
 variable tags {
     type    = map
 }
+variable user_assigned_identity_id {}
 variable user_name {}
 variable user_password {}
 variable vm_accelerated_networking {}

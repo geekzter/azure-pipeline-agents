@@ -9,20 +9,24 @@ AzureDiagnostics
 | parse TempDetails with * "Deny." RuleCollection2b ". Proceeding with" Rule2b
 | parse RuleDetails with * "Rule Collection: " RuleCollection2a ". Rule:" Rule2a " (config:" ConfigurationString ")"
 | parse RuleDetails with Rule2c "."
-| where ipv4_is_match("192.168.0.128/25", SourceIP)
+| where ipv4_is_match("192.168.0.128/21", SourceIP)
 | extend Action = coalesce(Action1,Action2,Action3,"Unknown"),
          Rule = coalesce(Rule2a,Rule2b,Rule1,Rule2c,"N/A"),
          RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),
          FQDN = coalesce(FQDN1,FQDN2,"N/A"),
          TargetPort = coalesce(tostring(TargetPortInt1),tostring(TargetPortInt2),"N/A")
-| extend Application1 = case(FQDN matches regex "(ums.*.blob.core.windows.net|md-.*.blob.storage.azure.net)","Azure VM Guest Agent","")
+| extend Application1 = case(FQDN matches regex "(ums.*.blob.core.windows.net|md-.*.blob.storage.azure.net|.*guestconfiguration.azure.com)","Azure VM Guest Agent","")
 | extend Application2 = case(FQDN matches regex "(z?rdfe.*prdstr.*.blob.core.windows.net)","Azure VM Provisioning Agent","")
 | extend Application3 = case(FQDN matches regex "(.*.ods.opinsights.azure.com|.*.azure-automation.net|scadvisorcontent.blob.core.windows.net)","Log Analytics VM extension","")
 | extend Application4 = case(FQDN matches regex "usnvsblobprod.*.blob.core.windows.net","Azure DevOps Artifacts","")
 | extend Application5 = case(FQDN matches regex "(.*.symcb.com|.*.symcd.com|.*.symantec.com)","Symantec","")
 | extend ApplicationA = coalesce(Application1,Application2,Application3,Application4,Application5,replace_regex(replace_regex(replace_regex(Rule,  "\\s*Allow ",""),"by.*$",""),"\\(.*$",""))
 | extend Application = strcat(toupper(substring(ApplicationA,0,1)),substring(ApplicationA,1))
-| extend SourceSubnet = case(ipv4_is_match("192.168.0.128/26", SourceIP), "ScaleSetAgents", case(ipv4_is_match("192.168.0.192/26", SourceIP), "SelfHostedAgents", "Other"))
+| extend SourceSubnet1 = case(ipv4_is_match("192.168.0.0/26", SourceIP), "AzureFirewallSubnet", "")
+| extend SourceSubnet2 = case(ipv4_is_match("192.168.2.0/26", SourceIP), "ScaleSetAgents", "")
+| extend SourceSubnet3 = case(ipv4_is_match("192.168.2.64/26", SourceIP), "SelfHostedAgents", "")
+| extend SourceSubnet4 = case(ipv4_is_match("192.168.7.0/26", SourceIP), "Packer", "")
+| extend SourceSubnet = coalesce(SourceSubnet1,SourceSubnet2,SourceSubnet3,SourceSubnet4,"Other")
 | extend Configuration = toint(ConfigurationString)
 | extend configure_cidr_allow_rules = (binary_or(Configuration,toint(pow(2,0))) == Configuration)
 | extend configure_wildcard_allow_rules = (binary_or(Configuration,toint(pow(2,1))) == Configuration)

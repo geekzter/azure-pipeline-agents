@@ -1,0 +1,147 @@
+parameters:
+- name: image
+  displayName: Image
+  type: string
+  default: All
+  values:
+  - All
+  - Latest
+  - Stable
+  - Ubuntu
+  - Ubuntu1804
+  - Ubuntu2004
+  - Windows
+  - Windows2019
+  - Windows2022
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: boolean
+  default: true
+- name: retryCount
+  displayName: Build task retry count
+  type: number
+  default: 1
+
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
+
+resources:
+  repositories:
+  - repository: virtual-environments
+    type: github
+    endpoint: github.com # Service Connection name
+    name: actions/virtual-environments
+    trigger:
+      branches:
+        include:
+        - main
+      paths:
+        include:
+        - 'images/linux/**'
+        - 'images/win/**'
+
+trigger: none
+
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - '*'
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
+
+schedules:
+- cron: '0 2 * * *'
+  displayName: 'Nightly build (UTC)'
+  always: 'true' # Run if there are no changes
+  branches:
+    include:
+    - master
+
+variables:
+  - group: 'build-images'
+
+jobs:
+- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:
+  - template: build-image-isolated.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      image: Ubuntu1804
+      imageReleaseName: ubuntu18
+      imageResourcePrefix: 'packer$(Build.BuildId)u18'
+      retryCount: ${{ parameters.retryCount }}
+
+- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
+  - template: build-image-isolated.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      image: Ubuntu2004
+      imageReleaseName: ubuntu20
+      imageResourcePrefix: 'packer$(Build.BuildId)u20'
+      retryCount: ${{ parameters.retryCount }}
+
+- ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
+  - template: build-image-isolated.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      image: Windows2019
+      imageReleaseName: win19
+      imageResourcePrefix: 'packer$(Build.BuildId)w19'
+      retryCount: ${{ parameters.retryCount }}
+
+- ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
+  - template: build-image-isolated.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      image: Windows2022
+      imageReleaseName: win22
+      imageResourcePrefix: 'packer$(Build.BuildId)w22'
+      retryCount: ${{ parameters.retryCount }}
+
+- ${{ if parameters.destroy }}:
+  - job: 'CleanUp'
+    dependsOn:
+      - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:
+        - Ubuntu1804
+      - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
+        - Ubuntu2004
+      - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
+        - Windows2019
+      - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
+        - Windows2022
+    displayName: 'Clean Up'
+    condition: or(always(),canceled())
+
+    pool:
+      name: '$(pool)'
+      vmImage: $(vmImage)
+
+    steps:
+    - task: AzureCLI@2
+      name: teardown
+      displayName: 'Tear down temporary resources'
+      condition: or(always(),canceled())
+      inputs:
+        azureSubscription: '$(packerSubscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Remove resources
+          az resource list -g $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME `
+                           --query "[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)'].id" `
+                           -o tsv | Set-Variable resourceIDs
+          if ($resourceIDs) {
+            Write-Host "Removing resources:"
+            $resourceIDs
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceIDs 2>&1
+            }
+          } else {
+            Write-Host "No resources to remove"
+          }
+          Write-Host "az resource list -g ${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME} --query `"[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)'].id`"" 
+        useGlobalConfig: true
+        failOnStandardError: true

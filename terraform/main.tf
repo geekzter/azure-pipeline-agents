@@ -1,3 +1,13 @@
+data http terraform_ip_address {
+# Get public IP address of the machine running this terraform template
+  url                          = "https://ipinfo.io/ip"
+}
+
+data http terraform_ip_prefix {
+# Get public IP prefix of the machine running this terraform template
+  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.terraform_ip_address.body)}"
+}
+
 # Random resource suffix, this will prevent name collisions when creating resources in parallel
 resource random_string suffix {
   length                       = 4
@@ -36,6 +46,42 @@ locals {
 
   config_directory             = "${formatdate("YYYY",timestamp())}/${formatdate("MM",timestamp())}/${formatdate("DD",timestamp())}/${formatdate("hhmm",timestamp())}"
   environment                  = "dev"
+  environment_variables        = merge(
+    {
+      PIPELINE_DEMO_AGENT_OUTBOUND_IP                           = module.network.outbound_ip_address
+      PIPELINE_DEMO_AGENT_SUBNET_ID                             = module.network.scale_set_agents_subnet_id
+      PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID      = azurerm_user_assigned_identity.agents.client_id
+      PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_NAME           = azurerm_user_assigned_identity.agents.name
+      PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_PRINCIPAL_ID   = azurerm_user_assigned_identity.agents.principal_id
+      PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_RESOURCE_ID    = azurerm_user_assigned_identity.agents.id
+      PIPELINE_DEMO_AGENT_VIRTUAL_NETWORK_ID                    = module.network.virtual_network_id
+      PIPELINE_DEMO_AGENT_LOCATION                              = var.location
+      PIPELINE_DEMO_COMPUTE_GALLERY_ID                          = module.gallery.shared_image_gallery_id
+      PIPELINE_DEMO_COMPUTE_GALLERY_NAME                        = split("/",module.gallery.shared_image_gallery_id)[8]
+      PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID           = join("/",slice(split("/",module.gallery.shared_image_gallery_id),0,5))
+      PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME         = split("/",module.gallery.shared_image_gallery_id)[4]
+      PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID              = join("/",slice(split("/",module.packer.build_resource_group_id),0,5))
+      PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME            = split("/",module.packer.build_resource_group_id)[4]
+      PIPELINE_DEMO_PACKER_LOCATION                             = var.location
+      PIPELINE_DEMO_PACKER_POLICY_SET_NAME                      = module.packer.policy_set_name
+      PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_ID                   = module.packer.storage_account_id
+      PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME                 = module.packer.storage_account_name
+      PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID    = join("/",slice(split("/",module.packer.storage_account_id),0,5))
+      PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME  = split("/",module.packer.storage_account_id)[4]
+      PIPELINE_DEMO_PACKER_SUBNET_NAME                          = module.packer.packer_subnet_name
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_ID                   = module.packer.virtual_network_id
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME                 = split("/",module.packer.virtual_network_id)[8]
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID    = join("/",slice(split("/",module.packer.virtual_network_id),0,5))
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME  = split("/",module.packer.virtual_network_id)[4]
+      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_ID                      = module.gallery.storage_account_id
+      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_NAME                    = module.gallery.storage_account_name
+      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_ID       = join("/",slice(split("/",module.gallery.storage_account_id),0,5))
+      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME     = split("/",module.gallery.storage_account_id)[4]
+      PIPELINE_DEMO_VHD_STORAGE_CONTAINER_ID                    = module.gallery.storage_container_id
+      PIPELINE_DEMO_VHD_STORAGE_CONTAINER_NAME                  = module.gallery.storage_container_name
+    },
+    var.environment_variables
+  )
   password                     = ".Az9${random_string.password.result}"
   suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
   tags                         = merge(
@@ -43,8 +89,8 @@ locals {
       application              = "Pipeline Agents"
       environment              = local.environment
       provisioner              = "terraform"
-      provisioner-client-id    = data.azurerm_client_config.current.client_id
-      provisioner-object-id    = data.azurerm_client_config.current.object_id
+      provisioner-client-id    = data.azurerm_client_config.default.client_id
+      provisioner-object-id    = data.azurerm_client_config.default.object_id
       repository               = "azure-pipeline-agents"
       runid                    = var.run_id
       shutdown                 = "false"
@@ -54,22 +100,11 @@ locals {
     },
     var.tags
   )  
+  terraform_ip_address         = data.http.terraform_ip_address.body
+  terraform_ip_prefix          = jsondecode(chomp(data.http.terraform_ip_prefix.body)).data.prefix
 
   # Networking
-  ipprefix                     = jsondecode(chomp(data.http.local_public_prefix.body)).data.prefix
-  admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.ipprefix])))) # Make sure ranges have correct base address
-}
-
-data azurerm_client_config current {}
-
-data http local_public_ip {
-# Get public IP address of the machine running this terraform template
-  url                          = "https://ipinfo.io/ip"
-}
-
-data http local_public_prefix {
-# Get public IP prefix of the machine running this terraform template
-  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.local_public_ip.body)}"
+  admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.terraform_ip_prefix])))) # Make sure ranges have correct base address
 }
 
 resource null_resource script_wrapper_check {
@@ -95,18 +130,18 @@ resource time_sleep script_wrapper_check {
   depends_on                   = [null_resource.script_wrapper_check]
 }
 
+resource local_file environment_variables {
+  content                      = templatefile("${path.root}/../scripts/set_environment_variables.template.ps1",
+  {
+    environment                = local.environment_variables
+  })
+  filename                     = "${path.root}/../data/${terraform.workspace}/set_environment_variables.ps1"
+}
+
 resource azurerm_resource_group rg {
-  name                         = terraform.workspace == "default" ? "azure-pipelines-agents-${local.suffix}" : "azure-pipelines-agents-${terraform.workspace}-${local.suffix}"
+  name                         = terraform.workspace == "default" ? "pipeline-agents-${local.suffix}" : "pipeline-${terraform.workspace}-agents-${local.suffix}"
   location                     = var.location
   tags                         = local.tags
 
   depends_on                   = [time_sleep.script_wrapper_check]
-}
-
-resource azurerm_role_assignment service_principal_contributor {
-  scope                        = azurerm_resource_group.rg.id
-  role_definition_name         = "Contributor"
-  principal_id                 = module.service_principal.0.principal_id
-
-  count                        = var.create_contributor_service_principal ? 1 : 0
 }

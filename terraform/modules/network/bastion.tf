@@ -2,7 +2,7 @@ resource azurerm_subnet bastion_subnet {
   name                         = "AzureBastionSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],3,2)]
+  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,1)]
 
   count                        = var.deploy_bastion ? 1 : 0
 }

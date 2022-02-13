@@ -7,12 +7,22 @@ variable devops_pat {}
 
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
+variable environment_variables {
+    type = map
+}
+variable install_tools {
+  type                         = bool
+}
 
 variable linux_agent_count {}
 variable linux_os_offer {}
 variable linux_os_publisher {}
 variable linux_os_sku {}
 variable linux_os_version {}
+variable linux_os_image_id {
+  default                      = null
+}
+
 variable linux_storage_type {}
 variable linux_vm_name_prefix {}
 variable linux_vm_size {}
@@ -30,6 +40,7 @@ variable tags {
     type = map
 }
 variable ssh_public_key {}
+variable user_assigned_identity_id {}
 variable user_name {}
 variable user_password {}
 variable vm_accelerated_networking {}

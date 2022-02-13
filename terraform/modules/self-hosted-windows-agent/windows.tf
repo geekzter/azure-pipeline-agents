@@ -69,7 +69,7 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
- custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.module}/install_agent.ps1")) : null
+ custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.root}/../scripts/host/install_agent.ps1")) : null
  allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
  provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
 
@@ -79,17 +79,30 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_type       = var.storage_type
   }
 
-  source_image_reference {
-    publisher                  = var.os_publisher
-    offer                      = var.os_offer
-    sku                        = var.os_sku
-    version                    = var.os_version
+  source_image_id              = var.os_image_id
+
+  dynamic "source_image_reference" {
+    for_each = range(var.os_image_id == null || var.os_image_id == "" ? 1 : 0) 
+    content {
+      publisher                = var.os_publisher
+      offer                    = var.os_offer
+      sku                      = var.os_sku
+      version                  = var.os_version
+    }
+  }    
+
+  identity {
+    type                       = "SystemAssigned, UserAssigned"
+    identity_ids               = [var.user_assigned_identity_id]
   }
 
-  # Required for AAD Login
-  identity {
-    type                       = "SystemAssigned"
-  }
+  lifecycle {
+    ignore_changes             = [
+      custom_data,
+      source_image_id,
+      source_image_reference.0.version,
+    ]
+  }    
   
   tags                         = var.tags
 
@@ -202,6 +215,9 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   publisher                    = "Microsoft.Compute"
   type                         = "CustomScriptExtension"
   type_handler_version         = "1.10"
+  # publisher                    = "Microsoft.Azure.Extensions"
+  # type                         = "CustomScript"
+  # type_handler_version         = "2.1"
   auto_upgrade_minor_version   = true
 
   protected_settings           = jsonencode({

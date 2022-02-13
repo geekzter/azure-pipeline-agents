@@ -2,27 +2,58 @@ data cloudinit_config user_data {
   gzip                         = false
   base64_encode                = false
 
+  part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-post-generation.yaml",
+    {
+      user_name                = var.user_name
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
+  }
   dynamic "part" {
-    for_each = range(var.prepare_host ? 1 : 0)
+    for_each = range(var.install_tools ? 1 : 0)
     content {
-      content                  = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-tools.yaml",
       {
         outbound_ip            = var.outbound_ip_address
         subnet_id              = var.subnet_id
         virtual_network_id     = local.virtual_network_id
       })
       content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
+    }
+  }  
+  part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
+    {
+      user_name                = var.user_name
+      environment              = var.environment_variables
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
+  }
+  # Azure Log Analytics VM extension fails on https://github.com/actions/virtual-environments
+  # Pre-installing the agent, will make the VM extension install succeed
+  dynamic "part" {
+    for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
+    content {
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-log-analytics.yaml",
+      {
+        workspace_id           = data.azurerm_log_analytics_workspace.monitor.workspace_id
+        workspace_key          = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
+      content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
     }
   }
-
   dynamic "part" {
     for_each = range(var.deploy_agent ? 1 : 0)
     content {
-    content                    = templatefile("${path.module}/cloud-config-agent.yaml",
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-agent.yaml",
       {
         agent_name             = var.pipeline_agent_name
         agent_pool             = var.pipeline_agent_pool
-        install_agent_script_b64= filebase64("${path.module}/install_agent.sh")
+        install_agent_script_b64= filebase64("${path.root}/../scripts/host/install_agent.sh")
         org                    = var.devops_org
         pat                    = var.devops_pat
         user                   = var.user_name
@@ -116,22 +147,34 @@ resource azurerm_linux_virtual_machine linux_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
+  identity {
+    type                       = "SystemAssigned, UserAssigned"
+    identity_ids               = [var.user_assigned_identity_id]
+  }
+  
   os_disk {
     name                       = "${var.name}-osdisk"
     caching                    = "ReadWrite"
     storage_account_type       = var.storage_type
   }
 
-  source_image_reference {
-    publisher                  = var.os_publisher
-    offer                      = var.os_offer
-    sku                        = var.os_sku
-    version                    = var.os_version
-  }
+  source_image_id              = var.os_image_id
+
+  dynamic "source_image_reference" {
+    for_each = range(var.os_image_id == null || var.os_image_id == "" ? 1 : 0) 
+    content {
+      publisher                = var.os_publisher
+      offer                    = var.os_offer
+      sku                      = var.os_sku
+      version                  = var.os_version
+    }
+  }    
 
   lifecycle {
     ignore_changes             = [
-      custom_data
+      custom_data,
+      source_image_id,
+      source_image_reference.0.version,
     ]
   }  
 
@@ -151,15 +194,19 @@ resource azurerm_virtual_machine_extension cloud_config_status {
   virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
   publisher                    = "Microsoft.Azure.Extensions"
   type                         = "CustomScript"
-  type_handler_version         = "2.0"
+  type_handler_version         = "2.1"
+  auto_upgrade_minor_version   = true
   settings                     = jsonencode({
     "commandToExecute"         = "/usr/bin/cloud-init status --long --wait ; systemctl status cloud-final.service --full --no-pager --wait"
   })
-
   tags                         = var.tags
 
-  count                        = var.deploy_agent || var.prepare_host ? 1 : 0
+  timeouts {
+    create                     = "60m"
+  }  
 }
+
+# BUG: https://github.com/Azure/azure-linux-extensions/issues/1116
 resource azurerm_virtual_machine_extension linux_log_analytics {
   name                         = "OmsAgentForMe"
   virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
@@ -198,7 +245,10 @@ resource azurerm_virtual_machine_extension linux_dependency_monitor {
   tags                         = var.tags
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-  depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
+  depends_on                   = [
+    azurerm_virtual_machine_extension.cloud_config_status,
+    azurerm_virtual_machine_extension.linux_log_analytics
+  ]
 }
 resource azurerm_virtual_machine_extension linux_watcher {
   name                         = "AzureNetworkWatcherExtension"
@@ -211,7 +261,10 @@ resource azurerm_virtual_machine_extension linux_watcher {
   tags                         = var.tags
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-  depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
+  depends_on                   = [
+    azurerm_virtual_machine_extension.cloud_config_status,
+    azurerm_virtual_machine_extension.linux_log_analytics
+  ]
 }
 resource azurerm_virtual_machine_extension policy {
   name                         = "AzurePolicyforLinux"
@@ -224,4 +277,8 @@ resource azurerm_virtual_machine_extension policy {
   tags                         = var.tags
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
+  depends_on                   = [
+    azurerm_virtual_machine_extension.cloud_config_status,
+    azurerm_virtual_machine_extension.linux_log_analytics
+  ]
 }

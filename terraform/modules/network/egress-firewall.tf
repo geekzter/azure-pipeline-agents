@@ -2,7 +2,7 @@ resource azurerm_subnet fw_subnet {
   name                         = "AzureFirewallSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],2,0)]
+  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,0)]
 
   count                        = var.deploy_firewall ? 1 : 0
 }
@@ -19,12 +19,27 @@ resource azurerm_ip_group agents {
   count                        = var.deploy_firewall ? 1 : 0
 }
 
-resource azurerm_ip_group vnet {
-  name                         = "${azurerm_virtual_network.pipeline_network.name}-ip-group"
+resource azurerm_ip_group packer {
+  name                         = "packer-ip-group"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
-  cidrs                        = azurerm_virtual_network.pipeline_network.address_space
+  cidrs                        = [var.packer_address_space]
+
+  tags                         = var.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
+}
+
+resource azurerm_ip_group vnet {
+  name                         = "vnets-ip-group"
+  location                     = var.location
+  resource_group_name          = var.resource_group_name
+
+  cidrs                        = [
+    var.address_space,
+    var.packer_address_space
+  ]
 
   tags                         = var.tags
 
@@ -82,6 +97,12 @@ resource azurerm_public_ip firewall {
   tags                         = var.tags
 
   count                        = var.deploy_firewall ? 1 : 0
+
+  # provisioner local-exec {
+  #   # BUG: https://github.com/hashicorp/terraform-provider-azurerm/issues/14966
+  #   when                       = destroy
+  #   command                    = "az network firewall delete --ids ${self.id}"
+  # }
 }
 
 resource azurerm_firewall firewall {
@@ -110,8 +131,8 @@ resource azurerm_virtual_network_dns_servers dns_proxy {
 }
 
 # Outbound domain whitelisting
-resource azurerm_firewall_application_rule_collection fw_app_rules {
-  name                         = "${azurerm_firewall.firewall.0.name}-app-rules"
+resource azurerm_firewall_application_rule_collection agent_app_rules {
+  name                         = "${azurerm_firewall.firewall.0.name}-agent-app-rules"
   azure_firewall_name          = azurerm_firewall.firewall.0.name
   resource_group_name          = var.resource_group_name
   priority                     = 200
@@ -153,6 +174,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "*.delivery.mp.microsoft.com",
       "*.do.dsp.mp.microsoft.com",
       "*.events.data.microsoft.com",
+      "*.guestconfiguration.azure.com",
       "*.identity.azure.net", # MSI Sidecar
       "*.ingestion.msftcloudes.com",
       "*.loganalytics.io",
@@ -234,6 +256,7 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
       "api.npms.io",
       "api.snapcraft.io",
       "azcopy.azureedge.net",
+      "azcopyvnext.azureedge.net",
       "azurecliprod.blob.core.windows.net",
       "azuredatastudiobuilds.blob.core.windows.net",
       "baltocdn.com",
@@ -541,7 +564,180 @@ resource azurerm_firewall_application_rule_collection fw_app_rules {
   count                        = var.deploy_firewall ? 1 : 0
 } 
 
-resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
+resource azurerm_firewall_application_rule_collection packer_app_rules {
+  name                         = "${azurerm_firewall.firewall.0.name}-packer-app-rules"
+  azure_firewall_name          = azurerm_firewall.firewall.0.name
+  resource_group_name          = var.resource_group_name
+  priority                     = 201
+  action                       = "Allow"
+
+  rule {
+    name                       = "Allow Known HTTPS (config:${var.configuration_name})"
+
+    source_ip_groups           = [
+      azurerm_ip_group.packer.0.id
+    ]
+
+    target_fqdns               = [
+      "*.cloudfront.net",
+      "adoptopenjdk.jfrog.io",
+      "aka.ms",
+      "api.github.com",
+      "api.nuget.org",
+      "api.pulumi.com",
+      "api.snapcraft.io",
+      "apt.postgresql.org",
+      "auth.docker.io",
+      "awscli.amazonaws.com",
+      "azcliextensionsync.blob.core.windows.net",
+      "azcopyvnext.azureedge.net",
+      "azcopyvnextrelease.blob.core.windows.net",
+      "azure.microsoft.com",
+      "azurecliprod.blob.core.windows.net",
+      "bbuseruploads.s3.amazonaws.com",
+      "binaries.erlang-solutions.com",
+      "bitbucket.org",
+      "cdn.mysql.com",
+      "changelogs.ubuntu.com",
+      "checkpoint-api.hashicorp.com",
+      "chromedriver.storage.googleapis.com",
+      "cli-assets.heroku.com",
+      "cloud.r-project.org",
+      "composer.github.io",
+      "crates.io",
+      "dc.services.visualstudio.com",
+      "dl.google.com",
+      "dl.hhvm.com",
+      "dl.k8s.io",
+      "dotnetcli.blob.core.windows.net",
+      "download.microsoft.com",
+      "download.mono-project.com",
+      "download.opensuse.org",
+      "download.swift.org",
+      "downloads.apache.org",
+      "downloads.gradle-dn.com",
+      "downloads.haskell.org",
+      "downloads.mysql.com",
+      "downloads.python.org",
+      "entropy.ubuntu.com",
+      "files.pythonhosted.org",
+      "get-ghcup.haskell.org",
+      "get.haskellstack.org",
+      "get.helm.sh",
+      "get.pulumi.com",
+      "getcomposer.org",
+      "ghcr.io",
+      "github.com",
+      "go.microsoft.com",
+      "jfrog-prod-usw2-shared-oregon-main.s3.amazonaws.com",
+      "julialang-s3.julialang.org",
+      "keyserver.ubuntu.com",
+      "launchpad.net",
+      "mirror.openshift.com",
+      "mirrorcache-us.opensuse.org",
+      "mirrorcache.opensuse.org",
+      "nodejs.org",
+      "objects.githubusercontent.com",
+      "oca.opensource.oracle.com",
+      "omahaproxy.appspot.com",
+      "packagecloud.io",
+      "packages.adoptium.net",
+      "packages.cloud.google.com",
+      "packages.microsoft.com",
+      "phar.phpunit.de",
+      "pkg-containers.githubusercontent.com",
+      "production.cloudflare.docker.com",
+      "provo-mirror.opensuse.org",
+      "psg-prod-eastus.azureedge.net",
+      "pypi.org",
+      "pypi.python.org",
+      "raw.githubusercontent.com",
+      "rdfepirv2dm1prdstr01.blob.core.windows.net",
+      "rdfepirv2dm1prdstr03.blob.core.windows.net",
+      "rdfepirv2dm1prdstr04.blob.core.windows.net",
+      "rdfepirv2dm1prdstr07.blob.core.windows.net",
+      "rdfepirv2dm1prdstr08.blob.core.windows.net",
+      "registry-1.docker.io",
+      "registry.npmjs.org",
+      "releases.bazel.build",
+      "releases.hashicorp.com",
+      "repo.anaconda.com",
+      "repo.continuum.io",
+      "repo.mongodb.org",
+      "repo1.maven.org",
+      "repos.azul.com",
+      "rubygems.org",
+      "s3.amazonaws.com",
+      "services.gradle.org",
+      "sh.rustup.rs",
+      "static.crates.io",
+      "static.rust-lang.org",
+      "storage.googleapis.com",
+      "swift.org",
+      "www-eu.apache.org",
+      "www.google-analytics.com",
+      "www.googleapis.com",
+      "www.graalvm.org",
+      "www.mongodb.org",
+      "www.postgresql.org",
+      "www.powershellgallery.com",
+      "www.pulumi.com",
+      "www.swift.org",
+    ]
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+
+rule {
+    name                       = "Allow Known HTTP (config:${var.configuration_name})"
+
+    source_ip_groups           = [
+      azurerm_ip_group.packer.0.id
+    ]
+
+    target_fqdns               = [
+      "azure.archive.ubuntu.com",
+      "keyserver.ubuntu.com",
+      "ppa.launchpad.net",
+      "security.ubuntu.com",
+      "www.cpan.org"
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+  }
+
+  rule {
+    name                       = "Allow All HTTP(S) (config:${var.configuration_name})"
+
+    source_ip_groups           = [
+      azurerm_ip_group.packer.0.id
+    ]
+
+    target_fqdns               = [
+      "*"
+    ]
+
+    protocol {
+      port                     = "80"
+      type                     = "Http"
+    }
+
+    protocol {
+      port                     = "443"
+      type                     = "Https"
+    }
+  }
+
+  count                        = var.deploy_firewall ? 1 : 0
+} 
+
+resource azurerm_firewall_network_rule_collection vnet_net_outbound_rules {
   name                         = "${azurerm_firewall.firewall.0.name}-net-out-rules"
   azure_firewall_name          = azurerm_firewall.firewall.0.name
   resource_group_name          = var.resource_group_name
@@ -614,6 +810,27 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   }    
 
   rule {
+    name                       = "Allow Git SSH"
+
+    source_ip_groups           = [
+      azurerm_ip_group.vnet.0.id
+    ]
+
+    destination_ports          = [
+      "22"
+    ]
+    destination_fqdns          = [
+      "github.com", 
+      "ssh.dev.azure.com",
+      "vs-ssh.visualstudio.com"
+    ]
+
+    protocols                  = [
+      "TCP"
+    ]
+  }
+
+  rule {
     name                       = "Allow ICMP (config:${var.configuration_name})"
 
     source_ip_groups           = [
@@ -653,7 +870,7 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
 
   # keyserver.ubuntu.com 
   rule {
-    name                       = "Allow Ubuntu Key Server (config:${var.configuration_name})"
+    name                       = "Allow Ubuntu OpenPGP Key Server (config:${var.configuration_name})"
 
     source_ip_groups           = [
       azurerm_ip_group.vnet.0.id
@@ -662,8 +879,8 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
     destination_ports          = [
       "11371",
     ]
-    destination_addresses      = [
-      "*",
+    destination_fqdns          = [
+      "keyserver.ubuntu.com", 
     ]
 
     protocols                  = [
@@ -693,38 +910,64 @@ resource azurerm_firewall_network_rule_collection fw_net_outbound_rules {
   count                        = var.deploy_firewall ? 1 : 0
 }
 
-
-/*
-resource azurerm_firewall_network_rule_collection fw_net_outbound_debug_rules {
-  name                         = "${azurerm_firewall.firewall.0.name}-net-out-debug-rules"
-  azure_firewall_name          = azurerm_firewall.firewall.0.name
-  resource_group_name          = var.resource_group_name
-  priority                     = 999
-  action                       = "Allow"
+# resource azurerm_firewall_network_rule_collection agent_allow_all_outbound {
+#   name                         = "${azurerm_firewall.firewall.0.name}-agent-net-out-debug-rules"
+#   azure_firewall_name          = azurerm_firewall.firewall.0.name
+#   resource_group_name          = var.resource_group_name
+#   priority                     = 999
+#   action                       = "Allow"
 
 
-  rule {
-    name                       = "Allow All Outbound (DEBUG) (config:${var.configuration_name})"
+#   rule {
+#     name                       = "Allow All Outbound (DEBUG) (config:${var.configuration_name})"
 
-    source_ip_groups           = [
-      azurerm_ip_group.vnet.0.id
-    ]
+#     source_ip_groups           = [
+#       azurerm_ip_group.vnet.0.id
+#     ]
 
-    destination_ports          = [
-      "*"
-    ]
-    destination_addresses      = [
-      "*", 
-    ]
+#     destination_ports          = [
+#       "*"
+#     ]
+#     destination_addresses      = [
+#       "*", 
+#     ]
 
-    protocols                  = [
-      "Any"
-    ]
-  }
+#     protocols                  = [
+#       "Any"
+#     ]
+#   }
 
-  count                        = var.deploy_firewall ? 1 : 0
-}
-*/
+#   count                        = var.deploy_firewall ? 1 : 0
+# }
+
+# resource azurerm_firewall_network_rule_collection packer_net_rules {
+#   name                         = "${azurerm_firewall.firewall.0.name}-packer-net-out-rules"
+#   azure_firewall_name          = azurerm_firewall.firewall.0.name
+#   resource_group_name          = var.resource_group_name
+#   priority                     = 998
+#   action                       = "Allow"
+
+#   rule {
+#     name                       = "Allow All Outbound (DEBUG) (config:${var.configuration_name})"
+
+#     source_ip_groups           = [
+#       azurerm_ip_group.packer.0.id
+#     ]
+
+#     destination_ports          = [
+#       "*"
+#     ]
+#     destination_addresses      = [
+#       "*", 
+#     ]
+
+#     protocols                  = [
+#       "Any"
+#     ]
+#   }
+
+#   count                        = var.deploy_firewall ? 1 : 0
+# }
 
 resource azurerm_monitor_diagnostic_setting firewall_ip_logs {
   name                         = "${azurerm_public_ip.firewall.0.name}-logs"
@@ -856,9 +1099,11 @@ resource azurerm_subnet_route_table_association scale_set_agents {
 
   count                        = var.deploy_firewall ? 1 : 0
   depends_on                   = [
-    azurerm_firewall_application_rule_collection.fw_app_rules,
-    azurerm_firewall_network_rule_collection.fw_net_outbound_rules,
-    # azurerm_firewall_network_rule_collection.fw_net_outbound_debug_rules,
+    azurerm_firewall_application_rule_collection.agent_app_rules,
+    azurerm_firewall_application_rule_collection.packer_app_rules,
+    azurerm_firewall_network_rule_collection.vnet_net_outbound_rules,
+    # azurerm_firewall_network_rule_collection.agent_allow_all_outbound,
+    # azurerm_firewall_network_rule_collection.packer_allow_all_outbound,
     azurerm_monitor_diagnostic_setting.firewall_logs,
   ]
 }
@@ -868,9 +1113,11 @@ resource azurerm_subnet_route_table_association self_hosted_agents {
 
   count                        = var.deploy_firewall ? 1 : 0
   depends_on                   = [
-    azurerm_firewall_application_rule_collection.fw_app_rules,
-    azurerm_firewall_network_rule_collection.fw_net_outbound_rules,
-    # azurerm_firewall_network_rule_collection.fw_net_outbound_debug_rules,
+    azurerm_firewall_application_rule_collection.agent_app_rules,
+    azurerm_firewall_application_rule_collection.packer_app_rules,
+    azurerm_firewall_network_rule_collection.vnet_net_outbound_rules,
+    # azurerm_firewall_network_rule_collection.agent_allow_all_outbound,
+    # azurerm_firewall_network_rule_collection.packer_allow_all_outbound,
     azurerm_monitor_diagnostic_setting.firewall_logs,
   ]
 }

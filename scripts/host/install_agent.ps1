@@ -9,13 +9,13 @@ param (
     [parameter(Mandatory=$true)][string]$Organization,
     [parameter(Mandatory=$true)][string]$PAT
 ) 
+$ProgressPreference = 'SilentlyContinue' # Improves batch performance in Windows PowerShell
 
 if (!$IsWindows -and ($PSVersionTable.PSEdition -ine "Desktop")) {
     Write-Error "This only runs on Windows..."
     exit 1
 }
 
-#$pipelineDirectory = Join-Path $env:HOME pipeline-agent
 $pipelineDirectory = Join-Path $env:ProgramFiles pipeline-agent
 $agentService = "vstsagent.${Organization}.${AgentPool}.${AgentName}"
 if (Test-Path (Join-Path $pipelineDirectory .agent)) {

@@ -56,6 +56,7 @@ variable deploy_self_hosted_vms {
   type                         = bool
 }
 variable deploy_self_hosted_vm_agents {
+  description                  = "Deploys Pipeline Agent on self-hosted VMs. Variables devops_org and devops_pat should also be specified."
   default                      = true
   type                         = bool
 }
@@ -66,9 +67,11 @@ variable destroy_wait_minutes {
 }
 variable devops_org {
   description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+  default                      = null
 }
 variable devops_pat {
   description                  = "A Personal Access Token to access the Azure DevOps organization"
+  default                      = null
 }
 
 variable dns_host_suffix {

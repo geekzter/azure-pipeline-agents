@@ -24,14 +24,6 @@ resource azurerm_role_assignment packer_storage_contributors {
   for_each                     = toset(local.storage_contributors)
 }
 
-resource azurerm_role_assignment service_principal_contributor {
-  scope                        = azurerm_resource_group.rg.id
-  role_definition_name         = "Contributor"
-  principal_id                 = module.service_principal.0.principal_id
-
-  count                        = var.create_contributor_service_principal ? 1 : 0
-}
-
 resource azurerm_role_assignment agent_viewer {
   scope                        = azurerm_resource_group.rg.id
   role_definition_name         = "Reader"

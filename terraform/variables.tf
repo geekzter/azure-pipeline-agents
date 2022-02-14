@@ -20,11 +20,6 @@ variable configure_wildcard_allow_rules {
   default                      = true
   type                         = bool
 }
-variable create_contributor_service_principal {
-  description                  = "Create Service Principal that can be used for a Service Connection"
-  default                      = false
-  type                         = bool
-}
 
 variable demo_viewers {
   description                  = "Object ID's of AAD groups/users to be granted reader access"

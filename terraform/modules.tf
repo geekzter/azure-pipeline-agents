@@ -44,13 +44,6 @@ module packer {
   ]
 }
 
-module service_principal {
-  source                       = "./modules/service-principal"
-  name                         = "azure-pipelines-service-connection-${terraform.workspace}-${local.suffix}"
-
-  count                        = var.create_contributor_service_principal ? 1 : 0
-}
-
 module scale_set_linux_agents {
   source                       = "./modules/scale-set-linux-agents"
 

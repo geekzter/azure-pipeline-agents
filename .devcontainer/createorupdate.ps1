@@ -3,9 +3,14 @@
 
 # Update relevant packages
 sudo apt-get update
-#sudo apt-get install --only-upgrade -y azure-cli powershell
 if (!(Get-Command tmux -ErrorAction SilentlyContinue)) {
     sudo apt-get install -y tmux
+}
+if (!(Get-Command packer -ErrorAction SilentlyContinue)) {
+    sudo apt-get install -y lsb-release
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    sudo apt-get install -y packer
 }
 
 # Determine directory locations (may vary based on what branch has been cloned initially)
@@ -52,6 +57,6 @@ if (!(Test-Path $Profile)) {
 
 # Create SSH keypair
 if (!(Test-Path ~/.ssh/id_rsa)) {
-    # pwsh doesn't let me create an empty passphrase
+    # pwsh doesn't let us create an empty passphrase
     bash -c "ssh-keygen -q -m PEM -N '' -f ~/.ssh/id_rsa"
 }

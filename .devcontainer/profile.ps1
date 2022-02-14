@@ -14,7 +14,7 @@ $env:PATH = $pathList -Join ":"
 # Making sure pwsh is the default shell for Terraform local-exec
 $env:SHELL = (Get-Command pwsh).Source
 
-Set-Location $repoDirectory
+Set-Location $repoDirectory/scripts
 Write-Host "To update Codespace configuration, run $repoDirectory/.devcontainer/createorupdate.ps1"
 Write-Host "To provision infrastructure, run $repoDirectory/scripts/deploy.ps1 -Apply"
 Write-Host "To destroy infrastructure, run $repoDirectory/scripts/deploy.ps1 -Destroy"

@@ -71,7 +71,18 @@ The above ensures VM instances are kept up to date. The speed of this is control
 # Infrastructure Provisioning
 To customize provisioning, see [configuration](#configuration).
 ## Codespace
-The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh). Follow the instructions shown to provision infrastructure.
+The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh).    
+If your prompt looks like this, post creation has not yet finished:
+```
+PS /workspaces/azure-pipeline-agents> 
+```
+Instead a terminal should look like:
+```
+/workspaces/azure-pipeline-agents/scripts [master ≡]> 
+```
+Follow the instructions shown in the terminal to provision infrastructure.
+### Environment variables
+If you fork this repository on GitHub, you can define secrets. These will be surfaced as environment variables with the same name. Defining secrets for ARM_TENANT_ID and ARM_SUBSCRIPTION_ID will make sure you target the right Azure subscription.
 ## Local
 ### Pre-requisites
 If you set this up locally, make sure you have the following pre-requisites:
@@ -94,7 +105,7 @@ Alternatively, run:
 `./deploy.ps1 -Apply`
 
 ### Pool
-This will perform the  provision the agents. To create a pool from the scale set use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
+To create a pool from the scale set use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
 ## From Pipeline
 This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. You'll need the [Azure Pipelines Terraform Tasks](https://marketplace.visualstudio.com/items?itemName=charleszipp.azure-pipelines-tasks-terraform) extension installed.
 To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool, and 'Limit job authorization scope to current project for non-release pipelines' disabled. For this reason, it is recommended to have a dedicated project for this pipeline.

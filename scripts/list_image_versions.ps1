@@ -2,7 +2,7 @@
 
 <# 
 .EXAMPLE
-    ./list_image_versions.ps1 -GalleryResourceGroupName Shared -GalleryName testgal -ImageDefinitionName UbuntuPipelineHost 
+    ./list_image_versions.ps1 -GalleryResourceGroupName Shared -GalleryName testgal -ImageDefinitionName Ubuntu1804
 #> 
 #Requires -Version 7
 

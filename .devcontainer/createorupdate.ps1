@@ -34,7 +34,7 @@ Push-Location $terraformDirectory
 # Get the desired version of Terraform
 tfenv install latest
 tfenv install min-required
-tfenv use min-required
+tfenv use latest
 # We may as well initialize Terraform now
 terraform init -upgrade
 Pop-Location

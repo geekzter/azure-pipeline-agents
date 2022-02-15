@@ -26,21 +26,21 @@ $terraformDirectory = (Join-Path $repoDirectory "terraform")
 # This will be the location where we save a PowerShell profile
 $profileTemplate = (Join-Path $PSScriptRoot profile.ps1)
 
-# Get/update tfenv, for Terraform versioning
-if (!(Get-Command tfenv -ErrorAction SilentlyContinue)) {
-    Write-Host 'Installing tfenv...'
-    git clone https://github.com/tfutils/tfenv.git ~/.tfenv
-    sudo ln -s ~/.tfenv/bin/* /usr/local/bin
-} else {
-    Write-Host 'Upgrading tfenv...'
-    git -C ~/.tfenv pull
-}
+# # Get/update tfenv, for Terraform versioning
+# if (!(Get-Command tfenv -ErrorAction SilentlyContinue)) {
+#     Write-Host 'Installing tfenv...'
+#     git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+#     sudo ln -s ~/.tfenv/bin/* /usr/local/bin
+# } else {
+#     Write-Host 'Upgrading tfenv...'
+#     git -C ~/.tfenv pull
+# }
 
 Push-Location $terraformDirectory
-# Get the desired version of Terraform
-tfenv install latest
-tfenv install min-required
-tfenv use min-required
+# # Get the desired version of Terraform
+# tfenv install latest
+# tfenv install min-required
+# tfenv use min-required
 # We may as well initialize Terraform now
 terraform init -upgrade
 Pop-Location

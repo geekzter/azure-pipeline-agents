@@ -126,11 +126,11 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
         "commandToExecute"     = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./host_configuration.ps1 -Force;./host_configuration.ps1\""
       })
 
-      provision_after_extensions= [
+      provision_after_extensions= var.deploy_non_essential_vm_extensions ? [
         "MMAExtension",
         "DAExtension",
         "AzureNetworkWatcherExtension"
-      ]
+      ] : null
     }
   }    
 

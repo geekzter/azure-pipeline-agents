@@ -24,3 +24,4 @@ Write-Host "$($PSStyle.Bold)1)$($PSStyle.Reset) To prevent losing (or to reconne
 Write-Host "$($PSStyle.Bold)2)$($PSStyle.Reset) To provision infrastructure, run $($PSStyle.Bold)$repoDirectory/scripts/deploy.ps1 -Apply$($PSStyle.Reset)"
 Write-Host "$($PSStyle.Bold)3)$($PSStyle.Reset) To destroy infrastructure, run $($PSStyle.Bold)$repoDirectory/scripts/deploy.ps1 -Destroy$($PSStyle.Reset)"
 Write-Host "$($PSStyle.Bold)4)$($PSStyle.Reset) To update Codespace configuration, run $($PSStyle.Bold)$repoDirectory/.devcontainer/createorupdate.ps1$($PSStyle.Reset)"
+Write-Host ""

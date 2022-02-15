@@ -44,20 +44,10 @@ module packer {
   ]
 }
 
-module service_principal {
-  source                       = "./modules/service-principal"
-  name                         = "azure-pipelines-service-connection-${terraform.workspace}-${local.suffix}"
-
-  count                        = var.create_contributor_service_principal ? 1 : 0
-}
-
 module scale_set_linux_agents {
   source                       = "./modules/scale-set-linux-agents"
 
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
-
-  devops_org                   = var.devops_org
-  devops_pat                   = var.devops_pat
 
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
@@ -102,9 +92,6 @@ module scale_set_windows_agents {
 
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  devops_org                   = var.devops_org
-  devops_pat                   = var.devops_pat
-
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
@@ -147,7 +134,7 @@ module self_hosted_linux_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent                 = var.deploy_self_hosted_vm_agents
+  deploy_agent                 = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
@@ -201,7 +188,7 @@ module self_hosted_windows_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent_vm_extension    = var.deploy_self_hosted_vm_agents
+  deploy_agent_vm_extension    = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org

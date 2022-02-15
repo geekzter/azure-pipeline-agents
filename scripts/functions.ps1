@@ -27,12 +27,15 @@ function AzLogin (
         }
     }
     $login = ($loginError -or $userError)
+    if ($env:CODESPACES -ieq "true") {
+        $azLoginSwitches = "--use-device-code"
+    }
     # Set Azure CLI context
     if ($login) {
         if ($env:ARM_TENANT_ID) {
-            az login -t $env:ARM_TENANT_ID -o none
+            az login -t $env:ARM_TENANT_ID -o none $($azLoginSwitches)
         } else {
-            az login -o none
+            az login -o none $($azLoginSwitches)
         }
     }
 

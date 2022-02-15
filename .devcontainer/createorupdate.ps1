@@ -3,7 +3,13 @@
 
 # Update relevant packages
 sudo apt-get update
-#sudo apt-get install --only-upgrade -y azure-cli powershell
+if (!(Get-Content /etc/apt/sources.list | Select-String "^deb.*hashicorp" )) {
+    sudo apt-get install -y lsb-release
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    sudo apt-get install -y terraform
+    sudo apt-get install -y packer
+} 
 if (!(Get-Command tmux -ErrorAction SilentlyContinue)) {
     sudo apt-get install -y tmux
 }
@@ -28,18 +34,20 @@ Push-Location $terraformDirectory
 # Get the desired version of Terraform
 tfenv install latest
 tfenv install min-required
-tfenv use min-required
+tfenv use latest
 # We may as well initialize Terraform now
 terraform init -upgrade
 Pop-Location
 
 # Use geekzter/bootstrap-os for PowerShell setup
-if (!(Test-Path ~/bootstrap-os)) {
-    git clone https://github.com/geekzter/bootstrap-os.git ~/bootstrap-os
+if (Test-Path ~/bootstrap-os) {
+    pushd ~/bootstrap-os/linux
+    ./bootstrap_linux.sh --skip-packages
+    popd
+    sudo apt-get upgrade packer
+    sudo apt-get upgrade terraform
 } else {
-    git -C ~/bootstrap-os pull
-    # This has been run before, upgrade packages
-    sudo apt-get upgrade -y
+    git clone https://github.com/geekzter/bootstrap-os.git ~/bootstrap-os
 }
 . ~/bootstrap-os/common/common_setup.ps1 -NoPackages
 . ~/bootstrap-os/common/functions/functions.ps1
@@ -52,6 +60,6 @@ if (!(Test-Path $Profile)) {
 
 # Create SSH keypair
 if (!(Test-Path ~/.ssh/id_rsa)) {
-    # pwsh doesn't let me create an empty passphrase
+    # pwsh doesn't let us create an empty passphrase
     bash -c "ssh-keygen -q -m PEM -N '' -f ~/.ssh/id_rsa"
 }

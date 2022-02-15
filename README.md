@@ -22,14 +22,12 @@ Azure services used include:
 - Pipelines
 - Virtual Network 
 
-
 Tools used are:
 - Azure CLI 
 - clound-init
 - Packer
 - PowerShell
 - Terraform
-
 
 ## Infrastructure
 <p align="center">
@@ -70,9 +68,21 @@ The above ensures VM instances are kept up to date. The speed of this is control
 
 # Infrastructure Provisioning
 To customize provisioning, see [configuration](#configuration).
-## Codespace
-The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh). Follow the instructions shown to provision infrastructure.
-## Local
+## Provision with Codespace
+The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu or [page](../../codespaces). This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh).    
+If your prompt looks like this, post creation has not yet finished:    
+`PS /workspaces/azure-pipeline-agents>`   
+Instead a terminal should look like:    
+`/workspaces/azure-pipeline-agents/scripts [master ≡]>`   
+Follow the instructions shown in the terminal to provision infrastructure.
+### Environment variables
+If you fork this repository on GitHub, you can define [Codescape secrets](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-encrypted-secrets-for-your-codespaces). These will be surfaced as environment variables with the same name. Defining secrets for ARM_TENANT_ID and ARM_SUBSCRIPTION_ID will make sure you target the right Azure subscription.
+
+### Session Management
+You can reconnect to disconnected terminal sessions using [tmux](https://github.com/tmux/tmux/wiki). This [blog post](https://geekzter.medium.com/session-management-for-cloud-shell-and-codespaces-29f474925c53) explains how that works. Just type    
+`ct <terraform workspace>`   
+to enter a tmux session with the terraform workspace environment variable TF_WORKSPACE set. Type the same to get back into a previously disconnected session. This can be done up to the timeout [configured](https://docs.github.com/en/codespaces/customizing-your-codespace/setting-your-timeout-period-for-codespaces) in Codespaces.
+## Provision locally
 ### Pre-requisites
 If you set this up locally, make sure you have the following pre-requisites:
 - [Azure CLI](http://aka.ms/azure-cli)
@@ -91,11 +101,11 @@ You can provision agents by running:
 
 ### Scripted
 Alternatively, run:  
-`./deploy.ps1 -Apply`
+`scripts/deploy.ps1 -Apply`
 
 ### Pool
-This will perform the  provision the agents. To create a pool from the scale set use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
-## From Pipeline
+To create an Azure Pipeline pool from the scale set, use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
+## Provision from Pipeline
 This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. You'll need the [Azure Pipelines Terraform Tasks](https://marketplace.visualstudio.com/items?itemName=charleszipp.azure-pipelines-tasks-terraform) extension installed.
 To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool, and 'Limit job authorization scope to current project for non-release pipelines' disabled. For this reason, it is recommended to have a dedicated project for this pipeline.
 

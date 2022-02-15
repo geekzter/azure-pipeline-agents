@@ -2,7 +2,7 @@
 
 <# 
 .EXAMPLE
-    ./list_image_versions.ps1 -GalleryResourceGroupName Shared -GalleryName testgal -ImageDefinitionName UbuntuPipelineHost 
+    ./list_image_versions.ps1 -GalleryResourceGroupName Shared -GalleryName testgal -ImageDefinitionName Ubuntu1804
 #> 
 #Requires -Version 7
 
@@ -19,12 +19,6 @@ function List-ImageVersions (
     [parameter(Mandatory=$true)][string]$ImageDefinitionName
 ) {
     Write-Host "az sig image-version list --gallery-image-definition $ImageDefinitionName --gallery-name $GalleryName --resource-group $GalleryResourceGroupName"
-    az sig image-version list --gallery-image-definition $ImageDefinitionName `
-                              --gallery-name $GalleryName `
-                              --resource-group $GalleryResourceGroupName `
-                              -o json
-
-    exit
     az sig image-version list --gallery-image-definition $ImageDefinitionName `
                               --gallery-name $GalleryName `
                               --resource-group $GalleryResourceGroupName `

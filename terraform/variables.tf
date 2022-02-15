@@ -20,11 +20,6 @@ variable configure_wildcard_allow_rules {
   default                      = true
   type                         = bool
 }
-variable create_contributor_service_principal {
-  description                  = "Create Service Principal that can be used for a Service Connection"
-  default                      = false
-  type                         = bool
-}
 
 variable demo_viewers {
   description                  = "Object ID's of AAD groups/users to be granted reader access"
@@ -44,7 +39,7 @@ variable deploy_firewall {
 }
 variable deploy_non_essential_vm_extensions {
   description                  = "Whether to deploy optional VM extensions"
-  default                      = true
+  default                      = false
   type                         = bool
 }
 variable deploy_scale_set {
@@ -56,6 +51,7 @@ variable deploy_self_hosted_vms {
   type                         = bool
 }
 variable deploy_self_hosted_vm_agents {
+  description                  = "Deploys Pipeline Agent on self-hosted VMs. Variables devops_org and devops_pat should also be specified."
   default                      = true
   type                         = bool
 }
@@ -66,9 +62,11 @@ variable destroy_wait_minutes {
 }
 variable devops_org {
   description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+  default                      = null
 }
 variable devops_pat {
   description                  = "A Personal Access Token to access the Azure DevOps organization"
+  default                      = null
 }
 
 variable dns_host_suffix {
@@ -218,9 +216,9 @@ variable windows_agent_count {
 variable windows_os_image_id {
   default                      = null
 }
-# az vm image list-skus -l westeurope -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
-# az vm image list-skus -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -o table
-# az vm image list -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
+# az vm image list-skus -l centralus -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -o table
+# az vm image list -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
 variable windows_os_offer {
   default                      = "visualstudio2022"
 }

@@ -11,7 +11,8 @@ if (!(Get-Content /etc/apt/sources.list | Select-String "^deb.*hashicorp" )) {
     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
     sudo apt-get install -y packer
-    sudo apt-get install -y terraform
+    sudo rm /usr/local/bin/terraform 2>/dev/null # Not installed with apt
+    sudo apt-get install -y terraform # Installed in /usr/bin
 } 
 
 # Determine directory locations (may vary based on what branch has been cloned initially)

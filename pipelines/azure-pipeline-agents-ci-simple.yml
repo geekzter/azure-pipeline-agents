@@ -1,0 +1,190 @@
+# This pipeline is for CI/CD
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ parameters.workspace }}-$(Build.BuildId)
+
+trigger: none
+
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - '*'
+  drafts: false
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
+
+schedules:
+- cron: '0 0 * * Tue,Thu,Sun'
+  displayName: 'Bi-Nightly build (UTC)'
+  # Run if there are no changes
+  always: 'true'
+  branches:
+    include:
+    - master
+
+variables:
+- AZURE_CORE_ONLY_SHOW_ERRORS: true
+- AZURE_EXTENSION_USE_DYNAMIC_INSTALL: yes_without_prompt
+- repository: azure-pipeline-agents
+- resourceGroup: azure-pipelines-agents-$(TF_WORKSPACE)-$(Build.BuildId)
+- scriptDirectory: $(Build.SourcesDirectory)/scripts
+- terraformDirectory: $(Build.SourcesDirectory)/terraform
+- TF_IN_AUTOMATION: true
+- TF_INPUT: 0
+- TF_VAR_run_id: $(Build.BuildId)
+- TF_VAR_ssh_public_key: id_rsa.pub
+- TF_WORKSPACE: cis
+
+jobs:
+- job: 'Provision'
+  displayName: 'Provision & Destroy (simple)'
+  timeoutInMinutes: 120
+
+  pool:
+    name: 'Azure Pipelines'
+    vmImage: ubuntu-latest
+
+  variables:
+  - group: 'pipeline-agents-ci-simple'
+
+  steps:
+  - bash: |
+      ssh-keygen -q -m PEM -N '' -f ~/.ssh/id_rsa
+    displayName: 'Generate SSH Key Pair'
+
+  - task: TerraformInstaller@0
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: 'latest'
+
+  - pwsh: terraform init
+    displayName: 'Terraform init'
+    workingDirectory: '$(terraformDirectory)'
+
+  - task: AzureCLI@2
+    displayName: 'Terraform plan & apply'
+    name: apply
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        ./set_terraform_azurerm_vars.ps1
+        ./deploy.ps1 -apply -force
+      addSpnToEnvironment: true
+      failOnStandardError: true
+      retryCountOnTaskFailure: 3
+      workingDirectory: '$(scriptDirectory)'
+              
+  - ${{ if not(eq(parameters.destroy, 'Never')) }}:
+    - pwsh: |
+        Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+      name: provisioningResult
+      displayName: 'Indicate provisioning success'
+      condition: succeeded()
+
+  - ${{ if not(eq(parameters.destroy, 'Never')) }}:
+    - task: AzureCLI@2
+      displayName: 'Terraform destroy'
+      ${{ if eq(parameters.destroy, 'Always') }}:
+        condition: succeededOrFailed()
+      ${{ if eq(parameters.destroy, 'On failure') }}:
+        condition: failed()
+      ${{ if eq(parameters.destroy, 'On success') }}:
+        condition: succeeded()
+      continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          ./set_terraform_azurerm_vars.ps1
+          ./deploy.ps1 -destroy -force
+        addSpnToEnvironment: true
+        failOnStandardError: true
+        retryCountOnTaskFailure: 3
+        workingDirectory: '$(scriptDirectory)'
+
+  - ${{ if ne(parameters.destroy, 'Never') }}:
+    - task: AzureCLI@2
+      name: teardown
+      displayName: 'Tear down remaining resources'
+      ${{ if eq(parameters.destroy, 'Always') }}:
+        condition: or(always(),canceled())
+      ${{ if eq(parameters.destroy, 'On failure') }}:
+        condition: not(eq(outputs['provisioningResult.result'],'success'))
+      ${{ if eq(parameters.destroy, 'On success') }}:
+        condition: eq(outputs['provisioningResult.result'],'success')
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resource group fails
+          # Build JMESPath expression
+          $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '$(TF_WORKSPACE)' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
+          Write-Host "Removing resources identified by `"$tagQuery`"..."
+
+          # Remove resource groups
+          $resourceGroupIDs = $(az group list --query "${tagQuery}" -o tsv)
+          if ($resourceGroupIDs) {
+            Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceGroupIDs 2>&1
+            }
+          } else {
+            Write-Host "No resource groups to remove"
+          }
+
+          # Remove (remaining) resources
+          $resourceIDs = $(az resource list --query "${tagQuery}" -o tsv)
+          if ($resourceIDs) {
+            Write-Host "Removing resources `"${resourceIDs}`"..."
+            &{ # az writes information to stderr
+              $ErrorActionPreference = 'SilentlyContinue'
+              az resource delete --ids $resourceIDs 2>&1
+            }
+          } else {
+            Write-Host "No resources to remove"
+          }
+
+          # Remove policy definition
+          ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
+        addSpnToEnvironment: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
+
+  - ${{ if ne(parameters.destroy, 'Never') }}:
+    - task: AzureCLI@2
+      name: cleanup
+      displayName: 'Clean up Terraform state'
+      ${{ if eq(parameters.destroy, 'Always') }}:
+        condition: or(always(),canceled())
+      ${{ if eq(parameters.destroy, 'On failure') }}:
+        condition: not(eq(outputs['provisioningResult.result'],'success'))
+      ${{ if eq(parameters.destroy, 'On success') }}:
+        condition: eq(outputs['provisioningResult.result'],'success')
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $(scriptDirectory)/set_terraform_azurerm_vars.ps1
+
+          $terraformState = (terraform state pull | ConvertFrom-Json)
+          if ($terraformState.resources) {
+            Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
+            $terraformState.outputs = New-Object PSObject # Empty output
+            $terraformState.resources = @() # No resources
+            $terraformState.serial++
+            $terraformState | ConvertTo-Json | terraform state push -
+          } else {
+            Write-Host "No resources in Terraform state in workspace ${env:TF_WORKSPACE}..."
+          }
+          terraform state pull 
+        addSpnToEnvironment: true
+        failOnStandardError: true
+        workingDirectory: '$(terraformDirectory)'

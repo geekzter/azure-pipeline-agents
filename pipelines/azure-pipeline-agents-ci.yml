@@ -153,7 +153,7 @@ jobs:
           substituteAlternateVariables: true
           TF_VAR_resource_suffix: '$(Build.BuildId)b'
           TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
-          TF_WORKSPACE: '${{ parameters.workspace }}a'
+          TF_WORKSPACE: '${{ parameters.workspace }}b'
           unpinTerraformProviders: ${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
       maxParallel: 2
 

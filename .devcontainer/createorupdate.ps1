@@ -3,22 +3,16 @@
 
 # Update relevant packages
 sudo apt-get update
-if (!(Get-Command tmux -ErrorAction SilentlyContinue)) {
-    sudo apt-get install -y tmux
-}
 if (!(Get-Content /etc/apt/sources.list | Select-String "^deb.*hashicorp" )) {
     sudo apt-get install -y lsb-release
     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    sudo apt-get install -y terraform
     sudo apt-get install -y packer
-    sudo apt-get install -y terraform # Installed in /usr/bin
-    if (Test-Path /usr/local/bin/terraform) {
-        Write-Host "Removing /usr/local/bin/terraform..."
-        sudo rm /usr/local/bin/terraform
-    } else {
-        Write-Host "/usr/local/bin/terraform does not exist"
-    }
 } 
+if (!(Get-Command tmux -ErrorAction SilentlyContinue)) {
+    sudo apt-get install -y tmux
+}
 
 # Determine directory locations (may vary based on what branch has been cloned initially)
 $repoDirectory = (Split-Path $PSScriptRoot -Parent)
@@ -26,22 +20,7 @@ $terraformDirectory = (Join-Path $repoDirectory "terraform")
 # This will be the location where we save a PowerShell profile
 $profileTemplate = (Join-Path $PSScriptRoot profile.ps1)
 
-# # Get/update tfenv, for Terraform versioning
-# if (!(Get-Command tfenv -ErrorAction SilentlyContinue)) {
-#     Write-Host 'Installing tfenv...'
-#     git clone https://github.com/tfutils/tfenv.git ~/.tfenv
-#     sudo ln -s ~/.tfenv/bin/* /usr/local/bin
-# } else {
-#     Write-Host 'Upgrading tfenv...'
-#     git -C ~/.tfenv pull
-# }
-
 Push-Location $terraformDirectory
-# # Get the desired version of Terraform
-# tfenv install latest
-# tfenv install min-required
-# tfenv use min-required
-# We may as well initialize Terraform now
 terraform init -upgrade
 Pop-Location
 

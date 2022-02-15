@@ -19,7 +19,7 @@ $env:SHELL = (Get-Command pwsh).Source
 # https://docs.github.com/en/codespaces/managing-your-codespaces/managing-encrypted-secrets-for-your-codespaces
 
 Set-Location $repoDirectory/scripts
-Write-Host "To prevent losing (or to reconnect to) a terminal session, type $($PSStyle.Formatting.FormatAccent)ct <terraform workspace>$($PSStyle.Reset)"
-Write-Host "To update Codespace configuration, run $($PSStyle.Formatting.FormatAccent)$repoDirectory/.devcontainer/createorupdate.ps1$($PSStyle.Reset)"
-Write-Host "To provision infrastructure, run $($PSStyle.Formatting.FormatAccent)$repoDirectory/scripts/deploy.ps1 -Apply$($PSStyle.Reset)"
-Write-Host "To destroy infrastructure, run $($PSStyle.Formatting.FormatAccent)$repoDirectory/scripts/deploy.ps1 -Destroy$($PSStyle.Reset)"
+Write-Host "To prevent losing (or to reconnect to) a terminal session, type $($PSStyle.Bold)ct <terraform workspace>$($PSStyle.Reset)"
+Write-Host "To update Codespace configuration, run $($PSStyle.Bold)$repoDirectory/.devcontainer/createorupdate.ps1$($PSStyle.Reset)"
+Write-Host "To provision infrastructure, run $($PSStyle.Bold)$repoDirectory/scripts/deploy.ps1 -Apply$($PSStyle.Reset)"
+Write-Host "To destroy infrastructure, run $($PSStyle.Bold)$repoDirectory/scripts/deploy.ps1 -Destroy$($PSStyle.Reset)"

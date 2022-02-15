@@ -147,6 +147,7 @@ jobs:
           TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
           TF_WORKSPACE: '${{ parameters.workspace }}a'
           unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
+          variableGroup: 'pipeline-agents-ci'
         alternate:
           resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}b-$(Build.BuildId)'
           terraformArtifactName: 'terraformAlternate'
@@ -155,9 +156,11 @@ jobs:
           TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
           TF_WORKSPACE: '${{ parameters.workspace }}b'
           unpinTerraformProviders: ${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
+          variableGroup: 'pipeline-agents-ci'
       maxParallel: 2
 
   variables:
+  - group: '$(variableGroup)'
     ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
       # Not running as strategy
       terraformArtifactName: 'terraformPrimary'

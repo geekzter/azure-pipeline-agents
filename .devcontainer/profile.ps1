@@ -10,6 +10,7 @@ $scriptDirectory = (Join-Path $repoDirectory "scripts")
 if (!$pathList.Contains($scriptDirectory)) {
     $pathList.Insert(1,$scriptDirectory)
 }
+$env:AZURE_EXTENSION_USE_DYNAMIC_INSTALL = "yes_without_prompt"
 $env:PATH = $pathList -Join ":"
 
 # Making sure pwsh is the default shell for Terraform local-exec

@@ -216,9 +216,9 @@ variable windows_agent_count {
 variable windows_os_image_id {
   default                      = null
 }
-# az vm image list-skus -l westeurope -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
-# az vm image list-skus -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -o table
-# az vm image list -l westeurope -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
+# az vm image list-skus -l centralus -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -o table
+# az vm image list -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
 variable windows_os_offer {
   default                      = "visualstudio2022"
 }

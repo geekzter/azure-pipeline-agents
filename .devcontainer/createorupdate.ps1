@@ -6,12 +6,13 @@ sudo apt-get update
 if (!(Get-Command tmux -ErrorAction SilentlyContinue)) {
     sudo apt-get install -y tmux
 }
-if (!(Get-Command packer -ErrorAction SilentlyContinue)) {
+if (!(Get-Content /etc/apt/sources.list | Select-String "^deb.*hashicorp" )) {
     sudo apt-get install -y lsb-release
     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
     sudo apt-get install -y packer
-}
+    sudo apt-get install -y terraform
+} 
 
 # Determine directory locations (may vary based on what branch has been cloned initially)
 $repoDirectory = (Split-Path $PSScriptRoot -Parent)
@@ -39,12 +40,14 @@ terraform init -upgrade
 Pop-Location
 
 # Use geekzter/bootstrap-os for PowerShell setup
-if (!(Test-Path ~/bootstrap-os)) {
-    git clone https://github.com/geekzter/bootstrap-os.git ~/bootstrap-os
+if (Test-Path ~/bootstrap-os) {
+    pushd ~/bootstrap-os/linux
+    ./bootstrap_linux.sh --skip-packages
+    popd
+    sudo apt-get upgrade packer
+    sudo apt-get upgrade terraform
 } else {
-    git -C ~/bootstrap-os pull
-    # This has been run before, upgrade packages
-    sudo apt-get upgrade -y
+    git clone https://github.com/geekzter/bootstrap-os.git ~/bootstrap-os
 }
 . ~/bootstrap-os/common/common_setup.ps1 -NoPackages
 . ~/bootstrap-os/common/functions/functions.ps1

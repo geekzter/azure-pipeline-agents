@@ -68,7 +68,7 @@ The above ensures VM instances are kept up to date. The speed of this is control
 
 # Infrastructure Provisioning
 To customize provisioning, see [configuration](#configuration).
-## Codespace
+## Provision with Codespace
 The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh).    
 If your prompt looks like this, post creation has not yet finished:    
 `PS /workspaces/azure-pipeline-agents>`   
@@ -82,7 +82,7 @@ If you fork this repository on GitHub, you can define [Codescape secrets](https:
 You can reconnect to disconnected terminal sessions using [tmux](https://github.com/tmux/tmux/wiki). This [blog post](https://geekzter.medium.com/session-management-for-cloud-shell-and-codespaces-29f474925c53) explains how that works. Just type    
 `ct <terraform workspace>`   
 to enter a tmux session with the terraform workspace environment variable TF_WORKSPACE set. Type the same to get back into a previously disconnected session. This can be done up to the timeout [configured](https://docs.github.com/en/codespaces/customizing-your-codespace/setting-your-timeout-period-for-codespaces) in Codespaces.
-## Local
+## Provision locally
 ### Pre-requisites
 If you set this up locally, make sure you have the following pre-requisites:
 - [Azure CLI](http://aka.ms/azure-cli)

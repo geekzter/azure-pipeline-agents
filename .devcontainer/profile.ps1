@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+#Requires -Version 7.2
 
 $repoDirectory = (Split-Path (Split-Path (Get-Item $MyInvocation.MyCommand.Path).Target -Parent) -Parent)
 $scriptDirectory = (Join-Path $repoDirectory "scripts")
@@ -14,8 +15,11 @@ $env:PATH = $pathList -Join ":"
 # Making sure pwsh is the default shell for Terraform local-exec
 $env:SHELL = (Get-Command pwsh).Source
 
+# Set additional environment variables as Codespace secrets
+# https://docs.github.com/en/codespaces/managing-your-codespaces/managing-encrypted-secrets-for-your-codespaces
+
 Set-Location $repoDirectory/scripts
-Write-Host "To prevent loosing (or to reconnect to) a terminal session, type ct <terraform workspace>"
-Write-Host "To update Codespace configuration, run $repoDirectory/.devcontainer/createorupdate.ps1"
-Write-Host "To provision infrastructure, run $repoDirectory/scripts/deploy.ps1 -Apply"
-Write-Host "To destroy infrastructure, run $repoDirectory/scripts/deploy.ps1 -Destroy"
+Write-Host "To prevent losing (or to reconnect to) a terminal session, type $($PSStyle.Formatting.FormatAccent)ct <terraform workspace>$($PSStyle.Reset)"
+Write-Host "To update Codespace configuration, run $($PSStyle.Formatting.FormatAccent)$repoDirectory/.devcontainer/createorupdate.ps1$($PSStyle.Reset)"
+Write-Host "To provision infrastructure, run $($PSStyle.Formatting.FormatAccent)$repoDirectory/scripts/deploy.ps1 -Apply$($PSStyle.Reset)"
+Write-Host "To destroy infrastructure, run $($PSStyle.Formatting.FormatAccent)$repoDirectory/scripts/deploy.ps1 -Destroy$($PSStyle.Reset)"

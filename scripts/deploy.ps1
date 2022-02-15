@@ -168,7 +168,7 @@ try {
                 Write-Warning "You're about to replace these Virtual Machines in workspace '${workspace}':"
                 $vmsReplaced
                 if ($Force) {
-                    $Force = $false # Ignore force if resources with state get replaces
+                    $Force = $false # Ignore force if resources with state get replaced
                     Write-Warning "Ignoring -force"
                 }
             }

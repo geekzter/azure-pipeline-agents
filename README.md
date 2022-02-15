@@ -69,7 +69,7 @@ The above ensures VM instances are kept up to date. The speed of this is control
 # Infrastructure Provisioning
 To customize provisioning, see [configuration](#configuration).
 ## Provision with Codespace
-The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu. This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh).    
+The easiest method is to use a GitHub [Codespace](https://github.com/features/codespaces). Just create a GitHub Codespace from the Code menu or [page](codespaces). This will create a Codespace with prerequisites installed. Wait until Codespace preparation including [post create commands](.devcontainer/createorupdate.ps1) have been completed to start a clean shell (pwsh).    
 If your prompt looks like this, post creation has not yet finished:    
 `PS /workspaces/azure-pipeline-agents>`   
 Instead a terminal should look like:    

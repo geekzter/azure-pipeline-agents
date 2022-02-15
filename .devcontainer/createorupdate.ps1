@@ -11,10 +11,13 @@ if (!(Get-Content /etc/apt/sources.list | Select-String "^deb.*hashicorp" )) {
     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
     sudo apt-get install -y packer
-    if (Test-Path /usr/local/bin/terraform) {
-        sudo rm /usr/local/bin/terraform
-    }
     sudo apt-get install -y terraform # Installed in /usr/bin
+    if (Test-Path /usr/local/bin/terraform) {
+        Write-Host "Removing /usr/local/bin/terraform..."
+        sudo rm /usr/local/bin/terraform
+    } else {
+        Write-Host "/usr/local/bin/terraform does not exist"
+    }
 } 
 
 # Determine directory locations (may vary based on what branch has been cloned initially)

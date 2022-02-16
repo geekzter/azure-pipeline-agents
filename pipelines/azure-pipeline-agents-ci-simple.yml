@@ -47,7 +47,6 @@ jobs:
     TF_INPUT: 0
     TF_VAR_resource_suffix: $(Build.BuildId)
     TF_VAR_run_id: $(Build.BuildId)
-    TF_VAR_ssh_public_key: id_rsa.pub
     TF_WORKSPACE: cis
 
   steps:
@@ -81,7 +80,6 @@ jobs:
     env: # Maintain casing of Terraform variable names
       TF_VAR_resource_suffix: $(TF_VAR_resource_suffix)
       TF_VAR_run_id: $(TF_VAR_run_id)
-      TF_VAR_ssh_public_key: $(TF_VAR_ssh_public_key)
 
   - pwsh: |
       Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"

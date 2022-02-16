@@ -45,6 +45,7 @@ jobs:
     terraformDirectory: $(Build.SourcesDirectory)/terraform
     TF_IN_AUTOMATION: true
     TF_INPUT: 0
+    TF_VAR_resource_suffix: $(Build.BuildId)
     TF_VAR_run_id: $(Build.BuildId)
     TF_VAR_ssh_public_key: id_rsa.pub
     TF_WORKSPACE: cis
@@ -139,10 +140,18 @@ jobs:
         }
 
         # Remove policy definition
-        ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
+        ./delete_policy.ps1 -Workspace $(TF_WORKSPACE) -Suffix $(Build.BuildId)
       addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Delete $(resourceGroup)'
+    condition: or(failed(),canceled()) # Try this if the previous approach failed
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      action: 'deleteRG'
+      resourceGroupName: '$(resourceGroup)'
 
   - task: AzureCLI@2
     name: cleanup

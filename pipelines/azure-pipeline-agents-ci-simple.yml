@@ -40,7 +40,7 @@ jobs:
     AZURE_CORE_ONLY_SHOW_ERRORS: true
     AZURE_EXTENSION_USE_DYNAMIC_INSTALL: yes_without_prompt
     repository: azure-pipeline-agents
-    resourceGroup: azure-pipelines-agents-$(TF_WORKSPACE)-$(Build.BuildId)
+    resourceGroup: pipelines-agents-$(TF_WORKSPACE)-$(Build.BuildId)
     scriptDirectory: $(Build.SourcesDirectory)/scripts
     terraformDirectory: $(Build.SourcesDirectory)/terraform
     TF_IN_AUTOMATION: true

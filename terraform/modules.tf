@@ -40,7 +40,6 @@ module packer {
   tags                         = local.tags
 
   depends_on                   = [
-    azurerm_role_assignment.packer_storage_contributors,
     time_sleep.script_wrapper_check
   ]
 }

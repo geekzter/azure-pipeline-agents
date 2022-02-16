@@ -1,12 +1,12 @@
 locals {
-    storage_contributors       = distinct(
-        concat(
-            var.storage_contributors,
-            [
-                data.azurerm_client_config.default.object_id
-            ]
-        )
+  storage_contributors         = distinct(
+    concat(
+      var.storage_contributors,
+      [
+        data.azurerm_client_config.default.object_id
+      ]
     )
+  )
 }
 
 resource azurerm_role_assignment agent_storage_contributors {

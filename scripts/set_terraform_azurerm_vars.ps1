@@ -1,10 +1,4 @@
 #!/usr/bin/env pwsh
-<# 
-.EXAMPLE
-    ./get_ssh_key_pair.ps1 -KeyName ~/.ssh/id_rsa_dev
-.EXAMPLE
-    ./get_ssh_key_pair.ps1 -InformationAction Continue
-#> 
 
 $pipeline = ![string]::IsNullOrEmpty($env:AGENT_VERSION)
 if ($pipeline) {

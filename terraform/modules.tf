@@ -246,6 +246,7 @@ module gallery {
   suffix                       = local.suffix
 
   depends_on                   = [
+    azurerm_role_assignment.agent_storage_contributors,
     module.network,
     module.packer
   ]

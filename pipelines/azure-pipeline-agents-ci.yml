@@ -1,7 +1,7 @@
 # This pipeline is for CI/CD
 parameters:
 - name: workspace
-  displayName: Pipeline Environment / Terraform Workspace
+  displayName: Pipeline Environment / Terraform Workspace prefix
   type: string
   default: ci
   values:
@@ -95,12 +95,8 @@ variables:
   value: 'true'
 - name: 'TF_INPUT'
   value: 0
-- name: 'TF_WORKSPACE'
-  value: ${{ parameters.workspace }}
 - name: 'scriptDirectory'
   value: '$(Build.SourcesDirectory)/scripts'
-- name: 'terraformArtifactName'
-  value: 'terraform'
 - name: 'terraformDirectory'
   value: '$(Build.SourcesDirectory)/terraform'
 - name: 'TF_VAR_linux_pipeline_agent_name_prefix'
@@ -144,27 +140,35 @@ jobs:
     strategy:
       matrix:
         primary:
-          publishTerraformArtifact: true
+          resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}a-$(Build.BuildId)'
+          terraformArtifactName: 'terraformPrimary'
           substituteAlternateVariables: false
-          TF_VAR_resource_suffix: '$(Build.BuildId)a'
+          TF_VAR_resource_suffix: '$(Build.BuildId)'
           TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+          TF_WORKSPACE: '${{ parameters.workspace }}a'
           unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
+          # variableGroup: 'pipeline-agents-ci'
         alternate:
-          publishTerraformArtifact: false
+          resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}b-$(Build.BuildId)'
+          terraformArtifactName: 'terraformAlternate'
           substituteAlternateVariables: true
-          TF_VAR_resource_suffix: '$(Build.BuildId)b'
+          TF_VAR_resource_suffix: '$(Build.BuildId)'
           TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
+          TF_WORKSPACE: '${{ parameters.workspace }}b'
           unpinTerraformProviders: ${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
-      maxParallel: 1
+          # variableGroup: 'pipeline-agents-ci'
+      maxParallel: 2
 
   variables:
+  # - group: '$(variableGroup)'
     ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
       # Not running as strategy
+      terraformArtifactName: 'terraformPrimary'
       ${{ if parameters.clear }}:  # Don't reset suffix if we want to keep existing resources
         TF_VAR_resource_suffix: '$(Build.BuildId)'
+      TF_WORKSPACE: '${{ parameters.workspace }}'
       unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
-    publishTerraformArtifact: true
-    resourceGroup: '$(TF_VAR_resource_prefix)-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
+      resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}-$(Build.BuildId)'
 
   workspace:
     clean: all
@@ -230,11 +234,9 @@ jobs:
         backendAzureRmKey: 'terraform.tfstate'
         allowTelemetryCollection: true
 
-    - ${{ if ne(parameters.destroy, 'Never') }}:
-      - publish: $(terraformDirectory)
-        displayName: 'Publish Terraform workspace'
-        condition: and(succeeded(), eq(variables['publishTerraformArtifact'],'true'))
-        artifact: $(terraformArtifactName)
+    - publish: $(terraformDirectory)
+      displayName: 'Publish Terraform workspace'
+      artifact: $(terraformArtifactName)
 
     - ${{ if eq(parameters.clear, true) }}:
       - task: AzureCLI@2
@@ -439,134 +441,86 @@ jobs:
           allowTelemetryCollection: true
           retryCountOnTaskFailure: 3
 
-
-- ${{ if ne(parameters.destroy, 'Never') }}:
-  # Clean up resources, in the event 'terraform destroy' fails   
-  - job: 'Teardown'
-    dependsOn:
-      - Provision
-    displayName: 'Tear down & Clean up (${{ lower(parameters.destroy) }})'
-    ${{ if eq(parameters.destroy, 'Always') }}:
-      condition: or(always(),canceled())
-    ${{ if eq(parameters.destroy, 'On failure') }}:
-      condition: not(eq(dependencies.Provision.outputs['provisioningResult.result'],'success'))
-    ${{ if eq(parameters.destroy, 'On success') }}:
-      condition: eq(dependencies.Provision.outputs['provisioningResult.result'],'success')
-    timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
-
-    variables:
-      terraformDirectory: $(Pipeline.Workspace)/$(terraformArtifactName)
-      terraformVersion: 'latest' # Use the latest version so we don't need a dependency
-
-    pool:
-      name: '$(pool)'
-      vmImage: $(vmImage)
-
-    workspace:
-      clean: all
-
-    steps:
-    - task: AzureCLI@2
-      name: teardown
-      displayName: 'Tear down remaining resources'
-      inputs:
-        azureSubscription: '$(subscriptionConnection)'
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: |
-          $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resource group fails
-          # Build JMESPath expression
-          $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '$(TF_WORKSPACE)' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
-          Write-Host "Removing resources identified by `"$tagQuery`"..."
-
-          # Remove resource groups
-          $resourceGroupIDs = $(az group list --query "${tagQuery}" -o tsv)
-          if ($resourceGroupIDs) {
-            Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
-            &{ # az writes information to stderr
-              $ErrorActionPreference = 'SilentlyContinue'
-              az resource delete --ids $resourceGroupIDs 2>&1
-            }
-          } else {
-            Write-Host "No resource groups to remove"
-          }
-
-          # Remove (remaining) resources
-          $resourceIDs = $(az resource list --query "${tagQuery}" -o tsv)
-          if ($resourceIDs) {
-            Write-Host "Removing resources `"${resourceIDs}`"..."
-            &{ # az writes information to stderr
-              $ErrorActionPreference = 'SilentlyContinue'
-              az resource delete --ids $resourceIDs 2>&1
-            }
-          } else {
-            Write-Host "No resources to remove"
-          }
-
-          # Remove policy definition
-          ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
-        addSpnToEnvironment: true
-        useGlobalConfig: true
-        failOnStandardError: true
-        workingDirectory: '$(scriptDirectory)'
-
-    - ${{ if eq(parameters.clear, true) }}: # Only works if we can identity the suffix and therefore the resource group name
-      - task: AzureResourceManagerTemplateDeployment@3
-        displayName: 'Delete $(resourceGroup)'
-        condition: failed() # Try this if the previous approach failed
+    - ${{ if ne(parameters.destroy, 'Never') }}:
+      - task: AzureCLI@2
+        name: teardown
+        displayName: 'Tear down remaining resources'
+        ${{ if eq(parameters.destroy, 'Always') }}:
+          condition: or(always(),canceled())
+        ${{ if eq(parameters.destroy, 'On failure') }}:
+          condition: not(eq(outputs['provisioningResult.result'],'success'))
+        ${{ if eq(parameters.destroy, 'On success') }}:
+          condition: eq(outputs['provisioningResult.result'],'success')
         inputs:
-          deploymentScope: 'Resource Group'
-          azureResourceManagerConnection: '$(subscriptionConnection)'
-          subscriptionId: '$(ARM_SUBSCRIPTION_ID)'
-          action: 'DeleteRG'
-          resourceGroupName: '$(resourceGroup)'
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resource group fails
+            # Build JMESPath expression
+            $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '$(TF_WORKSPACE)' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
+            Write-Host "Removing resources identified by `"$tagQuery`"..."
 
-    - task: TerraformInstaller@0
-      condition: succeededOrFailed() # Procees clearing Terraform state, even if resources could not be removed
-      displayName: 'Install terraform'
-      inputs:
-        terraformVersion: '$(terraformVersion)'
+            # Remove resource groups
+            $resourceGroupIDs = $(az group list --query "${tagQuery}" -o tsv)
+            if ($resourceGroupIDs) {
+              Write-Host "Removing resource group(s) `"${resourceGroupIDs}`"..."
+              &{ # az writes information to stderr
+                $ErrorActionPreference = 'SilentlyContinue'
+                az resource delete --ids $resourceGroupIDs 2>&1
+              }
+            } else {
+              Write-Host "No resource groups to remove"
+            }
 
-    - download: current
-      displayName: 'Download Terraform directory from previous job'
-      artifact: $(terraformArtifactName)
+            # Remove (remaining) resources
+            $resourceIDs = $(az resource list --query "${tagQuery}" -o tsv)
+            if ($resourceIDs) {
+              Write-Host "Removing resources `"${resourceIDs}`"..."
+              &{ # az writes information to stderr
+                $ErrorActionPreference = 'SilentlyContinue'
+                az resource delete --ids $resourceIDs 2>&1
+              }
+            } else {
+              Write-Host "No resources to remove"
+            }
 
-    - task: TerraformCLI@0
-      displayName: 'Terraform init'
-      inputs:
-        command: 'init'
-        workingDirectory: '$(terraformDirectory)'
-        backendType: 'azurerm'
-        backendServiceArm: '$(subscriptionConnection)'
-        backendAzureRmResourceGroupName: '$(TF_STATE_RESOURCE_GROUP_NAME)'
-        backendAzureRmStorageAccountName: '$(TF_STATE_STORAGE_ACCOUNT_NAME)'
-        backendAzureRmContainerName: '$(TF_STATE_CONTAINER_NAME)'
-        backendAzureRmKey: 'terraform.tfstate'
-        allowTelemetryCollection: true
+            # Remove policy definition
+            ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          failOnStandardError: true
+          workingDirectory: '$(scriptDirectory)'
 
-    - task: AzureCLI@2
-      name: cleanup
-      displayName: 'Clean up Terraform state'
-      condition: succeededOrFailed()
-      inputs:
-        azureSubscription: '$(subscriptionConnection)'
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: |
-          $(scriptDirectory)/set_terraform_azurerm_vars.ps1
+    - ${{ if ne(parameters.destroy, 'Never') }}:
+      - task: AzureCLI@2
+        name: cleanup
+        displayName: 'Clean up Terraform state'
+        ${{ if eq(parameters.destroy, 'Always') }}:
+          condition: or(always(),canceled())
+        ${{ if eq(parameters.destroy, 'On failure') }}:
+          condition: not(eq(outputs['provisioningResult.result'],'success'))
+        ${{ if eq(parameters.destroy, 'On success') }}:
+          condition: eq(outputs['provisioningResult.result'],'success')
+        inputs:
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            $(scriptDirectory)/set_terraform_azurerm_vars.ps1
 
-          $terraformState = (terraform state pull | ConvertFrom-Json)
-          if ($terraformState.resources) {
-            Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
-            $terraformState.outputs = New-Object PSObject # Empty output
-            $terraformState.resources = @() # No resources
-            $terraformState.serial++
-            $terraformState | ConvertTo-Json | terraform state push -
-          } else {
-            Write-Host "No resources in Terraform state in workspace ${env:TF_WORKSPACE}..."
-          }
-          terraform state pull 
-        addSpnToEnvironment: true
-        useGlobalConfig: true
-        failOnStandardError: true
-        workingDirectory: '$(terraformDirectory)'
+            $terraformState = (terraform state pull | ConvertFrom-Json)
+            if ($terraformState.resources) {
+              Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
+              $terraformState.outputs = New-Object PSObject # Empty output
+              $terraformState.resources = @() # No resources
+              $terraformState.serial++
+              $terraformState | ConvertTo-Json | terraform state push -
+            } else {
+              Write-Host "No resources in Terraform state in workspace ${env:TF_WORKSPACE}..."
+            }
+            terraform state pull 
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          failOnStandardError: true
+          workingDirectory: '$(terraformDirectory)'

@@ -193,7 +193,7 @@ try {
     }
 
     if ($Destroy) {
-        Invoke "terraform destroy $varArgs" # $forceArgs"
+        Invoke "terraform destroy $varArgs $forceArgs"
     }
 } finally {
     Pop-Location

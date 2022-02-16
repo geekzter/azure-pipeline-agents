@@ -78,7 +78,11 @@ jobs:
       failOnStandardError: true
       retryCountOnTaskFailure: 3
       workingDirectory: '$(scriptDirectory)'
-              
+    env: # Maintain casing of Terraform variable names
+      TF_VAR_resource_suffix: $(TF_VAR_resource_suffix)
+      TF_VAR_run_id: $(TF_VAR_run_id)
+      TF_VAR_ssh_public_key: $(TF_VAR_ssh_public_key)
+
   - pwsh: |
       Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
     name: provisioningResult

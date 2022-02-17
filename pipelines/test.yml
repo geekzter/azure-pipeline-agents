@@ -1,0 +1,49 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
+
+resources:
+  repositories:
+  - repository: virtual-environments
+    type: github
+    endpoint: github.com # Service Connection name
+    name: actions/virtual-environments
+    trigger:
+      branches:
+        include:
+        - main
+      paths:
+        include:
+        - 'images/linux/**'
+        - 'images/win/**'
+
+trigger: none
+
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - '*'
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
+
+schedules:
+- cron: '0 12 * * Mon,Wed,Fri'
+  displayName: 'Bi-Nightly build (UTC)'
+  always: 'true' # Run if there are no changes
+  branches:
+    include:
+    - master
+
+variables:
+  - group: 'build-images'
+
+jobs:
+  - template: build-image-template.yml
+    parameters:
+      destroy: false
+      image: Ubuntu1804
+      imageReleaseName: ubuntu18
+      imageResourceGroup: 'pipeline-image-12533-u18'
+      retryCount: 1

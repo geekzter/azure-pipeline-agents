@@ -111,6 +111,7 @@ jobs:
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
                                                                                                     | Select-Object -First 1 `
                                                                                                     | Set-Variable release
+        Write-Host "`nLatest version of $(imageDefinitionName) at https://github.com/actions/virtual-environments/releases:"
         $release | Format-List
         $version = $release.tag_name.Split("/")[1]
 
@@ -119,17 +120,18 @@ jobs:
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[?tags.versionlabel=='$version' && provisioningState!='Deleting' && provisioningState!='Failed' && !(publishingProfile.excludeFromLatest)]" | ConvertFrom-Json | Set-Variable imageVersion
-        $imageVersion | Format-List
-        $newImageVersion = !$imageVersion
-        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$($newImageVersion.ToString())"
-        if ($newImageVersion) {
+
+        if ($imageVersion) {
+          Write-Host "`nLatest version of $(imageDefinitionName) at gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          $imageVersion | Format-List
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
+          Write-Warning "Build & publish will be skipped"
+        } else {
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
-        } else {
-          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
-          Write-Warning "Build & publish will be skipped"
         }
+        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$((!$imageVersion).ToString())"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(imageRepository)'

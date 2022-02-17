@@ -165,12 +165,12 @@ az sig image-version create --exclude-from-latest $ExcludeFromLatest.ToString().
                             --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
                             --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
 Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' creation submitted after $($stopwatch.Elapsed.ToString("m'm's's'"))"
-Write-Host "Waiting for wait for image to finish creating ans replicate to regions (long-running operation: ${TargetRegion}) to finish..."
+Write-Host "Waiting for image to finish creating and replicate to regions (long-running operation: ${TargetRegion}) to finish..."
 az sig image-version wait   --created `
                             --gallery-image-definition $ImageDefinitionName `
                             --gallery-name $GalleryName `
                             --gallery-image-version $newVersionString `
                             --resource-group $galleryResourceGroupName `
-Write-Host "Image version ${newVersionString} of Image Definition '$ImageDefinitionName' created after $($stopwatch.Elapsed.ToString("m'm's's'"))"
+Write-Host "Image version ${newVersionString} of Image Definition '$ImageDefinitionName' created and replicated after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 
 $imageVersion | Format-List

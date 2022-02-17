@@ -103,10 +103,10 @@ jobs:
         $fullyQualifiedReleaseVersion = ([version]"${releaseVersion}.0.0").ToString(3)
 
         # Determine whether image with same config already exists
-        az sig image-version list --gallery-image-version $fullyQualifiedReleaseVersion `
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "[?name=='$(imageDefinitionName)']" `
+                                  --query "[?name=='${fullyQualifiedReleaseVersion}']" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         
         if ($imageVersion) {

@@ -384,6 +384,31 @@ resource azurerm_firewall_application_rule_collection agent_app_rules {
     }
   }
 
+  dynamic "rule" {
+    for_each = range(var.devops_org != null && var.devops_org != "" ? 1 : 0) 
+    content {
+      name                     = "Allow Azure DevOps Organization (config:${var.configuration_name})"
+
+      source_ip_groups         = [
+        azurerm_ip_group.agents.0.id
+      ]
+
+      target_fqdns             = [
+        "${var.devops_org}.pkgs.visualstudio.com",
+        "${var.devops_org}.visualstudio.com",
+        "${var.devops_org}.vsblob.visualstudio.com",
+        "${var.devops_org}.vsrm.visualstudio.com",
+        "${var.devops_org}.vssps.visualstudio.com",
+        "${var.devops_org}.vstmr.visualstudio.com",
+      ]
+
+      protocol {
+        port                   = "443"
+        type                   = "Https"
+      }
+    }
+  }
+
   rule {
     name                       = "Allow Azure DevOps (config:${var.configuration_name})"
     description                = "The VSTS/Azure DevOps agent installed on application VM's requires outbound access. This agent is used by Azure Pipelines for application deployment"
@@ -403,12 +428,6 @@ resource azurerm_firewall_application_rule_collection agent_app_rules {
       "*.vssps.visualstudio.com",
       "*.vstmr.visualstudio.com",
       "*.vstmrblob.vsassets.io",
-      "${var.devops_org}.pkgs.visualstudio.com",
-      "${var.devops_org}.visualstudio.com",
-      "${var.devops_org}.vsblob.visualstudio.com",
-      "${var.devops_org}.vsrm.visualstudio.com",
-      "${var.devops_org}.vssps.visualstudio.com",
-      "${var.devops_org}.vstmr.visualstudio.com",
       "api.github.com",
       "app.vssps.visualstudio.com",
       "dev.azure.com",

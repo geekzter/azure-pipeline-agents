@@ -96,13 +96,13 @@ if (!$ImageDefinitionVersionTags -or !$ImageDefinitionVersionTags.ContainsKey("v
 }
 
 az sig image-version list --gallery-image-definition $ImageDefinitionName `
-                            --gallery-name $GalleryName `
-                            --resource-group $galleryResourceGroupName --query "[].name" -o json `
-                            --subscription $gallerySubscriptionId `
-                            | ConvertFrom-Json `
-                            | ForEach-Object {[version]$_} `
-                            | Sort-Object -Descending | Select-Object -First 1 `
-                            | Set-Variable latestVersion
+                          --gallery-name $GalleryName `
+                          --resource-group $galleryResourceGroupName --query "[].name" -o json `
+                          --subscription $gallerySubscriptionId `
+                          | ConvertFrom-Json `
+                          | ForEach-Object {[version]$_} `
+                          | Sort-Object -Descending | Select-Object -First 1 `
+                          | Set-Variable latestVersion
 # Increment version
 [version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
 $newVersionString = $newVersion.ToString()
@@ -165,7 +165,7 @@ az sig image-version create --exclude-from-latest $ExcludeFromLatest.ToString().
                             --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
                             --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
 Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' creation submitted after $($stopwatch.Elapsed.ToString("m'm's's'"))"
-Write-Host "Waiting for image to finish creating and replicate to regions (long-running operation: ${TargetRegion}) to finish..."
+Write-Host "Waiting for image creation and replication to regions (long-running operation: ${TargetRegion}) to finish..."
 az sig image-version wait   --created `
                             --gallery-image-definition $ImageDefinitionName `
                             --gallery-name $GalleryName `

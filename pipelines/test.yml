@@ -44,6 +44,6 @@ jobs:
     parameters:
       destroy: false
       image: Ubuntu1804
-      imageReleaseName: ubuntu18
-      imageResourceGroup: 'pipeline-image-12533-u18'
+      imageReleaseName: ubuntu20
+      imageResourceGroup: 'pipeline-image-12529-u20'
       retryCount: 1

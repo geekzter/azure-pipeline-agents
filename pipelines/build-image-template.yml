@@ -109,26 +109,29 @@ jobs:
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
                                                                                                     | Select-Object -First 1 `
                                                                                                     | Set-Variable release
-        $version = $release.tag_name.Split("/")[1]
-        Write-Host "`nLatest version ($version) of $(imageDefinitionName) at https://github.com/actions/virtual-environments/releases:"
+        $releaseVersion = $release.tag_name.Split("/")[1]
+        Write-Host "`nLatest version ($releaseVersion) of $(imageDefinitionName) at https://github.com/actions/virtual-environments/releases:"
         $release | Format-List
+        $fullyQualifiedReleaseVersion = ([version]"${releaseVersion}.0.0").ToString(3)
 
         # Determine whether image with same config already exists
-        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+        az sig image-version show --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-image-version $fullyQualifiedReleaseVersion `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "[?tags.versionlabel=='$version' && provisioningState!='Deleting' && provisioningState!='Failed']" | ConvertFrom-Json | Set-Variable imageVersion
+                                  | ConvertFrom-Json | Set-Variable imageVersion
         
         if ($imageVersion) {
-          Write-Host "Image Definition '$(imageDefinitionName)' with label '$version' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          Write-Host "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
           $imageVersion | Format-List
-          Write-Warning "Build & publish of '$version' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
-          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$releaseVersion' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
-          Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
+          Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
+          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedReleaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
         }
       addSpnToEnvironment: true
@@ -204,22 +207,18 @@ jobs:
 
         # Find VHD 
         az storage blob directory list -c "system" `
-                                      -d "Microsoft.Compute/Images/images" `
-                                      --account-name $($storageAccount.name) `
-                                      --query "[?ends_with(@.name, 'vhd')]" | ConvertFrom-Json `
-                                      | Set-Variable vhdBlob
+                                       -d "Microsoft.Compute/Images/images" `
+                                       --account-name $($storageAccount.name) `
+                                       --query "[?ends_with(@.name, 'vhd')]" | ConvertFrom-Json `
+                                       | Set-Variable vhdBlob
         $vhdBlob | Format-List
         $vhdBlob.metadata | Format-List
         $vhdBlob.properties | Format-List     
 
         $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/$($vhdBlob.name)"
         Write-Host "`$vhdUrl: $vhdUrl"
+        Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
-
-        # $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
-        # ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
-        #               -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
-        # Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:IMAGE_VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
@@ -233,26 +232,42 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        # Publish
-        $imageDefinitionVersionTags = @{
-          build = "$(Build.BuildId)"
-          commit = "$(imageBuild.commit)"
-          pipeline = "$(Build.DefinitionName)"
-          versionlabel = "$(githubRelease.version)"
+        if (-not (az sig image-definition list --query "[?name=='$(imageDefinitionName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
+          az sig image-definition create --gallery-image-definition $(imageDefinitionName) `
+                                         --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                         --location $env:PIPELINE_DEMO_PACKER_LOCATION `
+                                         --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                         --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
+                                         --os-type $(imageOSType) --os-state Generalized
         }
-        $imageDefinitionVersionTags | Format-Table
 
-        ./publish_vhd.ps1 -ExcludeFromLatest `
-                          -SourceVHDUrl "$(vhd.url)" `
-                          -GalleryResourceGroupId $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID `
-                          -GalleryName $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                          -ImageDefinitionName $(imageDefinitionName) `
-                          -ImageDefinitionVersionTags $imageDefinitionVersionTags `
-                          -Publisher $(imagePublisher) `
-                          -Offer $(imageOffer) `
-                          -SKU $(imageSKU) `
-                          -OsType $(imageOSType) `
-                          -TargetRegion $(targetRegions)
+        az sig image-version create --exclude-from-latest true `
+                                    --gallery-image-definition $(imageDefinitionName) `
+                                    --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                    --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
+                                    --location $env:PIPELINE_DEMO_PACKER_LOCATION `
+                                    --no-wait `
+                                    --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                    --target-regions $TargetRegion `
+                                    --os-vhd-uri "$(vhd.url)" `
+                                    --os-vhd-storage-account $(vhd.storageAccountName) 
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(agentScriptDirectory)'
+
+  - task: AzureCLI@2
+    name: replicate
+    displayName: 'Replicate image'
+    condition: ne(coalesce(variables['vhd.url'],'null'),'null')
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az sig image-version wait --created `
+                                  --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME 
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'
@@ -264,9 +279,10 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        ./list_image_versions.ps1 -GalleryResourceGroupName $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  -GalleryName $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                                  -ImageDefinitionName $(imageDefinitionName)
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  -o table
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'

@@ -121,15 +121,15 @@ jobs:
         if ($imageVersion) {
           Write-Host "`nLatest version of $(imageDefinitionName) at gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
           $imageVersion | Format-List
-          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists"
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Warning "Build & publish will be skipped"
         } else {
+          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
         }
         Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$((!$imageVersion).ToString())"
-
       addSpnToEnvironment: true
       useGlobalConfig: true
       failOnStandardError: true

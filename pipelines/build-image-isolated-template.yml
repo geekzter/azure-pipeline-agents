@@ -111,9 +111,9 @@ jobs:
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
                                                                                                     | Select-Object -First 1 `
                                                                                                     | Set-Variable release
-        Write-Host "`nLatest version of $(imageDefinitionName) at https://github.com/actions/virtual-environments/releases:"
-        $release | Format-List
         $version = $release.tag_name.Split("/")[1]
+        Write-Host "`nLatest version ($version) of $(imageDefinitionName) at https://github.com/actions/virtual-environments/releases:"
+        $release | Format-List
 
         # Determine whether image with same config already exists
         az sig image-version list --gallery-image-definition $(imageDefinitionName) `
@@ -122,17 +122,17 @@ jobs:
                                   --query "[?tags.versionlabel=='$version' && provisioningState!='Deleting' && provisioningState!='Failed' && !(publishingProfile.excludeFromLatest)]" | ConvertFrom-Json | Set-Variable imageVersion
 
         if ($imageVersion) {
-          Write-Host "`nLatest version of $(imageDefinitionName) at gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          Write-Host "Image Definition '$(imageDefinitionName)' with label '$version' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
           $imageVersion | Format-List
-          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-          Write-Warning "Build & publish will be skipped"
+          Write-Warning "Build & publish of '$version' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
           Write-Warning "Image Definition '$(imageDefinitionName)' with label '$version' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$version"
+          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
         }
-        Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]$((!$imageVersion).ToString())"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(imageRepository)'

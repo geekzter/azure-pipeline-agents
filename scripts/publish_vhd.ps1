@@ -166,7 +166,7 @@ az sig image-version create --exclude-from-latest $ExcludeFromLatest.ToString().
                             --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
 Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' creation submitted after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 Write-Host "Waiting for image creation and replication to regions (long-running operation: ${TargetRegion}) to finish..."
-az sig image-version wait   --created `
+az sig image-version wait   --custom "[?provisioningState=='Succeeded']" `
                             --gallery-image-definition $ImageDefinitionName `
                             --gallery-name $GalleryName `
                             --gallery-image-version $newVersionString `

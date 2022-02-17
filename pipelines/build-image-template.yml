@@ -196,10 +196,30 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
-        ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
-                      -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
-        Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:IMAGE_VHD_URL}"
+        # Find storage account created
+        az storage account list -g $packerResourceGroupName $(imageResourceGroup) `
+                                --query "[0]" -o json | ConvertFrom-Json `
+                                | Set-Variable storageAccount
+        $storageAccount | Format-List
+
+        # Find VHD 
+        az storage blob directory list -c "system" `
+                                      -d "Microsoft.Compute/Images/images" `
+                                      --account-name $($storageAccount.name) `
+                                      --query "[?ends_with(@.name, 'vhd')]" | ConvertFrom-Json `
+                                      | Set-Variable vhdBlob
+        $vhdBlob | Format-List
+        $vhdBlob.metadata | Format-List
+        $vhdBlob.properties | Format-List     
+
+        $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/$($vhdBlob.name)"
+        Write-Host "`$vhdUrl: $vhdUrl"
+        Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
+
+        # $packerResourceGroupId = "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$(imageResourceGroup)" 
+        # ./get_vhd.ps1 -PackerResourceGroupId $packerResourceGroupId `
+        #               -VHDUrlEnvironmentVariableName IMAGE_VHD_URL
+        # Write-Host "##vso[task.setvariable variable=url;isoutput=true]${env:IMAGE_VHD_URL}"
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(agentScriptDirectory)'

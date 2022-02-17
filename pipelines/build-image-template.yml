@@ -86,18 +86,6 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
-  - pwsh: |
-      $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
-      $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
-      $vmMetadata | Format-List
-
-      # List environment variables
-      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,TF_*,SYSTEM_* | Sort-Object -Property Name
-
-      Write-Host "##vso[task.setvariable variable=location;isoutput=true]$($vmMetadata.location)"
-    name: agent
-    displayName: 'Retrieve agent information'
-
   - task: AzureCLI@2
     name: githubRelease
     displayName: 'Get release for $(imageDefinitionName)'
@@ -115,10 +103,10 @@ jobs:
         $fullyQualifiedReleaseVersion = ([version]"${releaseVersion}.0.0").ToString(3)
 
         # Determine whether image with same config already exists
-        az sig image-version show --gallery-image-definition $(imageDefinitionName) `
-                                  --gallery-image-version $fullyQualifiedReleaseVersion `
+        az sig image-version list --gallery-image-version $fullyQualifiedReleaseVersion `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "[?name=='$(imageDefinitionName)']" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         
         if ($imageVersion) {
@@ -134,8 +122,6 @@ jobs:
           Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedReleaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
         }
-      addSpnToEnvironment: true
-      useGlobalConfig: true
       failOnStandardError: true
 
   - task: AzureCLI@2
@@ -146,13 +132,10 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json | Format-List
-
         Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
         Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
         Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
       addSpnToEnvironment: true
-      useGlobalConfig: true
       failOnStandardError: true
 
   # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md
@@ -188,7 +171,6 @@ jobs:
       pwsh: true
       failOnStandardError: true
       retryCountOnTaskFailure: $(retryCount)
-      workingDirectory: '$(imageScriptDirectory)'
 
   - task: AzureCLI@2
     name: vhd
@@ -221,7 +203,6 @@ jobs:
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
       useGlobalConfig: true
       failOnStandardError: true
-      workingDirectory: '$(agentScriptDirectory)'
 
   - task: AzureCLI@2
     name: publish
@@ -251,9 +232,7 @@ jobs:
                                     --target-regions $TargetRegion `
                                     --os-vhd-uri "$(vhd.url)" `
                                     --os-vhd-storage-account $(vhd.storageAccountName) 
-      useGlobalConfig: true
       failOnStandardError: true
-      workingDirectory: '$(agentScriptDirectory)'
 
   - task: AzureCLI@2
     name: replicate
@@ -268,9 +247,7 @@ jobs:
                                   --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME 
-      useGlobalConfig: true
       failOnStandardError: true
-      workingDirectory: '$(agentScriptDirectory)'
 
   - task: AzureCLI@2
     displayName: 'List published images'
@@ -283,9 +260,7 @@ jobs:
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   -o table
-      useGlobalConfig: true
       failOnStandardError: true
-      workingDirectory: '$(agentScriptDirectory)'
 
   - ${{ if parameters.destroy }}:
     - task: AzureCLI@2
@@ -308,7 +283,4 @@ jobs:
           } else {
             Write-Host "No resource groups to remove"
           }
-        addSpnToEnvironment: true
-        useGlobalConfig: true
         failOnStandardError: true
-        workingDirectory: '$(agentScriptDirectory)'

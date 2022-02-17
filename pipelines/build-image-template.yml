@@ -171,7 +171,8 @@ jobs:
       pwsh: true
       failOnStandardError: true
       retryCountOnTaskFailure: $(retryCount)
-
+      workingDirectory: '$(imageScriptDirectory)'
+      
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'

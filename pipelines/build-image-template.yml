@@ -109,19 +109,19 @@ jobs:
                                   --query "[?name=='${fullyQualifiedReleaseVersion}']" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         
-        if ($imageVersion) {
-          Write-Host "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
-          $imageVersion | Format-List
-          Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
-        } else {
+        # if ($imageVersion) {
+        #   Write-Host "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+        #   $imageVersion | Format-List
+        #   Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+        #   Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
+        # } else {
           Write-Warning "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
           Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedReleaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
-        }
+        # }
       failOnStandardError: true
 
   - task: AzureCLI@2

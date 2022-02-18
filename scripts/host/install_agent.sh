@@ -6,16 +6,21 @@ echo $(basename $0) "$@"
 function validate {
     valid=1
 
-    if [[ "$AGENT_POOL" == "" ]] 
-    then
-        echo "No agent pool. Use --agent-pool to specify agent pool"
-        valid=0
-    fi    
     if [[ "$AGENT_NAME" == "" ]] 
     then
         echo "No agent name. Use --agent-name to specify agent name"
         valid=0
     fi               
+    if [[ "$AGENT_POOL" == "" ]] 
+    then
+        echo "No agent pool. Use --agent-pool to specify agent pool"
+        valid=0
+    fi    
+    if [[ "$AGENT_VERSION_ID" == "" ]] 
+    then
+        echo "No agent version. Use --agent-version-id to specify agent version"
+        valid=0
+    fi    
     if [[ "$ORG" == "" ]] 
     then
         echo "No Azure DevOps organization. Use --org to specify an organization"
@@ -32,6 +37,7 @@ function validate {
     fi
 }
 
+AGENT_VERSION_ID = "latest" # Default
 while [ "$1" != "" ]; do
     case $1 in
         --agent-name)                   shift
@@ -39,6 +45,9 @@ while [ "$1" != "" ]; do
                                         ;;                                                                                                                
         --agent-pool)                   shift
                                         AGENT_POOL=$1
+                                        ;;
+        --agent-version-id)             shift
+                                        AGENT_VERSION_ID=$1
                                         ;;
         --org)                          shift
                                         ORG=$1
@@ -63,8 +72,8 @@ if [ -f $HOME/pipeline-agent/.agent ]; then
     ./config.sh remove --unattended --auth pat --token $PAT
 fi
 
-# Get latest released version from GitHub
-AGENT_VERSION=$(curl https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest | jq ".name" | sed -E 's/.*"v([^"]+)".*/\1/')
+# Get desired release version from GitHub
+AGENT_VERSION=$(curl https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/${AGENT_VERSION_ID} | jq ".name" | sed -E 's/.*"v([^"]+)".*/\1/')
 AGENT_PACKAGE="vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz"
 AGENT_URL="https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/${AGENT_PACKAGE}"
 

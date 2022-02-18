@@ -6,6 +6,7 @@
 param ( 
     [parameter(Mandatory=$false)][string]$AgentName=$env:COMPUTERNAME,
     [parameter(Mandatory=$true)][string]$AgentPool,
+    [parameter(Mandatory=$true)][string]$AgentVersionId="latest",
     [parameter(Mandatory=$true)][string]$Organization,
     [parameter(Mandatory=$true)][string]$PAT
 ) 
@@ -25,8 +26,8 @@ if (Test-Path (Join-Path $pipelineDirectory .agent)) {
     .\config.cmd remove --unattended --auth pat --token $PAT
 }
 
-# Get latest released version from GitHub
-$agentVersion = $(Invoke-Webrequest -Uri https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/latest -UseBasicParsing | ConvertFrom-Json | Select-Object -ExpandProperty name) -replace "v",""
+# Get desired release version from GitHub
+$agentVersion = $(Invoke-Webrequest -Uri https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/${AgentVersionId} -UseBasicParsing | ConvertFrom-Json | Select-Object -ExpandProperty name) -replace "v",""
 $agentPackage = "vsts-agent-win-x64-${agentVersion}.zip"
 $agentUrl = "https://vstsagentpackage.azureedge.net/agent/${agentVersion}/${agentPackage}"
 

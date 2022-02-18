@@ -1,5 +1,5 @@
 resource azurerm_virtual_network packer {
-  name                         = "${azurerm_resource_group.network.name}-${var.location}-network"
+  name                         = "${azurerm_resource_group.network.name}-network"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.network.name
   address_space                = [var.address_space]

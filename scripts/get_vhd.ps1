@@ -76,17 +76,6 @@ if ($GenerateSAS) {
                                  --subscription $packerSubscriptionId `
                                  --full-uri `
                                  -o tsv | Set-Variable vhdUrlResult
-    # az storage account generate-sas --account-key $(az storage account keys list -n $storageAccountName -g $packerResourceGroupName --subscription $packerSubscriptionId --query "[0].value" -o tsv) `
-    #                                 --account-name $storageContainerName `
-    #                                 --expiry "$([DateTime]::UtcNow.AddDays(7).ToString('s'))Z" `
-    #                                 --permissions "lracuw"`
-    #                                 --resource-types co `
-    #                                 --services b `
-    #                                 --subscription $packerSubscriptionId `
-    #                                 --start "$([DateTime]::UtcNow.AddDays(-30).ToString('s'))Z" `
-    #                                 -o tsv | Set-Variable sasToken    
-
-    # $vhdUrlResult = "${vhdUrl}?${sasToken}"
 }
 
 Write-Host "`nVHD: $vhdUrlResult"

@@ -96,13 +96,13 @@ if (!$ImageDefinitionVersionTags -or !$ImageDefinitionVersionTags.ContainsKey("v
 }
 
 az sig image-version list --gallery-image-definition $ImageDefinitionName `
-                            --gallery-name $GalleryName `
-                            --resource-group $galleryResourceGroupName --query "[].name" -o json `
-                            --subscription $gallerySubscriptionId `
-                            | ConvertFrom-Json `
-                            | ForEach-Object {[version]$_} `
-                            | Sort-Object -Descending | Select-Object -First 1 `
-                            | Set-Variable latestVersion
+                          --gallery-name $GalleryName `
+                          --resource-group $galleryResourceGroupName --query "[].name" -o json `
+                          --subscription $gallerySubscriptionId `
+                          | ConvertFrom-Json `
+                          | ForEach-Object {[version]$_} `
+                          | Sort-Object -Descending | Select-Object -First 1 `
+                          | Set-Variable latestVersion
 # Increment version
 [version]$newVersion = New-Object version $latestVersion.Major, $latestVersion.Minor, ($latestVersion.Build+1)
 $newVersionString = $newVersion.ToString()
@@ -151,18 +151,26 @@ if ($TargetVHDStorageAccountName -and $TargetVHDStorageContainerName -and $Targe
 }
 
 Write-Host "`nCreating Image version ${newVersionString} of Image Definition '$ImageDefinitionName'..."
-$TargetRegion ??=  ((@($gallery.location,$galleryResourceGroup.location) | Get-Unique) -join ",")
+$TargetRegion ??= ((@($gallery.location,$galleryResourceGroup.location) | Get-Unique) -join ",")
 az sig image-version create --exclude-from-latest $ExcludeFromLatest.ToString().ToLower() `
                             --gallery-image-definition $ImageDefinitionName `
                             --gallery-name $GalleryName `
                             --gallery-image-version $newVersionString `
                             --location $gallery.location `
+                            --no-wait `
                             --resource-group $galleryResourceGroupName `
                             --subscription $gallerySubscriptionId `
                             --target-regions $TargetRegion `
                             --os-vhd-uri "${vhdGalleryImportUrl}" `
                             --os-vhd-storage-account $vhdGalleryImportStorageAccountName `
                             --tags $imageTags | ConvertFrom-Json | Set-Variable imageVersion
-Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' created after $($stopwatch.Elapsed.ToString("m'm's's'"))"
+Write-Host "`nImage version ${newVersionString} of Image Definition '$ImageDefinitionName' creation submitted after $($stopwatch.Elapsed.ToString("m'm's's'"))"
+Write-Host "Waiting for image creation and replication to regions (long-running operation: ${TargetRegion}) to finish..."
+az sig image-version wait   --custom "[?provisioningState=='Succeeded']" `
+                            --gallery-image-definition $ImageDefinitionName `
+                            --gallery-name $GalleryName `
+                            --gallery-image-version $newVersionString `
+                            --resource-group $galleryResourceGroupName
+Write-Host "Image version ${newVersionString} of Image Definition '$ImageDefinitionName' created and replicated after $($stopwatch.Elapsed.ToString("m'm's's'"))"
 
 $imageVersion | Format-List

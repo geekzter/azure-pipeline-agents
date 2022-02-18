@@ -9,7 +9,7 @@ data azurerm_storage_account diagnostics {
 }
 
 resource azurerm_virtual_network pipeline_network {
-  name                         = "${var.resource_group_name}-${var.location}-network"
+  name                         = "${var.resource_group_name}-network"
   location                     = var.location
   resource_group_name          = var.resource_group_name
   address_space                = [var.address_space]

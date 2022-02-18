@@ -61,7 +61,7 @@ schedules:
     - master
 
 variables:
-  - group: 'build-images'
+  - group: 'build-images-isolated'
 
 jobs:
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:

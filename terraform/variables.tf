@@ -154,6 +154,11 @@ variable packer_tenant_id {
   default                      = null
 }
 
+variable pipeline_agent_version_id {
+  # https://api.github.com/repos/microsoft/azure-pipelines-agent/releases
+  default                      = "latest"
+}
+
 variable prepare_host {
   type                         = bool
   default                      = true

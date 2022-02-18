@@ -224,6 +224,9 @@ jobs:
                                          --os-type $(imageOSType) --os-state Generalized
         }
 
+        Write-Host "Creating $(imageDefinitionName) $(githubRelease.fullyQualifiedVersion)..."
+        Write-Host "az sig image-version create --exclude-from-latest true --gallery-image-definition $(imageDefinitionName) --gallery-name ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME} --gallery-image-version $(githubRelease.fullyQualifiedVersion) --location ${env:PIPELINE_DEMO_PACKER_LOCATION} --no-wait --resource-group ${env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME} --target-regions $TargetRegion --os-vhd-uri `"$(vhd.url)`" --os-vhd-storage-account $(vhd.storageAccountName)"
+
         az sig image-version create --exclude-from-latest true `
                                     --gallery-image-definition $(imageDefinitionName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -246,6 +249,9 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        Write-Host "Waiting for $(imageDefinitionName) $(githubRelease.fullyQualifiedVersion) to finish replicating..."
+        Write-Host "az sig image-version wait --created --gallery-image-definition $(imageDefinitionName) --gallery-image-version $(githubRelease.fullyQualifiedVersion) --gallery-name ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME} --resource-group ${env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME}"
+
         az sig image-version wait --created `
                                   --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-image-version $(githubRelease.fullyQualifiedVersion) `

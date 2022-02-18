@@ -15,7 +15,7 @@ runcmd:
   - sudo chmod +x /home/${user}/install_agent.sh
   - sudo chown ${user}:${user} /home/${user}
   - sudo chown ${user}:${user} /home/${user}/install_agent.sh
-  - sudo -u ${user} /home/${user}/install_agent.sh --agent-name ${agent_name} --agent-pool ${agent_pool} --org ${org} --pat ${pat}
+  - sudo -u ${user} /home/${user}/install_agent.sh --agent-name ${agent_name} --agent-pool ${agent_pool} --agent-version-id ${agent_version_id} --org ${org} --pat ${pat}
   # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts
 # - [ -d /opt/post-generation ] && sudo "find /opt/post-generation -mindepth 1 -maxdepth 1 -type f -name '*.sh' -exec bash {} \;"
 

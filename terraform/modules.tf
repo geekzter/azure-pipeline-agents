@@ -156,6 +156,7 @@ module self_hosted_linux_agents {
   os_version                   = var.linux_os_version
   pipeline_agent_name          = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.linux_pipeline_agent_pool
+  pipeline_agent_version_id    = var.pipeline_agent_version_id
   storage_type                 = var.linux_storage_type
   vm_size                      = var.linux_vm_size
 
@@ -210,6 +211,7 @@ module self_hosted_windows_agents {
   os_version                   = var.windows_os_version
   pipeline_agent_name          = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}${count.index+1}"
   pipeline_agent_pool          = var.windows_pipeline_agent_pool
+  pipeline_agent_version_id    = var.pipeline_agent_version_id
   storage_type                 = var.windows_storage_type
   vm_size                      = var.windows_vm_size
 

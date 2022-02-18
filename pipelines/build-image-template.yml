@@ -115,7 +115,7 @@ jobs:
           Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
-          Write-Warning "Image Definition '$(imageDefinitionName)' with label '$releaseVersion' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Warning "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
@@ -164,6 +164,9 @@ jobs:
                                   -AzureClientSecret "$(servicePrincipal.clientSecret)" `
                                   -AzureTenantId $(servicePrincipal.tenantId) `
                                   -RestrictToAgentIpAddress
+
+        Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
+        Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
@@ -173,7 +176,7 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: ne(coalesce(variables['imageBuild.commit'],'null'),'null')
+    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -205,7 +208,8 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: ne(coalesce(variables['vhd.url'],'null'),'null')
+    # condition: ne(coalesce(variables['vhd.url'],'null'),'null')
+    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -235,7 +239,8 @@ jobs:
   - task: AzureCLI@2
     name: replicate
     displayName: 'Replicate image'
-    condition: ne(coalesce(variables['vhd.url'],'null'),'null')
+    # condition: ne(coalesce(variables['vhd.url'],'null'),'null')
+    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

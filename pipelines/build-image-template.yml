@@ -106,22 +106,22 @@ jobs:
         az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "[?name=='${fullyQualifiedReleaseVersion}']" `
+                                  --query "[?name=='${fullyQualifiedReleaseVersion}' && provisioningState!='Succeeded' && provisioningState!='Creating']" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         
-        # if ($imageVersion) {
-        #   Write-Host "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
-        #   $imageVersion | Format-List
-        #   Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-        #   Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
-        # } else {
+        if ($imageVersion) {
+          Write-Host "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          $imageVersion | Format-List
+          Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
+        } else {
           Write-Warning "Image Definition '$(imageDefinitionName)' with version '$fullyQualifiedReleaseVersion' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
           Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedReleaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
-        # }
+        }
       failOnStandardError: true
 
   - task: AzureCLI@2
@@ -152,18 +152,18 @@ jobs:
 
         $env:PIPELINE_DEMO_PACKER_LOCATION ??= "centralus"
 
-        # # Build
-        # Import-Module ./GenerateResourcesAndImage.ps1
-        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-        #                           -ResourceGroupName $(imageResourceGroup) `
-        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
-        #                           -ImageType $(imageName) `
-        #                           -AzureLocation $env:PIPELINE_DEMO_PACKER_LOCATION `
-        #                           -AzureClientId $(servicePrincipal.clientId) `
-        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-        #                           -AzureTenantId $(servicePrincipal.tenantId) `
-        #                           -RestrictToAgentIpAddress
+        # Build
+        Import-Module ./GenerateResourcesAndImage.ps1
+        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+                                  -ResourceGroupName $(imageResourceGroup) `
+                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
+                                  -ImageType $(imageName) `
+                                  -AzureLocation $env:PIPELINE_DEMO_PACKER_LOCATION `
+                                  -AzureClientId $(servicePrincipal.clientId) `
+                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+                                  -AzureTenantId $(servicePrincipal.tenantId) `
+                                  -RestrictToAgentIpAddress
 
         # Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
         # Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"

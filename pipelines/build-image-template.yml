@@ -152,21 +152,21 @@ jobs:
 
         $env:PIPELINE_DEMO_PACKER_LOCATION ??= "centralus"
 
-        # Build
-        Import-Module ./GenerateResourcesAndImage.ps1
-        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-                                  -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(imageRepository)" `
-                                  -ImageType $(imageName) `
-                                  -AzureLocation $env:PIPELINE_DEMO_PACKER_LOCATION `
-                                  -AzureClientId $(servicePrincipal.clientId) `
-                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-                                  -AzureTenantId $(servicePrincipal.tenantId) `
-                                  -RestrictToAgentIpAddress
+        # # Build
+        # Import-Module ./GenerateResourcesAndImage.ps1
+        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+        #                           -ResourceGroupName $(imageResourceGroup) `
+        #                           -ImageGenerationRepositoryRoot "$(imageRepository)" `
+        #                           -ImageType $(imageName) `
+        #                           -AzureLocation $env:PIPELINE_DEMO_PACKER_LOCATION `
+        #                           -AzureClientId $(servicePrincipal.clientId) `
+        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+        #                           -AzureTenantId $(servicePrincipal.tenantId) `
+        #                           -RestrictToAgentIpAddress
 
-        Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
-        Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
+        # Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
+        # Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true

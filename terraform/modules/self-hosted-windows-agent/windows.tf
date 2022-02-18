@@ -221,7 +221,7 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   auto_upgrade_minor_version   = true
 
   protected_settings           = jsonencode({
-    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./install_agent.ps1 -Force;./install_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> install_agent.log\""
+    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./install_agent.ps1 -Force;./install_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -AgentVersionId ${var.pipeline_agent_version_id} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> install_agent.log\""
   })
 
   # Start VM, so we can update/destroy the extension

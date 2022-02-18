@@ -38,6 +38,9 @@ variable os_image_id {
 }
 variable pipeline_agent_name {}
 variable pipeline_agent_pool {}
+variable pipeline_agent_version_id {}
+
+
 variable storage_type {}
 variable vm_size {}
 

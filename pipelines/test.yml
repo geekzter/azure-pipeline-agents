@@ -43,7 +43,7 @@ jobs:
   - template: build-image-template.yml
     parameters:
       destroy: false
-      image: Ubuntu1804
+      image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'pipeline-image-12535-u20'
       retryCount: 1

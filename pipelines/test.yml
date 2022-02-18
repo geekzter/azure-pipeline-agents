@@ -37,7 +37,7 @@ schedules:
     - master
 
 variables:
-  - group: 'build-images'
+  - group: 'build-images-simple'
 
 jobs:
   - template: build-image-template.yml

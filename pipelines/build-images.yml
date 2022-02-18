@@ -17,10 +17,6 @@ parameters:
   displayName: Destroy Infrastructure
   type: boolean
   default: true
-- name: retryCount
-  displayName: Build task retry count
-  type: number
-  default: 1
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -61,7 +57,11 @@ schedules:
     - master
 
 variables:
-  - group: 'build-images'
+  - group: 'build-images-simple'
+  # Variable group should define these variables:
+  # PIPELINE_DEMO_PACKER_LOCATION
+  # PIPELINE_DEMO_COMPUTE_GALLERY_NAME
+  # PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
 
 jobs:
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:
@@ -71,7 +71,6 @@ jobs:
       image: Ubuntu1804
       imageReleaseName: ubuntu18
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u18'
-      retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
   - template: build-image-template.yml
@@ -80,7 +79,6 @@ jobs:
       image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u20'
-      retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-template.yml
@@ -89,7 +87,6 @@ jobs:
       image: Windows2019
       imageReleaseName: win19
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w19'
-      retryCount: ${{ parameters.retryCount }}
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-template.yml
@@ -98,4 +95,3 @@ jobs:
       image: Windows2022
       imageReleaseName: win22
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w22'
-      retryCount: ${{ parameters.retryCount }}

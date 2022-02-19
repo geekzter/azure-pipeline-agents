@@ -79,11 +79,10 @@ jobs:
         }
       }
       if ($fail) {
-        Write-Error "Some variables have not been set, job will fail"
+        Write-Error "Some variables have not been set, set them in variable group 'build-images'"
       }
     name: variableValidation
     displayName: 'Validate variables'
-    continueOnError: false
 
   - task: AzureCLI@2
     name: githubRelease

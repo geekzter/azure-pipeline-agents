@@ -66,6 +66,24 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
+  - pwsh: |
+      $requiredVariables = @(
+        "PIPELINE_DEMO_PACKER_LOCATION",`
+        "PIPELINE_DEMO_COMPUTE_GALLERY_NAME",`
+        "PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME"`
+      )
+      foreach ($var in @($requiredVariables)) {
+        if (!(Test-Path env:$var)) {
+          Write-Warning "Variable ${var} not set"
+          $fail = $true
+        }
+      }
+      if ($fail) {
+        Write-Error "Some variables have not been set, set them in variable group 'build-images'"
+      }
+    name: variableValidation
+    displayName: 'Validate variables'
+
   - task: AzureCLI@2
     name: githubRelease
     displayName: 'Get release for $(imageName)'
@@ -124,7 +142,7 @@ jobs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
       inline: |
-        # Patch GenerateResourcesAndImage.ps1 to improve build time
+        # Patch GenerateResourcesAndImage.ps1 to decrease build time
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
         # Build
@@ -157,20 +175,16 @@ jobs:
         az storage account list -g $packerResourceGroupName $(imageResourceGroup) `
                                 --query "[0]" -o json | ConvertFrom-Json `
                                 | Set-Variable storageAccount
-        $storageAccount | Format-List
 
         # Find VHD 
         az storage blob directory list -c "system" `
                                        -d "Microsoft.Compute/Images/images" `
                                        --account-name $($storageAccount.name) `
-                                       --query "[?ends_with(@.name, 'vhd')]" | ConvertFrom-Json `
-                                       | Set-Variable vhdBlob
-        $vhdBlob | Format-List
-        $vhdBlob.metadata | Format-List
-        $vhdBlob.properties | Format-List     
+                                       --query "[?ends_with(@.name, 'vhd')].name" `
+                                       -o tsv | Set-Variable vhdPath
 
-        $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/$($vhdBlob.name)"
-        Write-Host "`$vhdUrl: $vhdUrl"
+        $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/${vhdPath}"
+        Write-Host "vhdUrl: $vhdUrl"
         Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
       useGlobalConfig: true
@@ -195,8 +209,6 @@ jobs:
         }
 
         Write-Host "Creating $(imageName) $(githubRelease.fullyQualifiedVersion)..."
-        Write-Host "az sig image-version create --exclude-from-latest true --gallery-image-definition $(imageName) --gallery-name ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME} --gallery-image-version $(githubRelease.fullyQualifiedVersion) --no-wait --resource-group ${env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME} --os-vhd-uri `"$(vhd.url)`" --os-vhd-storage-account $(vhd.storageAccountName)"
-
         az sig image-version create --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
@@ -216,8 +228,6 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         Write-Host "Waiting for $(imageName) $(githubRelease.fullyQualifiedVersion) to finish replicating..."
-        Write-Host "az sig image-version wait --created --gallery-image-definition $(imageName) --gallery-image-version $(githubRelease.fullyQualifiedVersion) --gallery-name ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME} --resource-group ${env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME}"
-
         az sig image-version wait --created `
                                   --gallery-image-definition $(imageName) `
                                   --gallery-image-version $(githubRelease.fullyQualifiedVersion) `

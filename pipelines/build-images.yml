@@ -58,7 +58,7 @@ schedules:
 
 variables:
   - group: 'build-images'
-  # Variable group should define these variables:
+  # Variable group should set these variables:
   # PIPELINE_DEMO_PACKER_LOCATION
   # PIPELINE_DEMO_COMPUTE_GALLERY_NAME
   # PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME

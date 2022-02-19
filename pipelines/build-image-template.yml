@@ -66,6 +66,26 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
+  - pwsh: |
+      $requiredVariables = @(
+        "BOGUS",`
+        "PIPELINE_DEMO_PACKER_LOCATION",`
+        "PIPELINE_DEMO_COMPUTE_GALLERY_NAME",`
+        "PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME"`
+      )
+      foreach ($var in @($requiredVariables)) {
+        if (!Test-Path env:$var) {
+          Write-Warning "Variable ${var} not set"
+          $fail = $true
+        }
+      }
+      if ($fail) {
+        Write-Error "Some variables have not been set, job will fail"
+      }
+    name: variableValidation
+    displayName: 'Validate variables'
+    continueOnError: false
+
   - task: AzureCLI@2
     name: githubRelease
     displayName: 'Get release for $(imageName)'

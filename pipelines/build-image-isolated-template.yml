@@ -180,20 +180,20 @@ jobs:
         # System Assigned Managed Identity is shared amongst all pipelines running onm the same agent
         # A System Assigned Managed Identity will have the superset of all privileges for all pipelines (opposite of 'least privilege')
 
-        # Build
-        packer build -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
-                     -var "capture_name_prefix=$(imageResourcePrefix)" `
-                     -var "client_id=${env:servicePrincipalId}" `
-                     -var "client_secret=${env:servicePrincipalKey}" `
-                     -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
-                     -var "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
-                     -var "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
-                     -var "subscription_id=$(az account show --query id -o tsv)" `
-                     -var "tenant_id=${env:tenantId}" `
-                     -var "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
-                     -var "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
-                     -var "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" `
-                     $(imageTemplate) # TODO: Filter sensitive content        
+        # # Build
+        # packer build -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
+        #              -var "capture_name_prefix=$(imageResourcePrefix)" `
+        #              -var "client_id=${env:servicePrincipalId}" `
+        #              -var "client_secret=${env:servicePrincipalKey}" `
+        #              -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
+        #              -var "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
+        #              -var "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
+        #              -var "subscription_id=$(az account show --query id -o tsv)" `
+        #              -var "tenant_id=${env:tenantId}" `
+        #              -var "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
+        #              -var "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
+        #              -var "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" `
+        #              $(imageTemplate) # TODO: Filter sensitive content        
 
         Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
         Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"

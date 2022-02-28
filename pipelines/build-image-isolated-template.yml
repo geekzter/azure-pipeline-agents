@@ -111,7 +111,7 @@ jobs:
         $release | Format-List
 
         $releaseVersion = $release.tag_name.Split("/")[1]
-        $version = [version]"$({releaseVersion}).0.0"
+        $version = [version]"${releaseVersion}.0.0"
         $twoPartVersionString = $version.ToString(2)
         $threePartVersionString = $version.ToString(3)
 

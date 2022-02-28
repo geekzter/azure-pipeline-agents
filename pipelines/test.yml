@@ -53,4 +53,5 @@ jobs:
       imageReleaseName: ubuntu20
       imageResourcePrefix: 'packer12850u20'
       retryCount: 1
-      waitForReplication: {{ parameters.waitForReplication }}
+      waitForReplication: ${{ parameters.waitForReplication }}
+

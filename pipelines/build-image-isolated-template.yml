@@ -252,12 +252,12 @@ jobs:
         }
 
         # Publish
-        $imageDefinitionVersionTags = {
-          "build=$(Build.BuildId)"
-          "commit=$(imageBuild.commit)"
-          "pipeline=$(Build.DefinitionName)"
-          "versionlabel=$(githubRelease.version)"
-        }
+        $imageDefinitionVersionTags = @(`
+          "build=$(Build.BuildId)",`
+          "commit=$(imageBuild.commit)",`
+          "pipeline=$(Build.DefinitionName)",`
+          "versionlabel=$(githubRelease.version)"`
+        )
         Write-Host "`nTags that will be applied to image version:"
         $imageDefinitionVersionTags | Format-Table
 

@@ -39,8 +39,6 @@ jobs:
   variables:
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
-  - name: 'agentScriptDirectory'
-    value: '$(Build.SourcesDirectory)/azure-pipeline-agents/scripts'
   - name: AZURE_CORE_ONLY_SHOW_ERRORS
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
@@ -231,7 +229,7 @@ jobs:
                                        --query "[?ends_with(@.name, 'vhd')].name" `
                                        -o tsv | Set-Variable vhdPath
 
-        $vhdUrl = "${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/system/${vhdPath}"
+        $vhdUrl = "https://${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/system/${vhdPath}"
         Write-Host "vhdUrl: $vhdUrl"
         Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"        
       failOnStandardError: true

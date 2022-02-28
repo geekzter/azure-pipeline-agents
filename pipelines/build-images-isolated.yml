@@ -21,6 +21,10 @@ parameters:
   displayName: Build task retry count
   type: number
   default: 1
+- name: waitForReplication
+  displayName: Wait for image replication to finish
+  type: boolean
+  default: true
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -72,6 +76,7 @@ jobs:
       imageReleaseName: ubuntu18
       imageResourcePrefix: 'packer$(Build.BuildId)u18'
       retryCount: ${{ parameters.retryCount }}
+      waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
   - template: build-image-isolated-template.yml
@@ -81,6 +86,7 @@ jobs:
       imageReleaseName: ubuntu20
       imageResourcePrefix: 'packer$(Build.BuildId)u20'
       retryCount: ${{ parameters.retryCount }}
+      waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-isolated-template.yml
@@ -90,6 +96,7 @@ jobs:
       imageReleaseName: win19
       imageResourcePrefix: 'packer$(Build.BuildId)w19'
       retryCount: ${{ parameters.retryCount }}
+      waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-isolated-template.yml
@@ -99,6 +106,7 @@ jobs:
       imageReleaseName: win22
       imageResourcePrefix: 'packer$(Build.BuildId)w22'
       retryCount: ${{ parameters.retryCount }}
+      waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if parameters.destroy }}:
   - job: 'CleanUp'

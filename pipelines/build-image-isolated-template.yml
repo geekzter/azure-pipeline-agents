@@ -273,6 +273,8 @@ jobs:
                                          --os-type $(imageOSType) --os-state Generalized
         }
 
+        # TODO: Check whether version exists (and if so, create minor version)?
+
         Write-Host "Creating $(imageName) $(githubRelease.fullyQualifiedVersion)..."
         az sig image-version create --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `

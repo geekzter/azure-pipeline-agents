@@ -272,14 +272,14 @@ jobs:
 
         # Check whether version exists. If so, increment build number.
         $qualifiedVersionString = "$(githubRelease.qualifiedVersion)"
+        $qualifiedVersion = [version]$qualifiedVersionString
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "max_by([?starts_with(name,'$($qualifiedReleaseVersion.ToString(2))')],&name).name" `
+                                  --query "max_by([?starts_with(name,'$($qualifiedVersion.ToString(2))')],&name).name" `
                                   -o tsv | Set-Variable existingVersionString
         if ($existingVersionString) {
-          $existingVersion = [version]$existingVersionString
-          $qualifiedVersionString = ("{0}.{1}" -f $existingVersion.ToString(2), ($existingVersion.Build+1))
+          $qualifiedVersionString = ("{0}.{1}" -f $qualifiedVersion.ToString(2), ($qualifiedVersion.Build+1))
         }
 
         Write-Host "Creating $(imageName) $(githubRelease.qualifiedVersion)..."

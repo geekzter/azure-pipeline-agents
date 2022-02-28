@@ -223,6 +223,7 @@ jobs:
         }
 
         # Find VHD 
+        Write-Host "az storage blob directory list -c `"system`" -d `"Microsoft.Compute/Images/images`" --account-name $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME --query `"[?starts_with(@.name, '$(imageResourcePrefix)') && ends_with(@.name, 'vhd')].name`" -o tsv | Set-Variable vhdPath"
         az storage blob directory list -c "system" `
                                        -d "Microsoft.Compute/Images/images" `
                                        --account-name $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `

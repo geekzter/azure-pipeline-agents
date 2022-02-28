@@ -252,13 +252,12 @@ jobs:
         }
 
         # Publish
-        $imageDefinitionVersionTags = @{
-          build = "$(Build.BuildId)"
-          commit = "$(imageBuild.commit)"
-          pipeline = "$(Build.DefinitionName)"
-          versionlabel = "$(githubRelease.version)"
+        $imageDefinitionVersionTags = {
+          "build=$(Build.BuildId)"
+          "commit=$(imageBuild.commit)"
+          "pipeline=$(Build.DefinitionName)"
+          "versionlabel=$(githubRelease.version)"
         }
-        # TODO: Add tags
         Write-Host "`nTags that will be applied to image version:"
         $imageDefinitionVersionTags | Format-Table
 
@@ -274,7 +273,6 @@ jobs:
         # Check whether version exists. If so, increment build number.
         $qualifiedVersionString = "$(githubRelease.qualifiedVersion)"
         $qualifiedVersion = [version]$qualifiedVersionString
-        Write-Host "az sig image-version list --gallery-image-definition $(imageName) --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME --query `"max_by([?starts_with(name,'$($qualifiedVersion.ToString(2))')],&name).name`" -o tsv"
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
@@ -292,7 +290,8 @@ jobs:
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME 
+                                    --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
+                                    --tags $imageDefinitionVersionTags
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
       addSpnToEnvironment: true

@@ -98,23 +98,23 @@ jobs:
         $releaseVersion = $release.tag_name.Split("/")[1]
         Write-Host "`nLatest version ($releaseVersion) of $(imageName) at https://github.com/actions/virtual-environments/releases:"
         $release | Format-List
-        $fullyQualifiedReleaseVersion = ([version]"${releaseVersion}.0.0").ToString(3)
+        $qualifiedReleaseVersionString = ([version]"${releaseVersion}.0.0").ToString(3)
 
         # Determine whether image with same config already exists
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "[?name=='${fullyQualifiedReleaseVersion}' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
+                                  --query "[?name=='${qualifiedReleaseVersionString}' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         
         if ($imageVersion) {
-          Write-Host "Image Definition '$(imageName)' with version '$fullyQualifiedReleaseVersion' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          Write-Host "Image Definition '$(imageName)' with version '$qualifiedReleaseVersionString' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
           $imageVersion | Format-List
           Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
-          Write-Warning "Image Definition '$(imageName)' with version '$fullyQualifiedReleaseVersion' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedReleaseVersion"
+          Write-Warning "Image Definition '$(imageName)' with version '$qualifiedReleaseVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$qualifiedReleaseVersionString"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
         }
       failOnStandardError: true

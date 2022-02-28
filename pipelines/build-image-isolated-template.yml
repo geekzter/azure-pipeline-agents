@@ -110,24 +110,24 @@ jobs:
         $releaseVersion = $release.tag_name.Split("/")[1]
         Write-Host "`nLatest version ($version) of $(imageName) at https://github.com/actions/virtual-environments/releases:"
         $release | Format-List
-        $fullyQualifiedReleaseVersion = ([version]"${releaseVersion}.0.0").ToString(3)
+        $qualifiedReleaseVersionString = ([version]"${releaseVersion}.0.0").ToString(3)
 
         # Determine whether image with same config already exists
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "[?name=='${fullyQualifiedReleaseVersion}' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
+                                  --query "[?name=='${qualifiedReleaseVersionString}' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
 
         if ($imageVersion) {
-          Write-Host "Image Definition '$(imageName)' with version '$fullyQualifiedReleaseVersion' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          Write-Host "Image Definition '$(imageName)' with version '$qualifiedReleaseVersionString' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
           $imageVersion | Format-List
           Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
-          Write-Warning "Image Definition '$(imageName)' with version '$fullyQualifiedReleaseVersion' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Warning "Image Definition '$(imageName)' with version '$qualifiedReleaseVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
-          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedReleaseVersion"
+          Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedReleaseVersionString"
           Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
@@ -163,7 +163,7 @@ jobs:
           application = "Pipeline Agents"
           build = "$(Build.BuildId)"
           commit = "$(git rev-parse HEAD)"
-          fullyQualifiedVersion = "$(githubRelease.fullyQualifiedVersion)"
+          qualifiedVersion = "$(githubRelease.qualifiedVersion)"
           image = "$(imageName)"
           pipeline = "$(Build.DefinitionName)"
           shutdown = "false"
@@ -226,7 +226,7 @@ jobs:
         az storage blob directory list -c "system" `
                                        -d "Microsoft.Compute/Images/images" `
                                        --account-name $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
-                                       --query "[?ends_with(@.name, 'vhd')].name" `
+                                       --query "[?starts_with(@.name, '$(imageResourcePrefix)') && ends_with(@.name, 'vhd')].name" `
                                        -o tsv | Set-Variable vhdPath
 
         $vhdUrl = "https://${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/system/${vhdPath}"
@@ -270,12 +270,22 @@ jobs:
                                          --os-type $(imageOSType) --os-state Generalized
         }
 
-        # TODO: Check whether version exists (and if so, create minor version)?
+        # Check whether version exists. If so, increment build number.
+        $qualifiedVersionString = "$(githubRelease.qualifiedVersion)"
+        az sig image-version list --gallery-image-definition $(imageName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "max_by([?starts_with(name,'$($qualifiedReleaseVersion.ToString(2))')],&name).name" `
+                                  -o tsv | Set-Variable existingVersionString
+        if ($existingVersionString) {
+          $existingVersion = [version]$existingVersionString
+          $qualifiedVersionString = ("{0}.{1}" -f $existingVersion.ToString(2), ($existingVersion.Build+1))
+        }
 
-        Write-Host "Creating $(imageName) $(githubRelease.fullyQualifiedVersion)..."
+        Write-Host "Creating $(imageName) $(githubRelease.qualifiedVersion)..."
         az sig image-version create --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                                    --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
+                                    --gallery-image-version $qualifiedVersionString `
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
@@ -293,10 +303,10 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          Write-Host "Waiting for $(imageName) $(githubRelease.fullyQualifiedVersion) to finish replicating..."
+          Write-Host "Waiting for $(imageName) $(githubRelease.qualifiedVersion) to finish replicating..."
           az sig image-version wait --created `
                                     --gallery-image-definition $(imageName) `
-                                    --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
+                                    --gallery-image-version $(githubRelease.qualifiedVersion) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME 
         failOnStandardError: true
@@ -313,12 +323,12 @@ jobs:
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "[?name=='$(githubRelease.fullyQualifiedVersion)' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
+                                  --query "[?name=='$(githubRelease.qualifiedVersion)' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         if ($imageVersion) {
           $imageVersion | Format-Table
         } else {
-          Write-Error "$(imageName) version $(githubRelease.fullyQualifiedVersion) was not published!"
+          Write-Error "$(imageName) version $(githubRelease.qualifiedVersion) was not published!"
         }
       failOnStandardError: true
 

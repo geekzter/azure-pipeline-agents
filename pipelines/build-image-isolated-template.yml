@@ -281,7 +281,8 @@ jobs:
                                   --query "max_by([?starts_with(name,'$($qualifiedVersion.ToString(2))')],&name).name" `
                                   -o tsv | Set-Variable existingVersionString
         if ($existingVersionString) {
-          $qualifiedVersionString = ("{0}.{1}" -f $qualifiedVersion.ToString(2), ($qualifiedVersion.Build+1))
+          $existingVersion = [version]$existingVersionString
+          $qualifiedVersionString = ("{0}.{1}" -f $existingVersion.ToString(2), ($existingVersion.Build+1))
         }
 
         Write-Host "Creating $(imageName) ${qualifiedVersionString}..."

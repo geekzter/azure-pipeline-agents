@@ -43,10 +43,6 @@ jobs:
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
     value: 'yes_without_prompt'
-  - name: 'galleryResourceGroup' 
-    value: 'Shared'
-  - name: 'imageConfigFile'
-    value: '${{ lower(parameters.image) }}.json'
   - name: 'imageName'
     value: '${{ parameters.image }}'
   - ${{ if contains(parameters.image,'buntu') }}:
@@ -131,7 +127,6 @@ jobs:
           Write-Warning "Image Definition '$(imageName)' with version '$twoPartVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$threePartVersionString"
-          Write-Host "##vso[task.setvariable variable=tag;isoutput=true]$($release.tag_name)"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
         }

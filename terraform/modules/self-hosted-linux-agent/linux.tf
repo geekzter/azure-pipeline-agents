@@ -173,7 +173,7 @@ resource azurerm_linux_virtual_machine linux_agent {
 
   lifecycle {
     ignore_changes             = [
-      custom_data,
+      # custom_data,
       source_image_id,
       source_image_reference.0.version,
     ]

@@ -1,3 +1,9 @@
+parameters:
+- name: waitForReplication
+  displayName: Wait for image replication to finish
+  type: boolean
+  default: true
+
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
 
 resources:
@@ -29,21 +35,22 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 12 * * Mon,Wed,Fri'
-  displayName: 'Bi-Nightly build (UTC)'
+- cron: '0 2 * * *'
+  displayName: 'Nightly build (UTC)'
   always: 'true' # Run if there are no changes
   branches:
     include:
     - master
 
 variables:
-  - group: 'build-images-simple'
+  - group: 'build-images-isolated'
 
 jobs:
-  - template: build-image-template.yml
+  - template: build-image-isolated-template.yml
     parameters:
-      destroy: false
+      destroy: true
       image: Ubuntu2004
       imageReleaseName: ubuntu20
-      imageResourceGroup: 'pipeline-image-12535-u20'
+      imageResourcePrefix: 'packer12850u20'
       retryCount: 1
+      waitForReplication: ${{ parameters.waitForReplication }}

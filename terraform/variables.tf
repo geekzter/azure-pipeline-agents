@@ -231,7 +231,7 @@ variable windows_os_publisher {
   default                      = "microsoftvisualstudio"
 }
 variable windows_os_sku {
-  default                      = "vs-2022-comm-latest-ws2022"
+  default                      = "vs-2022-ent-latest-win11-n" # vs-2022-comm-latest-win11-n 2022.02.18 doesn't work with Log Analytics extension
 }
 variable windows_os_version {
   default                      = "latest"

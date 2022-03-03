@@ -37,6 +37,8 @@ function validate {
     fi
 }
 
+AGENT_DIRECTORY="/opt/pipelines-agent"
+AGENT_DATA_DIRECTORY="/var/opt/pipelines-agent"
 AGENT_VERSION_ID = "latest" # Default
 while [ "$1" != "" ]; do
     case $1 in
@@ -64,12 +66,13 @@ done
 validate
 
 # Allways re-install agent, so remove it if it exists
-if [ -f $HOME/pipeline-agent/.agent ]; then
+if [ -f $AGENT_DIRECTORY/.agent ]; then
     echo "Agent ${AGENT_NAME} already installed, removing first..."
-    pushd $HOME/pipeline-agent
+    pushd $AGENT_DIRECTORY
     sudo ./svc.sh stop
     sudo ./svc.sh uninstall
     ./config.sh remove --unattended --auth pat --token $PAT
+    popd
 fi
 
 # Get desired release version from GitHub
@@ -77,10 +80,15 @@ AGENT_VERSION=$(curl https://api.github.com/repos/microsoft/azure-pipelines-agen
 AGENT_PACKAGE="vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz"
 AGENT_URL="https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/${AGENT_PACKAGE}"
 
-if [ ! -d $HOME/pipeline-agent ]; then
-    mkdir $HOME/pipeline-agent
-fi
-pushd $HOME/pipeline-agent
+# Setting up directories
+sudo mkdir -p -- $AGENT_DIRECTORY $AGENT_DATA_DIRECTORY/diag $AGENT_DATA_DIRECTORY/work
+sudo ln -s $AGENT_DATA_DIRECTORY/diag $AGENT_DIRECTORY/_diag
+sudo ln -s $AGENT_DATA_DIRECTORY/work $AGENT_DIRECTORY/_work
+sudo chown -R $USER:$USER $AGENT_DIRECTORY
+sudo chown -R $USER:$USER $AGENT_DATA_DIRECTORY
+pushd $AGENT_DIRECTORY
+
+# Download & extract
 echo "Retrieving agent from ${AGENT_URL}..."
 wget $AGENT_URL
 echo "Extracting ${AGENT_PACKAGE} in $(pwd)..."
@@ -99,6 +107,7 @@ echo "Creating agent ${AGENT_NAME} and adding it to pool ${AGENT_POOL} in organi
             --pool $AGENT_POOL \
             --agent $AGENT_NAME --replace \
             --acceptTeeEula
+            --work $AGENT_DATA_DIRECTORY/work
 
 if [ ! -f /etc/systemd/system/vsts.agent.${ORG}.* ]; then
     # Run as systemd service

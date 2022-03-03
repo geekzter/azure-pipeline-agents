@@ -127,7 +127,7 @@ resource azurerm_virtual_network_dns_servers dns_proxy {
   virtual_network_id           = azurerm_virtual_network.pipeline_network.id
   dns_servers                  = [azurerm_firewall.firewall.0.ip_configuration.0.private_ip_address]
 
-  count                        = var.deploy_firewall ? 1 : 0
+  count                        = var.deploy_firewall && var.enable_firewall_dns_proxy ? 1 : 0
 }
 
 # Outbound domain whitelisting
@@ -189,6 +189,7 @@ resource azurerm_firewall_application_rule_collection agent_app_rules {
       "*.portal.azure.com",
       "*.portal.azure.net", # Portal images, resources
       "*.systemcenteradvisor.com",
+      "*.telecommandsvc.microsoft.com",
       "*.telemetry.microsoft.com",
       "*.update.microsoft.com",
       "*.windowsupdate.com",

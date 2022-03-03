@@ -73,6 +73,11 @@ variable dns_host_suffix {
   default                      = "mycicd"
 }
 
+variable enable_firewall_dns_proxy {
+  type                         = bool
+  default                      = false
+}
+
 variable environment_variables {
   type                         = map
   default = {

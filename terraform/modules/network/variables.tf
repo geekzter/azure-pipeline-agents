@@ -27,6 +27,9 @@ variable destroy_wait_minutes {
 variable devops_org {}
 variable diagnostics_storage_id {}
 variable dns_host_suffix {}
+variable enable_firewall_dns_proxy {
+    type = bool
+}
 variable location {}
 variable log_analytics_workspace_resource_id {}
 variable packer_address_space {}

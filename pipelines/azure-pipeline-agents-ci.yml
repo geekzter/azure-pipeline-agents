@@ -300,7 +300,7 @@ jobs:
           }
         } 
         Write-Host "Contents of ci.auto.tfvars:"
-        Get-Content ci.auto.tfvars
+        Get-Content ci.auto.tfvars | Sort-Object
       name: terraformVariables
       displayName: 'Prepare Terraform variables'
       workingDirectory: '$(terraformDirectory)'
@@ -432,9 +432,9 @@ jobs:
         ${{ if eq(parameters.destroy, 'Always') }}:
           condition: or(always(),canceled())
         ${{ if eq(parameters.destroy, 'On failure') }}:
-          condition: not(eq(outputs['provisioningResult.result'],'success'))
+          condition: not(eq(variables['provisioningResult.result'],'success'))
         ${{ if eq(parameters.destroy, 'On success') }}:
-          condition: eq(outputs['provisioningResult.result'],'success')
+          condition: eq(variables['provisioningResult.result'],'success')
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: pscore
@@ -483,9 +483,9 @@ jobs:
         ${{ if eq(parameters.destroy, 'Always') }}:
           condition: or(always(),canceled())
         ${{ if eq(parameters.destroy, 'On failure') }}:
-          condition: not(eq(outputs['provisioningResult.result'],'success'))
+          condition: not(eq(variables['provisioningResult.result'],'success'))
         ${{ if eq(parameters.destroy, 'On success') }}:
-          condition: eq(outputs['provisioningResult.result'],'success')
+          condition: eq(variables['provisioningResult.result'],'success')
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: pscore

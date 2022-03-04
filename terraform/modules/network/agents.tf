@@ -39,12 +39,12 @@ resource azurerm_network_security_rule agent_ssh {
   name                         = "AllowSSH"
   priority                     = 201
   direction                    = "Inbound"
-  access                       = "Allow"
+  access                       = var.enable_public_access ? "Allow" : "Deny"
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_range       = "22"
   source_address_prefixes      = var.admin_cidr_ranges
-  destination_address_prefix   = "*"
+  destination_address_prefixes = azurerm_subnet.self_hosted_agents.address_prefixes
   resource_group_name          = azurerm_network_security_group.agent_nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.agent_nsg.name
 }
@@ -52,12 +52,12 @@ resource azurerm_network_security_rule agent_rdp {
   name                         = "AllowRDP"
   priority                     = 202
   direction                    = "Inbound"
-  access                       = "Allow"
+  access                       = var.enable_public_access ? "Allow" : "Deny"
   protocol                     = "Tcp"
   source_port_range            = "*"
   destination_port_range       = "3389"
   source_address_prefixes      = var.admin_cidr_ranges
-  destination_address_prefix   = "*"
+  destination_address_prefixes = azurerm_subnet.self_hosted_agents.address_prefixes
   resource_group_name          = azurerm_network_security_group.agent_nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.agent_nsg.name
 }

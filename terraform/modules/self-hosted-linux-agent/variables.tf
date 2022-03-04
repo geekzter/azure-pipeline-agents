@@ -18,6 +18,9 @@ variable devops_pat {}
 
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
+variable enable_public_access {
+  type                         = bool
+}
 
 variable environment_variables {
     type = map
@@ -48,9 +51,6 @@ variable location {}
 variable log_analytics_workspace_resource_id {}
 variable outbound_ip_address {}
 variable prepare_host {
-  type                         = bool
-}
-variable public_access_enabled {
   type                         = bool
 }
 variable resource_group_name {}

@@ -77,6 +77,10 @@ variable enable_firewall_dns_proxy {
   type                         = bool
   default                      = false
 }
+variable enable_public_access {
+  type                         = bool
+  default                      = false
+}
 
 variable environment_variables {
   type                         = map

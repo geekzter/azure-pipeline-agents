@@ -2,6 +2,7 @@ variable address_space {}
 variable admin_cidr_ranges {
     type                       = list
 }
+variable agent_address_range {}
 variable deploy_nat_gateway {
     type                       = bool
 }

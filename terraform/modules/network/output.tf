@@ -1,3 +1,7 @@
+output agent_address_range {
+  value                        = azurerm_subnet.self_hosted_agents.address_prefixes[0]
+}
+
 output private_endpoint_subnet_id {
   value                        = azurerm_subnet.private_endpoint_subnet.id
 }

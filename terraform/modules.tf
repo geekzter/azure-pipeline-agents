@@ -14,6 +14,7 @@ module network {
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   dns_host_suffix              = var.dns_host_suffix
   enable_firewall_dns_proxy    = var.enable_firewall_dns_proxy
+  enable_public_access         = var.enable_public_access
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   packer_address_space         = var.packer_address_space
@@ -33,6 +34,7 @@ module packer {
 
   address_space                = var.packer_address_space
   admin_cidr_ranges            = local.admin_cidr_ranges
+  agent_address_range          = module.network.agent_address_range
   deploy_nat_gateway           = !var.deploy_firewall
   gateway_ip_address           = module.network.gateway_ip_address
   peer_virtual_network_id      = module.network.virtual_network_id
@@ -161,10 +163,10 @@ module self_hosted_linux_agents {
   storage_type                 = var.linux_storage_type
   vm_size                      = var.linux_vm_size
 
+  enable_public_access         = var.enable_public_access
   install_tools                = var.linux_tools
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
-  public_access_enabled        = !var.deploy_firewall
   resource_group_name          = azurerm_resource_group.rg.name
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
@@ -216,7 +218,7 @@ module self_hosted_windows_agents {
   storage_type                 = var.windows_storage_type
   vm_size                      = var.windows_vm_size
 
-  # outbound_ip_address          = module.network.outbound_ip_address # TODO
+  enable_public_access         = var.enable_public_access
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
   subnet_id                    = module.network.self_hosted_agents_subnet_id

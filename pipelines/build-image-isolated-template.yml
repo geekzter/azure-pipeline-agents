@@ -115,7 +115,7 @@ jobs:
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "[?starts_with(name,'${twoPartVersionString}') && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
+                                  --query "[?starts_with(name,'${twoPartVersionString}') && (provisioningState=='Creating' || provisioningState=='Succeeded') && !(publishingProfile.excludeFromLatest)]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
 
         if ($imageVersion) {

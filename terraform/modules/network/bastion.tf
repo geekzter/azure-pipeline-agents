@@ -218,6 +218,9 @@ resource azurerm_bastion_host bastion {
     public_ip_address_id       = azurerm_public_ip.bastion_ip.0.id
   }
 
+  # tunneling_enabled            = true
+  # sku                          = "Standard"
+
   tags                         = var.tags
 
   count                        = var.deploy_bastion ? 1 : 0

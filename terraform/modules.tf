@@ -13,6 +13,7 @@ module network {
   devops_org                   = var.devops_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   dns_host_suffix              = var.dns_host_suffix
+  enable_firewall_dns_proxy    = var.enable_firewall_dns_proxy
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   packer_address_space         = var.packer_address_space

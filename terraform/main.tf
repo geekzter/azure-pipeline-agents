@@ -48,6 +48,8 @@ locals {
   environment                  = "dev"
   environment_variables        = merge(
     {
+      "Agent.Diagnostic"                                        = "true"
+
       PIPELINE_DEMO_AGENT_OUTBOUND_IP                           = module.network.outbound_ip_address
       PIPELINE_DEMO_AGENT_SUBNET_ID                             = module.network.scale_set_agents_subnet_id
       PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID      = azurerm_user_assigned_identity.agents.client_id

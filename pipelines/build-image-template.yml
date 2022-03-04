@@ -21,6 +21,10 @@ parameters:
   displayName: Destroy Infrastructure
   type: boolean
   default: true
+- name: excludeFromLatest
+  displayName: Exclude from latest
+  type: boolean
+  default: true
 
 jobs:
 - job: '${{ parameters.image }}'
@@ -35,6 +39,8 @@ jobs:
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
     value: 'yes_without_prompt'
+  - name: excludeFromLatest
+    value: '${{ parameters.excludeFromLatest }}'
   - name: 'imageName'
     value: '${{ parameters.image }}'
   - ${{ if contains(parameters.image,'buntu') }}:
@@ -209,7 +215,8 @@ jobs:
         }
 
         Write-Host "Creating $(imageName) $(githubRelease.fullyQualifiedVersion)..."
-        az sig image-version create --gallery-image-definition $(imageName) `
+        az sig image-version create --exclude-from-latest $(excludeFromLatest) `
+                                    --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
                                     --no-wait `

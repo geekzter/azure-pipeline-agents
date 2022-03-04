@@ -17,6 +17,10 @@ parameters:
   displayName: Destroy Infrastructure
   type: boolean
   default: true
+- name: excludeFromLatest
+  displayName: Exclude from latest
+  type: boolean
+  default: true
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -68,6 +72,7 @@ jobs:
   - template: build-image-template.yml
     parameters:
       destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Ubuntu1804
       imageReleaseName: ubuntu18
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u18'
@@ -76,6 +81,7 @@ jobs:
   - template: build-image-template.yml
     parameters:
       destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u20'
@@ -84,6 +90,7 @@ jobs:
   - template: build-image-template.yml
     parameters:
       destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Windows2019
       imageReleaseName: win19
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w19'
@@ -92,6 +99,7 @@ jobs:
   - template: build-image-template.yml
     parameters:
       destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Windows2022
       imageReleaseName: win22
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w22'

@@ -19,8 +19,11 @@ variable devops_pat {}
 
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
+variable enable_public_access {
+  type                         = bool
+}
 variable environment_variables {
-    type = map
+  type                         = map
 }
 
 variable computer_name {}
@@ -43,15 +46,11 @@ variable vm_size {}
 
 variable location {}
 variable log_analytics_workspace_resource_id {}
-variable public_access_enabled {
-    type    = bool
-    default = false
-}
 variable resource_group_name {}
 variable subnet_id {}
 variable suffix {}
 variable tags {
-    type    = map
+  type                         = map
 }
 variable user_assigned_identity_id {}
 variable user_name {}

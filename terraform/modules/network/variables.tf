@@ -30,6 +30,9 @@ variable dns_host_suffix {}
 variable enable_firewall_dns_proxy {
     type = bool
 }
+variable enable_public_access {
+  type                         = bool
+}
 variable location {}
 variable log_analytics_workspace_resource_id {}
 variable packer_address_space {}

@@ -72,9 +72,13 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
- custom_data                  = var.deploy_agent_vm_extension ? base64encode(file("${path.root}/../scripts/host/install_agent.ps1")) : null
- allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
- provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
+  custom_data                  = var.deploy_agent_vm_extension ? base64encode(templatefile("${path.root}/../scripts/host/prepare_agent.ps1",
+    {
+      environment              = var.environment_variables
+    })
+  ) : null
+  allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
+  provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
 
   os_disk {
     name                       = "${var.name}-osdisk"
@@ -224,7 +228,7 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   auto_upgrade_minor_version   = true
 
   protected_settings           = jsonencode({
-    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./install_agent.ps1 -Force;./install_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -AgentVersionId ${var.pipeline_agent_version_id} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> install_agent.log\""
+    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./prepare_agent.ps1 -Force;./prepare_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -AgentVersionId ${var.pipeline_agent_version_id} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> install_agent.log\""
   })
 
   # Start VM, so we can update/destroy the extension

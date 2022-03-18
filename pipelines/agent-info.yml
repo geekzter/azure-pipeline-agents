@@ -24,6 +24,13 @@ schedules:
     include:
     - master
 
+variables:
+- group: 'agent-info'
+
+pool:
+  name: $(pool)
+  vmImage: $(vmImage)
+
 steps:
 - pwsh: |
     Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name

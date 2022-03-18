@@ -27,16 +27,13 @@ schedules:
 variables:
 - group: 'agent-info'
 
-# pool:
-#   name: '$(pool)'
-#   vmImage: $(vmImage)
-
 jobs:
 - job: 'selfHostedUbuntu'
   displayName: 'Self-Hosted Ubuntu'
   pool:
     name: '$(selfHostedPool)'
-    vmImage: ubuntu-latest
+    demands:
+    - agent.os -equals linux
   steps:
   - pwsh: |
       Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
@@ -46,7 +43,8 @@ jobs:
   displayName: 'Self-Hosted Windows'
   pool:
     name: '$(selfHostedPool)'
-    vmImage: windows-latest
+    demands:
+    - agent.os -equals windows
   steps:
   - pwsh: |
       Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name

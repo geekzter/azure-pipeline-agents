@@ -33,7 +33,7 @@ jobs:
   pool:
     name: '$(selfHostedPool)'
     demands:
-    - agent.os -equals linux
+    - agent.os -equals Linux
   steps:
   - pwsh: |
       Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
@@ -44,7 +44,7 @@ jobs:
   pool:
     name: '$(selfHostedPool)'
     demands:
-    - agent.os -equals windows
+    - agent.os -equals Windows_NT
   steps:
   - pwsh: |
       Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name

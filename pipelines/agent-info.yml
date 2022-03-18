@@ -32,10 +32,20 @@ variables:
 #   vmImage: $(vmImage)
 
 jobs:
-- job: 'default'
-  displayName: 'Default pool'
+- job: 'selfhostedubuntu'
+  displayName: 'Self-Hosted Ubuntu'
   pool:
     name: 'Default'
+    vmImage: ubuntu-latest
+  steps:
+  - pwsh: |
+      Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
+    displayName: 'List environment variables'
+- job: 'selfhostedwindows'
+  displayName: 'Self-Hosted Windows'
+  pool:
+    name: 'Default'
+    vmImage: windows-latest
   steps:
   - pwsh: |
       Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name

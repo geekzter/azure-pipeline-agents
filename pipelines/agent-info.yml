@@ -28,7 +28,7 @@ variables:
 - group: 'agent-info'
 
 pool:
-  name: $(pool)
+  name: '$(pool)'
   vmImage: $(vmImage)
 
 steps:

@@ -31,6 +31,7 @@ variables:
 #   name: '$(pool)'
 #   vmImage: $(vmImage)
 
+jobs:
 - job: 'default'
   displayName: 'Default pool'
   pool:

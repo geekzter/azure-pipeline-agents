@@ -27,11 +27,15 @@ schedules:
 variables:
 - group: 'agent-info'
 
-pool:
-  name: '$(pool)'
-  vmImage: $(vmImage)
+# pool:
+#   name: '$(pool)'
+#   vmImage: $(vmImage)
 
-steps:
-- pwsh: |
-    Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
-  displayName: 'List environment variables'
+- job: 'default'
+  displayName: 'Default pool'
+  pool:
+    name: 'Default'
+  steps:
+  - pwsh: |
+      Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
+    displayName: 'List environment variables'

@@ -175,3 +175,41 @@ resource azurerm_private_endpoint disk_access_endpoint {
 
   count                        = var.deploy_firewall ? 1 : 0
 }
+
+resource azurerm_storage_account share {
+  name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,14)}${substr(local.suffix,-6,-1)}shar"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  account_kind                 = "FileStorage"
+  account_tier                 = "Premium"
+  account_replication_type     = "LRS"
+  enable_https_traffic_only    = false # Needs to be off for NFS
+}
+
+resource azurerm_storage_share diagnostics_nfs_share {
+  name                         = "diagnostics"
+  storage_account_name         = azurerm_storage_account.share.name
+  enabled_protocol             = "NFS"
+}
+
+resource azurerm_private_endpoint diagnostics_nfs_share {
+  name                         = "${azurerm_storage_account.share.name}-nfs-share-endpoint"
+  resource_group_name          = azurerm_storage_account.share.resource_group_name
+  location                     = azurerm_storage_account.share.location
+  
+  subnet_id                    = module.network.private_endpoint_subnet_id
+
+  private_dns_zone_group {
+    name                       = module.network.azurerm_private_dns_zone_file_name
+    private_dns_zone_ids       = [module.network.azurerm_private_dns_zone_file_id]
+  }
+  
+  private_service_connection {
+    is_manual_connection       = false
+    name                       = "${azurerm_storage_account.share.name}-nfs-share-endpoint-connection"
+    private_connection_resource_id = azurerm_storage_account.share.id
+    subresource_names          = ["file"]
+  }
+
+  tags                         = local.tags
+}

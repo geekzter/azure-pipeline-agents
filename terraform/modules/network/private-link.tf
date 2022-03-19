@@ -32,7 +32,12 @@ resource azurerm_private_dns_zone blob {
 
   tags                         = var.tags
 }
+resource azurerm_private_dns_zone file {
+  name                         = "privatelink.file.core.windows.net"
+  resource_group_name          = var.resource_group_name
 
+  tags                         = var.tags
+}
 resource azurerm_private_dns_zone_virtual_network_link monitor {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-dns-monitor"
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
@@ -73,6 +78,14 @@ resource azurerm_private_dns_zone_virtual_network_link blob {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-dns-blob"
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   private_dns_zone_name        = azurerm_private_dns_zone.blob.name
+  virtual_network_id           = azurerm_virtual_network.pipeline_network.id
+
+  tags                         = var.tags
+}
+resource azurerm_private_dns_zone_virtual_network_link file {
+  name                         = "${azurerm_virtual_network.pipeline_network.name}-dns-file"
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+  private_dns_zone_name        = azurerm_private_dns_zone.file.name
   virtual_network_id           = azurerm_virtual_network.pipeline_network.id
 
   tags                         = var.tags

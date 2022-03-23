@@ -16,6 +16,8 @@ variable deploy_non_essential_vm_extensions {
 variable devops_org {}
 variable devops_pat {}
 
+variable diagnostics_share {}
+variable diagnostics_share_mount_point {}
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 variable enable_public_access {

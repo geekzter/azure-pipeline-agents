@@ -2,6 +2,7 @@ packages:
   - curl 
   - dos2unix 
   - jq 
+  - nfs-common
   - sed
 
 write_files:
@@ -11,12 +12,25 @@ write_files:
   encoding: b64
 
 runcmd:
+  # Point diagnostics to NFS
+  - echo creating mount point ${mount_point}...
+  - mkdir -p ${mount_point}
+  - mount -t nfs ${nfs_share} ${mount_point} -o vers=4,minorversion=1,sec=sys
+  - mkdir -p ${mount_point}/$(hostname) 2>/dev/null
+  - mkdir -p /var/opt/pipelines-agent
+  - ln -s ${mount_point}/$(hostname) /var/opt/pipelines-agent/diag
+  - chown ${user}:${user} ${mount_point}/$(hostname)
+  - echo "${nfs_share}  ${mount_point}    nfs   vers=4,minorversion=1,sec=sys   0   2" | sudo tee -a /etc/fstab 
+  - echo mounted ${nfs_share} to ${mount_point}, linked ${mount_point}/$(hostname) to /var/opt/pipelines-agent/diag
+  # Install agent
+  - echo Installing Pipelines Agent...
   - dos2unix /home/${user}/install_agent.sh
-  - sudo chmod +x /home/${user}/install_agent.sh
-  - sudo chown ${user}:${user} /home/${user}
-  - sudo chown ${user}:${user} /home/${user}/install_agent.sh
+  - chmod +x /home/${user}/install_agent.sh
+  - chown ${user}:${user} /home/${user}
+  - chown ${user}:${user} /home/${user}/install_agent.sh
   - sudo -u ${user} /home/${user}/install_agent.sh --agent-name ${agent_name} --agent-pool ${agent_pool} --agent-version-id ${agent_version_id} --org ${org} --pat ${pat}
   # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts
 # - [ -d /opt/post-generation ] && sudo "find /opt/post-generation -mindepth 1 -maxdepth 1 -type f -name '*.sh' -exec bash {} \;"
+  - echo Installed Pipelines Agent
 
 final_message: "Installed Pipeline Agent $UPTIME seconds into cloud-init"

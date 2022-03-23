@@ -187,9 +187,14 @@ resource azurerm_storage_account share {
 }
 
 resource azurerm_storage_share diagnostics_nfs_share {
-  name                         = "diagnostics"
+  name                         = "diagnosticsnfs"
   storage_account_name         = azurerm_storage_account.share.name
   enabled_protocol             = "NFS"
+}
+
+locals {
+  diagnostics_nfs_share        = "${azurerm_storage_account.share.primary_file_host}:/${azurerm_storage_account.share.name}/${azurerm_storage_share.diagnostics_nfs_share.name}"
+  diagnostics_nfs_share_mount_point= "/mount/${azurerm_storage_account.share.name}/${azurerm_storage_share.diagnostics_nfs_share.name}"
 }
 
 resource azurerm_private_endpoint diagnostics_nfs_share {

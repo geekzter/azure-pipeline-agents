@@ -52,6 +52,8 @@ module scale_set_linux_agents {
 
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
+  diagnostics_share            = local.diagnostics_nfs_share
+  diagnostics_share_mount_point= local.diagnostics_nfs_share_mount_point
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
@@ -85,6 +87,7 @@ module scale_set_linux_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_nfs_share,
     azurerm_private_endpoint.disk_access_endpoint,
     module.network
   ]
@@ -183,6 +186,7 @@ module self_hosted_linux_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_nfs_share,
     azurerm_private_endpoint.disk_access_endpoint,
     module.network
   ]

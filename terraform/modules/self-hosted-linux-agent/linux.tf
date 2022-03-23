@@ -24,6 +24,17 @@ data cloudinit_config user_data {
     }
   }  
   part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-nfs-share.yaml",
+    {
+      diagnostics_directory    = "/var/opt/pipelines-agent/diag"
+      mount_point              = var.diagnostics_share_mount_point
+      nfs_share                = var.diagnostics_share
+      user                     = var.user_name
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
+  }
+  part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {
       user_name                = var.user_name

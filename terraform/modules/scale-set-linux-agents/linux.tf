@@ -10,7 +10,6 @@ data cloudinit_config user_data {
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
-  
   dynamic "part" {
     for_each = range(var.install_tools ? 1 : 0)
     content {
@@ -24,7 +23,17 @@ data cloudinit_config user_data {
       merge_type               = "list(append)+dict(recurse_array)+str()"
     }
   }  
-
+  part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-nfs-share.yaml",
+    {
+      diagnostics_directory    = "/agent/_diag"
+      mount_point              = var.diagnostics_share_mount_point
+      nfs_share                = var.diagnostics_share
+      user                     = var.user_name
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
+  }
   part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",
     {

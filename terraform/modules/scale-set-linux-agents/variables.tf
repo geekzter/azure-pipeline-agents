@@ -2,6 +2,8 @@ variable deploy_non_essential_vm_extensions {
   type                         = bool
 }
 
+variable diagnostics_share {}
+variable diagnostics_share_mount_point {}
 variable diagnostics_storage_id {}
 variable diagnostics_storage_sas {}
 variable environment_variables {

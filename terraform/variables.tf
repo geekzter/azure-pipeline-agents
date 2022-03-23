@@ -213,7 +213,7 @@ variable tags {
 } 
 
 variable user_name {
-  default                      = "devopsadmin"
+  default                      = "AzDevOps"
 }
 
 variable vhd_storage_account_tier {

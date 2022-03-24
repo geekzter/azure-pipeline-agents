@@ -191,14 +191,13 @@ resource azurerm_storage_share diagnostics_nfs_share {
   storage_account_name         = azurerm_storage_account.share.name
   enabled_protocol             = "NFS"
 }
-
-locals {
-  diagnostics_nfs_share        = "${azurerm_storage_account.share.primary_file_host}:/${azurerm_storage_account.share.name}/${azurerm_storage_share.diagnostics_nfs_share.name}"
-  diagnostics_nfs_share_mount_point= "/mount/${azurerm_storage_account.share.name}/${azurerm_storage_share.diagnostics_nfs_share.name}"
+resource azurerm_storage_share diagnostics_smb_share {
+  name                         = "diagnostics"
+  storage_account_name         = azurerm_storage_account.share.name
+  enabled_protocol             = "SMB"
 }
-
 resource azurerm_private_endpoint diagnostics_nfs_share {
-  name                         = "${azurerm_storage_account.share.name}-nfs-share-endpoint"
+  name                         = "${azurerm_storage_account.share.name}-files-endpoint"
   resource_group_name          = azurerm_storage_account.share.resource_group_name
   location                     = azurerm_storage_account.share.location
   
@@ -211,7 +210,7 @@ resource azurerm_private_endpoint diagnostics_nfs_share {
   
   private_service_connection {
     is_manual_connection       = false
-    name                       = "${azurerm_storage_account.share.name}-nfs-share-endpoint-connection"
+    name                       = "${azurerm_storage_account.share.name}-files-endpoint-connection"
     private_connection_resource_id = azurerm_storage_account.share.id
     subresource_names          = ["file"]
   }
@@ -224,4 +223,11 @@ resource azurerm_private_endpoint diagnostics_nfs_share {
     azurerm_private_endpoint.disk_access_endpoint,
     module.network,
   ]
+}
+
+locals {
+  diagnostics_nfs_share        = "${azurerm_storage_account.share.primary_file_host}:/${azurerm_storage_account.share.name}/${azurerm_storage_share.diagnostics_nfs_share.name}"
+  diagnostics_nfs_share_mount_point= "/mount/${azurerm_storage_account.share.name}/${azurerm_storage_share.diagnostics_nfs_share.name}"
+  diagnostics_smb_share        = replace(azurerm_storage_share.diagnostics_smb_share.url,"https:","")
+  diagnostics_smb_share_mount_point= "/mount/${azurerm_storage_account.share.name}/${azurerm_storage_share.diagnostics_smb_share.name}"
 }

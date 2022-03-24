@@ -17,3 +17,8 @@ data azurerm_storage_account diagnostics {
   name                         = local.diagnostics_storage_name
   resource_group_name          = local.diagnostics_storage_rg
 }
+
+data azurerm_storage_account files {
+  name                         = split(".",split("/",var.diagnostics_smb_share)[2])[0]
+  resource_group_name          = var.resource_group_name
+}

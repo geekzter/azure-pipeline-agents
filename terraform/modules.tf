@@ -52,8 +52,10 @@ module scale_set_linux_agents {
 
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  diagnostics_share            = local.diagnostics_nfs_share
-  diagnostics_share_mount_point= local.diagnostics_nfs_share_mount_point
+  diagnostics_nfs_share        = local.diagnostics_nfs_share
+  diagnostics_nfs_share_mount_point= local.diagnostics_nfs_share_mount_point
+  diagnostics_smb_share        = local.diagnostics_smb_share
+  diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
@@ -146,8 +148,10 @@ module self_hosted_linux_agents {
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
-  diagnostics_share            = local.diagnostics_nfs_share
-  diagnostics_share_mount_point= local.diagnostics_nfs_share_mount_point
+  diagnostics_nfs_share        = local.diagnostics_nfs_share
+  diagnostics_nfs_share_mount_point= local.diagnostics_nfs_share_mount_point
+  diagnostics_smb_share        = local.diagnostics_smb_share
+  diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables

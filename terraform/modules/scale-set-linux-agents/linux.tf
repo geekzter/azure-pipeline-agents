@@ -33,11 +33,15 @@ data cloudinit_config user_data {
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
   part {
-    content                    = templatefile("${path.root}/../cloudinit/cloud-config-nfs-share.yaml",
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-files-share.yaml",
     {
       diagnostics_directory    = "/agent/_diag"
-      mount_point              = var.diagnostics_share_mount_point
-      nfs_share                = var.diagnostics_share
+      nfs_mount_point          = var.diagnostics_nfs_share_mount_point
+      nfs_share                = var.diagnostics_nfs_share
+      smb_mount_point          = var.diagnostics_smb_share_mount_point
+      smb_share                = var.diagnostics_smb_share
+      storage_account_key      = data.azurerm_storage_account.files.primary_access_key
+      storage_account_name     = data.azurerm_storage_account.files.name
       user                     = "AzDevOps"
     })
     content_type               = "text/cloud-config"

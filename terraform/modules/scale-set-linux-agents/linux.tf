@@ -24,12 +24,21 @@ data cloudinit_config user_data {
     }
   }  
   part {
+    content                    = templatefile("${path.root}/../cloudinit/cloud-config-user.yaml",
+    {
+      user                     = "AzDevOps"
+      public_key               = file(var.ssh_public_key)
+    })
+    content_type               = "text/cloud-config"
+    merge_type                 = "list(append)+dict(recurse_array)+str()"
+  }
+  part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-nfs-share.yaml",
     {
       diagnostics_directory    = "/agent/_diag"
       mount_point              = var.diagnostics_share_mount_point
       nfs_share                = var.diagnostics_share
-      user                     = var.user_name
+      user                     = "AzDevOps"
     })
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"

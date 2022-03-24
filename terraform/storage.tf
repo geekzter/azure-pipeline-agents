@@ -217,4 +217,11 @@ resource azurerm_private_endpoint diagnostics_nfs_share {
   }
 
   tags                         = local.tags
+
+  depends_on                   = [
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.disk_access_endpoint,
+    module.network,
+  ]
 }

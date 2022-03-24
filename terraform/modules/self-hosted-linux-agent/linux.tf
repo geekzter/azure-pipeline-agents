@@ -27,8 +27,6 @@ data cloudinit_config user_data {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-files-share.yaml",
     {
       diagnostics_directory    = "/var/opt/pipelines-agent/diag"
-      nfs_mount_point          = var.diagnostics_nfs_share_mount_point
-      nfs_share                = var.diagnostics_nfs_share
       smb_mount_point          = var.diagnostics_smb_share_mount_point
       smb_share                = var.diagnostics_smb_share
       storage_account_key      = data.azurerm_storage_account.files.primary_access_key
@@ -70,8 +68,6 @@ data cloudinit_config user_data {
         agent_pool             = var.pipeline_agent_pool
         agent_version_id       = var.pipeline_agent_version_id
         install_agent_script_b64= filebase64("${path.root}/../scripts/host/install_agent.sh")
-        mount_point            = var.diagnostics_nfs_share_mount_point
-        nfs_share              = var.diagnostics_nfs_share
         org                    = var.devops_org
         pat                    = var.devops_pat
         user                   = var.user_name

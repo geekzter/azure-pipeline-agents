@@ -36,8 +36,6 @@ data cloudinit_config user_data {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-files-share.yaml",
     {
       diagnostics_directory    = "/agent/_diag"
-      nfs_mount_point          = var.diagnostics_nfs_share_mount_point
-      nfs_share                = var.diagnostics_nfs_share
       smb_mount_point          = var.diagnostics_smb_share_mount_point
       smb_share                = var.diagnostics_smb_share
       storage_account_key      = data.azurerm_storage_account.files.primary_access_key

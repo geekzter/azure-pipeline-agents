@@ -18,6 +18,9 @@ output build_resource_ids {
   value                        = module.packer.build_resource_ids
 }
 
+output diagnostics_file_share {
+  value                        = azurerm_storage_share.diagnostics_smb_share.url
+}
 output diagnostics_storage_account {
   value                        = azurerm_storage_account.diagnostics.name
 }

@@ -52,8 +52,6 @@ module scale_set_linux_agents {
 
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  diagnostics_nfs_share        = local.diagnostics_nfs_share
-  diagnostics_nfs_share_mount_point= local.diagnostics_nfs_share_mount_point
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
@@ -89,7 +87,7 @@ module scale_set_linux_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
-    azurerm_private_endpoint.diagnostics_nfs_share,
+    azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
     module.network
   ]
@@ -148,8 +146,6 @@ module self_hosted_linux_agents {
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
-  diagnostics_nfs_share        = local.diagnostics_nfs_share
-  diagnostics_nfs_share_mount_point= local.diagnostics_nfs_share_mount_point
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
@@ -190,7 +186,7 @@ module self_hosted_linux_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
-    azurerm_private_endpoint.diagnostics_nfs_share,
+    azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
     module.network
   ]

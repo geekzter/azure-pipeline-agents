@@ -10,17 +10,6 @@ write_files:
   permissions: '0600'
 
 runcmd:
-  # # Point diagnostics to NFS
-  # - echo creating mount point ${nfs_mount_point}...
-  # - mkdir -p ${nfs_mount_point}
-  # # - mount -t nfs ${nfs_share} ${nfs_mount_point} -o vers=4,minorversion=1,sec=sys
-  # - echo "${nfs_share}  ${nfs_mount_point}    nfs   vers=4,minorversion=1,sec=sys   0   2" | sudo tee -a /etc/fstab 
-  # - mount -a
-  # - mkdir -p ${nfs_mount_point}/$(hostname) 2>/dev/null
-  # - mkdir -p $(dirname ${diagnostics_directory})
-  # # - ln -s ${nfs_mount_point}/$(hostname) ${diagnostics_directory}
-  # - chown ${user}:${user} ${nfs_mount_point}/$(hostname)
-  # - echo mounted ${nfs_share} to ${nfs_mount_point} #, linked ${nfs_mount_point}/$(hostname) to ${diagnostics_directory}
   # Configure SMB share
   - echo creating mount point ${smb_mount_point}...
   - mkdir -p ${smb_mount_point}

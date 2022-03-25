@@ -98,6 +98,10 @@ resource azurerm_subnet private_endpoint_subnet {
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,5)]
   enforce_private_link_endpoint_network_policies = true
 }
+resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
+  subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
+  network_security_group_id    = azurerm_network_security_group.default.id
+}
 
 resource azurerm_monitor_private_link_scope monitor {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-ampls"

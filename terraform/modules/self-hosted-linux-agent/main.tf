@@ -19,6 +19,8 @@ data azurerm_storage_account diagnostics {
 data azurerm_storage_account files {
   name                         = split(".",split("/",var.diagnostics_smb_share)[2])[0]
   resource_group_name          = var.resource_group_name
+
+  count                        = var.deploy_files_share ? 1 : 0
 }
 
 resource azurerm_network_security_group nsg {

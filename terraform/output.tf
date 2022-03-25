@@ -1,5 +1,5 @@
 output agent_diagnostics_file_share_url {
-  value                        = azurerm_storage_share.diagnostics_smb_share.url
+  value                        = var.deploy_files_share ? azurerm_storage_share.diagnostics_smb_share.0.url : null
 }
 output agent_identity_name {
   value                        = azurerm_user_assigned_identity.agents.name
@@ -55,7 +55,10 @@ output scale_set_linux_cloud_config {
   sensitive                    = true
   value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
 }
-
+output scale_set_windows_host_configuration_script {
+  sensitive                    = true
+  value                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.host_configuration_script : null
+}
 output self_hosted_agents_subnet_id {
   value                        = module.network.self_hosted_agents_subnet_id
 }

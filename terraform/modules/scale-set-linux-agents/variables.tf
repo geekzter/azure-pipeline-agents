@@ -1,3 +1,6 @@
+variable deploy_files_share {
+  type                         = bool
+}
 variable deploy_non_essential_vm_extensions {
   type                         = bool
 }

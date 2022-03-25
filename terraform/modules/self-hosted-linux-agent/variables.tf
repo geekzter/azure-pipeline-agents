@@ -9,6 +9,9 @@ variable create_public_ip_address {
 variable deploy_agent {
   type                         = bool
 }
+variable deploy_files_share {
+  type                         = bool
+}
 variable deploy_non_essential_vm_extensions {
   type                         = bool
 }

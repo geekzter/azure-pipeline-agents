@@ -32,18 +32,21 @@ data cloudinit_config user_data {
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
-  part {
+  dynamic "part" {
+    for_each = range(var.deploy_files_share ? 1 : 0)
+    content {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-files-share.yaml",
-    {
-      diagnostics_directory    = "/agent/_diag"
-      smb_mount_point          = var.diagnostics_smb_share_mount_point
-      smb_share                = var.diagnostics_smb_share
-      storage_account_key      = data.azurerm_storage_account.files.primary_access_key
-      storage_account_name     = data.azurerm_storage_account.files.name
-      user                     = "AzDevOps"
-    })
-    content_type               = "text/cloud-config"
-    merge_type                 = "list(append)+dict(recurse_array)+str()"
+      {
+        diagnostics_directory  = "/agent/_diag"
+        smb_mount_point        = var.diagnostics_smb_share_mount_point
+        smb_share              = var.diagnostics_smb_share
+        storage_account_key    = data.azurerm_storage_account.files.0.primary_access_key
+        storage_account_name   = data.azurerm_storage_account.files.0.name
+        user                   = "AzDevOps"
+      })
+      content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
+    }
   }
   part {
     content                    = templatefile("${path.root}/../cloudinit/cloud-config-userdata.yaml",

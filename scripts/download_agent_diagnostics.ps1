@@ -60,6 +60,10 @@ Push-Location $terraformDirectory
 if (!$FilesShareUrl) {
     $FilesShareUrl = (Get-TerraformOutput agent_diagnostics_file_share_url)
 }
+if (!$FilesShareUrl) {
+    Write-Warning "Files share has not been created (yet), nothing to do"
+    exit
+}
 if (!$FilesShareUrl.EndsWith("/")) {
     $FilesShareUrl += '/'
 }

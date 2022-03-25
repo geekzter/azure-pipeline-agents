@@ -60,6 +60,7 @@ data cloudinit_config user_data {
 
 resource azurerm_linux_virtual_machine_scale_set linux_agents {
   name                         = "${var.resource_group_name}-linux-agents"
+  computer_name_prefix         = "linuxvmss"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 

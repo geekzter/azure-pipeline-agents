@@ -1,3 +1,6 @@
+output agent_diagnostics_file_share_url {
+  value                        = azurerm_storage_share.diagnostics_smb_share.url
+}
 output agent_identity_name {
   value                        = azurerm_user_assigned_identity.agents.name
 }
@@ -18,9 +21,6 @@ output build_resource_ids {
   value                        = module.packer.build_resource_ids
 }
 
-output diagnostics_file_share {
-  value                        = azurerm_storage_share.diagnostics_smb_share.url
-}
 output diagnostics_storage_account {
   value                        = azurerm_storage_account.diagnostics.name
 }

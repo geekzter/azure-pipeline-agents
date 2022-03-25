@@ -1,31 +1,21 @@
 #!/usr/bin/env pwsh
 param ( 
-    [parameter(Mandatory=$true)][string]$FilesSourceUrl,
-    [parameter(Mandatory=$true)][string]$BlobTargetUrl,
+    [parameter(Mandatory=$false)][string]$FilesShareUrl,
     [parameter(Mandatory=$false)][string]$LocalPath
 ) 
-
+. (Join-Path $PSScriptRoot functions.ps1)
 function Create-SasToken (
     [parameter(Mandatory=$true)][string]$StorageAccountName,   
     [parameter(Mandatory=$true)][string]$ResourceGroupName,   
     [parameter(Mandatory=$true)][string]$SubscriptionId,
-    [parameter(Mandatory=$false)][switch]$Write,
-    [parameter(Mandatory=$false)][switch]$Delete,
     [parameter(Mandatory=$false)][int]$SasTokenValidityDays=1
 ) {
     # Add firewall rule on storage account
     Write-Information "Generating SAS token for '$StorageAccountName'..."
-    $sasPermissions = "lr"
-    if ($Write) {
-        $sasPermissions += "acuw"
-    }
-    if ($Delete) {
-        $sasPermissions += "d"
-    }
     az storage account generate-sas --account-key $(az storage account keys list -n $StorageAccountName -g $ResourceGroupName --subscription $SubscriptionId --query "[0].value" -o tsv) `
                                     --account-name $StorageAccountName `
                                     --expiry "$([DateTime]::UtcNow.AddDays($SasTokenValidityDays).ToString('s'))Z" `
-                                    --permissions $sasPermissions `
+                                    --permissions lr `
                                     --resource-types co `
                                     --services bf `
                                     --subscription $SubscriptionId `
@@ -57,34 +47,42 @@ function Parse-StorageAccountName (
 ) {
     if ($Url -notmatch "https://(?<name>\w+)\.(blob|file).core.windows.net/(?<container>\w+)/?[\w|/]*") {
         Write-Error "Target '$Url' is not a storage URL"
-        return
+        exit
     }
     $storageAccountName = $matches["name"]
     Write-Debug "storageAccountName: $storageAccountName"
     return $storageAccountName
 }
 
-if (!$FilesSourceUrl.EndsWith("/")) {
-    $FilesSourceUrl += '/'
+# Process parameters
+$terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")
+Push-Location $terraformDirectory
+if (!$FilesShareUrl) {
+    $FilesShareUrl = (Get-TerraformOutput agent_diagnostics_file_share_url)
 }
-if (!$BlobTargetUrl.EndsWith("/")) {
-    $BlobTargetUrl += '/'
+if (!$FilesShareUrl.EndsWith("/")) {
+    $FilesShareUrl += '/'
+}
+Pop-Location
+
+if (!$LocalPath) {
+    $LocalPath = (Join-Path (Split-Path $PSScriptRoot -Parent) data $env:TF_WORKSPACE agent)
+    New-Item $LocalPath -ItemType "directory" -Force -ErrorAction SilentlyContinue | Out-Null
 }
 
-$sourceStorageAccount = Get-StorageAccount -Url $FilesSourceUrl
+# Main
+$sourceStorageAccount = Get-StorageAccount -Url $FilesShareUrl
 $sourceStorageAccountToken = Create-SasToken -StorageAccountName $sourceStorageAccount.name `
                                              -ResourceGroupName $sourceStorageAccount.resourceGroup `
                                              -SubscriptionId $sourceStorageAccount.subscriptionId
-$targetStorageAccount = Get-StorageAccount -Url $BlobTargetUrl
-$targetStorageAccountToken = Create-SasToken -StorageAccountName $targetStorageAccount.name `
-                                             -ResourceGroupName $targetStorageAccount.resourceGroup `
-                                             -SubscriptionId $targetStorageAccount.subscriptionId `
-                                             -Write
-$sourceUrlWithToken = "${FilesSourceUrl}?${sourceStorageAccountToken}"
+$sourceUrlWithToken = "${FilesShareUrl}?${sourceStorageAccountToken}"
 Write-Debug "sourceUrlWithToken: $sourceUrlWithToken"
-$targetUrlWithToken = "${BlobTargetUrl}?${targetStorageAccountToken}"
-Write-Debug "targetUrlWithToken: $targetUrlWithToken"
+
+if (!(Test-Path $LocalPath)) {
+    "Local path '{0}' does not exist" -f $LocalPath | Write-Error
+    exit
+}
 azcopy copy "${sourceUrlWithToken}" `
-            "${targetUrlWithToken}" `
+            $LocalPath `
             --overwrite false `
             --recursive

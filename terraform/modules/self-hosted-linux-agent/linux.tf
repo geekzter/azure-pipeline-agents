@@ -31,8 +31,8 @@ data cloudinit_config user_data {
         diagnostics_directory  = "/var/opt/pipelines-agent/diag"
         smb_mount_point        = var.diagnostics_smb_share_mount_point
         smb_share              = var.diagnostics_smb_share
-        storage_account_key    = data.azurerm_storage_account.0.files.primary_access_key
-        storage_account_name   = data.azurerm_storage_account.0.files.name
+        storage_account_key    = data.azurerm_storage_account.files.0.primary_access_key
+        storage_account_name   = data.azurerm_storage_account.files.0.name
         user                   = var.user_name
       })
       content_type             = "text/cloud-config"

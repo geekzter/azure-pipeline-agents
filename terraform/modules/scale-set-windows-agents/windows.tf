@@ -8,6 +8,7 @@ locals {
       storage_account_key      = data.azurerm_storage_account.files.0.primary_access_key
       storage_account_name     = data.azurerm_storage_account.files.0.name
       storage_share_host       = data.azurerm_storage_account.files.0.primary_file_host
+      user_name                = var.user_name
     })
 }
 

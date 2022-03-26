@@ -203,11 +203,13 @@ module self_hosted_windows_agents {
 
   create_public_ip_address     = !var.deploy_firewall
   deploy_agent_vm_extension    = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
+  deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
+  diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables

@@ -33,6 +33,32 @@ if (Test-Path C:\post-generation) {
     [Environment]::SetEnvironmentVariable("${name}", "${value}", "Machine")
 %{ endfor ~}
 
+# Mount file share
+if ("${smb_share}") {
+    if (!(Get-Command New-SmbGlobalMapping -ErrorAction SilentlyContinue)) {
+        Write-Warning "Command 'New-SmbGlobalMapping' not found. Agent diagnostics will be stored locally."
+        exit
+    }
+
+    $connectTestResult = Test-NetConnection -ComputerName ${storage_share_host} -Port 445
+    if (!$connectTestResult.TcpTestSucceeded) {
+        Write-Error -Message "Unable to reach '${storage_share_host}' via port 445."
+    }
+
+    ConvertTo-SecureString -String "${storage_account_key}" -AsPlainText -Force | Set-Variable storageKey
+    New-Object System.Management.Automation.PSCredential -ArgumentList "AZURE\${storage_account_name}", $storageKey | Set-Variable credential 
+    New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "${user_name}" ) -Persistent $true #-UseWriteThrough
+
+    # Link agent diagnostics directory
+    Join-Path ${drive_letter}:\ $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory
+    New-Item -ItemType directory -Path $diagnosticsSMBDirectory -Force
+    if (!(Test-Path $diagnosticsSMBDirectory)) {
+        "'{0}' not found, has share {1} been mounted on {2}:?" -f $diagnosticsSMBDirectory, "${smb_share}", "${drive_letter}" | Write-Error
+    }
+    New-Item -ItemType symboliclink -Path "${diagnostics_directory}" -Value "$diagnosticsSMBDirectory" -Force
+    $pipelineDiagnosticsDirectory = "${diagnostics_directory}"
+}
+
 $pipelineDirectory = Join-Path $env:ProgramFiles pipeline-agent
 "vstsagent.{0}.{1}.{2}" -f $Organization, $AgentPool, $AgentName | Set-Variable agentService
 if (Test-Path (Join-Path $pipelineDirectory .agent)) {
@@ -62,7 +88,9 @@ Write-Host "Extracted $agentPackage"
 $pipelineWorkDirectory = "$($env:ProgramData)\pipeline-agent\work"
 $null = New-Item -ItemType Directory -Path $pipelineWorkDirectory -Force
 $null = New-Item -ItemType symboliclink -path "$pipelineDirectory\_work" -value "$pipelineWorkDirectory" -Force
-$pipelineDiagnosticsDirectory = "$($env:ProgramData)\pipeline-agent\diag"
+if (!$pipelineDiagnosticsDirectory -or !(Test-Path $pipelineDiagnosticsDirectory)) {
+    $pipelineDiagnosticsDirectory = "$($env:ProgramData)\pipeline-agent\diag"
+}
 $null = New-Item -ItemType Directory -Path $pipelineDiagnosticsDirectory -Force
 $null = New-Item -ItemType symboliclink -path "$pipelineDirectory\_diag" -value "$pipelineDiagnosticsDirectory" -Force
 

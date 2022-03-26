@@ -20,21 +20,25 @@ if (Test-Path C:\post-generation) {
 
 # Mount file share
 if ("${smb_share}") {
-    $connectTestResult = Test-NetConnection -ComputerName ${storage_share_host} -Port 445
-    if (!$connectTestResult.TcpTestSucceeded) {
-        Write-Error -Message "Unable to reach the Azure storage account via port 445. Check to make sure your organization or ISP is not blocking port 445, or use Azure P2S VPN, Azure S2S VPN, or Express Route to tunnel SMB traffic over a different port."
+    if (!(Get-Command New-SmbGlobalMapping -ErrorAction SilentlyContinue)) {
+        Write-Warning "Command 'New-SmbGlobalMapping' not found. Agent diagnostics will be stored locally."
+        exit
     }
 
-    # cmd.exe /c "cmdkey /add:`"${storage_share_host}`" /user:`"localhost\${storage_account_name}`" /pass:`"${storage_account_key}`""
+    $connectTestResult = Test-NetConnection -ComputerName ${storage_share_host} -Port 445
+    if (!$connectTestResult.TcpTestSucceeded) {
+        Write-Error -Message "Unable to reach '${storage_share_host}' via port 445."
+    }
+
     ConvertTo-SecureString -String "${storage_account_key}" -AsPlainText -Force | Set-Variable storageKey
     New-Object System.Management.Automation.PSCredential -ArgumentList "AZURE\${storage_account_name}", $storageKey | Set-Variable credential 
-    New-PSDrive -Credential $credential -Name ${drive_letter} -PSProvider FileSystem -Root "${smb_share}" -Persist -Scope global
+    New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "${user_name}" ) -Persistent $true #-UseWriteThrough
 
     # Link agent diagnostics directory
     Join-Path ${drive_letter}:\ $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory
     New-Item -ItemType directory -Path $diagnosticsSMBDirectory -Force
     if (!(Test-Path $diagnosticsSMBDirectory)) {
-        "'{0}' not found, has share {1} been mounted on {2}:?" -f $diagnosticsSMBDirectory, "${smb_share}", "${drive_letter}"  | Write-Error
+        "'{0}' not found, has share {1} been mounted on {2}:?" -f $diagnosticsSMBDirectory, "${smb_share}", "${drive_letter}" | Write-Error
     }
-    # New-Item -ItemType symboliclink -Path "${diagnostics_directory}" -Value "$diagnosticsSMBDirectory" -Force
+    New-Item -ItemType symboliclink -Path "${diagnostics_directory}" -Value "$diagnosticsSMBDirectory" -Force
 }

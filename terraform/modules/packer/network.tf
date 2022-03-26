@@ -57,6 +57,17 @@ resource azurerm_subnet private_endpoint_subnet {
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.packer.address_space[0],4,5)]
   enforce_private_link_endpoint_network_policies = true
 }
+resource azurerm_network_security_group default {
+  name                         = "${azurerm_virtual_network.packer.name}-default-nsg"
+  location                     = var.location
+  resource_group_name          = azurerm_virtual_network.packer.resource_group_name
+
+  tags                         = var.tags
+}
+resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
+  subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
+  network_security_group_id    = azurerm_network_security_group.default.id
+}
 
 resource azurerm_virtual_network_peering packer_to_agents {
   name                         = "${azurerm_virtual_network.packer.name}-peering"

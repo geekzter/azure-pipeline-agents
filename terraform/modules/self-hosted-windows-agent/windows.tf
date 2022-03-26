@@ -1,3 +1,17 @@
+locals {
+  prepare_agent_script         = templatefile("${path.root}/../scripts/host/prepare_agent.ps1",
+    {
+      diagnostics_directory    = "C:\\ProgramData\\pipeline-agent\\diag"
+      drive_letter             = "Z"
+      environment              = var.environment_variables
+      smb_share                = replace(var.diagnostics_smb_share,"/","\\")
+      storage_account_key      = data.azurerm_storage_account.files.0.primary_access_key
+      storage_account_name     = data.azurerm_storage_account.files.0.name
+      storage_share_host       = data.azurerm_storage_account.files.0.primary_file_host
+      user_name                = var.user_name
+    })
+}
+
 resource azurerm_public_ip windows_pip {
   name                         = "${var.name}-pip"
   location                     = var.location
@@ -72,11 +86,7 @@ resource azurerm_windows_virtual_machine windows_agent {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
-  custom_data                  = var.deploy_agent_vm_extension ? base64encode(templatefile("${path.root}/../scripts/host/prepare_agent.ps1",
-    {
-      environment              = var.environment_variables
-    })
-  ) : null
+  custom_data                  = var.deploy_agent_vm_extension ? base64encode(local.prepare_agent_script) : null
   allow_extension_operations   = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
   provision_vm_agent           = var.deploy_agent_vm_extension || var.deploy_non_essential_vm_extensions
 
@@ -228,7 +238,7 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   auto_upgrade_minor_version   = true
 
   protected_settings           = jsonencode({
-    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./prepare_agent.ps1 -Force;./prepare_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -AgentVersionId ${var.pipeline_agent_version_id} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> C:/WindowsAzure/Logs/install_agent.log\""
+    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./prepare_agent.ps1 -Force;./prepare_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -AgentVersionId ${var.pipeline_agent_version_id} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> C:/WindowsAzure/Logs/prepare_agent.log\""
   })
 
   # Start VM, so we can update/destroy the extension

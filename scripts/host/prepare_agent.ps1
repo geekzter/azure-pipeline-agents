@@ -47,7 +47,7 @@ if ("${smb_share}") {
 
     ConvertTo-SecureString -String "${storage_account_key}" -AsPlainText -Force | Set-Variable storageKey
     New-Object System.Management.Automation.PSCredential -ArgumentList "AZURE\${storage_account_name}", $storageKey | Set-Variable credential 
-    New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "${user_name}" ) -Persistent $true #-UseWriteThrough
+    New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "NT AUTHORITY\NETWORK SERVICE", "${user_name}" ) -Persistent $true #-UseWriteThrough
 
     # Link agent diagnostics directory
     Join-Path ${drive_letter}:\ $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory
@@ -90,8 +90,8 @@ $null = New-Item -ItemType Directory -Path $pipelineWorkDirectory -Force
 $null = New-Item -ItemType symboliclink -path "$pipelineDirectory\_work" -value "$pipelineWorkDirectory" -Force
 if (!$pipelineDiagnosticsDirectory -or !(Test-Path $pipelineDiagnosticsDirectory)) {
     $pipelineDiagnosticsDirectory = "$($env:ProgramData)\pipeline-agent\diag"
+    $null = New-Item -ItemType Directory -Path $pipelineDiagnosticsDirectory -Force
 }
-$null = New-Item -ItemType Directory -Path $pipelineDiagnosticsDirectory -Force
 $null = New-Item -ItemType symboliclink -path "$pipelineDirectory\_diag" -value "$pipelineDiagnosticsDirectory" -Force
 
 # Unattended config

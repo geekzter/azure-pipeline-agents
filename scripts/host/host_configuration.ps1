@@ -25,14 +25,19 @@ if ("${smb_share}") {
         exit
     }
 
-    $connectTestResult = Test-NetConnection -ComputerName ${storage_share_host} -Port 445
-    if (!$connectTestResult.TcpTestSucceeded) {
+    Test-NetConnection -ComputerName ${storage_share_host} -Port 445 | Set-Variable connectResult
+    if (!$connectResult.TcpTestSucceeded) {
         Write-Error -Message "Unable to reach '${storage_share_host}' via port 445."
+    }
+
+    $agentUser = "AzDevOps"
+    if (!(Get-LocalUser $agentUser -ErrorAction SilentlyContinue)) {
+        New-LocalUser -Name "$agentUser" -Description "Pre-created by $($MyInvocation.MyCommand.Path)" -NoPassword -AccountNeverExpires
     }
 
     ConvertTo-SecureString -String "${storage_account_key}" -AsPlainText -Force | Set-Variable storageKey
     New-Object System.Management.Automation.PSCredential -ArgumentList "AZURE\${storage_account_name}", $storageKey | Set-Variable credential 
-    New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "${user_name}" ) -Persistent $true #-UseWriteThrough
+    New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", $agentUser, "${user_name}" ) -Persistent $true #-UseWriteThrough
 
     # Link agent diagnostics directory
     Join-Path ${drive_letter}:\ $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory

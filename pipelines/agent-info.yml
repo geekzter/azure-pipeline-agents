@@ -1,0 +1,69 @@
+# This pipeline is for CI/CD
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
+
+trigger: none
+
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - '*'
+  drafts: false
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
+
+schedules:
+- cron: '0 0 * * Mon,Wed,Fri'
+  displayName: 'Bi-Nightly build (UTC)'
+  # Run if there are no changes
+  always: 'true'
+  branches:
+    include:
+    - master
+
+variables:
+- group: 'agent-info'
+
+jobs:
+- job: 'selfHostedUbuntu'
+  displayName: 'Self-Hosted Ubuntu'
+  pool:
+    name: '$(selfHostedPool)'
+    demands:
+    - agent.os -equals Linux
+  steps:
+  - pwsh: |
+      Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
+    displayName: 'List environment variables'
+
+- job: 'selfHostedWindows'
+  displayName: 'Self-Hosted Windows'
+  pool:
+    name: '$(selfHostedPool)'
+    demands:
+    - agent.os -equals Windows_NT
+  steps:
+  - pwsh: |
+      Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
+    displayName: 'List environment variables'
+
+- job: 'vmssHostedUbuntu'
+  displayName: 'Scale set Ubuntu'
+  pool:
+    name: '$(linuxVMSSPool)'
+  steps:
+  - pwsh: |
+      Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
+    displayName: 'List environment variables'
+
+- job: 'vmssHostedWindows'
+  displayName: 'Scale set Windows'
+  pool:
+    name: '$(windowsVMSSPool)'
+  steps:
+  - pwsh: |
+      Get-ChildItem -Path Env: -Recurse -Include * | Sort-Object -Property Name
+    displayName: 'List environment variables'

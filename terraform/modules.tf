@@ -50,8 +50,11 @@ module packer {
 module scale_set_linux_agents {
   source                       = "./modules/scale-set-linux-agents"
 
+  deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
+  diagnostics_smb_share        = local.diagnostics_smb_share
+  diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
@@ -85,6 +88,7 @@ module scale_set_linux_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
     module.network
   ]
@@ -93,8 +97,10 @@ module scale_set_linux_agents {
 module scale_set_windows_agents {
   source                       = "./modules/scale-set-windows-agents"
 
+  deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
+  diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
@@ -138,11 +144,14 @@ module self_hosted_linux_agents {
 
   create_public_ip_address     = !var.deploy_firewall
   deploy_agent                 = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
+  deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
+  diagnostics_smb_share        = local.diagnostics_smb_share
+  diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
@@ -181,6 +190,7 @@ module self_hosted_linux_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
     module.network
   ]
@@ -193,11 +203,13 @@ module self_hosted_windows_agents {
 
   create_public_ip_address     = !var.deploy_firewall
   deploy_agent_vm_extension    = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
+  deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   devops_org                   = var.devops_org
   devops_pat                   = var.devops_pat
 
+  diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables

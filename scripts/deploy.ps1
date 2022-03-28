@@ -11,7 +11,7 @@
 .EXAMPLE
     ./deploy.ps1 -apply
 #> 
-#Requires -Version 7
+#Requires -Version 7.2
 
 ### Arguments
 param ( 

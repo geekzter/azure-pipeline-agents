@@ -1,3 +1,17 @@
+locals {
+  host_configuration_script    = templatefile("${path.root}/../scripts/host/host_configuration.ps1",
+    {
+      diagnostics_directory    = "C:\\agent\\_diag"
+      drive_letter             = "Z"
+      environment              = var.environment_variables
+      smb_share                = replace(var.diagnostics_smb_share,"/","\\")
+      storage_account_key      = data.azurerm_storage_account.files.0.primary_access_key
+      storage_account_name     = data.azurerm_storage_account.files.0.name
+      storage_share_host       = data.azurerm_storage_account.files.0.primary_file_host
+      user_name                = var.user_name
+    })
+}
+
 resource azurerm_windows_virtual_machine_scale_set windows_agents {
   name                         = "${var.resource_group_name}-windows-agents"
   computer_name_prefix         = "winvmss"
@@ -15,11 +29,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
     storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
   }
 
-  custom_data                  = var.prepare_host ? base64encode(templatefile("${path.root}/../scripts/host/host_configuration.ps1",
-    {
-      environment              = var.environment_variables
-    })
-  ) : null
+  custom_data                  = var.prepare_host ? base64encode(local.host_configuration_script) : null
 
   identity {
     type                       = "SystemAssigned, UserAssigned"
@@ -123,7 +133,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
       protected_settings       = jsonencode({
         # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts
         # "commandToExecute"     = "powershell.exe -ExecutionPolicy Unrestricted -Command \"if (Test-Path C:/post-generation) {Get-ChildItem C:/post-generation -Filter *.ps1 | ForEach-Object { & $_.FullName }}\""
-        "commandToExecute"     = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./host_configuration.ps1 -Force;./host_configuration.ps1\""
+        "commandToExecute"     = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./host_configuration.ps1 -Force;./host_configuration.ps1 *> C:/WindowsAzure/Logs/host_configuration.log\""
       })
 
       provision_after_extensions= var.deploy_non_essential_vm_extensions ? [

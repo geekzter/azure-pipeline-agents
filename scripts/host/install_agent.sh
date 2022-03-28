@@ -81,7 +81,7 @@ AGENT_PACKAGE="vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz"
 AGENT_URL="https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/${AGENT_PACKAGE}"
 
 # Setting up directories
-sudo mkdir -p -- $AGENT_DIRECTORY $AGENT_DATA_DIRECTORY/diag $AGENT_DATA_DIRECTORY/work
+sudo mkdir -p -- $AGENT_DIRECTORY $AGENT_DATA_DIRECTORY/diag $AGENT_DATA_DIRECTORY/work 2>/dev/null
 sudo ln -s $AGENT_DATA_DIRECTORY/diag $AGENT_DIRECTORY/_diag
 sudo ln -s $AGENT_DATA_DIRECTORY/work $AGENT_DIRECTORY/_work
 sudo chown -R $USER:$USER $AGENT_DIRECTORY
@@ -90,7 +90,7 @@ pushd $AGENT_DIRECTORY
 
 # Download & extract
 echo "Retrieving agent from ${AGENT_URL}..."
-wget $AGENT_URL
+wget -nv $AGENT_URL
 echo "Extracting ${AGENT_PACKAGE} in $(pwd)..."
 tar zxf $AGENT_PACKAGE
 echo "Extracted ${AGENT_PACKAGE}"

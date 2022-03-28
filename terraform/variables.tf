@@ -32,6 +32,11 @@ variable deploy_bastion {
   default                      = true
   type                         = bool
 }
+variable deploy_files_share {
+  description                  = "Deploys files share (e.g. for agent diagnostics)"
+  default                      = true
+  type                         = bool
+}
 variable deploy_firewall {
   description                  = "Deploys NAT Gateway if set to false"
   default                      = false

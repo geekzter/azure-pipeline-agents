@@ -49,3 +49,11 @@ resource azurerm_virtual_network_peering agents_to_packer {
   allow_gateway_transit        = false
   use_remote_gateways          = false
 }
+
+resource azurerm_network_security_group default {
+  name                         = "${azurerm_virtual_network.pipeline_network.name}-default-nsg"
+  location                     = var.location
+  resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
+
+  tags                         = var.tags
+}

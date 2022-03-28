@@ -1,0 +1,21 @@
+packages:
+  - cifs-utils
+  - nfs-common
+
+write_files:
+- path: /etc/smbcredentials/${storage_account_name}.cred
+  content: |
+    username=${storage_account_name}
+    password=${storage_account_key}
+  permissions: '0600'
+
+runcmd:
+  # Configure SMB share
+  - echo creating mount point ${smb_mount_point}...
+  - mkdir -p ${smb_mount_point}
+  - echo "${smb_share}  ${smb_mount_point}    cifs   nofail,credentials=/etc/smbcredentials/${storage_account_name}.cred,serverino,dir_mode=0755,file_mode=0644,uid=$(id -u ${user}),gid=$(id -g ${user})   0   2" | sudo tee -a /etc/fstab 
+  - mount -a
+  - mkdir -p ${smb_mount_point}/$(hostname) 2>/dev/null
+  - mkdir -p $(dirname ${diagnostics_directory})
+  - ln -s ${smb_mount_point}/$(hostname) ${diagnostics_directory}
+  - echo mounted ${smb_share} to ${smb_mount_point}, linked ${smb_mount_point}/$(hostname) to ${diagnostics_directory}

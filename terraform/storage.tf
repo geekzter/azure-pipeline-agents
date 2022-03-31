@@ -114,7 +114,7 @@ resource azurerm_storage_container configuration {
 }
 
 resource azurerm_storage_blob terraform_backend_configuration {
-  name                         = "${local.config_directory}/backend.tf"
+  name                         = "terraform/backend.tf"
   storage_account_name         = azurerm_storage_account.automation_storage.name
   storage_container_name       = azurerm_storage_container.configuration.name
   type                         = "Block"
@@ -124,7 +124,7 @@ resource azurerm_storage_blob terraform_backend_configuration {
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 resource azurerm_storage_blob terraform_auto_vars_configuration {
-  name                         = "${local.config_directory}/config.auto.tfvars"
+  name                         = "terraform/config.auto.tfvars"
   storage_account_name         = azurerm_storage_account.automation_storage.name
   storage_container_name       = azurerm_storage_container.configuration.name
   type                         = "Block"
@@ -134,7 +134,7 @@ resource azurerm_storage_blob terraform_auto_vars_configuration {
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 resource azurerm_storage_blob terraform_workspace_vars_configuration {
-  name                         = "${local.config_directory}/${terraform.workspace}.tfvars"
+  name                         = "terraform/${terraform.workspace}.tfvars"
   storage_account_name         = azurerm_storage_account.automation_storage.name
   storage_container_name       = azurerm_storage_container.configuration.name
   type                         = "Block"

@@ -44,7 +44,6 @@ locals {
                                   0
   )
 
-  config_directory             = "${formatdate("YYYY",timestamp())}/${formatdate("MM",timestamp())}/${formatdate("DD",timestamp())}/${formatdate("hhmm",timestamp())}"
   environment                  = "dev"
   environment_variables        = merge(
     {

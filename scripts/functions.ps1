@@ -1,23 +1,14 @@
 function AzLogin (
     [parameter(Mandatory=$false)][switch]$DisplayMessages=$false
 ) {
-    # Are we logged into the wrong tenant?
-    Invoke-Command -ScriptBlock {
-        $Private:ErrorActionPreference = "Continue"
-        if ($env:ARM_TENANT_ID) {
-            $script:loggedInTenantId = $(az account show --query tenantId -o tsv 2>$null)
-        }
+    # Are we logged in? If so, is it the right tenant?
+    $azureAccount = $null
+    az account show 2>$null | ConvertFrom-Json | Set-Variable azureAccount
+    if ($azureAccount -and "${env:ARM_TENANT_ID}" -and ($azureAccount.tenantId -ine $env:ARM_TENANT_ID)) {
+        Write-Warning "Logged into tenant $($azureAccount.tenant_id) instead of $env:ARM_TENANT_ID (`$env:ARM_TENANT_ID)"
+        $azureAccount = $null
     }
-    if ($loggedInTenantId -and ($loggedInTenantId -ine $env:ARM_TENANT_ID)) {
-        Write-Warning "Logged into tenant $loggedInTenantId instead of $env:ARM_TENANT_ID (`$env:ARM_TENANT_ID), logging off az session"
-        az logout -o none
-    }
-
-    # Are we logged in?
-    $account = $null
-    az account show 2>$null | ConvertFrom-Json | Set-Variable account
-    # Set Azure CLI context
-    if (-not $account) {
+    if (-not $azureAccount) {
         if ($env:CODESPACES -ieq "true") {
             $azLoginSwitches = "--use-device-code"
         }

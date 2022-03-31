@@ -212,14 +212,16 @@ resource azurerm_bastion_host bastion {
   location                     = var.location
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
 
+  copy_paste_enabled           = true
+  file_copy_enabled            = true
   ip_configuration {
     name                       = "configuration"
     subnet_id                  = azurerm_subnet.bastion_subnet.0.id
     public_ip_address_id       = azurerm_public_ip.bastion_ip.0.id
   }
-
-  # tunneling_enabled            = true
-  # sku                          = "Standard"
+  shareable_link_enabled       = true
+  sku                          = "Standard"
+  tunneling_enabled            = true
 
   tags                         = var.tags
 

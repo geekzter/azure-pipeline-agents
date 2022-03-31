@@ -150,11 +150,11 @@ try {
 
         # Check whether key resources will be replaced
         if (Get-Command jq -ErrorAction SilentlyContinue) {
-            $linuxVMsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            $windowsVMsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            $linuxVMSSsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine_scale_set.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            
-            $vmsReplaced        = (($linuxVMsReplaced + $linuxVMSSsReplaced + $windowsVMsReplaced) -replace " +","`n")
+            $linuxVMsReplaced     = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine.\"))             | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $windowsVMsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine.\"))           | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $linuxVMSSsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine_scale_set.\"))   | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $windowsVMSSsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine_scale_set.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $vmsReplaced          = (($linuxVMsReplaced + $linuxVMSSsReplaced + $windowsVMsReplaced + $windowsVMSSsReplaced) -replace "(\w+)module", "`nmodule")
         } else {
             Write-Warning "jq not found, plan validation skipped. Look at the plan carefully before approving"
             if ($Force) {

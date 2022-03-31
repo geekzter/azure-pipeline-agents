@@ -32,7 +32,7 @@ if ("${smb_share}") {
 
     $agentUser = "AzDevOps"
     if (!(Get-LocalUser $agentUser -ErrorAction SilentlyContinue)) {
-        New-LocalUser -Name "$agentUser" -Description "Pre-created by $($MyInvocation.MyCommand.Path)" -NoPassword -AccountNeverExpires
+        New-LocalUser -Name "$agentUser" -Description "Pre-created by $($MyInvocation.MyCommand.Name)" -NoPassword -AccountNeverExpires
     }
 
     ConvertTo-SecureString -String "${storage_account_key}" -AsPlainText -Force | Set-Variable storageKey
@@ -40,7 +40,7 @@ if ("${smb_share}") {
     New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", $agentUser, "${user_name}" ) -Persistent $true #-UseWriteThrough
 
     # Link agent diagnostics directory
-    Join-Path ${drive_letter}:\ $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory
+    Join-Path ${drive_letter}:\ "windows\$(Get-Date -Format 'yyyy\\MM\\dd')" | Set-Variable diagnosticsSMBDirectory
     New-Item -ItemType directory -Path $diagnosticsSMBDirectory -Force
     if (!(Test-Path $diagnosticsSMBDirectory)) {
         "'{0}' not found, has share {1} been mounted on {2}:?" -f $diagnosticsSMBDirectory, "${smb_share}", "${drive_letter}" | Write-Error

@@ -200,6 +200,16 @@ variable script_wrapper_check {
   default                      = false
 }
 
+variable service_connection_id {
+  description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
+  default                      = ""
+}
+
+variable service_connection_project {
+  description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
+  default                      = ""
+}
+
 variable shared_image_gallery_id {
   description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
   default                      = null

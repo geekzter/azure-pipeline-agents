@@ -2,7 +2,7 @@
 param ( 
     [parameter(Mandatory=$false)][string]$FilesShareUrl,
     [parameter(Mandatory=$false)][string]$LocalPath,
-    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE
+    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "unknown"
 ) 
 . (Join-Path $PSScriptRoot functions.ps1)
 function Create-SasToken (

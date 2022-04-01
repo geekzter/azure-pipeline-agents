@@ -36,6 +36,9 @@ output environment_variables {
 output linux_os_image_id {
   value                        = local.linux_image_id
 }
+output linux_virtual_machine_scale_set_id {
+  value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.virtual_machine_scale_set_id : null
+}
 
 output log_analytics_workspace_id {
   value                        = local.log_analytics_workspace_id
@@ -83,10 +86,16 @@ output user_password {
   value                        = local.password
 }
 
+output virtual_machine_scale_set_ids {
+  value                        = local.virtual_machine_scale_set_ids
+}
 output virtual_network_id {
   value                        = module.network.virtual_network_id
 }
 
 output windows_os_image_id {
   value                        = local.windows_image_id
+}
+output windows_virtual_machine_scale_set_id {
+  value                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.virtual_machine_scale_set_id : null
 }

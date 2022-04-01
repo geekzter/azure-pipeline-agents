@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 param ( 
     [parameter(Mandatory=$false)][string]$FilesShareUrl,
-    [parameter(Mandatory=$false)][string]$LocalPath
+    [parameter(Mandatory=$false)][string]$LocalPath,
+    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE
 ) 
 . (Join-Path $PSScriptRoot functions.ps1)
 function Create-SasToken (
@@ -72,7 +73,7 @@ if (!$FilesShareUrl.EndsWith("/")) {
 Pop-Location
 
 if (!$LocalPath) {
-    $LocalPath = (Join-Path (Split-Path $PSScriptRoot -Parent) data $env:TF_WORKSPACE agent)
+    $LocalPath = (Join-Path (Split-Path $PSScriptRoot -Parent) data $Workspace agent)
     New-Item $LocalPath -ItemType "directory" -Force -ErrorAction SilentlyContinue | Out-Null
 }
 

@@ -81,35 +81,38 @@ function Create-ScaleSetPool(
         Write-Warning "${jsonPath} not found, has infrastrucure been provisioned in workspace '${Workspace}'?"
         exit
     }
-    Get-Content $jsonPath | Set-Variable requestJSon
-    $requestJSon | ConvertFrom-Json | Set-Variable scaleSet
-
-    # az devops cli does not (yet) allow updates, so using the REST API
-    $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
-    $PoolName ??= $scaleSet.azureId.Split('/')[-1]
+    # Get-Content $jsonPath | Set-Variable requestJson
+    # $requestJson | ConvertFrom-Json | Set-Variable scaleSetTemplate
 
     #### Test
-    Get-Content ./tmpew.json | Set-Variable requestJSon
+    Get-Content ./tmpew.json | Set-Variable requestJson
     Write-Debug "Request JSON: $requestJson"
-    $requestJson | ConvertFrom-Json | Set-Variable newScaleSet
-    $newScaleSet.azureId = "/subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/pipeline-test-agents-wypk/providers/Microsoft.Compute/virtualMachineScaleSets/pipeline-test-agents-wypk-linux-agents"
-    $newScaleSet.osType = "linux"
-    $newScaleSet | ConvertTo-Json | Set-Variable requestJson
+    $requestJson | ConvertFrom-Json | Set-Variable scaleSetTemplate
+    $scaleSetTemplate | Out-String | Write-Debug
+    $scaleSetTemplate.azureId = "/subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/pipeline-test-agents-xtxc/providers/Microsoft.Compute/virtualMachineScaleSets/pipeline-test-agents-xtxc-linux-agents"
+    $scaleSetTemplate.osType = "linux"
+    $scaleSetTemplate | ConvertTo-Json | Set-Variable requestJson
     Write-Debug "Request JSON: $requestJson"
     #####
 
+    $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
+    $scaleSetTemplate.azureId.Split('/')[-1] | Write-Host
+    if ([string]::IsNullOrEmpty($PoolName)) {
+        $PoolName = $scaleSetTemplate.azureId.Split('/')[-1]
+    }
+    Write-Debug "PoolName: $PoolName"
     $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?poolName=${PoolName}&authorizeAllPipelines=${AuthorizeAllPipelines}&autoProvisionProjectPools=${AutoProvisionProjectPools}&projectId=${ProjectId}&api-version=${apiVersion}"
     Write-Debug "REST API Url: $apiUrl"
 
     $requestHeaders = Create-RequestHeaders -OrganizationUrl $OrganizationUrl
 
     Write-Debug "Request JSON: $requestJson"
-    $requestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable scaleSet
+    $requestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
 
-    if (($DebugPreference -ine "SilentlyContinue") -and $scaleSet.value) {
-        $scaleSet.value | Write-Debug
+    if (($DebugPreference -ine "SilentlyContinue") -and $createdScaleSet.value) {
+        $createdScaleSet.value | Write-Debug
     }
-    $scaleSet
+    $createdScaleSet
 }
 
 # Main

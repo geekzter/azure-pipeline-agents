@@ -168,6 +168,12 @@ variable packer_tenant_id {
   default                      = null
 }
 
+variable pipeline_agent_diagnostics {
+  description                  = "Turn on diagnostics for the pipeline agent (Agent.Diagnostic)"
+  type                         = bool
+  default                      = false
+}
+
 variable pipeline_agent_version_id {
   # https://api.github.com/repos/microsoft/azure-pipelines-agent/releases
   default                      = "latest"

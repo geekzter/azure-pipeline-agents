@@ -88,6 +88,16 @@ function Create-ScaleSetPool(
     $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
     $PoolName ??= $scaleSet.azureId.Split('/')[-1]
 
+    #### Test
+    Get-Content ./tmpew.json | Set-Variable requestJSon
+    Write-Debug "Request JSON: $requestJson"
+    $requestJson | ConvertFrom-Json | Set-Variable newScaleSet
+    $newScaleSet.azureId = "/subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/pipeline-test-agents-wypk/providers/Microsoft.Compute/virtualMachineScaleSets/pipeline-test-agents-wypk-linux-agents"
+    $newScaleSet.osType = "linux"
+    $newScaleSet | ConvertTo-Json | Set-Variable requestJson
+    Write-Debug "Request JSON: $requestJson"
+    #####
+
     $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?poolName=${PoolName}&authorizeAllPipelines=${AuthorizeAllPipelines}&autoProvisionProjectPools=${AutoProvisionProjectPools}&projectId=${ProjectId}&api-version=${apiVersion}"
     Write-Debug "REST API Url: $apiUrl"
 

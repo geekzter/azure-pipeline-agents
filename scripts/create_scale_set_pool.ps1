@@ -26,34 +26,6 @@ if (!$Token) {
     exit
 }
 
-function Create-ScaleSetPool(
-    [parameter(Mandatory=$true)][string]$OrganizationUrl,
-    [parameter(Mandatory=$true)][string]$OS,
-    [parameter(Mandatory=$false)][string]$PoolName,
-    [parameter(Mandatory=$false)][string]$RequestJson,
-    [parameter(Mandatory=$false)][bool]$AuthorizeAllPipelines=$true,
-    [parameter(Mandatory=$false)][bool]$AutoProvisionProjectPools=$true,
-    [parameter(Mandatory=$false)][int]$ProjectId
-)
-{
-    "Creating scale set pool '$PoolName'..." | Write-Host
-    Write-Debug "PoolName: $PoolName"
-    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?poolName=${PoolName}&authorizeAllPipelines=${AuthorizeAllPipelines}&autoProvisionProjectPools=${AutoProvisionProjectPools}&projectId=${ProjectId}&api-version=${apiVersion}"
-    Write-Verbose "REST API Url: $apiUrl"
-
-    $requestHeaders = Create-RequestHeaders -Token $Token
-
-    Write-Debug "Request JSON: $RequestJson"
-    $RequestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
-
-    "Created scale set pool '$PoolName'" | Write-Host
-
-    if (($DebugPreference -ine "SilentlyContinue") -and $createdScaleSet.elasticPool) {
-        $createdScaleSet.elasticPool | Write-Debug
-    }
-    return $createdScaleSet
-}
-
 # Main
 $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
@@ -84,7 +56,7 @@ if ([string]::IsNullOrEmpty($PoolName)) {
 }
 
 # Test whether pool already exists
-List-ScaleSetPools -OrganizationUrl $OrganizationUrl -Token $Token | Set-Variable existingScaleSets
+Get-ScaleSetPools -OrganizationUrl $OrganizationUrl -Token $Token | Set-Variable existingScaleSets
 $existingScaleSets.value | ForEach-Object {
     $_.poolId
 } | Set-Variable existingPoolIds
@@ -102,7 +74,7 @@ if ($existingPoolIds) {
 }
 
 # Create VMSS pool
-Create-ScaleSetPool -OrganizationUrl $OrganizationUrl `
+New-ScaleSetPool -OrganizationUrl $OrganizationUrl `
                     -OS $OS.ToLowerInvariant() `
                     -PoolName $PoolName `
                     -RequestJson $RequestJson `

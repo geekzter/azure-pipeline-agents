@@ -135,19 +135,7 @@ function Get-TerraformWorkspace () {
     }
 }
 
-function Invoke (
-    [string]$cmd
-) {
-    Write-Host "`n$cmd" -ForegroundColor Green 
-    Invoke-Expression $cmd
-    $exitCode = $LASTEXITCODE
-    if ($exitCode -ne 0) {
-        Write-Warning "'$cmd' exited with status $exitCode"
-        exit $exitCode
-    }
-}
-
-function List-ScaleSetPools(
+function Get-ScaleSetPools(
     [parameter(Mandatory=$true)][string]$OrganizationUrl,
     [parameter(Mandatory=$true)][string]$Token
 )
@@ -162,4 +150,44 @@ function List-ScaleSetPools(
         $scaleSets.value | Write-Debug
     }
     return $scaleSets
+}
+
+function Invoke (
+    [string]$cmd
+) {
+    Write-Host "`n$cmd" -ForegroundColor Green 
+    Invoke-Expression $cmd
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+        Write-Warning "'$cmd' exited with status $exitCode"
+        exit $exitCode
+    }
+}
+
+function New-ScaleSetPool(
+    [parameter(Mandatory=$true)][string]$OrganizationUrl,
+    [parameter(Mandatory=$true)][string]$OS,
+    [parameter(Mandatory=$false)][string]$PoolName,
+    [parameter(Mandatory=$false)][string]$RequestJson,
+    [parameter(Mandatory=$false)][bool]$AuthorizeAllPipelines=$true,
+    [parameter(Mandatory=$false)][bool]$AutoProvisionProjectPools=$true,
+    [parameter(Mandatory=$false)][int]$ProjectId
+)
+{
+    "Creating scale set pool '$PoolName'..." | Write-Host
+    Write-Debug "PoolName: $PoolName"
+    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?poolName=${PoolName}&authorizeAllPipelines=${AuthorizeAllPipelines}&autoProvisionProjectPools=${AutoProvisionProjectPools}&projectId=${ProjectId}&api-version=${apiVersion}"
+    Write-Verbose "REST API Url: $apiUrl"
+
+    $requestHeaders = Create-RequestHeaders -Token $Token
+
+    Write-Debug "Request JSON: $RequestJson"
+    $RequestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
+
+    "Created scale set pool '$PoolName'" | Write-Host
+
+    if (($DebugPreference -ine "SilentlyContinue") -and $createdScaleSet.elasticPool) {
+        $createdScaleSet.elasticPool | Write-Debug
+    }
+    return $createdScaleSet
 }

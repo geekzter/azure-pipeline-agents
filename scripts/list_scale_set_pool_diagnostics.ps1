@@ -41,7 +41,7 @@ $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
 
 # Retrieve pools
-List-ScaleSetPools -OrganizationUrl $OrganizationUrl -Token $Token | Set-Variable existingScaleSets
+Get-ScaleSetPools -OrganizationUrl $OrganizationUrl -Token $Token | Set-Variable existingScaleSets
 $existingScaleSets.value | ForEach-Object {
     $_.poolId
 } | Set-Variable existingPoolIds

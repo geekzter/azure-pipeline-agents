@@ -4,7 +4,8 @@
 
 param ( 
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI,
-    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
+    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN,
+    [parameter(Mandatory=$false)][int]$Top=50
 ) 
 
 ### Internal Functions
@@ -46,12 +47,17 @@ $existingScaleSets.value | ForEach-Object {
 } | Set-Variable existingPoolIds
 Write-Debug "poolIds: $existingPoolIds"
 
-Get-Pool -OrganizationUrl $OrganizationUrl -PoolId $existingPoolIds | Set-Variable pools
+if (!$existingPoolIds) {
+    Write-Warning "No scale set pools found."
+    exit
+}
+
+Get-Pool -OrganizationUrl $OrganizationUrl -PoolId $existingPoolIds| Set-Variable pools
 
 $logItems = [System.Collections.ArrayList]@()
 foreach ($pool in $pools.value) {
     "Retrieving logs for pool {1} '{0}'" -f $pool.name, $pool.id | Write-Verbose
-    Get-ScaleSetPoolLogs -OrganizationUrl $OrganizationUrl -PoolId $pool.id | Set-Variable logs
+    Get-ScaleSetPoolLogs -OrganizationUrl $OrganizationUrl -PoolId $pool.id -Top $Top | Set-Variable logs
     $logs.value | ForEach-Object {
         $_.timestamp = (Get-Date $_.timestamp -Format "yyyy-MM-dd HH:mm:ss")
         $_ | Add-Member -NotePropertyName poolName -NotePropertyValue $pool.name

@@ -115,7 +115,7 @@ resource azurerm_windows_virtual_machine windows_agent {
 
   lifecycle {
     ignore_changes             = [
-      # custom_data,
+      custom_data,
       source_image_id,
       source_image_reference.0.version,
     ]

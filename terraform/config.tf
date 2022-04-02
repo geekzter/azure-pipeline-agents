@@ -36,7 +36,7 @@ locals {
       "maxSavedNodeCount"      = 1
       "osType"                 = vmss.os
       "desiredSize"            = min(vmss.count+1,vmss.max_count)
-      "agentInteractiveUI"     = true
+      "agentInteractiveUI"     = false
       "timeToLiveMinutes"      = 30
     }
   }

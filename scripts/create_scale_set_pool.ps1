@@ -15,9 +15,9 @@ param (
 
 # Validation
 if ([string]::IsNullOrEmpty($PoolName)) {
-    $PoolName = "${OS} scale set agents"
+    "{0}{1} scale set agents" -f $OS.Substring(0,1).ToUpperInvariant(), $OS.Substring(1) | Set-Variable PoolName
     if ($Workspace -and ($Workspace -ne "default")) {
-        "{0}{1} ({2})" -f $PoolName.Substring(0,1).ToUpperInvariant(), $PoolName.Substring(1), $Workspace | Set-Variable PoolName
+        "{0} ({1})" -f $PoolName, $Workspace | Set-Variable PoolName
     }
     Write-Debug "PoolName: $PoolName"
 }
@@ -36,6 +36,7 @@ function Create-ScaleSetPool(
     [parameter(Mandatory=$false)][int]$ProjectId
 )
 {
+    "Creating scale set pool '$PoolName'..." | Write-Host
     Write-Debug "PoolName: $PoolName"
     $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?poolName=${PoolName}&authorizeAllPipelines=${AuthorizeAllPipelines}&autoProvisionProjectPools=${AutoProvisionProjectPools}&projectId=${ProjectId}&api-version=${apiVersion}"
     Write-Verbose "REST API Url: $apiUrl"
@@ -45,8 +46,10 @@ function Create-ScaleSetPool(
     Write-Debug "Request JSON: $RequestJson"
     $RequestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
 
-    if (($DebugPreference -ine "SilentlyContinue") -and $createdScaleSet.value) {
-        $createdScaleSet.value | Write-Debug
+    "Created scale set pool '$PoolName'" | Write-Host
+
+    if (($DebugPreference -ine "SilentlyContinue") -and $createdScaleSet.elasticPool) {
+        $createdScaleSet.elasticPool | Write-Debug
     }
     return $createdScaleSet
 }
@@ -64,7 +67,13 @@ if (!(Test-Path $jsonFile)) {
 Get-Content $jsonFile | Set-Variable requestJson
 $requestJson | ConvertFrom-Json | Set-Variable scaleSetTemplate
 Write-Debug "Request JSON: $requestJson"
-# Optional manipulation of template
+# Validation and optional manipulation of template
+if ([string]::IsNullOrEmpty($scaleSetTemplate.serviceEndpointId)) {
+    throw "serviceEndpointId is required, but missing in '$jsonFile"
+}
+if ([string]::IsNullOrEmpty($scaleSetTemplate.serviceEndpointScope)) {
+    throw "serviceEndpointScope is required, but missing in '$jsonFile"
+}
 $scaleSetTemplate | Out-String | Write-Debug
 $scaleSetTemplate | ConvertTo-Json | Set-Variable requestJson
 Write-Debug "Request JSON: $requestJson"
@@ -81,13 +90,15 @@ $existingScaleSets.value | ForEach-Object {
 } | Set-Variable existingPoolIds
 Write-Debug "poolIds: $existingPoolIds"
 
-Get-Pool -OrganizationUrl $OrganizationUrl -PoolId $existingPoolIds | Set-Variable pools
-$pools.value | ForEach-Object {
-    $_.name
-} | Set-Variable existingPoolNames
-if ($existingPoolNames -and ($existingPoolNames -contains $PoolName)) {
-    Write-Warning "Pool '$PoolName' already exists at ${OrganizationUrl}/_settings/agentpools"
-    exit
+if ($existingPoolIds) {
+    Get-Pool -OrganizationUrl $OrganizationUrl -PoolId $existingPoolIds | Set-Variable pools
+    $pools.value | ForEach-Object {
+        $_.name
+    } | Set-Variable existingPoolNames
+    if ($existingPoolNames -and ($existingPoolNames -contains $PoolName)) {
+        Write-Warning "Pool '$PoolName' already exists at ${OrganizationUrl}/_settings/agentpools"
+        exit
+    }    
 }
 
 # Create VMSS pool
@@ -96,4 +107,7 @@ Create-ScaleSetPool -OrganizationUrl $OrganizationUrl `
                     -PoolName $PoolName `
                     -RequestJson $RequestJson `
                     | Set-Variable scaleSet
-$scaleSet
+
+if ($scaleSet.elasticPool) {
+    $scaleSet.elasticPool | Format-List
+}

@@ -1,3 +1,7 @@
+# Distributed Tasks requires 7.1
+# https://docs.microsoft.com/en-us/rest/api/azure/devops/distributedtask/?view=azure-devops-rest-7.1
+$apiVersion="7.1-preview.1"
+
 function AzLogin (
     [parameter(Mandatory=$false)][switch]$DisplayMessages=$false
 ) {
@@ -66,6 +70,40 @@ function AzLogin (
     }
 }
 
+function Create-RequestHeaders(
+    [parameter(Mandatory=$true)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
+)
+{
+    $base64AuthInfo = [Convert]::ToBase64String([System.Text.ASCIIEncoding]::ASCII.GetBytes(":${Token}"))
+    $authHeader = "Basic $base64AuthInfo"
+    Write-Debug "Authorization: $authHeader"
+    $requestHeaders = @{
+        Accept = "application/json"
+        Authorization = $authHeader
+        "Content-Type" = "application/json"
+    }
+
+    return $requestHeaders
+}
+
+function Get-Pool(
+    [parameter(Mandatory=$true)][string]$OrganizationUrl,
+    [parameter(Mandatory=$true)][int[]]$PoolId
+)
+{
+    $poolIdString = ($PoolId -join ",")
+    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/pools?poolIds=${poolIdString}&api-version=${apiVersion}"
+    Write-Verbose "REST API Url: $apiUrl"
+
+    $requestHeaders = Create-RequestHeaders -Token $Token
+    Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable pools
+
+    if (($DebugPreference -ine "SilentlyContinue") -and $pools.value) {
+        $pools.value | Write-Debug
+    }
+    return $pools
+}
+
 function Get-TerraformDirectory {
     return (Join-Path (Split-Path $PSScriptRoot -Parent) "terraform")
 }
@@ -107,4 +145,21 @@ function Invoke (
         Write-Warning "'$cmd' exited with status $exitCode"
         exit $exitCode
     }
+}
+
+function List-ScaleSetPools(
+    [parameter(Mandatory=$true)][string]$OrganizationUrl,
+    [parameter(Mandatory=$true)][string]$Token
+)
+{
+    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?api-version=${apiVersion}"
+    Write-Verbose "REST API Url: $apiUrl"
+
+    $requestHeaders = Create-RequestHeaders -Token $Token
+    Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable scaleSets
+    
+    if (($DebugPreference -ine "SilentlyContinue") -and $scaleSets.value) {
+        $scaleSets.value | Write-Debug
+    }
+    return $scaleSets
 }

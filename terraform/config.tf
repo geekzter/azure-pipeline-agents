@@ -10,22 +10,32 @@ locals {
     environment                = local.environment_variables
   })
   
-  virtual_machine_scale_set_ids= merge(
-    {for vmss in module.scale_set_linux_agents   : "linux"   => vmss.virtual_machine_scale_set_id},
-    {for vmss in module.scale_set_windows_agents : "windows" => vmss.virtual_machine_scale_set_id}
+  virtual_machine_scale_sets   = merge(
+    {for vmss in module.scale_set_linux_agents   : "linux"   => {
+      id                       = vmss.virtual_machine_scale_set_id
+      count                    = var.linux_scale_set_agent_count
+      max_count                = var.linux_scale_set_agent_max_count
+      os                       = "linux"
+    }},
+    {for vmss in module.scale_set_windows_agents : "windows" => {
+      id                       = vmss.virtual_machine_scale_set_id
+      count                    = var.windows_scale_set_agent_count
+      max_count                = var.windows_scale_set_agent_max_count
+      os                       = "windows"
+    }}
   )
 
   elastic_pools                = {
-    for os in keys(local.virtual_machine_scale_set_ids) : os => {
+    for vmss in local.virtual_machine_scale_sets : vmss.os => {
       "serviceEndpointId"      = var.service_connection_id
       "serviceEndpointScope"   = var.service_connection_project
-      "azureId"                = local.virtual_machine_scale_set_ids[os]
-      "maxCapacity"            = 8
-      "desiredIdle"            = 2 # linux_scale_set_agent_count/windows_scale_set_agent_count
+      "azureId"                = vmss.id
+      "maxCapacity"            = vmss.max_count
+      "desiredIdle"            = min(vmss.count,vmss.max_count)
       "recycleAfterEachUse"    = true
-      "maxSavedNodeCount"      = 0
-      "osType"                 = os
-      "desiredSize"            = 3 # linux_scale_set_agent_count/windows_scale_set_agent_count
+      "maxSavedNodeCount"      = 1
+      "osType"                 = vmss.os
+      "desiredSize"            = min(vmss.count+1,vmss.max_count)
       "agentInteractiveUI"     = true
       "timeToLiveMinutes"      = 30
     }

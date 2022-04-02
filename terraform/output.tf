@@ -86,8 +86,8 @@ output user_password {
   value                        = local.password
 }
 
-output virtual_machine_scale_set_ids {
-  value                        = local.virtual_machine_scale_set_ids
+output virtual_machine_scale_sets {
+  value                        = local.virtual_machine_scale_sets
 }
 output virtual_network_id {
   value                        = module.network.virtual_network_id

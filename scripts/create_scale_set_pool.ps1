@@ -6,6 +6,7 @@ param (
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI,
     [parameter(Mandatory=$true)][string][validateset("Linux", "Windows")]$OS,
     [parameter(Mandatory=$false)][string]$PoolName,
+    [parameter(Mandatory=$false)][switch]$Replace,
     [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default",
     [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
 ) 
@@ -77,25 +78,19 @@ function Create-ScaleSetPool(
 {
     # Retrieve Terraform generated configuration
     $jsonPath = Join-Path (Split-Path $PSScriptRoot -Parent) data $Workspace "${OS}_elastic_pool.json"
+    Write-Debug "JSON Path: $jsonPath"
     if (!(Test-Path $jsonPath)) {
-        Write-Warning "${jsonPath} not found, has infrastrucure been provisioned in workspace '${Workspace}'?"
+        Write-Warning "${jsonPath} not found, has infrastructure been provisioned in workspace '${Workspace}'?"
         exit
     }
-    # Get-Content $jsonPath | Set-Variable requestJson
-    # $requestJson | ConvertFrom-Json | Set-Variable scaleSetTemplate
-
-    #### Test
-    Get-Content ./tmpew.json | Set-Variable requestJson
-    Write-Debug "Request JSON: $requestJson"
+    Get-Content $jsonPath | Set-Variable requestJson
     $requestJson | ConvertFrom-Json | Set-Variable scaleSetTemplate
+    Write-Debug "Request JSON: $requestJson"
+    # Optional manipulation of template
     $scaleSetTemplate | Out-String | Write-Debug
-    $scaleSetTemplate.azureId = "/subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/resourceGroups/pipeline-test-agents-xtxc/providers/Microsoft.Compute/virtualMachineScaleSets/pipeline-test-agents-xtxc-linux-agents"
-    $scaleSetTemplate.osType = "linux"
     $scaleSetTemplate | ConvertTo-Json | Set-Variable requestJson
     Write-Debug "Request JSON: $requestJson"
-    #####
 
-    $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
     $scaleSetTemplate.azureId.Split('/')[-1] | Write-Host
     if ([string]::IsNullOrEmpty($PoolName)) {
         $PoolName = $scaleSetTemplate.azureId.Split('/')[-1]

@@ -9,10 +9,10 @@ However, there may be scenarios where you need to manage your own agents:
 - Configuration can't be met with any of the hosted agents (e.g. Linux distribution, Windows version)
 - Improve build times by caching artifacts
 
-The first point is probably the most common reason to set up your own agents. With the advent of [Private Link](https://docs.microsoft.com/en-us/azure/private-link/private-link-overview) it is more common to deploy Azure Services so that they can only be access from a virtual network. This requires an agent hosting model that fits that constraint. 
+The first point is probably the most common reason to set up your own agents. With the advent of [Private Link](https://docs.microsoft.com/en-us/azure/private-link/private-link-overview) it is more common to deploy Azure Services so that they can only be accessed from a virtual network. This requires an agent hosting model that fits that constraint. 
 
 # Architecture
-This repository contains Virtual Network integrated [Azure Pipeline Scale set agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) and [self-hosted agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) that can build the VM images it itself uses. 
+This repository contains Virtual Network integrated [Azure Pipeline scale set agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) and [self-hosted agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) that can build the VM images it itself uses. 
 
 Azure services used include:
 - Bastion
@@ -20,11 +20,12 @@ Azure services used include:
 - Firewall
 - NAT Gateway 
 - Pipelines
+- Storage File Share
 - Virtual Network 
 
 Tools used are:
 - Azure CLI 
-- clound-init
+- cloud-init
 - Packer
 - PowerShell
 - Terraform
@@ -36,35 +37,35 @@ Tools used are:
 
 This repo will provision an Azure Virtual Machine Scale Set in a Virtual Network. It will provision an egress device (Firewall or NAT Gateway) and remote access (Bastion). A choice can be made between a NAT Gateway (optimize cost) or Azure Firewall (optimize control) depending on the `deploy_firewall` Terraform variable. This also impacts the extend to which resources are connected via Private Endpoints.
 
-To enable Virtual Network integrated image builds with [build-image-isolated.yml](pipelines/build-image-isolated.yml), a separate Virtual Network (and resource group, potentially in a different subscription) to be used by Packer is created. For the image build VM's themselves yet another resource group is created. Policy is assigned to this resource group to prevent image build time VM extension installation which would render the image unusable (we want to install extensions at deploy time, not build time).
+To enable Virtual Network integrated image builds with [build-image-isolated.yml](pipelines/build-image-isolated.yml), a separate Virtual Network (and resource group, optionally in a different subscription) to be used by Packer is created. For the image build VM's themselves yet another resource group is created. Policy is assigned to this resource group to prevent image build time VM extension installation which would render the image unusable (we want to install extensions at deploy time, not build time).
 
 ## Image lifecycle
 <p align="center">
 <img src="visuals/image-lifecycle.png" width="640">
 </p>      
 
-The [build-image.yml](pipelines/build-images.yml) uses the [method and scripts described on the actions/virtual-environments GitHub repo](https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
+The [build-image.yml](pipelines/build-images.yml) pipeline uses the [method and scripts described on the actions/virtual-environments GitHub repo](https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
 
-In Enterprise you will have isolation requirements e.g. no public endpoints and build in a Virtual Network, protect the identity used for the build, etc. To accommodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/virtual-environments/tree/main/images/linux) and provides the variables required to customize the build VM. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
+In Enterprise you will have isolation requirements (e.g. no public endpoints), build in a Virtual Network, protect the identity used for the build, etc. To accommodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/virtual-environments/tree/main/images/linux) and provides the variables required to customize the VM that is used to create the image from. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
 
 ### Licensing
-Note that by building an image you are accepting licenses pertaining to the tools installed at software installation (i.e. build) time.
+Note that by building an image **you are accepting licenses** pertaining to the tools installed **at software installation (i.e. build) time**.
 
 ## Agent lifecycle
 <p align="center">
 <img src="visuals/agent-lifecycle.png" width="640">
 </p>     
 
-With the aforementioned image template created by [actions/virtual-environments](https://github.com/actions/virtual-environments/), or even a Marketplace image, you can make sure you're always on the latest version. Instead of post deployment patching, an immutable infrastructure approach is taken when new versions of the image are built.
+With the aforementioned image template created by [actions/virtual-environments](https://github.com/actions/virtual-environments/), or an Azure Marketplace image, you can make sure you're always on the latest version. Instead of post deployment patching, an immutable infrastructure approach is taken when new versions of the image are built instead of patching VM's.
 
 Lifecycle steps are:
 - A Virtual Machine Scale Set (VMSS) is created with the (at that time) latest version of an image
-- Adding the VMSS has a [Scale Set agent pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) ensures the Azure Pipelines agent is installed
+- Adding the VMSS has a [scale set agent pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) ensures the Azure Pipelines agent is installed
 - When a pipeline job needs to be run, a VMMS instance is assigned to run the job
 - When the pipeline completes, the VMSS instance is destroyed
 - When Virtual Machine Scale Set needs a new instance, an instance is created from the latest VM image version   
 
-The above ensures VM instances are kept up to date. The speed of this is controlled by the minimum and maximum number of instances if the Scale Set agents pool (as configured in Azure DevOps).
+The above ensures VM instances are kept up to date. The speed of this is controlled by the minimum and maximum number of instances if the scale set agents pool (as configured in Azure DevOps).
 
 # Infrastructure Provisioning
 To customize provisioning, see [configuration](#configuration).
@@ -76,12 +77,12 @@ Instead a terminal should look like:
 `/workspaces/azure-pipeline-agents/scripts [master ≡]>`   
 Follow the instructions shown in the terminal to provision infrastructure.
 ### Environment variables
-If you fork this repository on GitHub, you can define [Codescape secrets](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-encrypted-secrets-for-your-codespaces). These will be surfaced as environment variables with the same name. Defining secrets for ARM_TENANT_ID and ARM_SUBSCRIPTION_ID will make sure you target the right Azure subscription.
+If you fork this repository on GitHub, you can define [Codescape secrets](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-encrypted-secrets-for-your-codespaces). These will be surfaced as environment variables with the same name. Defining secrets for `ARM_TENANT_ID` and `ARM_SUBSCRIPTION_ID` will make sure you target the right Azure subscription.
 
 ### Session Management
 You can reconnect to disconnected terminal sessions using [tmux](https://github.com/tmux/tmux/wiki). This [blog post](https://geekzter.medium.com/session-management-for-cloud-shell-and-codespaces-29f474925c53) explains how that works. Just type    
 `ct <terraform workspace>`   
-to enter a tmux session with the terraform workspace environment variable TF_WORKSPACE set. Type the same to get back into a previously disconnected session. This can be done up to the timeout [configured](https://docs.github.com/en/codespaces/customizing-your-codespace/setting-your-timeout-period-for-codespaces) in Codespaces.
+to enter a tmux session with the terraform workspace environment variable `TF_WORKSPACE` set. Type the same to get back into a previously disconnected session. This can be done up to the timeout [configured](https://docs.github.com/en/codespaces/customizing-your-codespace/setting-your-timeout-period-for-codespaces) in Codespaces.
 ## Provision locally
 ### Pre-requisites
 If you set this up locally, make sure you have the following pre-requisites:
@@ -90,21 +91,16 @@ If you set this up locally, make sure you have the following pre-requisites:
 - [Terraform](https://www.terraform.io/downloads.html) (to get that you can use [tfenv](https://github.com/tfutils/tfenv) on Linux & macOS, [Homebrew](https://github.com/hashicorp/homebrew-tap) on macOS or [chocolatey](https://chocolatey.org/packages/terraform) on Windows).
 
 ### Interactive
-Use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) to login:  
-`az login`  
-`az account set --subscription="SUBSCRIPTION_ID"`
-
-This also [authenticates](https://www.terraform.io/docs/providers/azurerm/guides/azure_cli.html) the Terraform provider.
-You can provision agents by running:  
-`terraform init`  
-`terraform apply`
-
-### Scripted
-Alternatively, run:  
-`scripts/deploy.ps1 -Apply`
+Run:  
+`scripts/deploy.ps1 -Apply`   
+This will also log into Azure and let you select a subscription in case `ARM_SUBSCRIPTION_ID` is not set.
 
 ### Pool
-To create an Azure Pipeline pool from the scale set, use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).
+To create an Azure Pipeline pool from the scale set, use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).   
+Alteratively, you can run [create_scale_set_pools.ps1](scripts/create_scale_set_pools.ps1). This requires:
+- `AZURE_DEVOPS_EXT_PAT` or `AZDO_PERSONAL_ACCESS_TOKEN` to be set
+- `AZDO_ORG_SERVICE_URL` to be set
+- Terraform variables `service_connection_id` and `service_connection_scope` to be set, or the generated `*.elastic_pool.json` files in `data/TF_WORKSPACE` to be modified.
 ## Provision from Pipeline
 This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. You'll need the [Azure Pipelines Terraform Tasks](https://marketplace.visualstudio.com/items?itemName=charleszipp.azure-pipelines-tasks-terraform) extension installed.
 To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool, and 'Limit job authorization scope to current project for non-release pipelines' disabled. For this reason, it is recommended to have a dedicated project for this pipeline.

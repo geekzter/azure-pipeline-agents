@@ -1,5 +1,15 @@
 #!/usr/bin/env pwsh
+<# 
+.SYNOPSIS 
+    Create scale set agent pool
+ 
+.DESCRIPTION 
+    Terraform generates a template (<os>_elastic_pool.json) in data/<WORKSPACE> for each Virtual Machine Scale Set is creates.
+    This script takes those templates and creates a scale set agent pool.
 
+.EXAMPLE
+    ./create_scale_set_pool.ps1 -OS linux -ServiceConnectionName my-azure-subscription -ServiceConnectionProjectName PipelineAgents
+#> 
 #Requires -Version 7
 
 param ( 
@@ -23,12 +33,15 @@ if ([string]::IsNullOrEmpty($PoolName)) {
     }
     Write-Debug "PoolName: $PoolName"
 }
+$OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
 if (!$Token) {
     Write-Warning "No access token found. Please specify -Token or set the AZURE_DEVOPS_EXT_PAT or AZDO_PERSONAL_ACCESS_TOKEN environment variable."
     exit 1
 }
 
+# Retrieve service connection GUID's
 if ($ServiceConnectionName -and $ServiceConnectionProjectName) {
+    $Token | az devops login --organization $OrganizationUrl
     az devops service-endpoint list --org $OrganizationUrl `
                                     --project $ServiceConnectionProjectName `
                                     --query "[?name=='$ServiceConnectionName']" `
@@ -44,7 +57,6 @@ if ($ServiceConnectionName -and $ServiceConnectionProjectName) {
 
 # Main
 "`nDeploying {0} scale set pool ({1})..." -f $OS, $Workspace | Write-Host
-$OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
 
 # Retrieve Terraform generated configuration
@@ -101,10 +113,10 @@ if ($existingPoolIds) {
 
 # Create VMSS pool
 New-ScaleSetPool -OrganizationUrl $OrganizationUrl `
-                    -OS $OS.ToLowerInvariant() `
-                    -PoolName $PoolName `
-                    -RequestJson $RequestJson `
-                    | Set-Variable scaleSet
+                 -OS $OS.ToLowerInvariant() `
+                 -PoolName $PoolName `
+                 -RequestJson $RequestJson `
+                 | Set-Variable scaleSet
 
 if ($scaleSet.elasticPool) {
     $scaleSet.elasticPool | Format-List

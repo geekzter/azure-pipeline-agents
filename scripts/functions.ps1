@@ -96,7 +96,12 @@ function Get-Pool(
     Write-Verbose "REST API Url: $apiUrl"
 
     $requestHeaders = Create-RequestHeaders -Token $Token
-    Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable pools
+    try {
+        Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable pools
+    } catch {
+        Write-RestError
+        exit 1
+    }
 
     if (($DebugPreference -ine "SilentlyContinue") -and $pools.value) {
         $pools.value | Write-Debug
@@ -144,7 +149,12 @@ function Get-ScaleSetPools(
     Write-Verbose "REST API Url: $apiUrl"
 
     $requestHeaders = Create-RequestHeaders -Token $Token
-    Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable scaleSets
+    try {
+        Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable scaleSets
+    } catch {
+        Write-RestError
+        exit 1
+    }
     
     if (($DebugPreference -ine "SilentlyContinue") -and $scaleSets.value) {
         $scaleSets.value | Write-Debug
@@ -182,7 +192,12 @@ function New-ScaleSetPool(
     $requestHeaders = Create-RequestHeaders -Token $Token
 
     Write-Debug "Request JSON: $RequestJson"
-    $RequestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
+    try {
+        $RequestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
+    } catch {
+        Write-RestError
+        exit 1
+    }
 
     "Created scale set pool '$PoolName'" | Write-Host
 
@@ -190,4 +205,19 @@ function New-ScaleSetPool(
         $createdScaleSet.elasticPool | Write-Debug
     }
     return $createdScaleSet
+}
+
+function Write-RestError() {
+    if ($_.ErrorDetails.Message) {
+        try {
+            $_.ErrorDetails.Message | ConvertFrom-Json | Set-Variable restError
+            $restError | Format-List | Out-String | Write-Debug
+            $message = $restError.message
+        } catch {
+            $message = $_.ErrorDetails.Message
+        }
+    } else {
+        $message = $_.Exception.Message
+    }
+    Write-Warning $message
 }

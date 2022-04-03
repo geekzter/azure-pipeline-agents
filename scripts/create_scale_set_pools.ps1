@@ -1,5 +1,15 @@
 #!/usr/bin/env pwsh
+<# 
+.SYNOPSIS 
+    Create scale set agent pools
+ 
+.DESCRIPTION 
+    Terraform generates a template (<os>_elastic_pool.json) in data/<WORKSPACE> for each Virtual Machine Scale Set is creates.
+    This script takes those templates and creates a scale set agent pool for each.
 
+.EXAMPLE
+    ./create_scale_set_pools.ps1 -ServiceConnectionName my-azure-subscription -ServiceConnectionProjectName PipelineAgents
+#> 
 #Requires -Version 7
 
 param ( 

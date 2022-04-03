@@ -1,5 +1,4 @@
 #!/usr/bin/env pwsh
-
 <# 
 .SYNOPSIS 
     Deploys Azure resources using Terraform
@@ -19,7 +18,7 @@ param (
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform plan stage")][switch]$Plan=$false,
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform validate stage")][switch]$Validate=$false,
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform apply stage (implies plan)")][switch]$Apply=$false,
-    [parameter(Mandatory=$false,HelpMessage="Deploys scale set pools")][switch]$ScaleSetPools=$false,
+    [parameter(Mandatory=$false,HelpMessage="Deploys scale set pools")][switch]$CreateScaleSetPools=$false,
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform destroy stage")][switch]$Destroy=$false,
     [parameter(Mandatory=$false,HelpMessage="Show Terraform output variables")][switch]$Output=$false,
     [parameter(Mandatory=$false,HelpMessage="Don't show prompts unless something get's deleted that should not be")][switch]$Force=$false,
@@ -200,7 +199,7 @@ try {
         Invoke "terraform output"
     }
 
-    if ($ScaleSetPools -and !$Destroy) {
+    if ($CreateScaleSetPools -and !$Destroy) {
         . (Join-Path $PSScriptRoot create_scale_set_pools.ps1)
     }
 

@@ -127,6 +127,10 @@ variable linux_scale_set_agent_count {
   default                      = 2
   type                         = number
 }
+variable linux_scale_set_agent_max_count {
+  default                      = 8
+  type                         = number
+}
 variable linux_self_hosted_agent_count {
   default                      = 1
   type                         = number
@@ -168,6 +172,12 @@ variable packer_tenant_id {
   default                      = null
 }
 
+variable pipeline_agent_diagnostics {
+  description                  = "Turn on diagnostics for the pipeline agent (Agent.Diagnostic)"
+  type                         = bool
+  default                      = false
+}
+
 variable pipeline_agent_version_id {
   # https://api.github.com/repos/microsoft/azure-pipelines-agent/releases
   default                      = "latest"
@@ -192,6 +202,16 @@ variable script_wrapper_check {
   description                  = "Set to true in a .auto.tfvars file to force Terraform to check whether it's run from deploy.ps1"
   type                         = bool
   default                      = false
+}
+
+variable service_connection_id {
+  description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
+  default                      = ""
+}
+
+variable service_connection_project {
+  description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
+  default                      = ""
 }
 
 variable shared_image_gallery_id {
@@ -228,10 +248,6 @@ variable vm_accelerated_networking {
   default                      = false
 }
 
-variable windows_agent_count {
-  default                      = 2
-  type                         = number
-}
 variable windows_os_image_id {
   default                      = null
 }
@@ -262,6 +278,10 @@ variable windows_pipeline_agent_pool {
 }
 variable windows_scale_set_agent_count {
   default                      = 2
+  type                         = number
+}
+variable windows_scale_set_agent_max_count {
+  default                      = 8
   type                         = number
 }
 variable windows_self_hosted_agent_count {

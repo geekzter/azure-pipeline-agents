@@ -1,23 +1,18 @@
+# Distributed Tasks requires 7.1
+# https://docs.microsoft.com/en-us/rest/api/azure/devops/distributedtask/?view=azure-devops-rest-7.1
+$apiVersion="7.1-preview.1"
+
 function AzLogin (
     [parameter(Mandatory=$false)][switch]$DisplayMessages=$false
 ) {
-    # Are we logged into the wrong tenant?
-    Invoke-Command -ScriptBlock {
-        $Private:ErrorActionPreference = "Continue"
-        if ($env:ARM_TENANT_ID) {
-            $script:loggedInTenantId = $(az account show --query tenantId -o tsv 2>$null)
-        }
+    # Are we logged in? If so, is it the right tenant?
+    $azureAccount = $null
+    az account show 2>$null | ConvertFrom-Json | Set-Variable azureAccount
+    if ($azureAccount -and "${env:ARM_TENANT_ID}" -and ($azureAccount.tenantId -ine $env:ARM_TENANT_ID)) {
+        Write-Warning "Logged into tenant $($azureAccount.tenant_id) instead of $env:ARM_TENANT_ID (`$env:ARM_TENANT_ID)"
+        $azureAccount = $null
     }
-    if ($loggedInTenantId -and ($loggedInTenantId -ine $env:ARM_TENANT_ID)) {
-        Write-Warning "Logged into tenant $loggedInTenantId instead of $env:ARM_TENANT_ID (`$env:ARM_TENANT_ID), logging off az session"
-        az logout -o none
-    }
-
-    # Are we logged in?
-    $account = $null
-    az account show 2>$null | ConvertFrom-Json | Set-Variable account
-    # Set Azure CLI context
-    if (-not $account) {
+    if (-not $azureAccount) {
         if ($env:CODESPACES -ieq "true") {
             $azLoginSwitches = "--use-device-code"
         }
@@ -75,6 +70,45 @@ function AzLogin (
     }
 }
 
+function Create-RequestHeaders(
+    [parameter(Mandatory=$true)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
+)
+{
+    $base64AuthInfo = [Convert]::ToBase64String([System.Text.ASCIIEncoding]::ASCII.GetBytes(":${Token}"))
+    $authHeader = "Basic $base64AuthInfo"
+    Write-Debug "Authorization: $authHeader"
+    $requestHeaders = @{
+        Accept = "application/json"
+        Authorization = $authHeader
+        "Content-Type" = "application/json"
+    }
+
+    return $requestHeaders
+}
+
+function Get-Pool(
+    [parameter(Mandatory=$true)][string]$OrganizationUrl,
+    [parameter(Mandatory=$true)][int[]]$PoolId
+)
+{
+    $poolIdString = ($PoolId -join ",")
+    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/pools?poolIds=${poolIdString}&api-version=${apiVersion}"
+    Write-Verbose "REST API Url: $apiUrl"
+
+    $requestHeaders = Create-RequestHeaders -Token $Token
+    try {
+        Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable pools
+    } catch {
+        Write-RestError
+        exit 1
+    }
+
+    if (($DebugPreference -ine "SilentlyContinue") -and $pools.value) {
+        $pools.value | Write-Debug
+    }
+    return $pools
+}
+
 function Get-TerraformDirectory {
     return (Join-Path (Split-Path $PSScriptRoot -Parent) "terraform")
 }
@@ -106,6 +140,28 @@ function Get-TerraformWorkspace () {
     }
 }
 
+function Get-ScaleSetPools(
+    [parameter(Mandatory=$true)][string]$OrganizationUrl,
+    [parameter(Mandatory=$true)][string]$Token
+)
+{
+    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?api-version=${apiVersion}"
+    Write-Verbose "REST API Url: $apiUrl"
+
+    $requestHeaders = Create-RequestHeaders -Token $Token
+    try {
+        Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Get | Set-Variable scaleSets
+    } catch {
+        Write-RestError
+        exit 1
+    }
+    
+    if (($DebugPreference -ine "SilentlyContinue") -and $scaleSets.value) {
+        $scaleSets.value | Write-Debug
+    }
+    return $scaleSets
+}
+
 function Invoke (
     [string]$cmd
 ) {
@@ -116,4 +172,52 @@ function Invoke (
         Write-Warning "'$cmd' exited with status $exitCode"
         exit $exitCode
     }
+}
+
+function New-ScaleSetPool(
+    [parameter(Mandatory=$true)][string]$OrganizationUrl,
+    [parameter(Mandatory=$true)][string]$OS,
+    [parameter(Mandatory=$false)][string]$PoolName,
+    [parameter(Mandatory=$false)][string]$RequestJson,
+    [parameter(Mandatory=$false)][bool]$AuthorizeAllPipelines=$true,
+    [parameter(Mandatory=$false)][bool]$AutoProvisionProjectPools=$true,
+    [parameter(Mandatory=$false)][int]$ProjectId
+)
+{
+    "Creating scale set pool '$PoolName'..." | Write-Host
+    Write-Debug "PoolName: $PoolName"
+    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?poolName=${PoolName}&authorizeAllPipelines=${AuthorizeAllPipelines}&autoProvisionProjectPools=${AutoProvisionProjectPools}&projectId=${ProjectId}&api-version=${apiVersion}"
+    Write-Verbose "REST API Url: $apiUrl"
+
+    $requestHeaders = Create-RequestHeaders -Token $Token
+
+    Write-Debug "Request JSON: $RequestJson"
+    try {
+        $RequestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
+    } catch {
+        Write-RestError
+        exit 1
+    }
+
+    "Created scale set pool '$PoolName'" | Write-Host
+
+    if (($DebugPreference -ine "SilentlyContinue") -and $createdScaleSet.elasticPool) {
+        $createdScaleSet.elasticPool | Write-Debug
+    }
+    return $createdScaleSet
+}
+
+function Write-RestError() {
+    if ($_.ErrorDetails.Message) {
+        try {
+            $_.ErrorDetails.Message | ConvertFrom-Json | Set-Variable restError
+            $restError | Format-List | Out-String | Write-Debug
+            $message = $restError.message
+        } catch {
+            $message = $_.ErrorDetails.Message
+        }
+    } else {
+        $message = $_.Exception.Message
+    }
+    Write-Warning $message
 }

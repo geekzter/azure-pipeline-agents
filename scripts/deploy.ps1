@@ -1,5 +1,4 @@
 #!/usr/bin/env pwsh
-
 <# 
 .SYNOPSIS 
     Deploys Azure resources using Terraform
@@ -19,6 +18,7 @@ param (
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform plan stage")][switch]$Plan=$false,
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform validate stage")][switch]$Validate=$false,
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform apply stage (implies plan)")][switch]$Apply=$false,
+    [parameter(Mandatory=$false,HelpMessage="Deploys scale set pools")][switch]$CreateScaleSetPools=$false,
     [parameter(Mandatory=$false,HelpMessage="Perform Terraform destroy stage")][switch]$Destroy=$false,
     [parameter(Mandatory=$false,HelpMessage="Show Terraform output variables")][switch]$Output=$false,
     [parameter(Mandatory=$false,HelpMessage="Don't show prompts unless something get's deleted that should not be")][switch]$Force=$false,
@@ -150,11 +150,11 @@ try {
 
         # Check whether key resources will be replaced
         if (Get-Command jq -ErrorAction SilentlyContinue) {
-            $linuxVMsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            $windowsVMsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            $linuxVMSSsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine_scale_set.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            
-            $vmsReplaced        = (($linuxVMsReplaced + $linuxVMSSsReplaced + $windowsVMsReplaced) -replace " +","`n")
+            $linuxVMsReplaced     = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine.\"))             | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $windowsVMsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine.\"))           | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $linuxVMSSsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine_scale_set.\"))   | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $windowsVMSSsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine_scale_set.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $vmsReplaced          = (($linuxVMsReplaced + $linuxVMSSsReplaced + $windowsVMsReplaced + $windowsVMSSsReplaced) -replace '(\w+)(module\.)', "`$1`n`$2")
         } else {
             Write-Warning "jq not found, plan validation skipped. Look at the plan carefully before approving"
             if ($Force) {
@@ -197,6 +197,10 @@ try {
 
     if ($Output) {
         Invoke "terraform output"
+    }
+
+    if ($CreateScaleSetPools -and !$Destroy) {
+        . (Join-Path $PSScriptRoot create_scale_set_pools.ps1)
     }
 
     if ($Destroy) {

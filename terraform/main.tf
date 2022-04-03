@@ -44,11 +44,10 @@ locals {
                                   0
   )
 
-  config_directory             = "${formatdate("YYYY",timestamp())}/${formatdate("MM",timestamp())}/${formatdate("DD",timestamp())}/${formatdate("hhmm",timestamp())}"
   environment                  = "dev"
   environment_variables        = merge(
     {
-      "Agent.Diagnostic"                                        = "true"
+      "Agent.Diagnostic"                                        = var.pipeline_agent_diagnostics
       PIPELINE_DEMO_AGENT_OUTBOUND_IP                           = module.network.outbound_ip_address
       PIPELINE_DEMO_AGENT_SUBNET_ID                             = module.network.scale_set_agents_subnet_id
       PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID      = azurerm_user_assigned_identity.agents.client_id
@@ -80,7 +79,9 @@ locals {
       PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME     = split("/",module.gallery.storage_account_id)[4]
       PIPELINE_DEMO_VHD_STORAGE_CONTAINER_ID                    = module.gallery.storage_container_id
       PIPELINE_DEMO_VHD_STORAGE_CONTAINER_NAME                  = module.gallery.storage_container_name
-      VSTS_AGENT_HTTPTRACE                                      = "true"
+      "System.Debug"                                            = var.pipeline_agent_diagnostics
+      SYSTEM_DEBUG                                              = var.pipeline_agent_diagnostics
+      VSTS_AGENT_HTTPTRACE                                      = var.pipeline_agent_diagnostics
     },
     var.environment_variables
   )
@@ -130,14 +131,6 @@ resource time_sleep script_wrapper_check {
 
   count                        = var.script_wrapper_check ? 1 : 0
   depends_on                   = [null_resource.script_wrapper_check]
-}
-
-resource local_file environment_variables {
-  content                      = templatefile("${path.root}/../scripts/set_environment_variables.template.ps1",
-  {
-    environment                = local.environment_variables
-  })
-  filename                     = "${path.root}/../data/${terraform.workspace}/set_environment_variables.ps1"
 }
 
 resource azurerm_resource_group rg {

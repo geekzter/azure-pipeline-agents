@@ -3,17 +3,19 @@
 #Requires -Version 7
 
 param ( 
-    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI,
+    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL,
     [parameter(Mandatory=$true)][string][validateset("Linux", "Windows")]$OS,
     [parameter(Mandatory=$false)][string]$PoolName,
+    [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionName,
+    [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionProjectName,
     [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default",
-    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
+    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN
 ) 
 
 ### Internal Functions
 . (Join-Path $PSScriptRoot functions.ps1)
 
-# Validation
+# Validation & Parameter processing
 if ([string]::IsNullOrEmpty($PoolName)) {
     "{0}{1} scale set agents" -f $OS.Substring(0,1).ToUpperInvariant(), $OS.Substring(1) | Set-Variable PoolName
     if ($Workspace -and ($Workspace -ne "default")) {
@@ -23,10 +25,25 @@ if ([string]::IsNullOrEmpty($PoolName)) {
 }
 if (!$Token) {
     Write-Warning "No access token found. Please specify -Token or set the AZURE_DEVOPS_EXT_PAT or AZDO_PERSONAL_ACCESS_TOKEN environment variable."
-    exit
+    exit 1
+}
+
+if ($ServiceConnectionName -and $ServiceConnectionProjectName) {
+    az devops service-endpoint list --org $OrganizationUrl `
+                                    --project $ServiceConnectionProjectName `
+                                    --query "[?name=='$ServiceConnectionName']" `
+                                    | ConvertFrom-Json | Set-Variable endpoint
+    if (!$endpoint) {
+        Write-Warning "Service Connection '$ServiceConnectionName' not found in project '$ServiceConnectionProjectName'"
+        exit 1
+    }
+    Write-Debug $endpoint
+    $serviceEndpointId = $endpoint.id
+    $serviceEndpointScope = $endpoint.serviceEndpointProjectReferences[0].projectReference.id
 }
 
 # Main
+"`nDeploying {0} scale set pool ({1})..." -f $OS, $Workspace | Write-Host
 $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
 
@@ -35,16 +52,25 @@ $jsonFile = Join-Path (Split-Path $PSScriptRoot -Parent) data $Workspace "${OS}_
 Write-Debug "JSON Path: $jsonFile"
 if (!(Test-Path $jsonFile)) {
     Write-Warning "${jsonPath} not found, has infrastructure been provisioned in workspace '${Workspace}'?"
+    exit 1
 }
 Get-Content $jsonFile | Set-Variable requestJson
 $requestJson | ConvertFrom-Json | Set-Variable scaleSetTemplate
 Write-Debug "Request JSON: $requestJson"
 # Validation and optional manipulation of template
+if ($serviceEndpointId) {
+    $scaleSetTemplate.serviceEndpointId = $serviceEndpointId
+}
 if ([string]::IsNullOrEmpty($scaleSetTemplate.serviceEndpointId)) {
-    throw "serviceEndpointId is required, but missing in '$jsonFile"
+    Write-Warning "serviceEndpointId is required, but missing in '$jsonFile"
+    exit 1
+}
+if ($serviceEndpointScope) {
+    $scaleSetTemplate.serviceEndpointScope = $serviceEndpointScope
 }
 if ([string]::IsNullOrEmpty($scaleSetTemplate.serviceEndpointScope)) {
-    throw "serviceEndpointScope is required, but missing in '$jsonFile"
+    Write-Warning "serviceEndpointScope is required, but missing in '$jsonFile"
+    exit 1
 }
 $scaleSetTemplate | Out-String | Write-Debug
 $scaleSetTemplate | ConvertTo-Json | Set-Variable requestJson
@@ -69,7 +95,7 @@ if ($existingPoolIds) {
     } | Set-Variable existingPoolNames
     if ($existingPoolNames -and ($existingPoolNames -contains $PoolName)) {
         Write-Warning "Pool '$PoolName' already exists at ${OrganizationUrl}/_settings/agentpools"
-        exit
+        exit 0
     }    
 }
 

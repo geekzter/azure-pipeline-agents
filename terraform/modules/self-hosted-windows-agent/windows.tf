@@ -4,12 +4,13 @@ locals {
       diagnostics_directory    = "C:\\ProgramData\\pipeline-agent\\diag"
       drive_letter             = "Z"
       environment              = var.environment_variables
-      smb_share                = replace(var.diagnostics_smb_share,"/","\\")
-      storage_account_key      = data.azurerm_storage_account.files.0.primary_access_key
-      storage_account_name     = data.azurerm_storage_account.files.0.name
-      storage_share_host       = data.azurerm_storage_account.files.0.primary_file_host
+      smb_share                = var.diagnostics_smb_share != null ? replace(var.diagnostics_smb_share,"/","\\") : ""
+      storage_account_key      = var.diagnostics_smb_share != null ? data.azurerm_storage_account.files.0.primary_access_key : ""
+      storage_account_name     = var.diagnostics_smb_share != null ? data.azurerm_storage_account.files.0.name : ""
+      storage_share_host       = var.diagnostics_smb_share != null ? data.azurerm_storage_account.files.0.primary_file_host : ""
       user_name                = var.user_name
-    })
+    }
+  )
 }
 
 resource azurerm_public_ip windows_pip {

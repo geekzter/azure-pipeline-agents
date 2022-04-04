@@ -1,0 +1,1 @@
+PowerShell -Command "& {Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression '%~dp0\sync_windows_vm_logs.ps1 -All'}"

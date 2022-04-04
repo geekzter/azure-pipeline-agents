@@ -26,16 +26,17 @@ param (
 . (Join-Path $PSScriptRoot functions.ps1)
 
 # Validation & Parameter processing
-if ([string]::IsNullOrEmpty($PoolName)) {
-    "{0}{1} scale set agents" -f $OS.Substring(0,1).ToUpperInvariant(), $OS.Substring(1) | Set-Variable PoolName
-    if ($Workspace -and ($Workspace -ne "default")) {
-        "{0} ({1})" -f $PoolName, $Workspace | Set-Variable PoolName
-    }
-    Write-Debug "PoolName: $PoolName"
+if (!$OrganizationUrl) {
+    Write-Warning "OrganizationUrl is required. Please specify -OrganizationUrl or set the AZDO_ORG_SERVICE_URL environment variable."
+    exit 1
 }
 $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
 if (!$Token) {
     Write-Warning "No access token found. Please specify -Token or set the AZURE_DEVOPS_EXT_PAT or AZDO_PERSONAL_ACCESS_TOKEN environment variable."
+    exit 1
+}
+if (!$Workspace) {
+    Write-Warning "Workspace is required. Please specify -OrganizationUrl or set the TF_WORKSPACE environment variable."
     exit 1
 }
 
@@ -70,6 +71,10 @@ Get-Content $jsonFile | Set-Variable requestJson
 $requestJson | ConvertFrom-Json | Set-Variable scaleSetTemplate
 Write-Debug "Request JSON: $requestJson"
 # Validation and optional manipulation of template
+if ([string]::IsNullOrEmpty($scaleSetTemplate.azureId)) {
+    Write-Warning "azureId is required, but missing in '$jsonFile"
+    exit 1
+}
 if ($serviceEndpointId) {
     $scaleSetTemplate.serviceEndpointId = $serviceEndpointId
 }
@@ -90,7 +95,13 @@ Write-Debug "Request JSON: $requestJson"
 
 "VMSS: {0}" -f $scaleSetTemplate.azureId.Split('/')[-1] | Write-Debug
 if ([string]::IsNullOrEmpty($PoolName)) {
-    $PoolName = $scaleSetTemplate.azureId.Split('/')[-1]
+    if ($Workspace -ieq "default") {
+        "{0}{1} scale set agents" -f $OS.Substring(0,1).ToUpperInvariant(), $OS.Substring(1) | Set-Variable PoolName
+    } else {
+        # "{0} ({1})" -f $PoolName, $Workspace | Set-Variable PoolName # Makes sense once we can remove elastic pools via REST API
+        $PoolName = $scaleSetTemplate.azureId.Split('/')[-1]
+    }
+    Write-Debug "PoolName: $PoolName"
 }
 
 # Test whether pool already exists

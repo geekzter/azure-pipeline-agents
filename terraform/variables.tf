@@ -284,6 +284,11 @@ variable windows_scale_set_agent_max_count {
   default                      = 8
   type                         = number
 }
+variable windows_scale_set_agent_interactive_ui {
+  default                      = false
+  type                         = bool
+}
+
 variable windows_self_hosted_agent_count {
   default                      = 1
   type                         = number

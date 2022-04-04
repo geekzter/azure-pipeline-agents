@@ -50,7 +50,7 @@ if ("${smb_share}") {
     New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "NT AUTHORITY\NETWORK SERVICE", "${user_name}" ) -Persistent $true #-UseWriteThrough
 
     # Link agent diagnostics directory
-    Join-Path ${drive_letter}:\ "windows\$(Get-Date -Format 'yyyy\\MM\\dd')" | Set-Variable diagnosticsSMBDirectory
+    "{0}:\{1}\{2}" -f "${drive_letter}", (Get-Date -Format 'yyyy\\MM\\dd'), $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory
     New-Item -ItemType directory -Path $diagnosticsSMBDirectory -Force
     if (!(Test-Path $diagnosticsSMBDirectory)) {
         "'{0}' not found, has share {1} been mounted on {2}:?" -f $diagnosticsSMBDirectory, "${smb_share}", "${drive_letter}" | Write-Error

@@ -2,7 +2,7 @@ locals {
   host_configuration_script    = templatefile("${path.root}/../scripts/host/host_configuration.ps1",
     {
       diagnostics_directory    = "C:\\agent\\_diag"
-      drive_letter             = "Z"
+      drive_letter             = "X"
       environment              = var.environment_variables
       smb_share                = var.diagnostics_smb_share != null ? replace(var.diagnostics_smb_share,"/","\\") : ""
       storage_account_key      = var.diagnostics_smb_share != null ? data.azurerm_storage_account.files.0.primary_access_key : ""

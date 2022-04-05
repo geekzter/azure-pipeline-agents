@@ -34,7 +34,7 @@ variable deploy_bastion {
 }
 variable deploy_files_share {
   description                  = "Deploys files share (e.g. for agent diagnostics)"
-  default                      = true
+  default                      = false
   type                         = bool
 }
 variable deploy_firewall {
@@ -261,7 +261,7 @@ variable windows_os_publisher {
   default                      = "microsoftvisualstudio"
 }
 variable windows_os_sku {
-  default                      = "vs-2022-ent-latest-win11-n" # vs-2022-comm-latest-win11-n 2022.02.18 doesn't work with Log Analytics extension
+  default                      = "vs-2022-ent-latest-ws2022"
 }
 variable windows_os_version {
   default                      = "latest"

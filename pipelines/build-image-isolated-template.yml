@@ -307,7 +307,7 @@ jobs:
         Write-Host "Start replicating $(imageName) $(publish.qualifiedVersion) to '$(targetRegions)'..."
         az sig image-version update --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                                    --gallery-image-version $qualifiedVersionString `
+                                    --gallery-image-version $(publish.qualifiedVersion) `
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --target-regions $(targetRegions) # From build-images-isolated variable group

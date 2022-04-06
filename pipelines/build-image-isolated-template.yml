@@ -304,7 +304,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        Write-Host "Start replicating $(imageName) $(publish.qualifiedVersion) to '$(targetRegions)'..."
+        Write-Host "Starting replication of $(imageName) $(publish.qualifiedVersion) to: $(targetRegions)..."
         az sig image-version update --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --gallery-image-version $(publish.qualifiedVersion) `
@@ -322,7 +322,7 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          Write-Host "Waiting for replication of $(imageName) $(publish.qualifiedVersion) to '$(targetRegions)' to finish..."
+          Write-Host "Waiting for replication of $(imageName) $(publish.qualifiedVersion) to $(targetRegions) to finish..."
           az sig image-version wait --updated `
                                     --gallery-image-definition $(imageName) `
                                     --gallery-image-version $(publish.qualifiedVersion) `

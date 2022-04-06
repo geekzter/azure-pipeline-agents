@@ -297,7 +297,6 @@ jobs:
       failOnStandardError: true
 
   - task: AzureCLI@2
-    name: replicate
     displayName: 'Replicate image'
     condition: and(ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
     inputs:
@@ -316,7 +315,6 @@ jobs:
 
   - ${{ if parameters.waitForReplication }}:
     - task: AzureCLI@2
-      name: replicate
       displayName: 'Wait for replication to finish'
       condition: and(ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
       inputs:

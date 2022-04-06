@@ -290,25 +290,42 @@ jobs:
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
                                     --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
-                                    --tags $imageDefinitionVersionTags `
-                                    --target-regions $(targetRegions) # From build-images-isolated variable group
+                                    --tags $imageDefinitionVersionTags
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
       addSpnToEnvironment: true
       failOnStandardError: true
 
+  - task: AzureCLI@2
+    name: replicate
+    displayName: 'Replicate image'
+    condition: and(ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        Write-Host "Start replicating $(imageName) $(publish.qualifiedVersion) to '$(targetRegions)'..."
+        az sig image-version update --gallery-image-definition $(imageName) `
+                                    --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                    --gallery-image-version $qualifiedVersionString `
+                                    --no-wait `
+                                    --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                    --target-regions $(targetRegions) # From build-images-isolated variable group
+      failOnStandardError: true
+
   - ${{ if parameters.waitForReplication }}:
     - task: AzureCLI@2
       name: replicate
-      displayName: 'Replicate image'
-      condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+      displayName: 'Wait for replication to finish'
+      condition: and(ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
       inputs:
         azureSubscription: '$(gallerySubscriptionConnection)'
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          Write-Host "Waiting for $(imageName) $(publish.qualifiedVersion) to finish replicating..."
-          az sig image-version wait --created `
+          Write-Host "Waiting for replication of $(imageName) $(publish.qualifiedVersion) to '$(targetRegions)' to finish..."
+          az sig image-version wait --updated `
                                     --gallery-image-definition $(imageName) `
                                     --gallery-image-version $(publish.qualifiedVersion) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `

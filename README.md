@@ -129,6 +129,7 @@ Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and 
 |`configure_crl_oscp_rules`|Allow traffic to [TLS recommended locations](https://docs.microsoft.com/en-us/azure/security/fundamentals/tls-certificate-changes#will-this-change-affect-me). This is plain HTTP (port 80) traffic used by Certificate Revocation List (CRL) download and/or Online Certificate Status Protocol (OCSP).|
 |`configure_wildcard_allow_rules`|Configure generic wildcard FQDN rules e.g. *.blob.core.windows.net.|
 |`deploy_bastion`|Deploy [managed bastion host](https://docs.microsoft.com/en-us/azure/bastion/).|
+|`deploy_files_share`|Deploy [SMB files share](https://docs.microsoft.com/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal), mount it on agents and configure Pipeline Agent diagnostics (_diag directory) to use it.|
 |`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it. Setting this value to `true` will also create private endpoints for storage used, Azure Monitor, etc.|
 |`deploy_non_essential_vm_extensions`|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |
 |`deploy_scale_set`|Deploy Scale Set agents.|

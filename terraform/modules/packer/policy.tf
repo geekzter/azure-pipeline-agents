@@ -1,11 +1,17 @@
+locals {
+  policy_metadata              = {
+    application                = "Pipeline Agents"
+    provisioner                = "terraform"
+    workspace                  = terraform.workspace
+  }
+}
+
 resource azurerm_policy_definition no_vm_extension {
   name                         = "pipeline-build-no-vm-extension-policy-${terraform.workspace}-${var.suffix}"
 
   description                  = "VM extensions that are installed during VM image build time lead to non-deterministic outcomes, this policy aims to prevent that"
   display_name                 = "Prevent VM extensions on Packer Build VM's"
-  metadata                     = jsonencode({
-    "category"                 = "demo"
-  })
+  metadata                     = jsonencode(local.policy_metadata)
   mode                         = "Indexed"
   policy_rule                  = file("${path.module}/no-vm-extension-policy.json")
   policy_type                  = "Custom"
@@ -15,6 +21,7 @@ resource azurerm_policy_set_definition build_policies {
   name                         = "pipeline-build-policies-${terraform.workspace}-${var.suffix}"
   policy_type                  = "Custom"
   display_name                 = "Policies required for Packer image builds to succeeed"
+  metadata                     = jsonencode(local.policy_metadata)
 
   policy_definition_reference {
     policy_definition_id       = azurerm_policy_definition.no_vm_extension.id

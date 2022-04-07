@@ -15,7 +15,7 @@ runcmd:
   - mkdir -p ${smb_mount_point}
   - echo "${smb_share}  ${smb_mount_point}    cifs   nofail,credentials=/etc/smbcredentials/${storage_account_name}.cred,serverino,dir_mode=0755,file_mode=0644,uid=$(id -u ${user}),gid=$(id -g ${user})   0   2" | sudo tee -a /etc/fstab 
   - mount -a
-  - PIPELINE_DEMO_DIAGNOSTICS_DIRECTORY=${smb_mount_point}/linux/$(date '+%Y/%m/%d')
+  - PIPELINE_DEMO_DIAGNOSTICS_DIRECTORY=${smb_mount_point}/$(date '+%Y/%m/%d')/$(hostname)
   - mkdir -p $PIPELINE_DEMO_DIAGNOSTICS_DIRECTORY 2>/dev/null
   - mkdir -p $(dirname ${diagnostics_directory})
   - ln -s $PIPELINE_DEMO_DIAGNOSTICS_DIRECTORY ${diagnostics_directory}

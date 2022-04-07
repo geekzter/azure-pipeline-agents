@@ -33,10 +33,10 @@ locals {
       "maxCapacity"            = vmss.max_count
       "desiredIdle"            = min(vmss.count,vmss.max_count)
       "recycleAfterEachUse"    = true
-      "maxSavedNodeCount"      = 1
+      "maxSavedNodeCount"      = max(3,vmss.max_count - vmss.count)
       "osType"                 = vmss.os
       "desiredSize"            = min(vmss.count+1,vmss.max_count)
-      "agentInteractiveUI"     = false
+      "agentInteractiveUI"     = vmss.os == "windows" ? var.windows_scale_set_agent_interactive_ui : false
       "timeToLiveMinutes"      = 30
     }
   }

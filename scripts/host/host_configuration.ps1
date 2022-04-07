@@ -19,10 +19,10 @@ if (Test-Path C:\post-generation) {
 %{ endfor ~}
 
 # Mount file share
-if ("${smb_share}") {
+if (![string]::IsNullOrEmpty("${smb_share}")) {
     if (!(Get-Command New-SmbGlobalMapping -ErrorAction SilentlyContinue)) {
         Write-Warning "Command 'New-SmbGlobalMapping' not found. Agent diagnostics will be stored locally."
-        exit
+        exit 0
     }
 
     Test-NetConnection -ComputerName ${storage_share_host} -Port 445 | Set-Variable connectResult
@@ -40,10 +40,18 @@ if ("${smb_share}") {
     New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", $agentUser, "${user_name}" ) -Persistent $true #-UseWriteThrough
 
     # Link agent diagnostics directory
-    Join-Path ${drive_letter}:\ "windows\$(Get-Date -Format 'yyyy\\MM\\dd')" | Set-Variable diagnosticsSMBDirectory
+    "{0}:\{1}\{2}" -f "${drive_letter}", (Get-Date -Format 'yyyy\\MM\\dd'), $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory
     New-Item -ItemType directory -Path $diagnosticsSMBDirectory -Force
     if (!(Test-Path $diagnosticsSMBDirectory)) {
         "'{0}' not found, has share {1} been mounted on {2}:?" -f $diagnosticsSMBDirectory, "${smb_share}", "${drive_letter}" | Write-Error
     }
     New-Item -ItemType symboliclink -Path "${diagnostics_directory}" -Value "$diagnosticsSMBDirectory" -Force
+
+    $syncScript = "${drive_letter}:\\sync_windows_vm_logs.cmd"
+    if (!(Test-Path $syncScript)) {
+        Write-Error -Message "Unable to find '$syncScript'"
+        exit 0
+    }
+    Unblock-File -Path $syncScript
+    schtasks.exe /create /f /i 1 /ru "NT AUTHORITY\SYSTEM" /sc onidle /tn "Sync logs to file share" /tr $syncScript
 }

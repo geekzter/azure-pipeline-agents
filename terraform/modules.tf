@@ -133,6 +133,7 @@ module scale_set_windows_agents {
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
     azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_storage_share_file.sync_windows_vm_logs_ps1,
     module.network
   ]
 }
@@ -245,6 +246,7 @@ module self_hosted_windows_agents {
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
     azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_storage_share_file.sync_windows_vm_logs_ps1,
     module.network
   ]
 }

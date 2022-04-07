@@ -191,6 +191,20 @@ resource azurerm_private_endpoint diagnostics_share {
 
   count                        = var.deploy_files_share ? 1 : 0
 }
+resource azurerm_storage_share_file sync_windows_vm_logs_cmd {
+  name                         = "sync_windows_vm_logs.cmd"
+  storage_share_id             = azurerm_storage_share.diagnostics_smb_share.0.id
+  source                       = "${path.root}/../scripts/host/sync_windows_vm_logs.cmd"
+
+  count                        = var.deploy_files_share ? 1 : 0
+}
+resource azurerm_storage_share_file sync_windows_vm_logs_ps1 {
+  name                         = "sync_windows_vm_logs.ps1"
+  storage_share_id             = azurerm_storage_share.diagnostics_smb_share.0.id
+  source                       = "${path.root}/../scripts/host/sync_windows_vm_logs.ps1"
+
+  count                        = var.deploy_files_share ? 1 : 0
+}
 
 locals {
   diagnostics_smb_share        = var.deploy_files_share ? replace(azurerm_storage_share.diagnostics_smb_share.0.url,"https:","") : null

@@ -219,7 +219,6 @@ resource azurerm_bastion_host bastion {
     subnet_id                  = azurerm_subnet.bastion_subnet.0.id
     public_ip_address_id       = azurerm_public_ip.bastion_ip.0.id
   }
-  shareable_link_enabled       = true
   sku                          = "Standard"
   tunneling_enabled            = true
 

@@ -143,7 +143,7 @@ jobs:
   - task: AzurePowerShell@5
     name: imageBuild
     displayName: 'Build image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
@@ -171,7 +171,7 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -189,17 +189,22 @@ jobs:
                                        --query "[?ends_with(@.name, 'vhd')].name" `
                                        -o tsv | Set-Variable vhdPath
 
-        $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/${vhdPath}"
-        Write-Host "vhdUrl: $vhdUrl"
-        Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
-        Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
+        $vhdBaseUrl = "$($storageAccount.primaryEndpoints.blob)system"
+        if ($vhdPath) {
+          $vhdUrl = "${vhdBaseUrl}/${vhdPath}"
+          Write-Host "vhdUrl: $vhdUrl"
+          Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
+          Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
+        } else {
+          throw "VHD not found in ${vhdBaseUrl}, image build of '$(imageName)' was not successful"
+        }
       useGlobalConfig: true
       failOnStandardError: true
 
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -228,7 +233,7 @@ jobs:
   - task: AzureCLI@2
     name: replicate
     displayName: 'Replicate image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

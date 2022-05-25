@@ -189,13 +189,14 @@ jobs:
                                        --query "[?ends_with(@.name, 'vhd')].name" `
                                        -o tsv | Set-Variable vhdPath
 
+        $vhdBaseUrl = "$($storageAccount.primaryEndpoints.blob)system"
         if ($vhdPath) {
-          $vhdUrl = "$($storageAccount.primaryEndpoints.blob)system/${vhdPath}"
+          $vhdUrl = "${vhdBaseUrl}/${vhdPath}"
           Write-Host "vhdUrl: $vhdUrl"
           Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
           Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
         } else {
-          throw "VHD not found, image build of '$(imageName)' was not successful"
+          throw "VHD not found in ${vhdBaseUrl}, image build of '$(imageName)' was not successful"
         }
       useGlobalConfig: true
       failOnStandardError: true

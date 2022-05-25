@@ -226,12 +226,13 @@ jobs:
                                        --account-name $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
                                        --query "[?contains(@.name, '$(imageResourcePrefix)') && ends_with(@.name, 'vhd')].name" `
                                        -o tsv | Set-Variable vhdPath
+        $vhdBaseUrl = "https://${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/system"
         if ($vhdPath) {
-          $vhdUrl = "https://${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/system/${vhdPath}"
+          $vhdUrl = "${vhdBaseUrl}/${vhdPath}"
           Write-Host "vhdUrl: $vhdUrl"
           Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"        
         } else {
-          throw "VHD not found, image build of '$(imageName)' was not successful"
+          throw "VHD not found in ${vhdBaseUrl}, image build of '$(imageName)' was not successful"
         }
 
       failOnStandardError: true

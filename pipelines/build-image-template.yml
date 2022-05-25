@@ -143,7 +143,7 @@ jobs:
   - task: AzurePowerShell@5
     name: imageBuild
     displayName: 'Build image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
@@ -171,7 +171,7 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -203,7 +203,7 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -232,7 +232,7 @@ jobs:
   - task: AzureCLI@2
     name: replicate
     displayName: 'Replicate image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

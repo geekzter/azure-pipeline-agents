@@ -135,7 +135,7 @@ jobs:
   - task: AzureCLI@2
     name: imageBuild
     displayName: 'Build image'
-    condition: ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -206,7 +206,7 @@ jobs:
   - task: AzureCLI@2
     name: vhd
     displayName: 'Get VHD url'
-    condition: ne(coalesce(variables['imageBuild.commit'],'null'),'null')
+    condition: and(succeeded(), ne(coalesce(variables['imageBuild.commit'],'null'),'null'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -239,7 +239,7 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: ne(coalesce(variables['vhd.url'],'null'),'null')
+    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -302,7 +302,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Replicate image'
-    condition: and(ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -320,7 +320,7 @@ jobs:
   - ${{ if parameters.waitForReplication }}:
     - task: AzureCLI@2
       displayName: 'Wait for replication to finish'
-      condition: and(ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
+      condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'),ne(coalesce(variables['targetRegions'],'null'),'null'))
       inputs:
         azureSubscription: '$(gallerySubscriptionConnection)'
         scriptType: pscore
@@ -336,7 +336,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Check image version of $(imageName)'
-    condition: ne(coalesce(variables['githubRelease.version'],'null'),'null')
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.version'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

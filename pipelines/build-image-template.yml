@@ -195,7 +195,7 @@ jobs:
           Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
           Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
         } else {
-          throw "VHD not found"
+          throw "VHD not found, image build of '$(imageName)' was not successful"
         }
       useGlobalConfig: true
       failOnStandardError: true

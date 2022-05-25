@@ -231,7 +231,7 @@ jobs:
           Write-Host "vhdUrl: $vhdUrl"
           Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"        
         } else {
-          throw "VHD not found"
+          throw "VHD not found, image build of '$(imageName)' was not successful"
         }
 
       failOnStandardError: true

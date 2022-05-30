@@ -14,12 +14,13 @@ if (!(Test-Path $diagnosticsPath)) {
     exit
 }
 
-Get-ChildItem -Path $diagnosticsPath -Recurse -File | Where-Object {$_.Directory.Name -ne "pages"} `
+Get-ChildItem -Path $diagnosticsPath -Recurse -File | Where-Object {($_.Directory.Name -notin "azure","pages","Plugins") -and ($_.Directory.FullName -notmatch "Plugins/Microsoft")} `
                                                     | ForEach-Object {
     $_ | Add-Member -NotePropertyName DiagnosticsType -NotePropertyValue ($_.Name -replace "[_|-].*$", "")
-    $_ | Add-Member -NotePropertyName OS -NotePropertyValue ($_.DirectoryName -match "linux" ? "Linux" : ($_.DirectoryName -match "windows" ? "Windows" : "Unknown"))
+    $_ | Add-Member -NotePropertyName OS -NotePropertyValue ($_.DirectoryName -match "linux" ? "Linux" : ($_.DirectoryName -match "$([IO.Path]::DirectorySeparatorChar)win" ? "Windows" : "Unknown"))
     $_
-} | Group-Object -Property OS, DiagnosticsType | Select-Object -Property Name, Count | ForEach-Object {
+} | Where-Object {$_.DiagnosticsType -ine "sync"} `
+  | Group-Object -Property OS, DiagnosticsType | Select-Object -Property Name, Count | ForEach-Object {
     $_ | Add-Member -NotePropertyName OS -NotePropertyValue $_.Name.Split(", ")[0]
     $_ | Add-Member -NotePropertyName DiagnosticsType -NotePropertyValue $_.Name.Split(", ")[1]
     $_

@@ -47,7 +47,7 @@ if ($Pattern) {
         $_ | Add-Member -NotePropertyName OS -NotePropertyValue ($_.DirectoryName -match "linux" ? "Linux" : ($_.DirectoryName -match "$([IO.Path]::DirectorySeparatorChar)win" ? "Windows" : "Unknown"))
         $_
     } | Where-Object {$_.DiagnosticsType -ine "sync"} `
-        | Group-Object -Property OS, DiagnosticsType | Select-Object -Property Name, Count | ForEach-Object {
+      | Group-Object -Property OS, DiagnosticsType | Select-Object -Property Name, Count | ForEach-Object {
         $_ | Add-Member -NotePropertyName OS -NotePropertyValue $_.Name.Split(", ")[0]
         $_ | Add-Member -NotePropertyName DiagnosticsType -NotePropertyValue $_.Name.Split(", ")[1]
         $_

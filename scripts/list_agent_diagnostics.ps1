@@ -16,7 +16,7 @@
 param ( 
     [parameter(Mandatory=$false)][string]$Pattern,
     [parameter(Mandatory=$false)][switch]$AllMatches,
-    # [parameter(Mandatory=$false)][switch]$IncludeVMExtensionLogs,
+    [parameter(Mandatory=$false)][switch]$IncludeVMExtensionLogs,
     [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default"
 ) 
 
@@ -32,10 +32,10 @@ if (!(Test-Path $diagnosticsPath)) {
 
 Get-ChildItem -Path $diagnosticsPath -Recurse -File | Set-Variable diagnosticsFiles
 
-# if (!$IncludeVMExtensionLogs) {
+if (!$IncludeVMExtensionLogs) {
     $diagnosticsFiles | Where-Object {($_.Directory.Name -notin "azure","pages","Plugins") -and ($_.Directory.FullName -notmatch "Plugins/Microsoft")} `
                       | Set-Variable diagnosticsFiles
-# }
+}
 
 if ($Pattern) {
     # Search log files with given pattern
@@ -43,7 +43,7 @@ if ($Pattern) {
 } else {
     # Provide summary by file type instead
     $diagnosticsFiles | ForEach-Object {
-        $_ | Add-Member -NotePropertyName DiagnosticsType -NotePropertyValue ($_.Name -replace "[_|-].*$", "")
+        $_ | Add-Member -NotePropertyName DiagnosticsType -NotePropertyValue ($_.Name -replace "[\.|\d|_|-].*$", "")
         $_ | Add-Member -NotePropertyName OS -NotePropertyValue ($_.DirectoryName -match "linux" ? "Linux" : ($_.DirectoryName -match "$([IO.Path]::DirectorySeparatorChar)win" ? "Windows" : "Unknown"))
         $_
     } | Where-Object {$_.DiagnosticsType -ine "sync"} `

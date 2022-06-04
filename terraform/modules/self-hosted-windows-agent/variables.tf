@@ -21,8 +21,6 @@ variable devops_org {}
 variable devops_pat {}
 
 variable diagnostics_smb_share {}
-variable diagnostics_storage_id {}
-variable diagnostics_storage_sas {}
 variable enable_public_access {
   type                         = bool
 }

@@ -164,7 +164,7 @@ resource azurerm_linux_virtual_machine linux_agent {
   }
 
   boot_diagnostics {
-    storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
+    storage_account_uri        = null # Managed Storage Account
   }
 
   identity {

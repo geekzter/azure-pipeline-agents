@@ -55,8 +55,6 @@ module scale_set_linux_agents {
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
-  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
-  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
@@ -101,8 +99,6 @@ module scale_set_windows_agents {
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   diagnostics_smb_share        = local.diagnostics_smb_share
-  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
-  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
@@ -153,8 +149,6 @@ module self_hosted_linux_agents {
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
-  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
-  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
@@ -211,8 +205,6 @@ module self_hosted_windows_agents {
   devops_pat                   = var.devops_pat
 
   diagnostics_smb_share        = local.diagnostics_smb_share
-  diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
-  diagnostics_storage_sas      = data.azurerm_storage_account_sas.diagnostics.sas
   environment_variables        = local.environment_variables
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id

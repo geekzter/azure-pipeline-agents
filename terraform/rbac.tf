@@ -3,7 +3,7 @@ locals {
     concat(
       var.storage_contributors,
       [
-        data.azurerm_client_config.default.object_id
+        data.azuread_client_config.default.object_id
       ]
     )
   )
@@ -45,6 +45,12 @@ resource azurerm_role_assignment network_viewer {
   principal_id                 = each.key
 
   for_each                     = toset(var.demo_viewers)
+}
+
+resource azurerm_role_assignment vm_admin {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Virtual Machine Administrator Login"
+  principal_id                 = var.admin_object_id != null ? var.admin_object_id : data.azuread_client_config.default.object_id
 }
 
 resource azurerm_user_assigned_identity agents {

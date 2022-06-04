@@ -93,7 +93,7 @@ locals {
       environment              = local.environment
       provisioner              = "terraform"
       provisioner-client-id    = data.azurerm_client_config.default.client_id
-      provisioner-object-id    = data.azurerm_client_config.default.object_id
+      provisioner-object-id    = data.azuread_client_config.default.object_id
       repository               = "azure-pipeline-agents"
       runid                    = var.run_id
       shutdown                 = "false"

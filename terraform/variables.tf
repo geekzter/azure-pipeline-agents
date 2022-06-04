@@ -7,6 +7,9 @@ variable admin_ip_ranges {
   default                      = []
   type                         = list
 }
+variable admin_object_id {
+  default                      = null
+}
 
 variable configure_cidr_allow_rules {
   default                      = false

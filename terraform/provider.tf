@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     azuread                    = "~> 2.0"
-    azurerm                    = "~> 2.96"
+    azurerm                    = "~> 3.0"
     cloudinit                  = "~> 2.2"
     http                       = "~> 2.1"
     local                      = "~> 2.1"

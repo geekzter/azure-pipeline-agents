@@ -53,6 +53,12 @@ resource azurerm_role_assignment vm_admin {
   principal_id                 = var.admin_object_id != null ? var.admin_object_id : data.azuread_client_config.default.object_id
 }
 
+resource azurerm_role_assignment vm_contributor {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Virtual Machine Contributor"
+  principal_id                 = var.admin_object_id != null ? var.admin_object_id : data.azuread_client_config.default.object_id
+}
+
 resource azurerm_user_assigned_identity agents {
   name                         = "${azurerm_resource_group.rg.name}-agent-identity"
   resource_group_name          = azurerm_resource_group.rg.name

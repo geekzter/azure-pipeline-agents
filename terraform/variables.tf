@@ -107,7 +107,7 @@ variable linux_os_image_id {
 }
 # az vm image list-offers -l centralus -p "Canonical" -o table
 variable linux_os_offer {
-  default                      = "UbuntuServer"
+  default                      = "0001-com-ubuntu-server-focal"
 }
 variable linux_os_publisher {
   default                      = "Canonical"

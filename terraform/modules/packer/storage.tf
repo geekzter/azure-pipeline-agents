@@ -46,6 +46,10 @@ resource azurerm_private_endpoint images_blob_storage_endpoint {
   }
 
   tags                         = var.tags
+
+  depends_on                  = [
+                                 azurerm_subnet_network_security_group_association.private_endpoint_subnet 
+  ]
 }
 
 resource azurerm_storage_account_network_rules images {

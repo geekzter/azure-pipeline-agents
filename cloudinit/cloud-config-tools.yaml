@@ -10,22 +10,23 @@ bootcmd:
   - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -           # Hashicorp
   - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
   - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
-  - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
+  # - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
+  - curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null # Microsoft
+  # Remove outdated version of Azure CLI from universe repository
+  - sudo apt remove azure-cli -y && sudo apt autoremove -y
 
 apt:
   sources:
     git-core:
       source: "ppa:git-core/ppa"
     hashicorp:
-      source: "deb [trusted=yes] https://apt.releases.hashicorp.com bionic main"
+      source: "deb [trusted=yes] https://apt.releases.hashicorp.com focal main"
     helm-stable-debian.list:
       source: "deb https://baltocdn.com/helm/stable/debian/ all main"
     kubernetes.list:
       source: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-    azure-cli.list:
-      source: "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ bionic main"
     microsoft-prod.list:
-      source: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main"
+      source: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/20.04/prod focal main"
 
 package_update: true
 packages:
@@ -51,7 +52,7 @@ packages:
   - helm
   - kubectl
   # Microsoft
-  - azure-cli
+  # - azure-cli
   - azure-functions-core-tools
   # - blobfuse
   - dotnet-sdk-3.1
@@ -59,6 +60,7 @@ packages:
   - powershell
 
 runcmd:
+  - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
   - sudo ACCEPT_EULA=Y apt install msodbcsql17 -y
   - sudo ACCEPT_EULA=Y apt install mssql-tools -y
   - echo Installing PowerShell modules...

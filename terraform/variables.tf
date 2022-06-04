@@ -105,14 +105,16 @@ variable linux_tools {
 variable linux_os_image_id {
   default                      = null
 }
+# az vm image list-offers -l centralus -p "Canonical" -o table
 variable linux_os_offer {
   default                      = "UbuntuServer"
 }
 variable linux_os_publisher {
   default                      = "Canonical"
 }
+# az vm image list-skus -l centralus -f "0001-com-ubuntu-server-focal" -p "Canonical" -o table
 variable linux_os_sku {
-  default                      = "18.04-LTS"
+  default                      = "20_04-lts"
 }
 variable linux_os_version {
   default                      = "latest"

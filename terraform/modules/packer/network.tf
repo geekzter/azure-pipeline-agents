@@ -69,6 +69,12 @@ resource azurerm_subnet_network_security_group_association private_endpoint_subn
   network_security_group_id    = azurerm_network_security_group.default.id
 }
 
+# FIX: Resource is in Updating state and the last operation that updated/is updating the resource is PutSubnetOperation"
+resource time_sleep private_endpoint_subnet {
+  depends_on                   = [azurerm_subnet_network_security_group_association.private_endpoint_subnet]
+  create_duration              = "2m"
+}
+
 resource azurerm_virtual_network_peering packer_to_agents {
   name                         = "${azurerm_virtual_network.packer.name}-peering"
   resource_group_name          = azurerm_virtual_network.packer.resource_group_name

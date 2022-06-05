@@ -57,7 +57,19 @@ data cloudinit_config user_data {
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
-
+  dynamic "part" {
+    for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
+    content {
+      content                  = templatefile("${path.root}/../cloudinit/cloud-config-log-analytics.yaml",
+      {
+        workspace_id           = data.azurerm_log_analytics_workspace.monitor.workspace_id
+        workspace_key          = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
+      content_type             = "text/cloud-config"
+      merge_type               = "list(append)+dict(recurse_array)+str()"
+    }
+  }
+  
   count                        = var.prepare_host ? 1 : 0
 }
 

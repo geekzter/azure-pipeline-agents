@@ -39,7 +39,7 @@ function validate {
 
 AGENT_DIRECTORY="/opt/pipelines-agent"
 AGENT_DATA_DIRECTORY="/var/opt/pipelines-agent"
-AGENT_VERSION_ID = "latest" # Default
+AGENT_VERSION_ID="latest" # Default
 while [ "$1" != "" ]; do
     case $1 in
         --agent-name)                   shift

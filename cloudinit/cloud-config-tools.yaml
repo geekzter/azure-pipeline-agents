@@ -43,7 +43,7 @@ packages:
   - coreutils
   - docker
   - packer
-  - python-minimal
+  - python2-minimal
   - unixodbc-dev
   - unzip
   # GitHub

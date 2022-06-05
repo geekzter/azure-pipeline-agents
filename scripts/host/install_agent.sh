@@ -106,7 +106,7 @@ echo "Creating agent ${AGENT_NAME} and adding it to pool ${AGENT_POOL} in organi
             --auth pat --token $PAT \
             --pool $AGENT_POOL \
             --agent $AGENT_NAME --replace \
-            --acceptTeeEula
+            --acceptTeeEula \
             --work $AGENT_DATA_DIRECTORY/work
 
 if [ ! -f /etc/systemd/system/vsts.agent.${ORG}.* ]; then

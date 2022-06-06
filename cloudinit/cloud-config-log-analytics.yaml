@@ -1,14 +1,14 @@
-# packages:
-  # - python2 # This can cause issues, assume python2 is already installed
+packages:
+  - python2 # This can cause issues, assume python2 is already installed
   # - wget
 
-# runcmd:
+runcmd:
   # Configure python2 as default. This should no longer be needed, but still resolves issues.
   # https://docs.microsoft.com/en-us/azure/azure-monitor/agents/agent-linux#python-requirement
-  # - PYTHON_VERSION_MAJOR=$(python -c 'import sys; print(sys.version_info[0])')
-  # - '[ "$PYTHON_VERSION_MAJOR" != "2" ] && sudo update-alternatives --remove-all python 2>/dev/null'
-  # - '[ "$PYTHON_VERSION_MAJOR" != "2" ] && sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1'
-  # - unset PYTHON_VERSION_MAJOR
+  - PYTHON_VERSION_MAJOR=$(python -c 'import sys; print(sys.version_info[0])') 2>/dev/null
+  - '[ "$PYTHON_VERSION_MAJOR" != "2" ] && sudo update-alternatives --remove-all python 2>/dev/null'
+  - '[ "$PYTHON_VERSION_MAJOR" != "2" ] && sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1'
+  - unset PYTHON_VERSION_MAJOR
   # Install agent if it does not yet exist
   # https://docs.microsoft.com/en-us/azure/azure-monitor/agents/agent-linux#install-the-agent-using-wrapper-script
   # FIX: https://github.com/Azure/azure-linux-extensions/issues/1116

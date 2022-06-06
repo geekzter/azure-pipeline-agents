@@ -5,7 +5,7 @@ resource azurerm_storage_account diagnostics {
   account_kind                 = "StorageV2"
   account_tier                 = "Standard"
   account_replication_type     = "LRS"
-  allow_blob_public_access     = false
+  allow_nested_items_to_be_public = false
   enable_https_traffic_only    = true
 
   tags                         = local.tags
@@ -37,14 +37,16 @@ data azurerm_storage_account_sas diagnostics {
   expiry                       = time_offset.sas_expiry.rfc3339  
 
   permissions {
-    read                       = false
     add                        = true
     create                     = true
-    write                      = true
     delete                     = false
+    filter                     = false
     list                       = true
-    update                     = true
     process                    = false
+    read                       = false
+    tag                        = false
+    update                     = true
+    write                      = true
   }
 }
 
@@ -79,7 +81,7 @@ resource azurerm_storage_account automation_storage {
   account_kind                 = "StorageV2"
   account_tier                 = "Standard"
   account_replication_type     = "LRS"
-  allow_blob_public_access     = false
+  allow_nested_items_to_be_public = false
   enable_https_traffic_only    = true
 
   tags                         = local.tags
@@ -158,6 +160,7 @@ resource azurerm_storage_share diagnostics_smb_share {
   name                         = "diagnostics"
   storage_account_name         = azurerm_storage_account.share.0.name
   enabled_protocol             = "SMB"
+  quota                        = 5120
 
   count                        = var.deploy_files_share ? 1 : 0
 }

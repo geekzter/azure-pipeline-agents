@@ -110,6 +110,9 @@ resource azurerm_firewall firewall {
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
+  sku_name                     = "AZFW_VNet"
+  sku_tier                     = "Standard"
+
   dns_servers                  = ["168.63.129.16"] # Azure DNS
 
   ip_configuration {

@@ -84,7 +84,7 @@ resource azurerm_windows_virtual_machine windows_agent {
   admin_password               = var.user_password
 
   boot_diagnostics {
-    storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
+    storage_account_uri        = null # Managed Storage Account
   }
 
   custom_data                  = var.deploy_agent_vm_extension ? base64encode(local.prepare_agent_script) : null

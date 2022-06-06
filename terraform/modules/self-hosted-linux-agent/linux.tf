@@ -49,7 +49,6 @@ data cloudinit_config user_data {
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
   # Azure Log Analytics VM extension fails on https://github.com/actions/virtual-environments
-  # Pre-installing the agent, will make the VM extension install succeed
   dynamic "part" {
     for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
     content {
@@ -164,7 +163,7 @@ resource azurerm_linux_virtual_machine linux_agent {
   }
 
   boot_diagnostics {
-    storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
+    storage_account_uri        = null # Managed Storage Account
   }
 
   identity {

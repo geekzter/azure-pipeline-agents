@@ -5,7 +5,7 @@ resource azurerm_storage_account images {
   account_kind                 = "StorageV2"
   account_tier                 = "Premium"
   account_replication_type     = "LRS"
-  allow_blob_public_access     = false
+  allow_nested_items_to_be_public = false
   enable_https_traffic_only    = true
 
   tags                         = var.tags
@@ -46,6 +46,10 @@ resource azurerm_private_endpoint images_blob_storage_endpoint {
   }
 
   tags                         = var.tags
+
+  depends_on                  = [
+                                 time_sleep.private_endpoint_subnet 
+  ]
 }
 
 resource azurerm_storage_account_network_rules images {

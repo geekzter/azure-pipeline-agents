@@ -27,7 +27,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
   upgrade_mode                 = "Manual"
 
   boot_diagnostics {
-    storage_account_uri        = "${data.azurerm_storage_account.diagnostics.primary_blob_endpoint}${var.diagnostics_storage_sas}"
+    storage_account_uri        = null # Managed Storage Account
   }
 
   custom_data                  = var.prepare_host ? base64encode(local.host_configuration_script) : null

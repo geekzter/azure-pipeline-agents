@@ -1,6 +1,7 @@
 terraform {
   required_providers {
-    azurerm                    = "~> 2.96"
+    azuread                    = "~> 2.0"
+    azurerm                    = "~> 3.0"
     cloudinit                  = "~> 2.2"
     http                       = "~> 2.1"
     local                      = "~> 2.1"
@@ -42,10 +43,11 @@ provider azurerm {
   alias                        = "default"
   features {}
 }
-data azurerm_subscription default {
+data azuread_client_config default {}
+data azurerm_client_config default {
   provider                     = azurerm.default
 }
-data azurerm_client_config default {
+data azurerm_subscription default {
   provider                     = azurerm.default
 }
 provider azurerm {

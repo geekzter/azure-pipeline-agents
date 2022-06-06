@@ -13,7 +13,8 @@ runcmd:
   # Configure SMB share
   - echo creating mount point ${smb_mount_point}...
   - mkdir -p ${smb_mount_point}
-  - echo "${smb_share}  ${smb_mount_point}    cifs   nofail,credentials=/etc/smbcredentials/${storage_account_name}.cred,serverino,dir_mode=0755,file_mode=0644,uid=$(id -u ${user}),gid=$(id -g ${user})   0   2" | sudo tee -a /etc/fstab 
+  # FIX: nobrl required to avoid UnauthorizedAccessException: https://github.com/dotnet/runtime/issues/42790#issuecomment-817758887
+  - echo "${smb_share}  ${smb_mount_point}    cifs   nofail,credentials=/etc/smbcredentials/${storage_account_name}.cred,serverino,dir_mode=0755,file_mode=0644,nobrl,uid=$(id -u ${user}),gid=$(id -g ${user})   0   2" | sudo tee -a /etc/fstab 
   - mount -a
   - PIPELINE_DEMO_DIAGNOSTICS_DIRECTORY=${smb_mount_point}/$(date '+%Y/%m/%d')/$(hostname)
   - mkdir -p $PIPELINE_DEMO_DIAGNOSTICS_DIRECTORY 2>/dev/null

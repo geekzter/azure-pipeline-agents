@@ -16,11 +16,6 @@ resource azurerm_storage_account vhds {
   tags                         = var.tags
 }
 
-resource azurerm_storage_container vhds {
-  name                         = "vhds"
-  storage_account_name         = azurerm_storage_account.vhds.name
-  container_access_type        = "private"
-}
 
 resource azurerm_private_endpoint vhds_blob_storage_endpoint {
   name                         = "${azurerm_storage_account.vhds.name}-blob-endpoint"

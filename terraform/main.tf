@@ -74,12 +74,6 @@ locals {
       PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME                 = split("/",module.packer.virtual_network_id)[8]
       PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID    = join("/",slice(split("/",module.packer.virtual_network_id),0,5))
       PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME  = split("/",module.packer.virtual_network_id)[4]
-      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_ID                      = module.gallery.storage_account_id
-      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_NAME                    = module.gallery.storage_account_name
-      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_ID       = join("/",slice(split("/",module.gallery.storage_account_id),0,5))
-      PIPELINE_DEMO_VHD_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME     = split("/",module.gallery.storage_account_id)[4]
-      PIPELINE_DEMO_VHD_STORAGE_CONTAINER_ID                    = module.gallery.storage_container_id
-      PIPELINE_DEMO_VHD_STORAGE_CONTAINER_NAME                  = module.gallery.storage_container_name
       # "System.Debug"                                            = tostring(var.pipeline_agent_diagnostics)
       SYSTEM_DEBUG                                              = tostring(var.pipeline_agent_diagnostics)
       VSTS_AGENT_HTTPTRACE                                      = tostring(var.pipeline_agent_diagnostics)

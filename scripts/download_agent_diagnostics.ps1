@@ -2,7 +2,7 @@
 param ( 
     [parameter(Mandatory=$false)][string]$FilesShareUrl,
     [parameter(Mandatory=$false)][string]$LocalPath,
-    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "unknown"
+    [parameter(Mandatory=$false)][string]$Workspace=($env:TF_WORKSPACE ?? "default")
 ) 
 . (Join-Path $PSScriptRoot functions.ps1)
 function Create-SasToken (
@@ -60,6 +60,7 @@ AzLogin -DisplayMessages
 # Process parameters
 $terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")
 Push-Location $terraformDirectory
+terraform workspace select $Workspace
 if (!$FilesShareUrl) {
     $FilesShareUrl = (Get-TerraformOutput agent_diagnostics_file_share_url)
 }

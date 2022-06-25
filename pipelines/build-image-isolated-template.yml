@@ -269,14 +269,17 @@ jobs:
         $imageDefinitionVersionTags = @(`
           "application=Pipeline Images",`
           "build=$(Build.BuildId)",`
+          "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
           "commit=$(imageBuild.commit)",`
           "pipeline=$(Build.DefinitionName)",`
+          "provisioner=azure-pipeline-yaml",`
           "versionlabel=$(githubRelease.version)"`
         )
         Write-Host "`nTags that will be applied to image version:"
         $imageDefinitionVersionTags | Format-Table
 
         if (-not (az sig image-definition list --query "[?name=='$(imageName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
+          Write-Host "`nCreating image definition $(imageName)..."
           az sig image-definition create --gallery-image-definition $(imageName) `
                                          --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                          --location $env:PIPELINE_DEMO_PACKER_LOCATION `
@@ -299,7 +302,7 @@ jobs:
           $qualifiedVersionString = ("{0}.{1}" -f $existingVersion.ToString(2), ($existingVersion.Build+1))
         }
 
-        Write-Host "`nCreating $(imageName) ${qualifiedVersionString}..."
+        Write-Host "`nCreating image version $(imageName) ${qualifiedVersionString}..."
         az sig image-version create --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --gallery-image-version $qualifiedVersionString `
@@ -384,7 +387,7 @@ jobs:
                                   -o json | ConvertFrom-Json | Set-Variable imageVersionsToPurge
 
         foreach ($imageVersionToPurge in $imageVersionsToPurge) {
-          Write-Host "Deleting $(imageName) version '$($imageVersionToPurge.name)'..."
+          Write-Host "`nDeleting $(imageName) version '$($imageVersionToPurge.name)'..."
           az sig image-version delete --gallery-image-definition $(imageName) `
                                       --gallery-image-version $imageVersionToPurge.name `
                                       --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `

@@ -25,6 +25,10 @@ parameters:
   displayName: Exclude from latest
   type: boolean
   default: true
+- name: numberOfVersionsToKeep
+  displayName: Number of image versions to keep
+  type: number
+  default: 3
 
 jobs:
 - job: '${{ parameters.image }}'
@@ -67,6 +71,8 @@ jobs:
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourceGroup' 
     value: '${{ parameters.imageResourceGroup }}'
+  - name: 'numberOfVersionsToKeep' 
+    value: ${{ parameters.numberOfVersionsToKeep }}
 
   steps:
   - checkout: self
@@ -204,7 +210,7 @@ jobs:
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -245,6 +251,29 @@ jobs:
                                   --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME 
+      failOnStandardError: true
+
+  - task: AzureCLI@2
+    displayName: 'Purge older (than $(numberOfVersionsToKeep) newest) image versions'
+    # condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az sig image-version list --gallery-image-definition $(imageName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "reverse(sort_by([],&name)) | [$(numberOfVersionsToKeep):]" `
+                                  -o json | ConvertFrom-Json | Set-Variable imageVersionsToPurge
+
+        foreach ($imageVersionToPurge in $imageVersionsToPurge) {
+          Write-Host "Deleting $(imageName) version '$($imageVersionToPurge.name)'..."
+          az sig image-version show --gallery-image-definition $(imageName) `
+                                      --gallery-image-version $imageVersionToPurge.name `
+                                      --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                      --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
+        }
       failOnStandardError: true
 
   - task: AzureCLI@2

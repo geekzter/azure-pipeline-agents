@@ -369,7 +369,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Purge older (than $(numberOfVersionsToKeep) newest) image versions'
-    # condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

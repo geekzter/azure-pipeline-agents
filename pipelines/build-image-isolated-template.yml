@@ -19,6 +19,10 @@ parameters:
   displayName: Destroy Infrastructure
   type: boolean
   default: true
+- name: numberOfVersionsToKeep
+  displayName: Number of image versions to keep
+  type: number
+  default: 3
 - name: retryCount
   displayName: Build task retry count
   type: number
@@ -73,6 +77,8 @@ jobs:
     value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageTemplate'
     value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+  - name: 'numberOfVersionsToKeep' 
+    value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'retryCount' 
     value: ${{ parameters.retryCount }}
 
@@ -358,6 +364,29 @@ jobs:
           $imageVersion | Format-Table
         } else {
           Write-Error "$(imageName) version $(publish.qualifiedVersion) was not published!"
+        }
+      failOnStandardError: true
+
+  - task: AzureCLI@2
+    displayName: 'Purge older (than $(numberOfVersionsToKeep) newest) image versions'
+    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az sig image-version list --gallery-image-definition $(imageName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "reverse(sort_by([],&name)) | [$(numberOfVersionsToKeep):]" `
+                                  -o json | ConvertFrom-Json | Set-Variable imageVersionsToPurge
+
+        foreach ($imageVersionToPurge in $imageVersionsToPurge) {
+          Write-Host "Deleting $(imageName) version '$($imageVersionToPurge.name)'..."
+          az sig image-version delete --gallery-image-definition $(imageName) `
+                                      --gallery-image-version $imageVersionToPurge.name `
+                                      --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                      --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
         }
       failOnStandardError: true
 

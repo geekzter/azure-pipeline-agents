@@ -21,6 +21,10 @@ parameters:
   displayName: Exclude from latest
   type: boolean
   default: true
+- name: numberOfVersionsToKeep
+  displayName: Number of image versions to keep
+  type: number
+  default: 3
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -76,6 +80,7 @@ jobs:
       image: Ubuntu1804
       imageReleaseName: ubuntu18
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u18'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
   - template: build-image-template.yml
@@ -85,6 +90,7 @@ jobs:
       image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u20'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-template.yml
@@ -94,6 +100,7 @@ jobs:
       image: Windows2019
       imageReleaseName: win19
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w19'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-template.yml
@@ -103,3 +110,4 @@ jobs:
       image: Windows2022
       imageReleaseName: win22
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w22'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}

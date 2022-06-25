@@ -251,6 +251,8 @@ resource azurerm_virtual_machine_extension pipeline_agent {
     command                    = "az vm start --ids ${self.virtual_machine_id}"
   }
 
+  tags                         = var.tags
+
   count                        = var.deploy_agent_vm_extension ? 1 : 0
   depends_on                   = [
     azurerm_virtual_machine_extension.windows_log_analytics,

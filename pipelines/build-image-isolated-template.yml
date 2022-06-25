@@ -382,8 +382,8 @@ jobs:
                                   -o json | ConvertFrom-Json | Set-Variable imageVersionsToPurge
 
         foreach ($imageVersionToPurge in $imageVersionsToPurge) {
-          Write-Host "Deleting $(imageName) version $($imageVersionToPurge.name)..."
-          az sig image-version show --gallery-image-definition $(imageName) `
+          Write-Host "Deleting $(imageName) version '$($imageVersionToPurge.name)'..."
+          az sig image-version delete --gallery-image-definition $(imageName) `
                                       --gallery-image-version $imageVersionToPurge.name `
                                       --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                       --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME

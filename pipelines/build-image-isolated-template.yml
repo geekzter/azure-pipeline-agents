@@ -267,6 +267,7 @@ jobs:
 
         # Publish
         $imageDefinitionVersionTags = @(`
+          "application=Pipeline Images",`
           "build=$(Build.BuildId)",`
           "commit=$(imageBuild.commit)",`
           "pipeline=$(Build.DefinitionName)",`
@@ -281,7 +282,8 @@ jobs:
                                          --location $env:PIPELINE_DEMO_PACKER_LOCATION `
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
-                                         --os-type $(imageOSType) --os-state Generalized
+                                         --os-type $(imageOSType) --os-state Generalized `
+                                         --tags $imageDefinitionVersionTags
         }
 
         # Check whether version exists. If so, increment build number.

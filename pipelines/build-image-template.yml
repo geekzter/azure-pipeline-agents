@@ -216,13 +216,23 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $imageDefinitionVersionTags = @(`
+          "application=Pipeline Images",`
+          "build=$(Build.BuildId)",`
+          "pipeline=$(Build.DefinitionName)",`
+          "versionlabel=$(githubRelease.fullyQualifiedVersion)"`
+        )
+        Write-Host "`nTags that will be applied to image version:"
+        $imageDefinitionVersionTags | Format-Table
+
         if (-not (az sig image-definition list --query "[?name=='$(imageName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
           az sig image-definition create --gallery-image-definition $(imageName) `
                                          --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                          --location $env:PIPELINE_DEMO_PACKER_LOCATION `
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
-                                         --os-type $(imageOSType) --os-state Generalized
+                                         --os-type $(imageOSType) --os-state Generalized `
+                                         --tags $imageDefinitionVersionTags
         }
 
         Write-Host "Creating $(imageName) $(githubRelease.fullyQualifiedVersion)..."
@@ -233,7 +243,8 @@ jobs:
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $(vhd.storageAccountName) 
+                                    --os-vhd-storage-account $(vhd.storageAccountName) `
+                                    --tags $imageDefinitionVersionTags
       failOnStandardError: true
 
   - task: AzureCLI@2

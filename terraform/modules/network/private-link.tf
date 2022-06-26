@@ -107,6 +107,7 @@ resource azurerm_monitor_private_link_scope monitor {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-ampls"
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
 
+  tags                         = var.tags
   count                        = var.deploy_firewall ? 1 : 0
 }
 

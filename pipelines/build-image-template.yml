@@ -216,16 +216,29 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $imageDefinitionVersionTags = @(`
+          "application=Pipeline Images",`
+          "build=$(Build.BuildId)",`
+          "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+          "pipeline=$(Build.DefinitionName)",`
+          "provisioner=azure-pipeline-yaml",`
+          "versionlabel=$(githubRelease.fullyQualifiedVersion)"`
+        )
+        Write-Host "`nTags that will be applied to image version:"
+        $imageDefinitionVersionTags | Format-Table
+
         if (-not (az sig image-definition list --query "[?name=='$(imageName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
+          Write-Host "`nCreating image definition $(imageName)..."
           az sig image-definition create --gallery-image-definition $(imageName) `
                                          --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                          --location $env:PIPELINE_DEMO_PACKER_LOCATION `
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
-                                         --os-type $(imageOSType) --os-state Generalized
+                                         --os-type $(imageOSType) --os-state Generalized `
+                                         --tags $imageDefinitionVersionTags
         }
 
-        Write-Host "Creating $(imageName) $(githubRelease.fullyQualifiedVersion)..."
+        Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
         az sig image-version create --exclude-from-latest $(excludeFromLatest) `
                                     --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -233,7 +246,8 @@ jobs:
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $(vhd.storageAccountName) 
+                                    --os-vhd-storage-account $(vhd.storageAccountName) `
+                                    --tags $imageDefinitionVersionTags
       failOnStandardError: true
 
   - task: AzureCLI@2
@@ -268,7 +282,7 @@ jobs:
                                   -o json | ConvertFrom-Json | Set-Variable imageVersionsToPurge
 
         foreach ($imageVersionToPurge in $imageVersionsToPurge) {
-          Write-Host "Deleting $(imageName) version '$($imageVersionToPurge.name)'..."
+          Write-Host "`nDeleting $(imageName) version '$($imageVersionToPurge.name)'..."
           az sig image-version delete --gallery-image-definition $(imageName) `
                                       --gallery-image-version $imageVersionToPurge.name `
                                       --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `

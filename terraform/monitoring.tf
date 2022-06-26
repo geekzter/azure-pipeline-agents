@@ -48,6 +48,8 @@ resource azurerm_log_analytics_solution solution {
     product                     = "OMSGallery/${each.value}"
   }
 
+  tags                         = local.tags
+
   for_each                     = var.log_analytics_workspace_id == "" || var.log_analytics_workspace_id == null ? toset([
     "ServiceMap",
     "VMInsights",

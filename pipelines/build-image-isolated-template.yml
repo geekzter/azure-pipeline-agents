@@ -374,7 +374,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Purge older (than $(numberOfVersionsToKeep) newest) image versions'
-    condition: and(succeeded(), ne(coalesce(variables['publish.qualifiedVersion'],'null'),'null'))
+    # condition: and(succeeded(), ne(coalesce(variables['publish.qualifiedVersion'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -387,7 +387,12 @@ jobs:
                                   --query "reverse(sort_by([],&name)) | [${numberOfVersionsToKeep}:].id" `
                                   -o tsv | Set-Variable imageVersionIDsToPurge
 
-        az resource delete --ids $imageVersionIDsToPurge
+        if ($imageVersionIDsToPurge) {
+            Write-Host "`nDeleting ${imageName} versions: ${imageVersionIDsToPurge}..."
+            az resource show --ids $imageVersionIDsToPurge
+        } else {
+            Write-Host "No ${imageName} versions to delete"
+        }
       failOnStandardError: true
 
   - task: AzureCLI@2

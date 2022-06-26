@@ -374,7 +374,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Purge older (than $(numberOfVersionsToKeep) newest) image versions'
-    # condition: and(succeeded(), ne(coalesce(variables['publish.qualifiedVersion'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['publish.qualifiedVersion'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -388,7 +388,7 @@ jobs:
                                   -o tsv | Set-Variable imageVersionIDsToPurge
 
         if ($imageVersionIDsToPurge) {
-            Write-Host "`nDeleting $(imageName) versions: ${imageVersionIDsToPurge}..."
+            Write-Host "`nDeleting $(imageName) version(s): ${imageVersionIDsToPurge}..."
             az resource delete --ids $imageVersionIDsToPurge
         } else {
             Write-Host "No $(imageName) versions to delete"

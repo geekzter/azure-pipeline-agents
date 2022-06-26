@@ -275,10 +275,11 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $numberOfVersionsToKeep = [math]::Max($(numberOfVersionsToKeep),1)
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "reverse(sort_by([],&name)) | [$(numberOfVersionsToKeep):].id" `
+                                  --query "reverse(sort_by([],&name)) | [${numberOfVersionsToKeep}:].id" `
                                   -o tsv | Set-Variable imageVersionIDsToPurge
 
         az resource delete --ids $imageVersionIDsToPurge

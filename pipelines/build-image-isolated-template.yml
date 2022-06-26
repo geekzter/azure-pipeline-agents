@@ -388,10 +388,10 @@ jobs:
                                   -o tsv | Set-Variable imageVersionIDsToPurge
 
         if ($imageVersionIDsToPurge) {
-            Write-Host "`nDeleting ${imageName} versions: ${imageVersionIDsToPurge}..."
-            az resource show --ids $imageVersionIDsToPurge
+            Write-Host "`nDeleting $(imageName) versions: ${imageVersionIDsToPurge}..."
+            az resource delete --ids $imageVersionIDsToPurge
         } else {
-            Write-Host "No ${imageName} versions to delete"
+            Write-Host "No $(imageName) versions to delete"
         }
       failOnStandardError: true
 

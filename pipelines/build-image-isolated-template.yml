@@ -22,7 +22,7 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 3
+  default: 4
 - name: retryCount
   displayName: Build task retry count
   type: number
@@ -272,7 +272,7 @@ jobs:
           "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
           "commit=$(imageBuild.commit)",`
           "pipeline=$(Build.DefinitionName)",`
-          "provisioner=azure-pipeline-yaml",`
+          "provisioner=azure-cli",`
           "versionlabel=$(githubRelease.version)"`
         )
         Write-Host "`nTags that will be applied to image version:"
@@ -374,7 +374,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Purge older (than $(numberOfVersionsToKeep) newest) image versions'
-    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['publish.qualifiedVersion'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -383,16 +383,10 @@ jobs:
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "reverse(sort_by([],&name)) | [$(numberOfVersionsToKeep):]" `
-                                  -o json | ConvertFrom-Json | Set-Variable imageVersionsToPurge
+                                  --query "reverse(sort_by([],&name)) | [$(numberOfVersionsToKeep):].id" `
+                                  -o tsv | Set-Variable imageVersionIDsToPurge
 
-        foreach ($imageVersionToPurge in $imageVersionsToPurge) {
-          Write-Host "`nDeleting $(imageName) version '$($imageVersionToPurge.name)'..."
-          az sig image-version delete --gallery-image-definition $(imageName) `
-                                      --gallery-image-version $imageVersionToPurge.name `
-                                      --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                                      --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
-        }
+        az resource delete --ids $imageVersionIDsToPurge
       failOnStandardError: true
 
   - task: AzureCLI@2

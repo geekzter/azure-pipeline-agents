@@ -24,7 +24,7 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 3
+  default: 4
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 

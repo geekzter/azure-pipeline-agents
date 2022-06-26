@@ -28,7 +28,7 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 3
+  default: 4
 
 jobs:
 - job: '${{ parameters.image }}'
@@ -221,7 +221,7 @@ jobs:
           "build=$(Build.BuildId)",`
           "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
           "pipeline=$(Build.DefinitionName)",`
-          "provisioner=azure-pipeline-yaml",`
+          "provisioner=azure-cli",`
           "versionlabel=$(githubRelease.fullyQualifiedVersion)"`
         )
         Write-Host "`nTags that will be applied to image version:"
@@ -278,16 +278,10 @@ jobs:
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                  --query "reverse(sort_by([],&name)) | [$(numberOfVersionsToKeep):]" `
-                                  -o json | ConvertFrom-Json | Set-Variable imageVersionsToPurge
+                                  --query "reverse(sort_by([],&name)) | [$(numberOfVersionsToKeep):].id" `
+                                  -o tsv | Set-Variable imageVersionIDsToPurge
 
-        foreach ($imageVersionToPurge in $imageVersionsToPurge) {
-          Write-Host "`nDeleting $(imageName) version '$($imageVersionToPurge.name)'..."
-          az sig image-version delete --gallery-image-definition $(imageName) `
-                                      --gallery-image-version $imageVersionToPurge.name `
-                                      --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                                      --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
-        }
+        az resource delete --ids $imageVersionIDsToPurge
       failOnStandardError: true
 
   - task: AzureCLI@2

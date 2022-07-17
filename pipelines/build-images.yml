@@ -34,14 +34,14 @@ resources:
     type: github
     endpoint: github.com # Service Connection name
     name: actions/virtual-environments
-    trigger:
-      branches:
-        include:
-        - main
-      paths:
-        include:
-        - 'images/linux/**'
-        - 'images/win/**'
+    # trigger:
+    #   branches:
+    #     include:
+    #     - main
+    #   paths:
+    #     include:
+    #     - 'images/linux/**'
+    #     - 'images/win/**'
 
 trigger: none
 
@@ -57,8 +57,8 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 12 * * Mon,Wed,Fri'
-  displayName: 'Bi-Nightly build (UTC)'
+- cron: '0 12 * * Fri'
+  displayName: 'Weekly build (UTC)'
   always: 'true' # Run if there are no changes
   branches:
     include:

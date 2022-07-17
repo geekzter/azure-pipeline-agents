@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     azuread                    = "~> 2.0"
-    azurerm                    = "~> 3.0"
+    azurerm                    = "~> 3.14"
     cloudinit                  = "~> 2.2"
     http                       = "~> 2.1"
     local                      = "~> 2.1"
@@ -17,6 +17,9 @@ provider azurerm {
   features {
     key_vault {
       purge_soft_delete_on_destroy = false
+    }
+    resource_group {
+      prevent_deletion_if_contains_resources = false
     }
     virtual_machine {
       # Don't do this in production

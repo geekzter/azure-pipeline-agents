@@ -160,7 +160,7 @@ resource azurerm_storage_share diagnostics_smb_share {
   name                         = "diagnostics"
   storage_account_name         = azurerm_storage_account.share.0.name
   enabled_protocol             = "SMB"
-  quota                        = 5120
+  quota                        = 50
 
   count                        = var.deploy_files_share ? 1 : 0
 }

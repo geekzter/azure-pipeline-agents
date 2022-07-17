@@ -2,6 +2,7 @@
 param ( 
     [parameter(Mandatory=$false)][string]$FilesShareUrl,
     [parameter(Mandatory=$false)][string]$LocalPath,
+    [parameter(Mandatory=$false)][switch]$Purge,
     [parameter(Mandatory=$false)][string]$Workspace=($env:TF_WORKSPACE ?? "default")
 ) 
 . (Join-Path $PSScriptRoot functions.ps1)
@@ -16,7 +17,7 @@ function Create-SasToken (
     az storage account generate-sas --account-key $(az storage account keys list -n $StorageAccountName -g $ResourceGroupName --subscription $SubscriptionId --query "[0].value" -o tsv) `
                                     --account-name $StorageAccountName `
                                     --expiry "$([DateTime]::UtcNow.AddDays($SasTokenValidityDays).ToString('s'))Z" `
-                                    --permissions lr `
+                                    --permissions dlr `
                                     --resource-types co `
                                     --services bf `
                                     --subscription $SubscriptionId `
@@ -94,3 +95,28 @@ azcopy copy "${sourceUrlWithToken}" `
             $LocalPath `
             --overwrite false `
             --recursive
+
+if ($LASTEXITCODE -eq 1) {
+    Write-Warning "azcopy failed copying files (${LASTEXITCODE})"
+    $defaultPurgeChoice = 1
+} elseif ($LASTEXITCODE -ne 0) {
+    Write-Warning "azcopy failed copying files (${LASTEXITCODE}), exiting"
+    exit $exitCode
+}
+
+if ($Purge) {
+    $choices = @(
+        [System.Management.Automation.Host.ChoiceDescription]::new("&Purge", "Purge files from the share?")
+        [System.Management.Automation.Host.ChoiceDescription]::new("&Exit", "Abort purge operation")
+    )
+    $defaultPurgeChoice ??= 0 
+    $decision = $Host.UI.PromptForChoice("Continue", "Do you wish to proceed puging files from ${FilesShareUrl}?", $choices, $defaultPurgeChoice)
+
+    if ($decision -eq 0) {
+        Write-Host "$($choices[$decision].HelpMessage)"
+    } else {
+        Write-Host "$($PSStyle.Formatting.Warning)$($choices[$decision].HelpMessage)$($PSStyle.Reset)"
+        exit                    
+    }
+    azcopy rm "${sourceUrlWithToken}" --recursive
+}

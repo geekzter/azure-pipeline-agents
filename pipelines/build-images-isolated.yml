@@ -20,7 +20,7 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 4
+  default: 2
 - name: retryCount
   displayName: Build task retry count
   type: number
@@ -38,14 +38,14 @@ resources:
     type: github
     endpoint: github.com # Service Connection name
     name: actions/virtual-environments
-    trigger:
-      branches:
-        include:
-        - main
-      paths:
-        include:
-        - 'images/linux/**'
-        - 'images/win/**'
+    # trigger:
+    #   branches:
+    #     include:
+    #     - main
+    #   paths:
+    #     include:
+    #     - 'images/linux/**'
+    #     - 'images/win/**'
 
 trigger: none
 
@@ -61,8 +61,8 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 2 * * *'
-  displayName: 'Nightly build (UTC)'
+- cron: '0 2 * * Thu'
+  displayName: 'Weekly build (UTC)'
   always: 'true' # Run if there are no changes
   branches:
     include:

@@ -132,8 +132,16 @@ variable linux_scale_set_agent_count {
   default                      = 2
   type                         = number
 }
+variable linux_scale_set_agent_idle_count {
+  default                      = 1
+  type                         = number
+}
 variable linux_scale_set_agent_max_count {
   default                      = 8
+  type                         = number
+}
+variable linux_scale_set_agent_max_saved_count {
+  default                      = 1
   type                         = number
 }
 variable linux_self_hosted_agent_count {
@@ -285,8 +293,16 @@ variable windows_scale_set_agent_count {
   default                      = 2
   type                         = number
 }
+variable windows_scale_set_agent_idle_count {
+  default                      = 1
+  type                         = number
+}
 variable windows_scale_set_agent_max_count {
   default                      = 8
+  type                         = number
+}
+variable windows_scale_set_agent_max_saved_count {
+  default                      = 1
   type                         = number
 }
 variable windows_scale_set_agent_interactive_ui {

@@ -13,7 +13,7 @@ resource random_string suffix {
   length                       = 4
   upper                        = false
   lower                        = true
-  number                       = false
+  numeric                      = false
   special                      = false
 }
 
@@ -22,7 +22,7 @@ resource random_string password {
   length                       = 12
   upper                        = true
   lower                        = true
-  number                       = true
+  numeric                      = true
   special                      = true
 # override_special             = "!@#$%&*()-_=+[]{}<>:?" # default
 # Avoid characters that may cause shell scripts to break

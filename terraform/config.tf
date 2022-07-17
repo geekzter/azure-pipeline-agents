@@ -31,7 +31,7 @@ locals {
       "serviceEndpointScope"   = var.service_connection_project
       "azureId"                = vmss.id
       "maxCapacity"            = vmss.max_count
-      "desiredIdle"            = min(vmss.count,vmss.max_count)
+      "desiredIdle"            = min(vmss.count,vmss.max_count,coalesce(vmss.os == "windows" ? var.windows_scale_set_agent_idle_count : var.linux_scale_set_agent_idle_count),vmss.count)
       "recycleAfterEachUse"    = true
       "maxSavedNodeCount"      = max(3,vmss.max_count - vmss.count)
       "osType"                 = vmss.os

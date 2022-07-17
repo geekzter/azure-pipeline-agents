@@ -132,6 +132,9 @@ variable linux_scale_set_agent_count {
   default                      = 2
   type                         = number
 }
+variable linux_scale_set_agent_idle_count {
+  type                         = number
+}
 variable linux_scale_set_agent_max_count {
   default                      = 8
   type                         = number
@@ -283,6 +286,9 @@ variable windows_pipeline_agent_pool {
 }
 variable windows_scale_set_agent_count {
   default                      = 2
+  type                         = number
+}
+variable windows_scale_set_agent_idle_count {
   type                         = number
 }
 variable windows_scale_set_agent_max_count {

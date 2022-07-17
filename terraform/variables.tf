@@ -133,6 +133,7 @@ variable linux_scale_set_agent_count {
   type                         = number
 }
 variable linux_scale_set_agent_idle_count {
+  default                      = 1
   type                         = number
 }
 variable linux_scale_set_agent_max_count {
@@ -293,6 +294,7 @@ variable windows_scale_set_agent_count {
   type                         = number
 }
 variable windows_scale_set_agent_idle_count {
+  default                      = 1
   type                         = number
 }
 variable windows_scale_set_agent_max_count {

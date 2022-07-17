@@ -33,7 +33,7 @@ locals {
       "maxCapacity"            = vmss.max_count
       "desiredIdle"            = min(vmss.count,vmss.max_count,coalesce(vmss.os == "windows" ? var.windows_scale_set_agent_idle_count : var.linux_scale_set_agent_idle_count),vmss.count)
       "recycleAfterEachUse"    = true
-      "maxSavedNodeCount"      = max(3,vmss.max_count - vmss.count)
+      "maxSavedNodeCount"      = max(0,vmss.max_count - vmss.count,vmss.os == "windows" ? var.windows_scale_set_agent_max_saved_count : var.linux_scale_set_agent_max_saved_count)
       "osType"                 = vmss.os
       "desiredSize"            = min(vmss.count+1,vmss.max_count)
       "agentInteractiveUI"     = vmss.os == "windows" ? var.windows_scale_set_agent_interactive_ui : false

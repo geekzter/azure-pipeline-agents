@@ -86,6 +86,7 @@ locals {
     {
       application              = "Pipeline Agents"
       environment              = local.environment
+      github-repo              = "https://github.com/geekzter/azure-pipeline-agents"
       provisioner              = "terraform"
       provisioner-client-id    = data.azurerm_client_config.default.client_id
       provisioner-object-id    = data.azuread_client_config.default.object_id

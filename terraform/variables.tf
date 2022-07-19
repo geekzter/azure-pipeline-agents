@@ -246,6 +246,15 @@ variable storage_contributors {
   type                         = list
 }
 
+variable subscription_id {
+  description                  = "Configure subscription_id independent from ARM_SUBSCRIPTION_ID"
+  default                      = null
+}
+variable tenant_id {
+  description                  = "Configure tenant_id independent from ARM_TENANT_ID"
+  default                      = null
+}
+
 variable tags {
   description                  = "A map of the tags to use for the resources that are deployed"
   type                         = map

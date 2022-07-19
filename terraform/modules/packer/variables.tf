@@ -11,6 +11,7 @@ variable gateway_ip_address {
 }
 variable location {}
 variable peer_virtual_network_id {}
+variable prefix {}
 variable suffix {}
 variable tags {
     type                       = map

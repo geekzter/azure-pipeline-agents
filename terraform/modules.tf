@@ -39,6 +39,7 @@ module packer {
   gateway_ip_address           = module.network.gateway_ip_address
   peer_virtual_network_id      = module.network.virtual_network_id
   location                     = var.location
+  prefix                       = var.resource_prefix
   suffix                       = local.suffix
   tags                         = local.tags
 

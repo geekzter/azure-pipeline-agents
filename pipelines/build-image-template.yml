@@ -232,7 +232,11 @@ jobs:
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
                                          --os-type $(imageOSType) --os-state Generalized `
-                                         --tags $imageDefinitionVersionTags
+                                         --query id -o tsv | Set-Variable imageDefinitionId
+                                         
+          # BUG: https://github.com/Azure/azure-cli/issues/23194
+          # FIX: Set tag separately
+          az tag create az --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
         }
 
         Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
@@ -244,7 +248,11 @@ jobs:
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
                                     --os-vhd-storage-account $(vhd.storageAccountName) `
-                                    --tags $imageDefinitionVersionTags
+                                    --query id -o tsv | Set-Variable imageVersionId
+
+          # BUG: https://github.com/Azure/azure-cli/issues/23194
+          # FIX: Set tag separately
+          az tag create az --resource-id $imageVersionId --tags $imageDefinitionVersionTags
       failOnStandardError: true
 
   - task: AzureCLI@2

@@ -71,7 +71,7 @@ jobs:
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourceGroup' 
     # value: '${{ parameters.imageResourceGroup }}'
-    value: replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))
+    value: $[replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))]
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
 

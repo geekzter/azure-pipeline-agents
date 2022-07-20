@@ -61,11 +61,40 @@ resource azurerm_network_security_rule agent_rdp {
   resource_group_name          = azurerm_network_security_group.agent_nsg.resource_group_name
   network_security_group_name  = azurerm_network_security_group.agent_nsg.name
 }
+
+# Address race condition where policy assigned NSG before we can assign our own
+resource null_resource remove_conflicting_scale_set_nsg {
+  triggers                     = {
+    always                     = timestamp()
+  }
+
+  provisioner local-exec {
+    command                    = "az network vnet subnet update --ids ${azurerm_subnet.scale_set_agents.id} --nsg '' --query 'networkSecurityGroup'"
+  }  
+}
 resource azurerm_subnet_network_security_group_association scale_set_agents {
   subnet_id                    = azurerm_subnet.scale_set_agents.id
   network_security_group_id    = azurerm_network_security_group.agent_nsg.id
+
+  depends_on                   = [
+    null_resource.remove_conflicting_scale_set_nsg
+  ]
+}
+# Address race condition where policy assigned NSG before we can assign our own
+resource null_resource remove_conflicting_self_hosted_nsg {
+  triggers                     = {
+    always                     = timestamp()
+  }
+
+  provisioner local-exec {
+    command                    = "az network vnet subnet update --ids ${azurerm_subnet.self_hosted_agents.id} --nsg '' --query 'networkSecurityGroup'"
+  }  
 }
 resource azurerm_subnet_network_security_group_association self_hosted_agents {
   subnet_id                    = azurerm_subnet.self_hosted_agents.id
   network_security_group_id    = azurerm_network_security_group.agent_nsg.id
+
+  depends_on                   = [
+    null_resource.remove_conflicting_self_hosted_nsg
+  ]
 }

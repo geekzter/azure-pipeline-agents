@@ -64,9 +64,23 @@ resource azurerm_network_security_group default {
 
   tags                         = var.tags
 }
+# Address race condition where policy assigned NSG before we can assign our own
+resource null_resource remove_conflicting_private_endpoint_nsg {
+  triggers                     = {
+    always                     = timestamp()
+  }
+
+  provisioner local-exec {
+    command                    = "az network vnet subnet update --ids ${azurerm_subnet.private_endpoint_subnet.id} --nsg '' --query 'networkSecurityGroup'"
+  }  
+}
 resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
   network_security_group_id    = azurerm_network_security_group.default.id
+
+  depends_on                   = [
+    null_resource.remove_conflicting_private_endpoint_nsg
+  ]
 }
 
 # FIX: Resource is in Updating state and the last operation that updated/is updating the resource is PutSubnetOperation"

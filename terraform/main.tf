@@ -49,6 +49,7 @@ locals {
     {
       # "Agent.Diagnostic"                                        = tostring(var.pipeline_agent_diagnostics)
       AGENT_DIAGNOSTIC                                          = tostring(var.pipeline_agent_diagnostics)
+      PIPELINE_DEMO_AGENT_LOCATION                              = var.location
       PIPELINE_DEMO_AGENT_OUTBOUND_IP                           = module.network.outbound_ip_address
       PIPELINE_DEMO_AGENT_SUBNET_ID                             = module.network.scale_set_agents_subnet_id
       PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID      = azurerm_user_assigned_identity.agents.client_id
@@ -56,7 +57,8 @@ locals {
       PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_PRINCIPAL_ID   = azurerm_user_assigned_identity.agents.principal_id
       PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_RESOURCE_ID    = azurerm_user_assigned_identity.agents.id
       PIPELINE_DEMO_AGENT_VIRTUAL_NETWORK_ID                    = module.network.virtual_network_id
-      PIPELINE_DEMO_AGENT_LOCATION                              = var.location
+      PIPELINE_DEMO_APPLICATION_NAME                            = var.application_name
+      PIPELINE_DEMO_APPLICATION_OWNER                           = local.owner
       PIPELINE_DEMO_COMPUTE_GALLERY_ID                          = module.gallery.shared_image_gallery_id
       PIPELINE_DEMO_COMPUTE_GALLERY_NAME                        = split("/",module.gallery.shared_image_gallery_id)[8]
       PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID           = join("/",slice(split("/",module.gallery.shared_image_gallery_id),0,5))
@@ -74,19 +76,22 @@ locals {
       PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME                 = split("/",module.packer.virtual_network_id)[8]
       PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID    = join("/",slice(split("/",module.packer.virtual_network_id),0,5))
       PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME  = split("/",module.packer.virtual_network_id)[4]
+      PIPELINE_DEMO_RESOURCE_PREFIX                             = var.resource_prefix
       # "System.Debug"                                            = tostring(var.pipeline_agent_diagnostics)
       SYSTEM_DEBUG                                              = tostring(var.pipeline_agent_diagnostics)
       VSTS_AGENT_HTTPTRACE                                      = tostring(var.pipeline_agent_diagnostics)
     },
     var.environment_variables
   )
+  owner                        = var.application_owner != "" ? var.application_owner : data.azuread_client_config.default.object_id
   password                     = ".Az9${random_string.password.result}"
   suffix                       = var.resource_suffix != "" ? lower(var.resource_suffix) : random_string.suffix.result
   tags                         = merge(
     {
-      application              = "Pipeline Agents"
+      application              = var.application_name
       environment              = local.environment
       github-repo              = "https://github.com/geekzter/azure-pipeline-agents"
+      owner                    = local.owner
       provisioner              = "terraform"
       provisioner-client-id    = data.azurerm_client_config.default.client_id
       provisioner-object-id    = data.azuread_client_config.default.object_id

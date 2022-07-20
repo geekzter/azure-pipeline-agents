@@ -13,10 +13,6 @@ parameters:
 # https://api.github.com/repos/actions/virtual-environments/releases
   displayName: Image Release Name
   type: string
-- name: imageResourceGroup
-  displayName: Image Resource Group
-  type: string
-  default: packer
 - name: destroy
   displayName: Destroy Infrastructure
   type: boolean
@@ -70,7 +66,7 @@ jobs:
   - name: 'imageReleaseName' 
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourceGroup' 
-    value: '${{ parameters.imageResourceGroup }}'
+    value: '$(PIPELINE_DEMO_RESOURCE_PREFIX)-packer'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
 
@@ -81,6 +77,7 @@ jobs:
   - pwsh: |
       $requiredVariables = @(
         "PIPELINE_DEMO_PACKER_LOCATION",`
+        "PIPELINE_DEMO_RESOURCE_PREFIX",`
         "PIPELINE_DEMO_COMPUTE_GALLERY_NAME",`
         "PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME"`
       )

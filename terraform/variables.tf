@@ -11,6 +11,16 @@ variable admin_object_id {
   default                      = null
 }
 
+variable application_name {
+  description                  = "Value of 'application' resource tag"
+  default                      = "Pipeline Agents"
+}
+
+variable application_owner {
+  description                  = "Value of 'owner' resource tag"
+  default                      = "" # Empty string takes objectId of current user
+}
+
 variable configure_cidr_allow_rules {
   default                      = false
   type                         = bool

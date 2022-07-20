@@ -2,6 +2,8 @@ resource azurerm_storage_container configuration {
   name                         = "configuration"
   storage_account_name         = azurerm_storage_account.automation_storage.name
   container_access_type        = "private"
+
+  depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 
 locals {

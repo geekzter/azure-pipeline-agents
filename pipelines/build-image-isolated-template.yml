@@ -356,10 +356,6 @@ jobs:
                                     --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
                                     --query id -o tsv | Set-Variable imageVersionId
 
-        # BUG: https://github.com/Azure/azure-cli/issues/23194
-        # FIX: Set tag separately
-        az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
-
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
       addSpnToEnvironment: true
       failOnStandardError: true
@@ -396,6 +392,7 @@ jobs:
                                     --gallery-image-version $(publish.qualifiedVersion) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME 
+          
         failOnStandardError: true
 
   - task: AzureCLI@2
@@ -413,7 +410,11 @@ jobs:
                                   --query "[?name=='$(publish.qualifiedVersion)' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         if ($imageVersion) {
-          $imageVersion | Format-Table
+          # BUG: https://github.com/Azure/azure-cli/issues/23194
+          # FIX: Set tag separately
+          az tag create --resource-id $imageVersion.id --tags $imageDefinitionVersionTags
+
+          $imageVersion | Format-List
         } else {
           Write-Error "$(imageName) version $(publish.qualifiedVersion) was not published!"
         }

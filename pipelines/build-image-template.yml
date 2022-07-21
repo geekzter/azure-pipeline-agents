@@ -143,7 +143,7 @@ jobs:
       inlineScript: |
         # az ad signed-in-user show --query id -o tsv | Set-Variable spObjectId
         az role assignment create --role "Storage Blob Data Contributor" `
-                                  --assignee ${env:servicePrincipalId} `
+                                  --assignee $spObjectId `
                                   --assignee-principal-type ServicePrincipal `
                                   --resource-group $(imageResourceGroup)
 

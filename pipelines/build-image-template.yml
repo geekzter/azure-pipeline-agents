@@ -143,9 +143,28 @@ jobs:
       inlineScript: |
         az ad sp list --filter "appId eq '${env:servicePrincipalId}'"
         az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
-        az role assignment create --role "Storage Blob Data Contributor" `
-                                  --assignee ${env:servicePrincipalId} `
-                                  --resource-group $(imageResourceGroup)
+
+        az role assignment list --assignee $spObjectId `
+                                --resource-group $(imageResourceGroup) `
+                                --include-inherited `
+                                --query "[?roleDefinitionName=='Storage Blob Data Owner' || roleDefinitionName=='Storage Blob Data Contributor']" `
+                                -o json | ConvertFrom-Json | Set-Variable dataAccess
+
+        if (!$dataAccess) {
+          az role assignment list --assignee $spObjectId `
+                                  --resource-group $(imageResourceGroup) `
+                                  --include-inherited `
+                                  --query "[?roleDefinitionName=='Owner']" `
+                                  -o json | ConvertFrom-Json | Set-Variable owner
+          if ($owner) {
+            az role assignment create --role "Storage Blob Data Contributor" `
+                                      --assignee ${env:servicePrincipalId} `
+                                      --resource-group $(imageResourceGroup)
+          } else {
+            Write-Warning "Service Principal does not have Storage Data access, nor the (Owner) permission to grant it. VHD blob creation will likely fail."
+            throw quiting
+          }
+        }
 
         Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
         Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"

@@ -114,7 +114,7 @@ jobs:
                                       --resource-group $(imageResourceGroup)
           } else {
             Write-Warning "Service Principal does not have Storage Data access, nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
-            exit 1
+            exit 0
           }
         }
       addSpnToEnvironment: true

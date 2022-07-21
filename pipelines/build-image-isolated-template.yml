@@ -412,6 +412,16 @@ jobs:
         if ($imageVersion) {
           # BUG: https://github.com/Azure/azure-cli/issues/23194
           # FIX: Set tag separately
+          $imageDefinitionVersionTags = @(`
+            "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
+            "build=$(Build.BuildId)",`
+            "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+            "commit=$(imageBuild.commit)",`
+            "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
+            "pipeline=$(Build.DefinitionName)",`
+            "provisioner=azure-cli",`
+            "versionlabel=$(githubRelease.version)"`
+          )
           az tag create --resource-id $imageVersion.id --tags $imageDefinitionVersionTags
 
           $imageVersion | Format-List

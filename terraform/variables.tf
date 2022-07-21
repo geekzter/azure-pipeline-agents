@@ -21,6 +21,12 @@ variable application_owner {
   default                      = "" # Empty string takes objectId of current user
 }
 
+variable configure_access_control {
+  description                  = "Assumes the Terraform user is an owner of the subscription. Turning this off reduces functionality somewhat"
+  default                      = true
+  type                         = bool
+}
+
 variable configure_cidr_allow_rules {
   default                      = false
   type                         = bool

@@ -3,6 +3,7 @@ resource azurerm_storage_container configuration {
   storage_account_name         = azurerm_storage_account.automation_storage.name
   container_access_type        = "private"
 
+  count                        = var.configure_access_control ? 1 : 0
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 
@@ -51,10 +52,11 @@ resource local_file set_environment_variables_script {
 resource azurerm_storage_blob set_environment_variables_script {
   name                         = "data/${terraform.workspace}/set_environment_variables.ps1"
   storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.configuration.name
+  storage_container_name       = azurerm_storage_container.configuration.0.name
   type                         = "Block"
   source_content               = local.set_environment_variables_script
 
+  count                        = var.configure_access_control ? 1 : 0
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 
@@ -67,40 +69,40 @@ resource local_file elastic_pools {
 resource azurerm_storage_blob scale_set_pool_config {
   name                         = "data/${terraform.workspace}/${each.key}_elastic_pool.json"
   storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.configuration.name
+  storage_container_name       = azurerm_storage_container.configuration.0.name
   type                         = "Block"
   source_content               = jsonencode(each.value)
 
-  for_each                     = local.elastic_pools
+  for_each                     = var.configure_access_control ? local.elastic_pools : tomap({})
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 resource azurerm_storage_blob terraform_backend_configuration {
   name                         = "terraform/backend.tf"
   storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.configuration.name
+  storage_container_name       = azurerm_storage_container.configuration.0.name
   type                         = "Block"
   source                       = "${path.root}/backend.tf"
 
-  count                        = fileexists("${path.root}/backend.tf") ? 1 : 0
+  count                        = var.configure_access_control && fileexists("${path.root}/backend.tf") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 resource azurerm_storage_blob terraform_auto_vars_configuration {
   name                         = "terraform/config.auto.tfvars"
   storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.configuration.name
+  storage_container_name       = azurerm_storage_container.configuration.0.name
   type                         = "Block"
   source                       = "${path.root}/config.auto.tfvars"
 
-  count                        = fileexists("${path.root}/config.auto.tfvars") ? 1 : 0
+  count                        = var.configure_access_control && fileexists("${path.root}/config.auto.tfvars") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }
 resource azurerm_storage_blob terraform_workspace_vars_configuration {
   name                         = "terraform/${terraform.workspace}.tfvars"
   storage_account_name         = azurerm_storage_account.automation_storage.name
-  storage_container_name       = azurerm_storage_container.configuration.name
+  storage_container_name       = azurerm_storage_container.configuration.0.name
   type                         = "Block"
   source                       = "${path.root}/${terraform.workspace}.tfvars"
 
-  count                        = fileexists("${path.root}/${terraform.workspace}.tfvars") ? 1 : 0
+  count                        = var.configure_access_control && fileexists("${path.root}/${terraform.workspace}.tfvars") ? 1 : 0
   depends_on                   = [azurerm_role_assignment.agent_storage_contributors]
 }

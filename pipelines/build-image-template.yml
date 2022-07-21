@@ -141,6 +141,12 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        # az ad signed-in-user show --query id -o tsv | Set-Variable spObjectId
+        az role assignment create --role "Storage Blob Data Contributor" `
+                                  --assignee ${env:servicePrincipalId} `
+                                  --assignee-principal-type ServicePrincipal `
+                                  --resource-group $(imageResourceGroup)
+
         Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
         Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
         Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
@@ -242,7 +248,7 @@ jobs:
                                          
           # BUG: https://github.com/Azure/azure-cli/issues/23194
           # FIX: Set tag separately
-          az tag create az --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
+          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
         }
 
         Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
@@ -258,7 +264,7 @@ jobs:
 
           # BUG: https://github.com/Azure/azure-cli/issues/23194
           # FIX: Set tag separately
-          az tag create az --resource-id $imageVersionId --tags $imageDefinitionVersionTags
+          az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
       failOnStandardError: true
 
   - task: AzureCLI@2

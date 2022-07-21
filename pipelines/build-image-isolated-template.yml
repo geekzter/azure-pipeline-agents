@@ -292,7 +292,7 @@ jobs:
                                          
           # BUG: https://github.com/Azure/azure-cli/issues/23194
           # FIX: Set tag separately
-          az tag create az --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
+          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
         }
 
         # Check whether version exists. If so, increment build number.
@@ -321,7 +321,7 @@ jobs:
 
         # BUG: https://github.com/Azure/azure-cli/issues/23194
         # FIX: Set tag separately
-        az tag create az --resource-id $imageVersionId --tags $imageDefinitionVersionTags
+        az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
       addSpnToEnvironment: true

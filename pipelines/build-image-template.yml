@@ -141,11 +141,10 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        az ad signed-in-user show
-        az ad signed-in-user show --query id -o tsv | Set-Variable spObjectId
+        az ad sp list --filter "appId eq '${env:servicePrincipalId}'"
+        az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
         az role assignment create --role "Storage Blob Data Contributor" `
-                                  --assignee-object-id $spObjectId `
-                                  --assignee-principal-type ServicePrincipal `
+                                  --assignee ${env:servicePrincipalId} `
                                   --resource-group $(imageResourceGroup)
 
         Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"

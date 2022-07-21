@@ -285,7 +285,7 @@ jobs:
 
           # BUG: https://github.com/Azure/azure-cli/issues/23194
           # FIX: Set tag separately
-          az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
+          # az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
       failOnStandardError: true
 
   - task: AzureCLI@2

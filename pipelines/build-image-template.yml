@@ -135,15 +135,14 @@ jobs:
 
   - task: AzureCLI@2
     name: servicePrincipal
-    displayName: 'Fetch build credentials'
+    displayName: 'Check access'
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        az ad sp list --filter "appId eq '${env:servicePrincipalId}'"
+        # Check access
         az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
-
         az role assignment list --assignee $spObjectId `
                                 --resource-group $(imageResourceGroup) `
                                 --include-inherited `
@@ -161,8 +160,8 @@ jobs:
                                       --assignee ${env:servicePrincipalId} `
                                       --resource-group $(imageResourceGroup)
           } else {
-            Write-Warning "Service Principal does not have Storage Data access, nor the (Owner) permission to grant it. VHD blob creation will likely fail."
-            throw quiting
+            Write-Warning "Service Principal does not have Storage Data access, nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
+            exit 1
           }
         }
 

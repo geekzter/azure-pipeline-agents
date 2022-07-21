@@ -149,7 +149,7 @@ jobs:
                                 --query "[?roleDefinitionName=='Storage Blob Data Owner' || roleDefinitionName=='Storage Blob Data Contributor']" `
                                 -o json | ConvertFrom-Json | Set-Variable dataAccess
 
-        if (!$dataAccess) {
+        if ($dataAccess) {
           Write-Host "Service Principal has Storage Data access to resource group $(imageResourceGroup)"
         } else {
           az role assignment list --assignee $spObjectId `

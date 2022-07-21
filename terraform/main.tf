@@ -79,6 +79,7 @@ locals {
       PIPELINE_DEMO_RESOURCE_PREFIX                             = var.resource_prefix
       # "System.Debug"                                            = tostring(var.pipeline_agent_diagnostics)
       SYSTEM_DEBUG                                              = tostring(var.pipeline_agent_diagnostics)
+      VSTSAGENT_TRACE                                           = tostring(var.pipeline_agent_diagnostics)
       VSTS_AGENT_HTTPTRACE                                      = tostring(var.pipeline_agent_diagnostics)
     },
     var.environment_variables

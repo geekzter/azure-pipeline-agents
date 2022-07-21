@@ -150,6 +150,8 @@ jobs:
                                 -o json | ConvertFrom-Json | Set-Variable dataAccess
 
         if (!$dataAccess) {
+          Write-Host "Service Principal has Storage Data access to resource group $(imageResourceGroup)"
+        } else {
           az role assignment list --assignee $spObjectId `
                                   --resource-group $(imageResourceGroup) `
                                   --include-inherited `
@@ -159,6 +161,7 @@ jobs:
             az role assignment create --role "Storage Blob Data Contributor" `
                                       --assignee ${env:servicePrincipalId} `
                                       --resource-group $(imageResourceGroup)
+            Write-Host "Granted Storage Data access on resource group $(imageResourceGroup) to Service Principal"
           } else {
             Write-Warning "Service Principal does not have Storage Data access to resource group $(imageResourceGroup), nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
             exit 1

@@ -102,7 +102,9 @@ jobs:
                                 --query "[?roleDefinitionName=='Storage Blob Data Owner' || roleDefinitionName=='Storage Blob Data Contributor']" `
                                 -o json | ConvertFrom-Json | Set-Variable dataAccess
 
-        if (!$dataAccess) {
+        if ($dataAccess) {
+          Write-Host "Service Principal has Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}"
+        } else {
           az role assignment list --assignee $spObjectId `
                                   --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} `
                                   --include-inherited `
@@ -112,6 +114,7 @@ jobs:
             az role assignment create --role "Storage Blob Data Contributor" `
                                       --assignee ${env:servicePrincipalId} `
                                       --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}
+            Write-Host "Granted Storage Data access on resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} to Service Principal"
           } else {
             Write-Warning "Service Principal does not have Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}, nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
             exit 1

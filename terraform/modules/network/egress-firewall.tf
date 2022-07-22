@@ -764,7 +764,7 @@ resource azurerm_firewall_network_rule_collection vnet_net_outbound_rules {
   name                         = "${azurerm_firewall.firewall.0.name}-net-out-rules"
   azure_firewall_name          = azurerm_firewall.firewall.0.name
   resource_group_name          = var.resource_group_name
-  priority                     = 101
+  priority                     = 201
   action                       = "Allow"
 
   dynamic "rule" {

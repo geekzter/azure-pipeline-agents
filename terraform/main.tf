@@ -66,7 +66,7 @@ locals {
       PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID              = join("/",slice(split("/",module.packer.build_resource_group_id),0,5))
       PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME            = split("/",module.packer.build_resource_group_id)[4]
       PIPELINE_DEMO_PACKER_LOCATION                             = var.location
-      PIPELINE_DEMO_PACKER_POLICY_SET_NAME                      = module.packer.policy_set_name
+      PIPELINE_DEMO_PACKER_POLICY_SET_NAME                      = var.configure_access_control ? module.packer.policy_set_name : ""
       PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_ID                   = module.packer.storage_account_id
       PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME                 = module.packer.storage_account_name
       PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_ID    = join("/",slice(split("/",module.packer.storage_account_id),0,5))

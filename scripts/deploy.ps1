@@ -64,13 +64,16 @@ try {
             $backendTemplate = "${backendFile}.sample"
             $newBackend = (!(Test-Path $backendFile))
             $tfbackendArgs = ""
+            $env:TF_STATE_backend_storage_account_name   ??= $env:TF_STATE_BACKEND_STORAGE_ACCOUNT_NAME
+            $env:TF_STATE_backend_storage_container_name ??= $env:TF_STATE_BACKEND_STORAGE_CONTAINER_NAME
+            $env:TF_STATE_backend_resource_group_name    ??= $env:TF_STATE_BACKEND_RESOURCE_GROUP_NAME
             if ($newBackend) {
-                if (!$env:TF_STATE_backend_storage_account -or !$env:TF_STATE_backend_storage_container) {
-                    Write-Warning "Environment variables TF_STATE_backend_storage_account and TF_STATE_backend_storage_container must be set when creating a new backend from $backendTemplate"
+                if (!$env:TF_STATE_backend_storage_account_name -or !$env:TF_STATE_backend_storage_container_name) {
+                    Write-Warning "Environment variables TF_STATE_backend_storage_account_name and TF_STATE_backend_storage_container_name must be set when creating a new backend from $backendTemplate"
                     $fail = $true
                 }
-                if (!($env:TF_STATE_backend_resource_group -or $env:ARM_ACCESS_KEY -or $env:ARM_SAS_TOKEN)) {
-                    Write-Warning "Environment variables ARM_ACCESS_KEY or ARM_SAS_TOKEN or TF_STATE_backend_resource_group (with $identity granted 'Storage Blob Data Contributor' role) must be set when creating a new backend from $backendTemplate"
+                if (!($env:TF_STATE_backend_resource_group_name -or $env:ARM_ACCESS_KEY -or $env:ARM_SAS_TOKEN)) {
+                    Write-Warning "Environment variables ARM_ACCESS_KEY or ARM_SAS_TOKEN or TF_STATE_backend_resource_group_name (with Terraform identity granted 'Storage Blob Data Contributor' role) must be set when creating a new backend from $backendTemplate"
                     $fail = $true
                 }
                 if ($fail) {
@@ -87,23 +90,16 @@ try {
                 $tfbackendArgs += " -reconfigure"
             }
 
-            if ($env:TF_STATE_backend_resource_group) {
-                $tfbackendArgs += " -backend-config=`"resource_group_name=${env:TF_STATE_backend_resource_group}`""
+            if ($env:TF_STATE_backend_resource_group_name) {
+                $tfbackendArgs += " -backend-config=`"resource_group_name=${env:TF_STATE_backend_resource_group_name}`""
             }
-            if ($env:TF_STATE_backend_storage_account) {
-                $tfbackendArgs += " -backend-config=`"storage_account_name=${env:TF_STATE_backend_storage_account}`""
+            if ($env:TF_STATE_backend_storage_account_name) {
+                $tfbackendArgs += " -backend-config=`"storage_account_name=${env:TF_STATE_backend_storage_account_name}`""
             }
-            if ($env:TF_STATE_backend_storage_container) {
-                $tfbackendArgs += " -backend-config=`"container_name=${env:TF_STATE_backend_storage_container}`""
+            if ($env:TF_STATE_backend_storage_container_name) {
+                $tfbackendArgs += " -backend-config=`"container_name=${env:TF_STATE_backend_storage_container_name}`""
             }
         }
-
-        $initCmd = "terraform init $tfbackendArgs"
-        if ($Upgrade) {
-            $initCmd += " -upgrade"
-        }
-        Invoke "$initCmd" 
-    }
 
     if ($Validate) {
         Invoke "terraform validate" 

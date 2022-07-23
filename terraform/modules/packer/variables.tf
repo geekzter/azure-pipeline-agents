@@ -3,6 +3,9 @@ variable admin_cidr_ranges {
     type                       = list
 }
 variable agent_address_range {}
+variable configure_policy {
+    type                       = bool
+}
 variable deploy_nat_gateway {
     type                       = bool
 }

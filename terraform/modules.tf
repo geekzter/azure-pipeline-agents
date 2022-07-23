@@ -35,6 +35,7 @@ module packer {
   address_space                = var.packer_address_space
   admin_cidr_ranges            = local.admin_cidr_ranges
   agent_address_range          = module.network.agent_address_range
+  configure_policy             = var.configure_access_control
   deploy_nat_gateway           = !var.deploy_firewall
   gateway_ip_address           = module.network.gateway_ip_address
   peer_virtual_network_id      = module.network.virtual_network_id

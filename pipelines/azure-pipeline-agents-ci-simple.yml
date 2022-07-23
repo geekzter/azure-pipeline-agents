@@ -16,8 +16,8 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 0 * * Fr'
-  displayName: 'Weekly build (UTC)'
+- cron: '0 0 * * Tue,Fr'
+  displayName: 'Bi-weekly build (UTC)'
   # Run if there are no changes
   always: 'true'
   branches:

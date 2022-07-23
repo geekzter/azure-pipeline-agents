@@ -48,7 +48,11 @@ locals {
 }
 provider azurerm {
   alias                        = "default"
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }  
+  }
 }
 data azuread_client_config default {}
 data azurerm_client_config default {

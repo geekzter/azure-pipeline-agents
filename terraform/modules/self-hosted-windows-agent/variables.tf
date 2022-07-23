@@ -49,11 +49,13 @@ variable vm_size {}
 variable location {}
 variable log_analytics_workspace_resource_id {}
 variable resource_group_name {}
+variable shutdown_time {}
 variable subnet_id {}
 variable suffix {}
 variable tags {
   type                         = map
 }
+variable timezone {}
 variable user_assigned_identity_id {}
 variable user_name {}
 variable user_password {}

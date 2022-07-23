@@ -252,6 +252,10 @@ variable shared_image_gallery_id {
   description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
   default                      = null
 }
+variable shutdown_time {
+  default                      = "" # Empty string doesn't triggers a shutdown
+  description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
+}
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }
@@ -279,6 +283,10 @@ variable tags {
     shutdown                   = "false"
   }  
 } 
+
+variable timezone {
+  default                      = "W. Europe Standard Time"
+}
 
 variable user_name {
   default                      = "devopsadmin"

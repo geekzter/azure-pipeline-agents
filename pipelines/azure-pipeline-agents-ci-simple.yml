@@ -16,8 +16,8 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 0 * * Fr'
-  displayName: 'Weekly build (UTC)'
+- cron: '0 0 * * Tue,Fr'
+  displayName: 'Bi-weekly build (UTC)'
   # Run if there are no changes
   always: 'true'
   branches:
@@ -78,7 +78,12 @@ jobs:
       retryCountOnTaskFailure: 3
       workingDirectory: '$(scriptDirectory)'
     env: # Maintain casing of Terraform variable names
+      TF_VAR_application_name: $(TF_VAR_application_name)
+      TF_VAR_application_owner: $(TF_VAR_application_owner)
+      TF_VAR_configure_access_control: $(TF_VAR_configure_access_control)
+      TF_VAR_resource_prefix: $(TF_VAR_resource_prefix)
       TF_VAR_resource_suffix: $(TF_VAR_resource_suffix)
+      TF_VAR_tags: $(TF_VAR_tags)
       TF_VAR_run_id: $(TF_VAR_run_id)
 
   - pwsh: |

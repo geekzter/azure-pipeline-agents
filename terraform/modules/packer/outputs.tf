@@ -29,5 +29,5 @@ output virtual_network_id {
 }
 
 output policy_set_name {
-  value                        = azurerm_policy_set_definition.build_policies.name
+  value                        = var.configure_policy ? azurerm_policy_set_definition.build_policies.0.name : null
 }

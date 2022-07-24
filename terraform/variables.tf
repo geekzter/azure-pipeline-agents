@@ -11,6 +11,22 @@ variable admin_object_id {
   default                      = null
 }
 
+variable application_name {
+  description                  = "Value of 'application' resource tag"
+  default                      = "Pipeline Agents"
+}
+
+variable application_owner {
+  description                  = "Value of 'owner' resource tag"
+  default                      = "" # Empty string takes objectId of current user
+}
+
+variable configure_access_control {
+  description                  = "Assumes the Terraform user is an owner of the subscription. Turning this off reduces functionality somewhat"
+  default                      = true
+  type                         = bool
+}
+
 variable configure_cidr_allow_rules {
   default                      = false
   type                         = bool
@@ -201,6 +217,11 @@ variable prepare_host {
   default                      = true
 }
 
+variable resource_prefix {
+  description                  = "The prefix to put at the of resource names created"
+  default                      = "pipelines"
+}
+
 variable resource_suffix {
   description                  = "The suffix to put at the of resource names created"
   default                      = "" # Empty string triggers a random suffix
@@ -231,6 +252,10 @@ variable shared_image_gallery_id {
   description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
   default                      = null
 }
+variable shutdown_time {
+  default                      = "" # Empty string doesn't triggers a shutdown
+  description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
+}
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }
@@ -241,6 +266,15 @@ variable storage_contributors {
   type                         = list
 }
 
+variable subscription_id {
+  description                  = "Configure subscription_id independent from ARM_SUBSCRIPTION_ID"
+  default                      = null
+}
+variable tenant_id {
+  description                  = "Configure tenant_id independent from ARM_TENANT_ID"
+  default                      = null
+}
+
 variable tags {
   description                  = "A map of the tags to use for the resources that are deployed"
   type                         = map
@@ -249,6 +283,10 @@ variable tags {
     shutdown                   = "false"
   }  
 } 
+
+variable timezone {
+  default                      = "W. Europe Standard Time"
+}
 
 variable user_name {
   default                      = "devopsadmin"

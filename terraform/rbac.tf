@@ -14,14 +14,14 @@ resource azurerm_role_assignment agent_storage_contributors {
   role_definition_name         = "Storage Blob Data Contributor"
   principal_id                 = each.value
 
-  for_each                     = toset(local.storage_contributors)
+  for_each                     = var.configure_access_control ? toset(local.storage_contributors) : toset([])
 }
 resource azurerm_role_assignment packer_storage_contributors {
   scope                        = module.packer.network_resource_group_id
   role_definition_name         = "Storage Blob Data Contributor"
   principal_id                 = each.value
 
-  for_each                     = toset(local.storage_contributors)
+  for_each                     = var.configure_access_control ? toset(local.storage_contributors) : toset([])
 }
 
 resource azurerm_role_assignment agent_viewer {
@@ -29,7 +29,7 @@ resource azurerm_role_assignment agent_viewer {
   role_definition_name         = "Reader"
   principal_id                 = each.key
 
-  for_each                     = toset(var.demo_viewers)
+  for_each                     = var.configure_access_control ? toset(var.demo_viewers) : toset([])
 }
 
 resource azurerm_role_assignment build_viewer {
@@ -37,26 +37,30 @@ resource azurerm_role_assignment build_viewer {
   role_definition_name         = "Reader"
   principal_id                 = each.key
 
-  for_each                     = toset(var.demo_viewers)
+  for_each                     = var.configure_access_control ? toset(var.demo_viewers) : toset([])
 }
 resource azurerm_role_assignment network_viewer {
   scope                        = module.packer.network_resource_group_id
   role_definition_name         = "Reader"
   principal_id                 = each.key
 
-  for_each                     = toset(var.demo_viewers)
+  for_each                     = var.configure_access_control ? toset(var.demo_viewers) : toset([])
 }
 
 resource azurerm_role_assignment vm_admin {
   scope                        = azurerm_resource_group.rg.id
   role_definition_name         = "Virtual Machine Administrator Login"
   principal_id                 = var.admin_object_id != null ? var.admin_object_id : data.azuread_client_config.default.object_id
+
+  count                        = var.configure_access_control ? 1 : 0
 }
 
 resource azurerm_role_assignment vm_contributor {
   scope                        = azurerm_resource_group.rg.id
   role_definition_name         = "Virtual Machine Contributor"
   principal_id                 = var.admin_object_id != null ? var.admin_object_id : data.azuread_client_config.default.object_id
+
+  count                        = var.configure_access_control ? 1 : 0
 }
 
 resource azurerm_user_assigned_identity agents {

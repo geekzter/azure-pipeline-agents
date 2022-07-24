@@ -260,3 +260,19 @@ resource azurerm_virtual_machine_extension pipeline_agent {
     azurerm_virtual_machine_extension.windows_watcher,
   ]
 }
+
+resource azurerm_dev_test_global_vm_shutdown_schedule auto_shutdown {
+  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent.id
+  location                     = azurerm_windows_virtual_machine.windows_agent.location
+  enabled                      = true
+
+  daily_recurrence_time        = replace(var.shutdown_time,":","")
+  timezone                     = var.timezone
+
+  notification_settings {
+    enabled                    = false
+  }
+
+  tags                         = var.tags
+  count                        = var.shutdown_time != null && var.shutdown_time != "" ? 1 : 0
+}

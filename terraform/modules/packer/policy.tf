@@ -15,6 +15,8 @@ resource azurerm_policy_definition no_vm_extension {
   mode                         = "Indexed"
   policy_rule                  = file("${path.module}/no-vm-extension-policy.json")
   policy_type                  = "Custom"
+
+  count                        = var.configure_policy ? 1 : 0
 }
 
 resource azurerm_policy_set_definition build_policies {
@@ -24,17 +26,21 @@ resource azurerm_policy_set_definition build_policies {
   metadata                     = jsonencode(local.policy_metadata)
 
   policy_definition_reference {
-    policy_definition_id       = azurerm_policy_definition.no_vm_extension.id
+    policy_definition_id       = azurerm_policy_definition.no_vm_extension.0.id
   }
+
+  count                        = var.configure_policy ? 1 : 0
 }
 
 resource azurerm_resource_group_policy_assignment vm_policies {
-  name                         = azurerm_policy_set_definition.build_policies.name
+  name                         = azurerm_policy_set_definition.build_policies.0.name
   location                     = azurerm_resource_group.build.location
   resource_group_id            = azurerm_resource_group.build.id
-  policy_definition_id         = azurerm_policy_set_definition.build_policies.id
+  policy_definition_id         = azurerm_policy_set_definition.build_policies.0.id
 
   identity {
     type                       = "SystemAssigned"
   }
+
+  count                        = var.configure_policy ? 1 : 0
 }

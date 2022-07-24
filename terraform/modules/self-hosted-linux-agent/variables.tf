@@ -57,11 +57,13 @@ variable prepare_host {
   type                         = bool
 }
 variable resource_group_name {}
+variable shutdown_time {}
 variable subnet_id {}
 variable suffix {}
 variable tags {
   type                         = map
 }
+variable timezone {}
 variable ssh_public_key {}
 variable user_assigned_identity_id {}
 variable user_name {}

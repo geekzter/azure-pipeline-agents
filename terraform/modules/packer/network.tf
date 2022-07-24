@@ -56,6 +56,23 @@ resource azurerm_subnet private_endpoint_subnet {
   resource_group_name          = azurerm_virtual_network.packer.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.packer.address_space[0],4,5)]
   enforce_private_link_endpoint_network_policies = true
+
+  depends_on                   = [
+    azurerm_network_security_group.default
+  ]
+}
+resource time_sleep private_endpoint_nsg_association {
+  depends_on                   = [azurerm_subnet.private_endpoint_subnet]
+  create_duration              = "1s"
+}
+data azurerm_subnet private_endpoint_subnet {
+  name                         = azurerm_subnet.private_endpoint_subnet.name
+  resource_group_name          = azurerm_subnet.private_endpoint_subnet.resource_group_name
+  virtual_network_name         = azurerm_subnet.private_endpoint_subnet.virtual_network_name
+
+  depends_on                   = [
+    time_sleep.private_endpoint_nsg_association
+  ]
 }
 resource azurerm_network_security_group default {
   name                         = "${azurerm_virtual_network.packer.name}-default-nsg"
@@ -64,14 +81,35 @@ resource azurerm_network_security_group default {
 
   tags                         = var.tags
 }
-resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
-  subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
-  network_security_group_id    = azurerm_network_security_group.default.id
+# Address race condition where policy assigned NSG before we can assign our own
+# Let's wait for any updates to happen, then overwrite our own
+# This removes the need to use azurerm_subnet_network_security_group_association
+resource null_resource private_endpoint_nsg_association {
+  triggers                     = {
+    nsg                        = coalesce(data.azurerm_subnet.private_endpoint_subnet.network_security_group_id,azurerm_network_security_group.default.id)
+  }
+
+  provisioner local-exec {
+    # command                    = "az network vnet subnet update --ids ${azurerm_subnet.private_endpoint_subnet.id} --nsg ${azurerm_network_security_group.default.id} --query 'networkSecurityGroup'"
+    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.private_endpoint_subnet.id} -NsgId ${azurerm_network_security_group.default.id}"
+    interpreter                = ["pwsh","-nop","-command"]
+  }  
 }
+# resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
+#   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
+#   network_security_group_id    = azurerm_network_security_group.default.id
+
+#   depends_on                   = [
+#     null_resource.private_endpoint_nsg_association
+#   ]
+# }
 
 # FIX: Resource is in Updating state and the last operation that updated/is updating the resource is PutSubnetOperation"
 resource time_sleep private_endpoint_subnet {
-  depends_on                   = [azurerm_subnet_network_security_group_association.private_endpoint_subnet]
+  depends_on                   = [
+    # azurerm_subnet_network_security_group_association.private_endpoint_subnet,
+    null_resource.private_endpoint_nsg_association
+  ]
   create_duration              = "2m"
 }
 

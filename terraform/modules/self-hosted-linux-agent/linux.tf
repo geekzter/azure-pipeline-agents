@@ -301,3 +301,19 @@ resource azurerm_virtual_machine_extension policy {
     azurerm_virtual_machine_extension.linux_log_analytics
   ]
 }
+
+resource azurerm_dev_test_global_vm_shutdown_schedule auto_shutdown {
+  virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
+  location                     = azurerm_linux_virtual_machine.linux_agent.location
+  enabled                      = true
+
+  daily_recurrence_time        = replace(var.shutdown_time,":","")
+  timezone                     = var.timezone
+
+  notification_settings {
+    enabled                    = false
+  }
+
+  tags                         = var.tags
+  count                        = var.shutdown_time != null && var.shutdown_time != "" ? 1 : 0
+}

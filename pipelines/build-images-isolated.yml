@@ -1,3 +1,6 @@
+# The Service Connection (Principal) for this pipeline requires Storage Data (Reader) or Owner access to the PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME resource group
+# This pipeline will create a storage account to temporarily store a VHD
+
 parameters:
 - name: image
   displayName: Image

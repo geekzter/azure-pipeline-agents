@@ -35,10 +35,12 @@ module packer {
   address_space                = var.packer_address_space
   admin_cidr_ranges            = local.admin_cidr_ranges
   agent_address_range          = module.network.agent_address_range
+  configure_policy             = var.configure_access_control
   deploy_nat_gateway           = !var.deploy_firewall
   gateway_ip_address           = module.network.gateway_ip_address
   peer_virtual_network_id      = module.network.virtual_network_id
   location                     = var.location
+  prefix                       = var.resource_prefix
   suffix                       = local.suffix
   tags                         = local.tags
 
@@ -172,8 +174,10 @@ module self_hosted_linux_agents {
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
   resource_group_name          = azurerm_resource_group.rg.name
+  shutdown_time                = var.shutdown_time
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
+  timezone                     = var.timezone
   subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
   user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
@@ -226,8 +230,10 @@ module self_hosted_windows_agents {
   enable_public_access         = var.enable_public_access
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
+  shutdown_time                = var.shutdown_time
   subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
+  timezone                     = var.timezone
   user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password

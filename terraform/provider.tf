@@ -35,6 +35,10 @@ provider azurerm {
 # Requires admin consent:
 # https://login.microsoftonline.com/${data.azurerm_subscription.default.tenant_id}/adminconsent?client_id=${var.packer_tenant_id}
   auxiliary_tenant_ids         = local.use_peer && var.packer_tenant_id != null && var.packer_tenant_id != "" ? [var.packer_tenant_id] : []
+
+  subscription_id              = var.subscription_id != null && var.subscription_id != "" ? var.subscription_id : data.azurerm_subscription.default.subscription_id
+  tenant_id                    = var.tenant_id != null && var.tenant_id != "" ? var.tenant_id : data.azurerm_subscription.default.tenant_id
+
 }
 
 # Multi-tenant multi-provider
@@ -57,7 +61,11 @@ provider azurerm {
   alias                        = "peer"
   client_id                    = local.use_peer && var.packer_client_id != null && var.packer_client_id != "" ? var.packer_client_id : null
   client_secret                = local.use_peer && var.packer_client_secret != null && var.packer_client_secret != "" ? var.packer_client_secret : null
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }  
+  }
   subscription_id              = local.use_peer ? var.packer_subscription_id : data.azurerm_subscription.default.subscription_id
   tenant_id                    = local.use_peer && var.packer_tenant_id != null && var.packer_tenant_id != "" ? var.packer_tenant_id : data.azurerm_subscription.default.tenant_id
 # Requires admin consent:

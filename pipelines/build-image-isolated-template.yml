@@ -86,6 +86,43 @@ jobs:
   - checkout: self
   - checkout: virtual-environments
 
+  - task: AzureCLI@2
+    name: servicePrincipal
+    displayName: 'Check access'
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Check access
+        az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
+        az role assignment list --assignee $spObjectId `
+                                --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} `
+                                --include-inherited `
+                                --query "[?roleDefinitionName=='Storage Blob Data Owner' || roleDefinitionName=='Storage Blob Data Contributor']" `
+                                -o json | ConvertFrom-Json | Set-Variable dataAccess
+
+        if ($dataAccess) {
+          Write-Host "Service Principal has Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}"
+        } else {
+          az role assignment list --assignee $spObjectId `
+                                  --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} `
+                                  --include-inherited `
+                                  --query "[?roleDefinitionName=='Owner']" `
+                                  -o json | ConvertFrom-Json | Set-Variable owner
+          if ($owner) {
+            az role assignment create --role "Storage Blob Data Contributor" `
+                                      --assignee ${env:servicePrincipalId} `
+                                      --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}
+            Write-Host "Granted Storage Data access on resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} to Service Principal"
+          } else {
+            Write-Warning "Service Principal does not have Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}, nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
+            exit 1
+          }
+        }
+      addSpnToEnvironment: true
+      failOnStandardError: true
+
   - pwsh: |
       $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
       $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
@@ -164,11 +201,12 @@ jobs:
         # Update template to override configuration not accessible as variables
         Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
         $packerTemplate.builders[0]["azure_tags"] = @{
-          application = "Pipeline Agents"
+          application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
           build = "$(Build.BuildId)"
           commit = "$(git rev-parse HEAD)"
           qualifiedVersion = "$(githubRelease.qualifiedVersion)"
           image = "$(imageName)"
+          owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
           pipeline = "$(Build.DefinitionName)"
           shutdown = "false"
           versionlabel = "$(githubRelease.version)"
@@ -267,10 +305,11 @@ jobs:
 
         # Publish
         $imageDefinitionVersionTags = @(`
-          "application=Pipeline Images",`
+          "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
           "build=$(Build.BuildId)",`
           "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
           "commit=$(imageBuild.commit)",`
+          "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
           "pipeline=$(Build.DefinitionName)",`
           "provisioner=azure-cli",`
           "versionlabel=$(githubRelease.version)"`
@@ -286,7 +325,11 @@ jobs:
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
                                          --os-type $(imageOSType) --os-state Generalized `
-                                         --tags $imageDefinitionVersionTags
+                                         --query id -o tsv | Set-Variable imageDefinitionId
+                                         
+          # BUG: https://github.com/Azure/azure-cli/issues/23194
+          # FIX: Set tag separately
+          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
         }
 
         # Check whether version exists. If so, increment build number.
@@ -311,7 +354,7 @@ jobs:
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
                                     --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
-                                    --tags $imageDefinitionVersionTags
+                                    --query id -o tsv | Set-Variable imageVersionId
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
       addSpnToEnvironment: true
@@ -349,6 +392,7 @@ jobs:
                                     --gallery-image-version $(publish.qualifiedVersion) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME 
+          
         failOnStandardError: true
 
   - task: AzureCLI@2
@@ -366,7 +410,21 @@ jobs:
                                   --query "[?name=='$(publish.qualifiedVersion)' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
         if ($imageVersion) {
-          $imageVersion | Format-Table
+          # BUG: https://github.com/Azure/azure-cli/issues/23194
+          # FIX: Set tag separately
+          $imageDefinitionVersionTags = @(`
+            "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
+            "build=$(Build.BuildId)",`
+            "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+            "commit=$(imageBuild.commit)",`
+            "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
+            "pipeline=$(Build.DefinitionName)",`
+            "provisioner=azure-cli",`
+            "versionlabel=$(githubRelease.version)"`
+          )
+          az tag create --resource-id $imageVersion.id --tags $imageDefinitionVersionTags
+
+          $imageVersion | Format-List
         } else {
           Write-Error "$(imageName) version $(publish.qualifiedVersion) was not published!"
         }

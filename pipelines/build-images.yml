@@ -1,3 +1,6 @@
+# The Service Connection (Principal) for this pipeline requires Storage Data (Reader) access to the subscription
+# This pipeline will create a storage account to temporarily store a VHD
+
 parameters:
 - name: image
   displayName: Image

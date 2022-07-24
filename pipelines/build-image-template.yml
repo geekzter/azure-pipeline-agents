@@ -70,7 +70,8 @@ jobs:
   - name: 'imageReleaseName' 
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourceGroup' 
-    value: '${{ parameters.imageResourceGroup }}'
+    # value: '${{ parameters.imageResourceGroup }}'
+    value: $[replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))]
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
 
@@ -81,6 +82,7 @@ jobs:
   - pwsh: |
       $requiredVariables = @(
         "PIPELINE_DEMO_PACKER_LOCATION",`
+        # "PIPELINE_DEMO_RESOURCE_PREFIX",`
         "PIPELINE_DEMO_COMPUTE_GALLERY_NAME",`
         "PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME"`
       )
@@ -144,7 +146,7 @@ jobs:
         Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
       addSpnToEnvironment: true
       failOnStandardError: true
-
+      
   # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md
   - task: AzurePowerShell@5
     name: imageBuild
@@ -217,9 +219,10 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         $imageDefinitionVersionTags = @(`
-          "application=Pipeline Images",`
+          "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
           "build=$(Build.BuildId)",`
           "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+          "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
           "pipeline=$(Build.DefinitionName)",`
           "provisioner=azure-cli",`
           "versionlabel=$(githubRelease.fullyQualifiedVersion)"`
@@ -235,7 +238,11 @@ jobs:
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
                                          --os-type $(imageOSType) --os-state Generalized `
-                                         --tags $imageDefinitionVersionTags
+                                         --query id -o tsv | Set-Variable imageDefinitionId
+                                         
+          # BUG: https://github.com/Azure/azure-cli/issues/23194
+          # FIX: Set tag separately
+          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
         }
 
         Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
@@ -247,7 +254,11 @@ jobs:
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
                                     --os-vhd-storage-account $(vhd.storageAccountName) `
-                                    --tags $imageDefinitionVersionTags
+                                    --query id -o tsv | Set-Variable imageVersionId
+
+          # BUG: https://github.com/Azure/azure-cli/issues/23194
+          # FIX: Set tag separately
+          # az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
       failOnStandardError: true
 
   - task: AzureCLI@2

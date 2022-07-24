@@ -48,11 +48,7 @@ locals {
 }
 provider azurerm {
   alias                        = "default"
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }  
-  }
+  features {}
 }
 data azuread_client_config default {}
 data azurerm_client_config default {
@@ -65,7 +61,11 @@ provider azurerm {
   alias                        = "peer"
   client_id                    = local.use_peer && var.packer_client_id != null && var.packer_client_id != "" ? var.packer_client_id : null
   client_secret                = local.use_peer && var.packer_client_secret != null && var.packer_client_secret != "" ? var.packer_client_secret : null
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }  
+  }
   subscription_id              = local.use_peer ? var.packer_subscription_id : data.azurerm_subscription.default.subscription_id
   tenant_id                    = local.use_peer && var.packer_tenant_id != null && var.packer_tenant_id != "" ? var.packer_tenant_id : data.azurerm_subscription.default.tenant_id
 # Requires admin consent:

@@ -133,6 +133,20 @@ jobs:
         }
       failOnStandardError: true
 
+  - task: AzureCLI@2
+    name: servicePrincipal
+    displayName: 'Fetch build credentials'
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
+        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
+      addSpnToEnvironment: true
+      failOnStandardError: true
+      
   # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md
   - task: AzurePowerShell@5
     name: imageBuild

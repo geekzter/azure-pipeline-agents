@@ -45,27 +45,24 @@ resources:
 
 trigger: none
 
-# This pipeline needs Blog Storage data access on to be created resource groups for Service Principal running it.
-# We don't have that, nor the subscription level owner role to create them.
-# Commenting out all triggers
-# pr:
-#   autoCancel: false
-#   branches:
-#     include:
-#     - '*'
-#   paths:
-#     exclude:
-#     - '.devcontainer/**'  
-#     - 'visuals/**'  
-#     - '*.md'  
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - '*'
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
 
-# schedules:
-# - cron: '0 12 * * Fri'
-#   displayName: 'Weekly build (UTC)'
-#   always: 'true' # Run if there are no changes
-#   branches:
-#     include:
-#     - master
+schedules:
+- cron: '0 12 * * Fri'
+  displayName: 'Weekly build (UTC)'
+  always: 'true' # Run if there are no changes
+  branches:
+    include:
+    - master
 
 variables:
   - group: 'build-images'

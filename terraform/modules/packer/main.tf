@@ -1,5 +1,5 @@
 resource azurerm_resource_group network {
-  name                         = terraform.workspace == "default" ? "${var.prefix}-images-network-${var.suffix}" : "pipeline-${terraform.workspace}-images-network-${var.suffix}"
+  name                         = terraform.workspace == "default" ? "${var.prefix}-images-network-${var.suffix}" : "${var.prefix}-${terraform.workspace}-images-network-${var.suffix}"
   location                     = var.location
   tags                         = var.tags
 }

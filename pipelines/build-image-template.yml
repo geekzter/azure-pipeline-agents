@@ -133,47 +133,6 @@ jobs:
         }
       failOnStandardError: true
 
-  - task: AzureCLI@2
-    name: servicePrincipal
-    displayName: 'Check access'
-    inputs:
-      azureSubscription: '$(packerSubscriptionConnection)'
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        # Check access
-        az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
-        az role assignment list --assignee $spObjectId `
-                                --resource-group $(imageResourceGroup) `
-                                --include-inherited `
-                                --query "[?roleDefinitionName=='Storage Blob Data Owner' || roleDefinitionName=='Storage Blob Data Contributor']" `
-                                -o json | ConvertFrom-Json | Set-Variable dataAccess
-
-        if ($dataAccess) {
-          Write-Host "Service Principal has Storage Data access to resource group $(imageResourceGroup)"
-        } else {
-          az role assignment list --assignee $spObjectId `
-                                  --resource-group $(imageResourceGroup) `
-                                  --include-inherited `
-                                  --query "[?roleDefinitionName=='Owner']" `
-                                  -o json | ConvertFrom-Json | Set-Variable owner
-          if ($owner) {
-            az role assignment create --role "Storage Blob Data Contributor" `
-                                      --assignee ${env:servicePrincipalId} `
-                                      --resource-group $(imageResourceGroup)
-            Write-Host "Granted Storage Data access on resource group $(imageResourceGroup) to Service Principal"
-          } else {
-            Write-Warning "Service Principal does not have Storage Data access to resource group $(imageResourceGroup), nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
-            exit 1
-          }
-        }
-
-        Write-Host "##vso[task.setvariable variable=clientId;isoutput=true]${env:servicePrincipalId}"
-        Write-Host "##vso[task.setvariable variable=clientSecret;isoutput=true;issecret=true]${env:servicePrincipalKey}"
-        Write-Host "##vso[task.setvariable variable=tenantId;isoutput=true]${env:tenantId}"
-      addSpnToEnvironment: true
-      failOnStandardError: true
-
   # https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md
   - task: AzurePowerShell@5
     name: imageBuild

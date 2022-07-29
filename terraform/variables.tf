@@ -256,6 +256,9 @@ variable shutdown_time {
   default                      = "" # Empty string doesn't triggers a shutdown
   description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
 }
+variable ssh_private_key {
+  default                      = "~/.ssh/id_rsa"
+}
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"
 }

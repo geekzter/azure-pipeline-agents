@@ -17,6 +17,12 @@ output azurerm_private_dns_zone_file_id {
 output azurerm_private_dns_zone_file_name {
   value                        = azurerm_private_dns_zone.file.name
 }
+output azurerm_private_dns_zone_vault_id {
+  value                        = azurerm_private_dns_zone.vault.id
+}
+output azurerm_private_dns_zone_vault_name {
+  value                        = azurerm_private_dns_zone.vault.name
+}
 
 output gateway_ip_address {
   value                        = var.deploy_firewall ? azurerm_firewall.firewall.0.ip_configuration.0.private_ip_address : null

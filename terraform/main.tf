@@ -142,3 +142,144 @@ resource azurerm_resource_group rg {
 
   depends_on                   = [time_sleep.script_wrapper_check]
 }
+
+
+resource azurerm_key_vault vault {
+  name                         = "${azurerm_resource_group.rg.name}-vlt"
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  tenant_id                    = data.azuread_client_config.default.tenant_id
+
+  enabled_for_disk_encryption  = true
+  purge_protection_enabled     = false
+  sku_name                     = "premium"
+
+  # Grant access to self
+  access_policy {
+    tenant_id                  = data.azuread_client_config.default.tenant_id
+    object_id                  = data.azuread_client_config.default.object_id
+
+    key_permissions            = [
+                                "Create",
+                                "Delete",
+                                "Get",
+                                "List",
+                                "Purge",
+                                "Recover",
+                                "UnwrapKey",
+                                "WrapKey",
+    ]
+    secret_permissions         = [
+                                "Delete",
+                                "Get",
+                                "List",
+                                "Purge",
+                                "Set",
+    ]
+  }
+
+  # Grant access to admin, if defined
+  dynamic "access_policy" {
+    for_each = range(var.admin_object_id != null && var.admin_object_id != "" ? 1 : 0) 
+    content {
+      tenant_id                = data.azurerm_client_config.default.tenant_id
+      object_id                = var.admin_object_id
+
+      key_permissions          = [
+                                "create",
+                                "get",
+                                "list",
+                                "purge",
+      ]
+
+      secret_permissions       = [
+                                "list",
+                                "purge",
+                                "set",
+      ]
+    }
+  }
+
+  network_acls {
+    default_action             = "Deny"
+    # When enabled_for_disk_encryption is true, network_acls.bypass must include "AzureServices"
+    bypass                     = "AzureServices"
+    ip_rules                   = local.admin_cidr_ranges
+  }
+
+  tags                         = azurerm_resource_group.rg.tags
+}
+resource azurerm_private_endpoint vault_endpoint {
+  name                         = "${azurerm_key_vault.vault.name}-endpoint"
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  
+  subnet_id                    = module.network.private_endpoint_subnet_id
+
+  private_service_connection {
+    is_manual_connection       = false
+    name                       = "${azurerm_key_vault.vault.name}-endpoint-connection"
+    private_connection_resource_id = azurerm_key_vault.vault.id
+    subresource_names          = ["vault"]
+  }
+
+  tags                         = local.tags
+}
+resource azurerm_private_dns_a_record vault_dns_record {
+  name                         = azurerm_key_vault.vault.name
+  zone_name                    = module.network.azurerm_private_dns_zone_vault_name
+  resource_group_name          = azurerm_resource_group.rg.name
+  ttl                          = 300
+  records                      = [azurerm_private_endpoint.vault_endpoint.private_service_connection[0].private_ip_address]
+
+  tags                         = local.tags
+}
+resource azurerm_monitor_diagnostic_setting key_vault {
+  name                         = "${azurerm_key_vault.vault.name}-logs"
+  target_resource_id           = azurerm_key_vault.vault.id
+  log_analytics_workspace_id   = local.log_analytics_workspace_id
+
+  log {
+    category                   = "AuditEvent"
+    enabled                    = true
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+
+  metric {
+    category                   = "AllMetrics"
+
+    retention_policy {
+      enabled                  = false
+    }
+  }
+}
+
+# Useful when using Bastion
+resource azurerm_key_vault_secret ssh_private_key {
+  name                         = "ssh-private-key"
+  value                        = file(var.ssh_private_key)
+  key_vault_id                 = azurerm_key_vault.vault.id
+}
+
+resource azurerm_key_vault_secret user_name {
+  name                         = "user-name"
+  value                        = var.user_name
+  key_vault_id                 = azurerm_key_vault.vault.id
+}
+resource azurerm_key_vault_secret user_password {
+  name                         = "user-password"
+  value                        = local.password
+  key_vault_id                 = azurerm_key_vault.vault.id
+}
+
+resource azurerm_ssh_public_key ssh_key {
+  name                         = azurerm_resource_group.rg.name
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  public_key                   = file(var.ssh_public_key)
+
+  tags                         = azurerm_resource_group.rg.tags
+}

@@ -145,7 +145,7 @@ resource azurerm_resource_group rg {
 
 
 resource azurerm_key_vault vault {
-  name                         = replace("${azurerm_resource_group.rg.name}-vlt","${terraform.workspace}-","")
+  name                         = substr(lower(replace("${azurerm_resource_group.rg.name}-vlt","/-|a|e|i|o|u|y/","")),0,24)
   location                     = azurerm_resource_group.rg.location
   resource_group_name          = azurerm_resource_group.rg.name
   tenant_id                    = data.azuread_client_config.default.tenant_id

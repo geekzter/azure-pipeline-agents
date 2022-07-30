@@ -186,16 +186,16 @@ resource azurerm_key_vault vault {
       object_id                = var.admin_object_id
 
       key_permissions          = [
-                                "create",
-                                "get",
-                                "list",
-                                "purge",
+                                "Create",
+                                "Get",
+                                "List",
+                                "Purge",
       ]
 
       secret_permissions       = [
-                                "list",
-                                "purge",
-                                "set",
+                                "List",
+                                "Purge",
+                                "Set",
       ]
     }
   }

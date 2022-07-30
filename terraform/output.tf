@@ -78,6 +78,12 @@ output self_hosted_linux_cloud_config {
   value                        = var.deploy_self_hosted_vms && var.linux_self_hosted_agent_count > 0 ? module.self_hosted_linux_agents.0.cloud_config : null
 }
 
+output ssh_private_key_id {
+  value                        = azurerm_key_vault_secret.ssh_private_key.id
+}
+output ssh_public_key_id {
+  value                        = azurerm_ssh_public_key.ssh_key.id
+}
 output user_name {
   value                        = var.user_name
 }

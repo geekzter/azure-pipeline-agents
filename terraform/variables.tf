@@ -1,5 +1,5 @@
 variable address_space {
-  default                      = "10.201.0.0/16"
+  default                      = "10.201.0.0/22"
 }
 
 variable admin_ip_ranges {
@@ -195,8 +195,7 @@ variable packer_client_secret {
   default                      = null
 }
 variable packer_address_space {
-  # Use Class C segment, to minimize conflict with networks provisioned from pipelines
-  default                      = "192.168.4.0/22"
+  default                      = "10.202.0.0/22"
 }
 variable packer_subscription_id {
   description                  = "When building images in a cross-tenant peered virtual network, this is needed"

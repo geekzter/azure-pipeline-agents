@@ -1,5 +1,8 @@
 # Alternatively, define environment variables e.g. TF_VAR_deploy_firewall="true"
 
+# bastion_tags = {
+#   bastion                      = "true"
+# } 
 # devops_org                     = "myorg"
 # devops_pat                     = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Self-Hosted Agent Build
 # linux_vm_size                  = "Standard_D4s_v3"

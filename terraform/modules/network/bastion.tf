@@ -8,7 +8,6 @@ resource azurerm_subnet bastion_subnet {
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,1)]
 
-  count                        = var.deploy_bastion ? 1 : 0
 }
 
 # https://docs.microsoft.com/en-us/azure/bastion/bastion-nsg
@@ -142,7 +141,7 @@ resource azurerm_network_security_rule get_session_oubound {
   count                        = var.deploy_bastion ? 1 : 0
 }
 resource azurerm_subnet_network_security_group_association bastion_nsg {
-  subnet_id                    = azurerm_subnet.bastion_subnet.0.id
+  subnet_id                    = azurerm_subnet.bastion_subnet.id
   network_security_group_id    = azurerm_network_security_group.bastion_nsg.0.id
 
   count                        = var.deploy_bastion && length(var.bastion_tags) == 0 ? 1 : 0
@@ -220,7 +219,7 @@ resource azurerm_bastion_host bastion {
   file_copy_enabled            = true
   ip_configuration {
     name                       = "configuration"
-    subnet_id                  = azurerm_subnet.bastion_subnet.0.id
+    subnet_id                  = azurerm_subnet.bastion_subnet.id
     public_ip_address_id       = azurerm_public_ip.bastion_ip.0.id
   }
   sku                          = "Standard"

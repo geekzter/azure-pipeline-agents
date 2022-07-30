@@ -226,7 +226,7 @@ resource azurerm_bastion_host bastion {
   sku                          = "Standard"
   tunneling_enabled            = true
 
-  tags                         = var.all_bastion_tags
+  tags                         = local.all_bastion_tags
 
   count                        = var.deploy_bastion ? 1 : 0
   depends_on                   = [

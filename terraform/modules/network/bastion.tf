@@ -1,3 +1,7 @@
+locals {
+  all_bastion_tags             = merge(var.bastion_tags, var.tags)
+}
+
 resource azurerm_subnet bastion_subnet {
   name                         = "AzureBastionSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
@@ -13,7 +17,7 @@ resource azurerm_network_security_group bastion_nsg {
   location                     = var.location
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
 
-  tags                         = var.tags
+  tags                         = local.all_bastion_tags
 
   count                        = var.deploy_bastion ? 1 : 0
 }
@@ -141,7 +145,7 @@ resource azurerm_subnet_network_security_group_association bastion_nsg {
   subnet_id                    = azurerm_subnet.bastion_subnet.0.id
   network_security_group_id    = azurerm_network_security_group.bastion_nsg.0.id
 
-  count                        = var.deploy_bastion ? 1 : 0
+  count                        = var.deploy_bastion && length(var.bastion_tags) == 0 ? 1 : 0
 
   depends_on                   = [
     azurerm_network_security_rule.https_inbound,
@@ -222,7 +226,7 @@ resource azurerm_bastion_host bastion {
   sku                          = "Standard"
   tunneling_enabled            = true
 
-  tags                         = var.tags
+  tags                         = var.all_bastion_tags
 
   count                        = var.deploy_bastion ? 1 : 0
   depends_on                   = [

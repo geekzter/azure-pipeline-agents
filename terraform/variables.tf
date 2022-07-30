@@ -1,6 +1,5 @@
 variable address_space {
-  # Use Class C segment, to minimize conflict with networks provisioned from pipelines
-  default                      = "192.168.0.0/22"
+  default                      = "10.201.0.0/16"
 }
 
 variable admin_ip_ranges {
@@ -20,6 +19,13 @@ variable application_owner {
   description                  = "Value of 'owner' resource tag"
   default                      = "" # Empty string takes objectId of current user
 }
+
+variable bastion_tags {
+  description                  = "A map of the tags to use for the bastion resources that are deployed"
+  type                         = map
+
+  default                      = {}  
+} 
 
 variable configure_access_control {
   description                  = "Assumes the Terraform user is an owner of the subscription. Turning this off reduces functionality somewhat"

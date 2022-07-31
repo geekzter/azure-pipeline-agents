@@ -103,8 +103,10 @@ variables:
   value: 'ubuntu-agent'
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
+- name: 'TF_VAR_ssh_private_key'
+  value: '$(Build.SourcesDirectory)/.ssh/id_rsa_ci'
 - name: 'TF_VAR_ssh_public_key'
-  value: 'id_rsa.pub' # Key will be downloaded in terraform directory
+  value: '$(Build.SourcesDirectory)/.ssh/id_rsa_ci.pub'
 - name: 'TF_VAR_windows_pipeline_agent_name_prefix'
   value: 'windows-agent'
 
@@ -175,17 +177,6 @@ jobs:
     clean: all
 
   steps:
-    - task: DownloadSecureFile@1
-      displayName: 'Download SSH Public Key'
-      inputs:
-        secureFile: '$(TF_VAR_ssh_public_key)'
-    - pwsh: |
-        foreach ($file in $(Get-ChildItem Env:*SECUREFILEPATH))
-        {
-            Copy-Item $file.Value '$(terraformDirectory)'
-        }
-      displayName: 'Copy Secure Files'
-
     - ${{ if not(parameters.unpinTerraform) }}:
       - pwsh: |
           $terraformVersion = (Get-Content .terraform-version)
@@ -265,6 +256,37 @@ jobs:
           useGlobalConfig: true
           failOnStandardError: true
           workingDirectory: '$(terraformDirectory)'
+
+    - ${{ if not(parameters.clear) }}:
+      - task: AzureCLI@2
+        displayName: 'Restore SSH key pair'
+        inputs:
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            ./set_terraform_azurerm_vars.ps1
+            ./get_ssh_key_pair.ps1 -Keyname $(TF_VAR_ssh_private_key) -Force
+            $keyDirectory = (Split-Path $(TF_VAR_ssh_private_key) -Parent)
+            if (Test-Path $keyDirectory) {
+              ls -al $keyDirectory
+            }
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          failOnStandardError: true
+          workingDirectory: '$(scriptDirectory)'
+
+    - bash: |
+        if [ -f "$(TF_VAR_ssh_private_key)" ]; then
+            echo "$(TF_VAR_ssh_private_key) already exists, skipping key pair generation"
+        else 
+            echo "$(TF_VAR_ssh_private_key) does not exist, generation key pair..."
+            mkdir -p $(dirname $(TF_VAR_ssh_private_key))
+            ssh-keygen -q -m PEM -N '' -f $(TF_VAR_ssh_private_key)
+        fi
+        ls -al $(dirname $(TF_VAR_ssh_private_key))
+      displayName: 'Generate SSH key pair'
+      workingDirectory: '$(terraformDirectory)'
 
     - pwsh: |
         if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {

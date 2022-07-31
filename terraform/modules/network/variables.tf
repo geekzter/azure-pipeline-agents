@@ -1,34 +1,38 @@
 variable address_space {}
 variable admin_cidr_ranges {
-    type                       = list
-    default                    = []
+  type                         = list
+  default                      = []
 }
+variable bastion_tags {
+  description                  = "A map of the tags to use for the bastion resources that are deployed"
+  type                         = map
+} 
 variable configuration_name {
-    description = "This value is appended to Azure FW rule names, so it can be parsed in Log Analytics queries"
+  description                  = "This value is appended to Azure FW rule names, so it can be parsed in Log Analytics queries"
 }
 variable configure_cidr_allow_rules {
-    type = bool
+  type                         = bool
 }
 variable configure_crl_oscp_rules {
-    type = bool
+  type                         = bool
 }
 variable configure_wildcard_allow_rules {
-    type = bool
+  type                         = bool
 }
 variable deploy_bastion {
-    type = bool
+  type                         = bool
 }
 variable deploy_firewall {
-    type = bool
+  type                         = bool
 }
 variable destroy_wait_minutes {
-    type = number
+  type                         = number
 }
 variable devops_org {}
 variable diagnostics_storage_id {}
 variable dns_host_suffix {}
 variable enable_firewall_dns_proxy {
-    type = bool
+  type                         = bool
 }
 variable enable_public_access {
   type                         = bool
@@ -41,5 +45,5 @@ variable resource_group_name {}
 variable packer_storage_account_name {}
 variable packer_storage_ip_address {}
 variable tags {
-    type = map
+  type                         = map
 }

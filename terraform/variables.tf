@@ -1,6 +1,5 @@
 variable address_space {
-  # Use Class C segment, to minimize conflict with networks provisioned from pipelines
-  default                      = "192.168.0.0/22"
+  default                      = "10.201.0.0/22"
 }
 
 variable admin_ip_ranges {
@@ -20,6 +19,13 @@ variable application_owner {
   description                  = "Value of 'owner' resource tag"
   default                      = "" # Empty string takes objectId of current user
 }
+
+variable bastion_tags {
+  description                  = "A map of the tags to use for the bastion resources that are deployed"
+  type                         = map
+
+  default                      = {}  
+} 
 
 variable configure_access_control {
   description                  = "Assumes the Terraform user is an owner of the subscription. Turning this off reduces functionality somewhat"
@@ -189,8 +195,7 @@ variable packer_client_secret {
   default                      = null
 }
 variable packer_address_space {
-  # Use Class C segment, to minimize conflict with networks provisioned from pipelines
-  default                      = "192.168.4.0/22"
+  default                      = "10.202.0.0/22"
 }
 variable packer_subscription_id {
   description                  = "When building images in a cross-tenant peered virtual network, this is needed"
@@ -255,6 +260,9 @@ variable shared_image_gallery_id {
 variable shutdown_time {
   default                      = "" # Empty string doesn't triggers a shutdown
   description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
+}
+variable ssh_private_key {
+  default                      = "~/.ssh/id_rsa"
 }
 variable ssh_public_key {
   default                      = "~/.ssh/id_rsa.pub"

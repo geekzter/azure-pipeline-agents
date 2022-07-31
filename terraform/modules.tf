@@ -3,6 +3,7 @@ module network {
 
   address_space                = var.address_space
   admin_cidr_ranges            = local.admin_cidr_ranges
+  bastion_tags                 = var.bastion_tags
   configuration_name           = local.configuration_bitmask
   configure_cidr_allow_rules   = var.configure_cidr_allow_rules
   configure_crl_oscp_rules     = var.configure_crl_oscp_rules

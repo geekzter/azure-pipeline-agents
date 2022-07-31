@@ -113,6 +113,11 @@ resource azurerm_subnet private_endpoint_subnet {
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,5)]
   enforce_private_link_endpoint_network_policies = true
 
+  # FIX: Resource is in Updating state and the last operation that updated/is updating the resource is PutSubnetOperation
+  provisioner local-exec {
+    command                    = "az resource wait --created --ids ${self.id}"
+  }
+
   depends_on                   = [
     azurerm_network_security_group.default
   ]

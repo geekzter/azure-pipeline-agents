@@ -8,10 +8,10 @@ name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$
 
 resources:
   repositories:
-  - repository: virtual-environments
+  - repository: runner-images
     type: github
     endpoint: github.com # Service Connection name
-    name: actions/virtual-environments
+    name: actions/runner-images
     trigger:
       branches:
         include:

@@ -5,7 +5,7 @@
     Finds VHD in given Resource Group
  
 .DESCRIPTION 
-    The image build script (https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1)
+    The image build script (https://github.com/actions/runner-images/blob/main/helpers/GenerateResourcesAndImage.ps1)
     creates a storage account, storage container and VHD. 
     This scipt finds the VHD based on the Resource Group name that is created by aforementioned script.
 

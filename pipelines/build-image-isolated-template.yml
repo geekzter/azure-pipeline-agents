@@ -9,7 +9,7 @@ parameters:
   - Windows2022
 - name: imageReleaseName
 # Image Release Name as defined in GitHUb release feed
-# https://api.github.com/repos/actions/virtual-environments/releases
+# https://api.github.com/repos/actions/runner-images/releases
   displayName: Image Release Name
   type: string
 - name: imageResourcePrefix
@@ -70,13 +70,13 @@ jobs:
   - name: 'imagePublisher'
     value: 'PrivatePipelineImages'
   - name: 'imageRepository'
-    value: '$(Build.SourcesDirectory)/virtual-environments'
+    value: '$(Build.SourcesDirectory)/runner-images'
   - name: 'imageReleaseName' 
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageTemplate'
-    value: '$(Build.SourcesDirectory)/virtual-environments/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+    value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'retryCount' 
@@ -84,7 +84,7 @@ jobs:
 
   steps:
   - checkout: self
-  - checkout: virtual-environments
+  - checkout: runner-images
 
   - task: AzureCLI@2
     name: servicePrincipal
@@ -143,10 +143,10 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/virtual-environments/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
+        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
                                                                                                     | Select-Object -First 1 `
                                                                                                     | Set-Variable release
-        Write-Host "`nLatest version ($version) of $(imageName) at https://github.com/actions/virtual-environments/releases:"
+        Write-Host "`nLatest version ($version) of $(imageName) at https://github.com/actions/runner-images/releases:"
         $release | Format-List
 
         $releaseVersion = $release.tag_name.Split("/")[1]
@@ -193,8 +193,8 @@ jobs:
         }
 
         # Checkout source pertaining to release is not recommended
-        # https://github.com/actions/virtual-environments/issues/4238#issuecomment-939732274
-        # https://github.com/actions/virtual-environments/discussions/4362
+        # https://github.com/actions/runner-images/issues/4238#issuecomment-939732274
+        # https://github.com/actions/runner-images/discussions/4362
         # git checkout $(githubRelease.commit) --quiet
         # We assume main branch is the latest released version
 

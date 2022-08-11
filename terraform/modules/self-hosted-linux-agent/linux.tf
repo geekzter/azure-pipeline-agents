@@ -48,7 +48,7 @@ data cloudinit_config user_data {
     content_type               = "text/cloud-config"
     merge_type                 = "list(append)+dict(recurse_array)+str()"
   }
-  # Azure Log Analytics VM extension fails on https://github.com/actions/virtual-environments
+  # Azure Log Analytics VM extension fails on https://github.com/actions/runner-images
   dynamic "part" {
     for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
     content {

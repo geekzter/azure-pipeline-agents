@@ -4,10 +4,10 @@
     Lists image releases
  
 .DESCRIPTION 
-    Downloads latest image releases from https://github.com/repos/actions/virtual-environments
+    Downloads latest image releases from https://github.com/repos/actions/runner-images
 #> 
 
-(Invoke-RestMethod -Uri "https://api.github.com/repos/actions/virtual-environments/releases") | ForEach-Object {
+(Invoke-RestMethod -Uri "https://api.github.com/repos/actions/runner-images/releases") | ForEach-Object {
     $_ | Add-Member -NotePropertyName Image   -NotePropertyValue $_.tag_name.Split("/")[0]
     $_ | Add-Member -NotePropertyName Preview -NotePropertyValue (($_.draft -ieq "true") -or ($_.prerelease -ieq "true"))
     $_ | Add-Member -NotePropertyName Version -NotePropertyValue $_.tag_name.Split("/")[1]

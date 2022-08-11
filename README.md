@@ -44,9 +44,9 @@ To enable Virtual Network integrated image builds with [build-image-isolated.yml
 <img src="visuals/image-lifecycle.png" width="640">
 </p>      
 
-The [build-image.yml](pipelines/build-images.yml) pipeline uses the [method and scripts described on the actions/virtual-environments GitHub repo](https://github.com/actions/virtual-environments/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/virtual-environments/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
+The [build-image.yml](pipelines/build-images.yml) pipeline uses the [method and scripts described on the actions/runner-images GitHub repo](https://github.com/actions/runner-images/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/runner-images/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
 
-In Enterprise you will have isolation requirements (e.g. no public endpoints), build in a Virtual Network, protect the identity used for the build, etc. To accommodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/virtual-environments/tree/main/images/linux) and provides the variables required to customize the VM that is used to create the image from. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
+In Enterprise you will have isolation requirements (e.g. no public endpoints), build in a Virtual Network, protect the identity used for the build, etc. To accommodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/runner-images/tree/main/images/linux) and provides the variables required to customize the VM that is used to create the image from. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
 
 ### Licensing
 Note that by building an image **you are accepting licenses** pertaining to the tools installed **at software installation (i.e. build) time**.
@@ -56,7 +56,7 @@ Note that by building an image **you are accepting licenses** pertaining to the 
 <img src="visuals/agent-lifecycle.png" width="640">
 </p>     
 
-With the aforementioned image template created by [actions/virtual-environments](https://github.com/actions/virtual-environments/), or an Azure Marketplace image, you can make sure you're always on the latest version. Instead of post deployment patching, an immutable infrastructure approach is taken when new versions of the image are built instead of patching VM's.
+With the aforementioned image template created by [actions/runner-images](https://github.com/actions/runner-images/), or an Azure Marketplace image, you can make sure you're always on the latest version. Instead of post deployment patching, an immutable infrastructure approach is taken when new versions of the image are built instead of patching VM's.
 
 Lifecycle steps are:
 - A Virtual Machine Scale Set (VMSS) is created with the (at that time) latest version of an image

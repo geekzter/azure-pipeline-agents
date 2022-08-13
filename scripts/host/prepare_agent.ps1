@@ -45,9 +45,15 @@ if ("${smb_share}") {
         Write-Error -Message "Unable to reach '${storage_share_host}' via port 445."
     }
 
-    ConvertTo-SecureString -String "${storage_account_key}" -AsPlainText -Force | Set-Variable storageKey
-    New-Object System.Management.Automation.PSCredential -ArgumentList "AZURE\${storage_account_name}", $storageKey | Set-Variable credential 
-    New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "NT AUTHORITY\NETWORK SERVICE", "${user_name}" ) -Persistent $true #-UseWriteThrough
+    # BUG: 'New-SmbGlobalMapping -Persistent $true' is not persistent
+    # ConvertTo-SecureString -String "${storage_account_key}" -AsPlainText -Force | Set-Variable storageKey
+    # New-Object System.Management.Automation.PSCredential -ArgumentList "AZURE\${storage_account_name}", $storageKey | Set-Variable credential 
+    # New-SmbGlobalMapping -RemotePath "${smb_share}" -Credential $credential -LocalPath ${drive_letter}: -FullAccess @( "NT AUTHORITY\SYSTEM", "NT AUTHORITY\NETWORK SERVICE", "${user_name}" ) -Persistent $true -RequirePrivacy $true #-UseWriteThrough
+
+    # FIX: Use classic command-line tools instead
+    cmd.exe /C "cmdkey /add:`"${smb_fqdn}`" /user:`"AZURE\${storage_account_name}`" /pass:`"${storage_account_key}`""
+    net use ${drive_letter}: ${smb_share} /global /persistent:yes /user:AZURE\${storage_account_name} "${storage_account_key}"
+    dir ${drive_letter}:
 
     # Link agent diagnostics directory
     "{0}:\{1}\{2}" -f "${drive_letter}", (Get-Date -Format 'yyyy\\MM\\dd'), $env:COMPUTERNAME | Set-Variable diagnosticsSMBDirectory

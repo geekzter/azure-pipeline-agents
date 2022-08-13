@@ -55,7 +55,7 @@ resource azurerm_subnet private_endpoint_subnet {
   virtual_network_name         = azurerm_virtual_network.packer.name
   resource_group_name          = azurerm_virtual_network.packer.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.packer.address_space[0],4,5)]
-  enforce_private_link_endpoint_network_policies = true
+  private_endpoint_network_policies_enabled = true
 
   depends_on                   = [
     azurerm_network_security_group.default

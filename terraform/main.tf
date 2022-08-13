@@ -5,7 +5,7 @@ data http terraform_ip_address {
 
 data http terraform_ip_prefix {
 # Get public IP prefix of the machine running this terraform template
-  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.terraform_ip_address.body)}"
+  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.terraform_ip_address.response_body)}"
 }
 
 # Random resource suffix, this will prevent name collisions when creating resources in parallel

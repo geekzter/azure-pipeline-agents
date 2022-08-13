@@ -208,6 +208,7 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
     azurerm_private_dns_zone_virtual_network_link.ods,
     azurerm_private_dns_zone_virtual_network_link.agentsvc,
     azurerm_private_dns_zone_virtual_network_link.blob,
+    null_resource.private_endpoint_nsg_association,
   ]
 }
 # FIX: Error: deleting Private DNS Zone Group "azure-monitor-zones" (Private Endpoint "azure-pipelines-agents-ci-99999b-westeurope-network-ampls-endpoint" / Resource Group "azure-pipelines-agents-ci-99999b"): network.PrivateDNSZoneGroupsClient#Delete: Failure sending request: StatusCode=0 -- Original Error: autorest/azure: Service returned an error. Status=<nil> Code="AnotherOperationInProgress" Message="Another operation on this or dependent resource is in progress. To retrieve status of the operation use uri: https://management.azure.com/subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/providers/Microsoft.Network/locations/westeurope/operations/e2bff2ad-cfad-4bfa-971f-3cb2a34df13c?api-version=2019-02-01." Details=[]

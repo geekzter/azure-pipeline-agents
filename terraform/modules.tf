@@ -91,6 +91,7 @@ module scale_set_linux_agents {
     azurerm_private_endpoint.diag_blob_storage_endpoint,
     azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_private_endpoint.vault_endpoint,
     module.network
   ]
 }
@@ -131,7 +132,9 @@ module scale_set_windows_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_private_endpoint.vault_endpoint,
     azurerm_storage_share_file.sync_windows_vm_logs_ps1,
     module.network
   ]
@@ -192,6 +195,7 @@ module self_hosted_linux_agents {
     azurerm_private_endpoint.diag_blob_storage_endpoint,
     azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_private_endpoint.vault_endpoint,
     module.network
   ]
 }
@@ -244,7 +248,9 @@ module self_hosted_windows_agents {
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_share,
     azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_private_endpoint.vault_endpoint,
     azurerm_storage_share_file.sync_windows_vm_logs_ps1,
     module.network
   ]

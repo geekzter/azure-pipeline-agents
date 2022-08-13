@@ -5,7 +5,7 @@ data http terraform_ip_address {
 
 data http terraform_ip_prefix {
 # Get public IP prefix of the machine running this terraform template
-  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.terraform_ip_address.body)}"
+  url                          = "https://stat.ripe.net/data/network-info/data.json?resource=${chomp(data.http.terraform_ip_address.response_body)}"
 }
 
 # Random resource suffix, this will prevent name collisions when creating resources in parallel
@@ -105,8 +105,8 @@ locals {
     },
     var.tags
   )  
-  terraform_ip_address         = chomp(data.http.terraform_ip_address.body)
-  terraform_ip_prefix          = jsondecode(chomp(data.http.terraform_ip_prefix.body)).data.prefix
+  terraform_ip_address         = chomp(data.http.terraform_ip_address.response_body)
+  terraform_ip_prefix          = jsondecode(chomp(data.http.terraform_ip_prefix.response_body)).data.prefix
 
   # Networking
   admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.terraform_ip_address])))) # Make sure ranges have correct base address
@@ -200,11 +200,14 @@ resource azurerm_key_vault vault {
     }
   }
 
-  # network_acls {
-  #   default_action             = "Deny"
-  #   bypass                     = "AzureServices"
-  #   ip_rules                   = local.admin_cidr_ranges
-  # }
+  dynamic "network_acls" {
+    for_each = range(var.deploy_firewall ? 1 : 0) 
+    content {
+      default_action           = "Deny"
+      bypass                   = "AzureServices"
+      ip_rules                 = local.admin_cidr_ranges
+    }
+  }
 
   tags                         = azurerm_resource_group.rg.tags
 }
@@ -223,15 +226,19 @@ resource azurerm_private_endpoint vault_endpoint {
   }
 
   tags                         = local.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
 }
 resource azurerm_private_dns_a_record vault_dns_record {
   name                         = azurerm_key_vault.vault.name
   zone_name                    = module.network.azurerm_private_dns_zone_vault_name
   resource_group_name          = azurerm_resource_group.rg.name
   ttl                          = 300
-  records                      = [azurerm_private_endpoint.vault_endpoint.private_service_connection[0].private_ip_address]
+  records                      = [azurerm_private_endpoint.vault_endpoint.0.private_service_connection[0].private_ip_address]
 
   tags                         = local.tags
+
+  count                        = var.deploy_firewall ? 1 : 0
 }
 resource azurerm_monitor_diagnostic_setting key_vault {
   name                         = "${azurerm_key_vault.vault.name}-logs"

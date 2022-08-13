@@ -71,6 +71,9 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
 
   tags                         = local.tags
 
+  depends_on                   = [
+    azurerm_private_endpoint.vault_endpoint,
+  ]
   count                        = var.deploy_firewall ? 1 : 0
 }
 
@@ -107,6 +110,9 @@ resource azurerm_private_endpoint aut_blob_storage_endpoint {
 
   tags                         = local.tags
 
+  depends_on                   = [
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+  ]
   count                        = var.deploy_firewall ? 1 : 0
 }
 
@@ -139,6 +145,9 @@ resource azurerm_private_endpoint disk_access_endpoint {
 
   tags                         = local.tags
 
+  depends_on                   = [
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+  ]
   count                        = var.deploy_firewall ? 1 : 0
 }
 
@@ -186,10 +195,7 @@ resource azurerm_private_endpoint diagnostics_share {
   tags                         = local.tags
 
   depends_on                   = [
-    azurerm_private_endpoint.aut_blob_storage_endpoint,
-    azurerm_private_endpoint.diag_blob_storage_endpoint,
     azurerm_private_endpoint.disk_access_endpoint,
-    module.network,
   ]
 
   count                        = var.deploy_files_share ? 1 : 0

@@ -77,6 +77,7 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
 
   depends_on                   = [
     azurerm_private_endpoint.vault_endpoint,
+    module.network
   ]
   count                        = var.deploy_firewall ? 1 : 0
 }
@@ -120,6 +121,7 @@ resource azurerm_private_endpoint aut_blob_storage_endpoint {
 
   depends_on                   = [
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    module.network
   ]
   count                        = var.deploy_firewall ? 1 : 0
 }
@@ -159,6 +161,7 @@ resource azurerm_private_endpoint disk_access_endpoint {
 
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
+    module.network
   ]
   count                        = var.deploy_firewall ? 1 : 0
 }
@@ -212,6 +215,7 @@ resource azurerm_private_endpoint diagnostics_share {
 
   depends_on                   = [
     azurerm_private_endpoint.disk_access_endpoint,
+    module.network
   ]
 
   count                        = var.deploy_files_share ? 1 : 0

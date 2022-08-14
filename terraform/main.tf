@@ -231,6 +231,9 @@ resource azurerm_private_endpoint vault_endpoint {
 
   tags                         = local.tags
 
+  depends_on                   = [
+                                  module.network
+  ]
   count                        = var.deploy_firewall ? 1 : 0
 }
 resource azurerm_private_dns_a_record vault_dns_record {

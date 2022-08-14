@@ -200,6 +200,10 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
     subresource_names          = ["azuremonitor"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = var.tags
   count                        = var.deploy_firewall ? 1 : 0
   depends_on                   = [

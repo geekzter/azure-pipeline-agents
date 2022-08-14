@@ -45,9 +45,13 @@ resource azurerm_private_endpoint images_blob_storage_endpoint {
     subresource_names          = ["blob"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = var.tags
 
-  depends_on                  = [
+  depends_on                   = [
                                  null_resource.private_endpoint_nsg_association,
                                  time_sleep.private_endpoint_subnet 
   ]

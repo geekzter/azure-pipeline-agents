@@ -69,10 +69,15 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
     subresource_names          = ["blob"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = local.tags
 
   depends_on                   = [
     azurerm_private_endpoint.vault_endpoint,
+    module.network
   ]
   count                        = var.deploy_firewall ? 1 : 0
 }
@@ -108,10 +113,15 @@ resource azurerm_private_endpoint aut_blob_storage_endpoint {
     subresource_names          = ["blob"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = local.tags
 
   depends_on                   = [
     azurerm_private_endpoint.diag_blob_storage_endpoint,
+    module.network
   ]
   count                        = var.deploy_firewall ? 1 : 0
 }
@@ -143,10 +153,15 @@ resource azurerm_private_endpoint disk_access_endpoint {
     subresource_names          = ["disks"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = local.tags
 
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
+    module.network
   ]
   count                        = var.deploy_firewall ? 1 : 0
 }
@@ -192,10 +207,15 @@ resource azurerm_private_endpoint diagnostics_share {
     subresource_names          = ["file"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = local.tags
 
   depends_on                   = [
     azurerm_private_endpoint.disk_access_endpoint,
+    module.network
   ]
 
   count                        = var.deploy_files_share ? 1 : 0

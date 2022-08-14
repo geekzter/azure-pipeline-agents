@@ -225,8 +225,15 @@ resource azurerm_private_endpoint vault_endpoint {
     subresource_names          = ["vault"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = local.tags
 
+  depends_on                   = [
+                                  module.network
+  ]
   count                        = var.deploy_firewall ? 1 : 0
 }
 resource azurerm_private_dns_a_record vault_dns_record {

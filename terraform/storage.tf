@@ -69,6 +69,10 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
     subresource_names          = ["blob"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = local.tags
 
   depends_on                   = [
@@ -108,6 +112,10 @@ resource azurerm_private_endpoint aut_blob_storage_endpoint {
     subresource_names          = ["blob"]
   }
 
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   tags                         = local.tags
 
   depends_on                   = [
@@ -141,6 +149,10 @@ resource azurerm_private_endpoint disk_access_endpoint {
     name                       = "${azurerm_disk_access.disk_access.name}-endpoint-connection"
     private_connection_resource_id = azurerm_disk_access.disk_access.id
     subresource_names          = ["disks"]
+  }
+
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
   }
 
   tags                         = local.tags
@@ -190,6 +202,10 @@ resource azurerm_private_endpoint diagnostics_share {
     name                       = "${azurerm_storage_account.share.0.name}-files-endpoint-connection"
     private_connection_resource_id = azurerm_storage_account.share.0.id
     subresource_names          = ["file"]
+  }
+
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
   }
 
   tags                         = local.tags

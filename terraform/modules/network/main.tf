@@ -48,6 +48,10 @@ resource azurerm_virtual_network_peering agents_to_packer {
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
   use_remote_gateways          = false
+
+  depends_on                   = [
+    azurerm_private_endpoint.diag_blob_storage_endpoint
+  ]
 }
 
 resource azurerm_network_security_group default {

@@ -13,6 +13,7 @@ parameters:
   - Ubuntu
   - Ubuntu1804
   - Ubuntu2004
+  - Ubuntu2204
   - Windows
   - Windows2019
   - Windows2022

@@ -5,6 +5,7 @@ parameters:
   values:
   - Ubuntu1804
   - Ubuntu2004
+  - Ubuntu2204
   - Windows2019
   - Windows2022
 - name: imageReleaseName
@@ -75,8 +76,14 @@ jobs:
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
-  - name: 'imageTemplate'
-    value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+  - ${{ if eq(parameters.image,'Ubuntu2204') }}:
+    - name: 'imageTemplate'
+      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.pkr.hcl'
+  - ${{ else }}:
+    - name: 'imageTemplate'
+      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+  - name: 'imageTemplatePath'
+    value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'retryCount' 
@@ -206,8 +213,7 @@ jobs:
         # We assume main branch is the latest released version
 
         # Update template to override configuration not accessible as variables
-        Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
-        $packerTemplate.builders[0]["azure_tags"] = @{
+        $azureTags = @{
           application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
           build = "$(Build.BuildId)"
           commit = "$(git rev-parse HEAD)"
@@ -218,15 +224,30 @@ jobs:
           shutdown = "false"
           versionlabel = "$(githubRelease.version)"
         }
-        Write-Host "`nTags that will be applied to build resources:"
-        $packerTemplate.builders[0]["azure_tags"] | Format-Table
-        Write-Host "`nPacker template:"
-        $packerTemplate | ConvertTo-Json -Depth 5
-        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
+        if ("$(imageTemplate)" -match "json") {
+          # This only works for JSON
+          Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
+          $packerTemplate.builders[0]["azure_tags"] = $azureTags
+          Write-Host "`nTags that will be applied to build resources:"
+          $packerTemplate.builders[0]["azure_tags"] | Format-Table
+          Write-Host "`nPacker template:"
+          $packerTemplate | ConvertTo-Json -Depth 5
+          $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
+        } else {
+          # HCL
+          $packerHCLVarsContent="azure_tags = {"
+          foreach ($key in $azureTags.Keys) {
+            $packerHCLVarsContent += "$key=`"$($azureTags[$key])`";"
+          }
+          $packerHCLVarsContent+="}"
+          $packerHCLVarsFile = "$(imageTemplatePath)/variables.auto.pkrvars.hcl"
+          $packerHCLVarsContent | Set-Content $packerHCLVarsFile
+          Get-Content $packerHCLVarsFile
+        }
 
         # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
         # https://www.packer.io/plugins/builders/azure#azure-managed-identity
-        # System Assigned Managed Identity is shared amongst all pipelines running onm the same agent
+        # System Assigned Managed Identity is shared amongst all pipelines running onm the same agent, regardless of Service Connection
         # A System Assigned Managed Identity will have the superset of all privileges for all pipelines (opposite of 'least privilege')
 
         # Build

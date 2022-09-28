@@ -244,7 +244,6 @@ jobs:
           $packerHCLVarsContent | Set-Content $packerHCLVarsFile
           Get-Content $packerHCLVarsFile
         }
-        exit
 
         # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
         # https://www.packer.io/plugins/builders/azure#azure-managed-identity

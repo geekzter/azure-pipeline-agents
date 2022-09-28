@@ -222,7 +222,9 @@ jobs:
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
       }
-    # condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+
+      packer inspect $(imageTemplate)
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
     workingDirectory: $(imageTemplateDirectory)
 

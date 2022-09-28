@@ -76,6 +76,16 @@ variables:
   # PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
 
 jobs:
+- ${{ if in(parameters.image,'All','Ubuntu','Ubuntu1804') }}:
+  - template: build-image-template.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
+      image: Ubuntu1804
+      imageReleaseName: ubuntu18
+      imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u18'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
   - template: build-image-template.yml
     parameters:

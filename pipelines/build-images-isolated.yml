@@ -98,6 +98,17 @@ jobs:
       retryCount: ${{ parameters.retryCount }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
+- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
+  - template: build-image-isolated-template.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      image: Ubuntu2204
+      imageReleaseName: ubuntu22
+      imageResourcePrefix: 'packer$(Build.BuildId)u22'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      retryCount: ${{ parameters.retryCount }}
+      waitForReplication: ${{ parameters.waitForReplication }}
+
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-isolated-template.yml
     parameters:

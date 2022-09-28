@@ -231,7 +231,8 @@ jobs:
   - task: AzureCLI@2
     name: imageBuild
     displayName: 'Build image'
-    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+    condition: false
+    # condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore

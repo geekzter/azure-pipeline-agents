@@ -106,11 +106,15 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft -and !$_.prerelease} `
+        (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft} `
+                                                                                             | Sort-Object -Property prerelease
                                                                                              | Select-Object -First 1 `
                                                                                              | Set-Variable release
         if (!$release) {
           throw "No release found for $(imageReleaseName) at https://api.github.com/repos/actions/runner-images/releases"
+        }
+        if ($release.prerelease) {
+          Write-Warning "Only prerelease version(s) exists of $(imageReleaseName)"
         }
         $releaseVersion = $release.tag_name.Split("/")[1]
         Write-Host "`nLatest version ($releaseVersion) of $(imageName) at https://github.com/actions/runner-images/releases:"

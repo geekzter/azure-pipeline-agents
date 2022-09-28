@@ -82,7 +82,7 @@ jobs:
   - ${{ else }}:
     - name: 'imageTemplate'
       value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
-  - name: 'imageTemplatePath'
+  - name: 'imageTemplateDirectory'
     value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
@@ -240,10 +240,11 @@ jobs:
             $packerHCLVarsContent += "$key=`"$($azureTags[$key])`";"
           }
           $packerHCLVarsContent+="}"
-          $packerHCLVarsFile = "$(imageTemplatePath)/variables.auto.pkrvars.hcl"
+          $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
           $packerHCLVarsContent | Set-Content $packerHCLVarsFile
           Get-Content $packerHCLVarsFile
         }
+        exit
 
         # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
         # https://www.packer.io/plugins/builders/azure#azure-managed-identity
@@ -275,7 +276,7 @@ jobs:
       addSpnToEnvironment: true
       failOnStandardError: true
       retryCountOnTaskFailure: $(retryCount)
-      workingDirectory: $(imageRepository)
+      workingDirectory: $(imageTemplateDirectory)
     env:
       PACKER_LOG: 1
       PACKER_LOG_PATH: $(Build.ArtifactStagingDirectory)/packer-log.txt

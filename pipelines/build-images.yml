@@ -81,7 +81,7 @@ jobs:
     parameters:
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
-      image: Ubuntu1804
+      image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u20'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
@@ -91,7 +91,7 @@ jobs:
     parameters:
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
-      image: Ubuntu2004
+      image: Ubuntu2204
       imageReleaseName: ubuntu22
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}

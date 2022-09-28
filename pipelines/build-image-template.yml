@@ -179,9 +179,6 @@ jobs:
                                   -AzureClientSecret "$(servicePrincipal.clientSecret)" `
                                   -AzureTenantId $(servicePrincipal.tenantId) `
                                   -RestrictToAgentIpAddress
-        if ($exitCode -ne 0) {
-          throw "'GenerateResourcesAndImage' exited with status $exitCode"
-        }
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true

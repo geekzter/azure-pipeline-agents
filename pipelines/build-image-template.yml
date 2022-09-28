@@ -108,7 +108,7 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft} `
-                                                                                             | Sort-Object -Property prerelease
+                                                                                             | Sort-Object -Property @{Expression = "created_at"; Descending = $true}, @{Expression = "prerelease"; Descending = $false}
                                                                                              | Select-Object -First 1 `
                                                                                              | Set-Variable release
         if (!$release) {

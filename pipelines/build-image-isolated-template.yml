@@ -151,7 +151,7 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft} `
-                                                                                             | Sort-Object -Property prerelease
+                                                                                             | Sort-Object -Property @{Expression = "created_at"; Descending = $true}, @{Expression = "prerelease"; Ascending = $true}
                                                                                              | Select-Object -First 1 `
                                                                                              | Set-Variable release
         if (!$release) {
@@ -189,6 +189,43 @@ jobs:
         }
       failOnStandardError: true
 
+  - pwsh: |
+      # Update template to override configuration not accessible as variables
+      $azureTags = @{
+        application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
+        build = "$(Build.BuildId)"
+        commit = "$(git rev-parse HEAD)"
+        qualifiedVersion = "$(githubRelease.qualifiedVersion)"
+        image = "$(imageName)"
+        owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
+        pipeline = "$(Build.DefinitionName)"
+        shutdown = "false"
+        versionlabel = "$(githubRelease.version)"
+      }
+      if ("$(imageTemplate)" -match "json") {
+        # This only works for JSON
+        Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
+        $packerTemplate.builders[0]["azure_tags"] = $azureTags
+        Write-Host "`nTags that will be applied to build resources:"
+        $packerTemplate.builders[0]["azure_tags"] | Format-Table
+        Write-Host "`nPacker template:"
+        $packerTemplate | ConvertTo-Json -Depth 5
+        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
+      } else {
+        # HCL
+        $packerHCLVarsContent="azure_tags = {"
+        foreach ($key in $azureTags.Keys) {
+          $packerHCLVarsContent += "$key=`"$($azureTags[$key])`";"
+        }
+        $packerHCLVarsContent+="}"
+        $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
+        $packerHCLVarsContent | Set-Content $packerHCLVarsFile
+        Get-Content $packerHCLVarsFile
+      }
+    # condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+    displayName: 'Update Packer configuration'
+    workingDirectory: $(imageTemplateDirectory)
+
   - task: AzureCLI@2
     name: imageBuild
     displayName: 'Build image'
@@ -209,41 +246,7 @@ jobs:
         # Checkout source pertaining to release is not recommended
         # https://github.com/actions/runner-images/issues/4238#issuecomment-939732274
         # https://github.com/actions/runner-images/discussions/4362
-        # git checkout $(githubRelease.commit) --quiet
         # We assume main branch is the latest released version
-
-        # Update template to override configuration not accessible as variables
-        $azureTags = @{
-          application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
-          build = "$(Build.BuildId)"
-          commit = "$(git rev-parse HEAD)"
-          qualifiedVersion = "$(githubRelease.qualifiedVersion)"
-          image = "$(imageName)"
-          owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
-          pipeline = "$(Build.DefinitionName)"
-          shutdown = "false"
-          versionlabel = "$(githubRelease.version)"
-        }
-        if ("$(imageTemplate)" -match "json") {
-          # This only works for JSON
-          Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
-          $packerTemplate.builders[0]["azure_tags"] = $azureTags
-          Write-Host "`nTags that will be applied to build resources:"
-          $packerTemplate.builders[0]["azure_tags"] | Format-Table
-          Write-Host "`nPacker template:"
-          $packerTemplate | ConvertTo-Json -Depth 5
-          $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
-        } else {
-          # HCL
-          $packerHCLVarsContent="azure_tags = {"
-          foreach ($key in $azureTags.Keys) {
-            $packerHCLVarsContent += "$key=`"$($azureTags[$key])`";"
-          }
-          $packerHCLVarsContent+="}"
-          $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
-          $packerHCLVarsContent | Set-Content $packerHCLVarsFile
-          Get-Content $packerHCLVarsFile
-        }
 
         # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
         # https://www.packer.io/plugins/builders/azure#azure-managed-identity

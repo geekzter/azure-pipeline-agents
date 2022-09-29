@@ -243,7 +243,8 @@ jobs:
       pwd
       ls -al
 
-      packer inspect $packerTemplateArgument
+      packer inspect $packerTemplateFileName
+      packer validate $packerTemplateArgument
 
       Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))

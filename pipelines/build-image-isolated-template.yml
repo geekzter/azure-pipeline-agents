@@ -190,6 +190,10 @@ jobs:
       failOnStandardError: true
 
   - pwsh: |
+      # Cope template to working directory
+      cp $(imageTemplate) .
+      $packerTemplateFileName = "$(imageTemplate)".Split('/')[-1]
+
       # Update template to override configuration not accessible as variables
       $azureTags = @{
         application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
@@ -202,17 +206,16 @@ jobs:
         shutdown = "false"
         versionlabel = "$(githubRelease.version)"
       }
-      if ("$(imageTemplate)" -match "json") {
+      if ($packerTemplateFileName -match "json") {
         # This only works for JSON
-        Get-Content $(imageTemplate) | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
+        Get-Content $packerTemplateFileName | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
         $packerTemplate.builders[0]["azure_tags"] = $azureTags
         Write-Host "`nTags that will be applied to build resources:"
         $packerTemplate.builders[0]["azure_tags"] | Format-Table
         Write-Host "`nPacker template:"
         $packerTemplate | ConvertTo-Json -Depth 5
-        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
-
-        $packerTemplateName = "$(imageTemplate)".Split('/')[-1]
+        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
+        Write-Host "##vso[task.setvariable variable=template;isoutput=true]$packerTemplateFileName"
       } else {
         # HCL
         $packerHCLVarsContent="azure_tag = {"
@@ -224,15 +227,13 @@ jobs:
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
 
-        $packerTemplateName = "."
+        Write-Host "##vso[task.setvariable variable=template;isoutput=true]."
       }
 
       packer inspect $packerTemplateName
-      Write-Host "##vso[task.setvariable variable=template;isoutput=true]$packerTemplateName"
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
     name: packerConfig
-    workingDirectory: $(imageTemplateDirectory)
 
   - task: AzureCLI@2
     name: imageBuild
@@ -288,7 +289,6 @@ jobs:
       addSpnToEnvironment: true
       failOnStandardError: true
       retryCountOnTaskFailure: $(retryCount)
-      workingDirectory: $(imageTemplateDirectory)
     env:
       PACKER_LOG: 1
       PACKER_LOG_PATH: $(Build.ArtifactStagingDirectory)/packer-log.txt

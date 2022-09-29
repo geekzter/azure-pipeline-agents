@@ -191,7 +191,7 @@ jobs:
 
   - pwsh: |
       # Cope template to working directory
-      cp $(imageTemplate) .
+      cp -v $(imageTemplate) .
       $packerTemplateFileName = "$(imageTemplate)".Split('/')[-1]
 
       # Update template to override configuration not accessible as variables
@@ -233,7 +233,7 @@ jobs:
       pwd
       ls -al
 
-      packer inspect $packerTemplateName
+      packer inspect $packerTemplateFileName
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
     name: packerConfig

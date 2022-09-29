@@ -262,14 +262,6 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        # Diagnostics
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
-
         # Checkout source pertaining to release is not recommended
         # https://github.com/actions/runner-images/issues/4238#issuecomment-939732274
         # https://github.com/actions/runner-images/discussions/4362
@@ -320,14 +312,6 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        # Diagnostics
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
-
         # Find VHD 
         az storage blob directory list -c "system" `
                                        -d "Microsoft.Compute/Images/images" `
@@ -354,14 +338,6 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        # Diagnostics
-        if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-          $DebugPreference       = "Continue"
-          $InformationPreference = "Continue"
-          $VerbosePreference     = "Continue"
-          Set-PSDebug -Trace 2
-        }
-
         # Publish
         $imageDefinitionVersionTags = @(`
           "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`

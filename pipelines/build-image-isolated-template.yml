@@ -240,6 +240,10 @@ jobs:
         $packerTemplateArgument = "."
       }
 
+      # Remove HCL files from other image templates residing in the same directory
+      Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
+      ls -al
+
       packer inspect $packerTemplateArgument
 
       Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"

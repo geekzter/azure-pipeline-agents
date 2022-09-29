@@ -244,6 +244,7 @@ jobs:
       ls -al
 
       packer inspect $packerTemplateFileName
+      Write-Host "packer validate $packerTemplateArgument"
       packer validate $packerTemplateArgument
 
       Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"

@@ -213,7 +213,7 @@ jobs:
         $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $(imageTemplate)
       } else {
         # HCL
-        $packerHCLVarsContent="azure_tags = {"
+        $packerHCLVarsContent="azure_tag = {"
         foreach ($key in $azureTags.Keys) {
           $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
         }

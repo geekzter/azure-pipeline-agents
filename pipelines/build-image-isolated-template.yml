@@ -79,9 +79,13 @@ jobs:
   - ${{ if eq(parameters.image,'Ubuntu2204') }}:
     - name: 'imageTemplate'
       value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.pkr.hcl'
+    - name: 'imageTemplateFileName'
+      value: '${{ lower(parameters.image) }}.pkr.hcl'
   - ${{ else }}:
     - name: 'imageTemplate'
       value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+    - name: 'imageTemplateFileName'
+      value: '${{ lower(parameters.image) }}.pkr.json'
   - name: 'imageTemplateDirectory'
     value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
   - name: 'numberOfVersionsToKeep' 
@@ -190,9 +194,7 @@ jobs:
       failOnStandardError: true
 
   - pwsh: |
-      # Cope template to working directory
-      cp -v $(imageTemplate) .
-      $packerTemplateFileName = "$(imageTemplate)".Split('/')[-1]
+      $packerTemplateFileName = "$(imageTemplateFileName)"
 
       # Update template to override configuration not accessible as variables
       $azureTags = @{
@@ -239,6 +241,7 @@ jobs:
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
     name: packerConfig
+    workingDirectory: $(imageTemplateDirectory)
 
   - task: AzureCLI@2
     name: imageBuild
@@ -294,6 +297,7 @@ jobs:
       addSpnToEnvironment: true
       failOnStandardError: true
       retryCountOnTaskFailure: $(retryCount)
+      workingDirectory: $(imageTemplateDirectory)
     env:
       PACKER_LOG: 1
       PACKER_LOG_PATH: $(Build.ArtifactStagingDirectory)/packer-log.txt

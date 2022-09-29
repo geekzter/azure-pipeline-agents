@@ -85,7 +85,7 @@ jobs:
     - name: 'imageTemplate'
       value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
     - name: 'imageTemplateFileName'
-      value: '${{ lower(parameters.image) }}.pkr.json'
+      value: '${{ lower(parameters.image) }}.json'
   - name: 'imageTemplateDirectory'
     value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
   - name: 'numberOfVersionsToKeep' 

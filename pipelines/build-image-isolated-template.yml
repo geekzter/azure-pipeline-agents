@@ -233,21 +233,14 @@ jobs:
           $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
         }
         $packerHCLVarsContent+="`n}"
-        $packerHCLVarsFile = "azuretags.pkrvars.hcl"
+        $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
 
-        $packerTemplateArgument = "-var-file=`"${packerHCLVarsFile}`"` ${packerTemplateFileName}"
+        $packerTemplateArgument = "."
       }
 
-      pwd
-      ls -al
-
-      packer inspect -h
-      packer inspect $packerTemplateFileName
-      packer validate -h
-      Write-Host "packer validate $packerTemplateArgument"
-      packer validate $packerTemplateArgument
+      packer inspect $packerTemplateArgument
 
       Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))

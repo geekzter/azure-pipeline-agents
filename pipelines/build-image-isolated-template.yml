@@ -230,6 +230,9 @@ jobs:
         Write-Host "##vso[task.setvariable variable=template;isoutput=true]."
       }
 
+      pwd
+      ls -al
+
       packer inspect $packerTemplateName
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'

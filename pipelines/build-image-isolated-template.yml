@@ -237,7 +237,7 @@ jobs:
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
 
-        $packerTemplateArgument = "-var-file='${packerHCLVarsFile}' ${packerTemplateFileName}"
+        $packerTemplateArgument = "--var-file='${packerHCLVarsFile}' ${packerTemplateFileName}"
       }
 
       pwd

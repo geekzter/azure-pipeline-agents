@@ -273,8 +273,7 @@ jobs:
         # A System Assigned Managed Identity will have the superset of all privileges for all pipelines (opposite of 'least privilege')
 
         # Build
-        # packer build -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
-        packer validate -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
+        packer build -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "capture_name_prefix=$(imageResourcePrefix)" `
                      -var "client_id=${env:servicePrincipalId}" `
                      -var "client_secret=${env:servicePrincipalKey}" `

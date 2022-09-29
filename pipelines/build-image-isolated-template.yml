@@ -215,7 +215,7 @@ jobs:
         Write-Host "`nPacker template:"
         $packerTemplate | ConvertTo-Json -Depth 5
         $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
-        Write-Host "##vso[task.setvariable variable=template;isoutput=true]$packerTemplateFileName"
+        $packerTemplateArgument = $packerTemplateFileName
       } else {
         # HCL
         $packerHCLVarsContent="azure_tag = {"
@@ -223,17 +223,19 @@ jobs:
           $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
         }
         $packerHCLVarsContent+="`n}"
-        $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
+        $packerHCLVarsFile = "variables.pkrvars.hcl"
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
 
-        Write-Host "##vso[task.setvariable variable=template;isoutput=true]."
+        $packerTemplateArgument = "-var-file=$packerHCLVarsFile $packerTemplateFileName"
       }
 
       pwd
       ls -al
 
-      packer inspect $packerTemplateFileName
+      packer inspect $packerTemplateArgument
+
+      Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
     name: packerConfig
@@ -280,7 +282,7 @@ jobs:
                      -var "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
                      -var "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
                      -var "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" `
-                     $(packerConfig.template) # TODO: Filter sensitive content        
+                     $(packerConfig.templateArgument) # TODO: Filter sensitive content        
 
         $exitCode = $LASTEXITCODE
         if ($exitCode -eq 0) {

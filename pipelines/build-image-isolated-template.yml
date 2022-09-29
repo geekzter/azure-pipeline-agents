@@ -233,7 +233,7 @@ jobs:
           $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
         }
         $packerHCLVarsContent+="`n}"
-        $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
+        $packerHCLVarsFile = "azuretags.pkrvars.hcl"
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
 
@@ -243,7 +243,9 @@ jobs:
       pwd
       ls -al
 
+      packer inspect -h
       packer inspect $packerTemplateFileName
+      packer validate -h
       Write-Host "packer validate $packerTemplateArgument"
       packer validate $packerTemplateArgument
 

@@ -215,10 +215,9 @@ jobs:
         # HCL
         $packerHCLVarsContent="azure_tags = {"
         foreach ($key in $azureTags.Keys) {
-          $packerHCLVarsContent += "$key=`"$($azureTags[$key])`";"
+          $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
         }
-        $packerHCLVarsContent+="}"
-        $packerHCLVarsContent -replace ";}","}" | Set-Variable packerHCLVarsContent
+        $packerHCLVarsContent+="`n}"
         $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile

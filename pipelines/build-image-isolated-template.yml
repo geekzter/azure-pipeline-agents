@@ -233,7 +233,7 @@ jobs:
           $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
         }
         $packerHCLVarsContent+="`n}"
-        $packerHCLVarsFile = "variables.pkrvars.hcl"
+        $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
 

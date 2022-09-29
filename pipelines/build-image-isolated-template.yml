@@ -218,11 +218,15 @@ jobs:
           $packerHCLVarsContent += "$key=`"$($azureTags[$key])`";"
         }
         $packerHCLVarsContent+="}"
+        $packerHCLVarsContent -replace ";}","}" | Set-Variable packerHCLVarsContent
         $packerHCLVarsFile = "variables.auto.pkrvars.hcl"
         $packerHCLVarsContent | Set-Content $packerHCLVarsFile
         Get-Content $packerHCLVarsFile
       }
 
+      pwd
+      ls -al
+      
       packer inspect $(imageTemplate)
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'

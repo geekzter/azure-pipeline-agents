@@ -13,6 +13,7 @@ parameters:
   - Ubuntu
   - Ubuntu1804
   - Ubuntu2004
+  - Ubuntu2204
   - Windows
   - Windows2019
   - Windows2022
@@ -75,7 +76,7 @@ variables:
   # PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
 
 jobs:
-- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:
+- ${{ if in(parameters.image,'All','Ubuntu','Ubuntu1804') }}:
   - template: build-image-template.yml
     parameters:
       destroy: ${{ parameters.destroy }}
@@ -85,7 +86,7 @@ jobs:
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u18'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
 
-- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
+- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
   - template: build-image-template.yml
     parameters:
       destroy: ${{ parameters.destroy }}
@@ -93,6 +94,16 @@ jobs:
       image: Ubuntu2004
       imageReleaseName: ubuntu20
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u20'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+
+- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
+  - template: build-image-template.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
+      image: Ubuntu2204
+      imageReleaseName: ubuntu22
+      imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:

@@ -13,6 +13,7 @@ parameters:
   - Ubuntu
   - Ubuntu1804
   - Ubuntu2004
+  - Ubuntu2204
   - Windows
   - Windows2019
   - Windows2022
@@ -97,6 +98,17 @@ jobs:
       retryCount: ${{ parameters.retryCount }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
+- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
+  - template: build-image-isolated-template.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      image: Ubuntu2204
+      imageReleaseName: ubuntu22
+      imageResourcePrefix: 'packer$(Build.BuildId)u22'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      retryCount: ${{ parameters.retryCount }}
+      waitForReplication: ${{ parameters.waitForReplication }}
+
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-isolated-template.yml
     parameters:
@@ -126,6 +138,8 @@ jobs:
         - Ubuntu1804
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
         - Ubuntu2004
+      - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
+        - Ubuntu2204
       - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
         - Windows2019
       - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:

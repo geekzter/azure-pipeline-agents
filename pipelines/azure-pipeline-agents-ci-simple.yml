@@ -80,7 +80,6 @@ jobs:
     env: # Maintain casing of Terraform variable names
       TF_VAR_application_name: $(TF_VAR_application_name)
       TF_VAR_application_owner: $(TF_VAR_application_owner)
-      TF_VAR_configure_access_control: $(TF_VAR_configure_access_control)
       TF_VAR_resource_prefix: $(TF_VAR_resource_prefix)
       TF_VAR_resource_suffix: $(TF_VAR_resource_suffix)
       TF_VAR_tags: $(TF_VAR_tags)
@@ -107,6 +106,13 @@ jobs:
       failOnStandardError: true
       retryCountOnTaskFailure: 3
       workingDirectory: '$(scriptDirectory)'
+    env: # Maintain casing of Terraform variable names
+      TF_VAR_application_name: $(TF_VAR_application_name)
+      TF_VAR_application_owner: $(TF_VAR_application_owner)
+      TF_VAR_resource_prefix: $(TF_VAR_resource_prefix)
+      TF_VAR_resource_suffix: $(TF_VAR_resource_suffix)
+      TF_VAR_tags: $(TF_VAR_tags)
+      TF_VAR_run_id: $(TF_VAR_run_id)
 
   - task: AzureCLI@2
     name: teardown

@@ -28,8 +28,8 @@ variable bastion_tags {
 } 
 
 variable configure_access_control {
-  description                  = "Assumes the Terraform user is an owner of the subscription. Turning this off reduces functionality somewhat"
-  default                      = true
+  description                  = "Assumes the Terraform user is an owner of the subscription."
+  default                      = false
   type                         = bool
 }
 

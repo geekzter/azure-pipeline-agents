@@ -29,10 +29,5 @@ output virtual_network_id {
 }
 
 output policy_set_name {
-  value                        = azurerm_policy_set_definition.build_policies.0.name
-
-  precondition {
-    condition                  = var.configure_policy
-    error_message              = "Policy not configured"
-  }  
+  value                        = try(azurerm_policy_set_definition.build_policies.0.name,null)
 }

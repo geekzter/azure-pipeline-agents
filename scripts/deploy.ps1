@@ -145,13 +145,19 @@ try {
     if ($Apply) {
         Write-Verbose "Converting $planFile into JSON so we can perform some inspection..."
         $planJSON = (terraform show -json $planFile)
+        if ($DebugPreference -ine "SilentlyContinue") {
+            New-TemporaryFile | Select-Object -ExpandProperty FullName | Set-Variable jsonPlanFile
+            $jsonPlanFile += ".json"
+            $planJSON | Set-Content $jsonPlanFile
+            Write-Debug "Plan file (json): ${jsonPlanFile}"
+        }
 
         # Check whether key resources will be replaced
         if (Get-Command jq -ErrorAction SilentlyContinue) {
-            $linuxVMsReplaced     = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine.\"))             | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            $windowsVMsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine.\"))           | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            $linuxVMSSsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_linux_virtual_machine_scale_set.\"))   | select( any (.change.actions[];contains(\"delete\"))) | .address'
-            $windowsVMSSsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains(\"azurerm_windows_virtual_machine_scale_set.\")) | select( any (.change.actions[];contains(\"delete\"))) | .address'
+            $linuxVMsReplaced     = $planJSON | jq -r '.resource_changes[] | select(.address|contains("azurerm_linux_virtual_machine."))             | select( any (.change.actions[];contains("delete"))) | .address'
+            $windowsVMsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains("azurerm_windows_virtual_machine."))           | select( any (.change.actions[];contains("delete"))) | .address'
+            $linuxVMSSsReplaced   = $planJSON | jq -r '.resource_changes[] | select(.address|contains("azurerm_linux_virtual_machine_scale_set."))   | select( any (.change.actions[];contains("delete"))) | .address'
+            $windowsVMSSsReplaced = $planJSON | jq -r '.resource_changes[] | select(.address|contains("azurerm_windows_virtual_machine_scale_set.")) | select( any (.change.actions[];contains("delete"))) | .address'
             $vmsReplaced          = (($linuxVMsReplaced + $linuxVMSSsReplaced + $windowsVMsReplaced + $windowsVMSSsReplaced) -replace '(\w+)(module\.)', "`$1`n`$2")
         } else {
             Write-Warning "jq not found, plan validation skipped. Look at the plan carefully before approving"
@@ -165,7 +171,7 @@ try {
             $defaultChoice = 0
             if ($vmsReplaced) {
                 $defaultChoice = 1
-                Write-Warning "You're about to replace these Virtual Machines in workspace '${workspace}':"
+                Write-Warning "You're about to remove or replace these Virtual Machines in workspace '${workspace}':"
                 $vmsReplaced
                 if ($Force) {
                     $Force = $false # Ignore force if resources with state get replaced

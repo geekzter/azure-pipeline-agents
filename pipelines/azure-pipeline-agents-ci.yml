@@ -232,7 +232,7 @@ jobs:
 
     - ${{ if eq(parameters.clear, true) }}:
       - task: AzureCLI@2
-        name: cleanup
+        name: clear
         displayName: 'Clear Terraform state'
         inputs:
           azureSubscription: '$(subscriptionConnection)'

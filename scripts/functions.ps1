@@ -167,11 +167,7 @@ function Invoke (
 ) {
     Write-Host "`n$cmd" -ForegroundColor Green 
     Invoke-Expression $cmd
-    $exitCode = $LASTEXITCODE
-    if ($exitCode -ne 0) {
-        Write-Warning "'$cmd' exited with status $exitCode"
-        exit $exitCode
-    }
+    Validate-ExitCode $cmd
 }
 
 function New-ScaleSetPool(
@@ -205,6 +201,16 @@ function New-ScaleSetPool(
         $createdScaleSet.elasticPool | Write-Debug
     }
     return $createdScaleSet
+}
+
+function Validate-ExitCode (
+    [string]$cmd
+) {
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+        Write-Warning "'$cmd' exited with status $exitCode"
+        exit $exitCode
+    }
 }
 
 function Write-RestError() {

@@ -3,6 +3,7 @@
 
 # Scripting
 brew "azure-cli"
+brew "jq"
 cask "powershell"
 
 # Visual Studio Code

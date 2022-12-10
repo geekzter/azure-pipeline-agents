@@ -103,6 +103,7 @@ jobs:
 
   - ${{ if parameters.upgradeAzureCLI }}:
     - pwsh: |
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
         az upgrade --all --yes
       displayName: 'Upgrade Azure CLI'
 

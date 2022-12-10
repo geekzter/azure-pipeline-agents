@@ -76,17 +76,6 @@ variables:
   - group: 'build-images-isolated'
 
 jobs:
-- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:
-  - template: build-image-isolated-template.yml
-    parameters:
-      destroy: ${{ parameters.destroy }}
-      image: Ubuntu1804
-      imageReleaseName: ubuntu18
-      imageResourcePrefix: 'packer$(Build.BuildId)u18'
-      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-      retryCount: ${{ parameters.retryCount }}
-      waitForReplication: ${{ parameters.waitForReplication }}
-
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
   - template: build-image-isolated-template.yml
     parameters:

@@ -101,7 +101,7 @@ jobs:
 
   - pwsh: |
       $installedAzVersion = ($(az version --query '"azure-cli"' -o tsv) -replace "\.\d+$","")
-      if (( -in (Get-Content $(agentRepository)/pipelines/azure-cli-versions-to-avoid.txt)) {
+      if ($installedAzVersion -in (Get-Content $(agentRepository)/pipelines/azure-cli-versions-to-avoid.txt)) {
         Write-Host "Upgrading Azure CLI version '${installedAzVersion}' to latest..."
         if ($IsLinux) {
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash

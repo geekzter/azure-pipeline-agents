@@ -29,6 +29,10 @@ parameters:
   displayName: Build task retry count
   type: number
   default: 1
+- name: upgradeAzureCLI
+  displayName: Upgrade Azure CLI to latest version
+  type: boolean
+  default: false
 - name: waitForReplication
   displayName: Wait for image replication to finish
   type: boolean
@@ -85,6 +89,7 @@ jobs:
       imageResourcePrefix: 'packer$(Build.BuildId)u20'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       retryCount: ${{ parameters.retryCount }}
+      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
@@ -96,6 +101,7 @@ jobs:
       imageResourcePrefix: 'packer$(Build.BuildId)u22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       retryCount: ${{ parameters.retryCount }}
+      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
@@ -107,6 +113,7 @@ jobs:
       imageResourcePrefix: 'packer$(Build.BuildId)w19'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       retryCount: ${{ parameters.retryCount }}
+      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
@@ -118,6 +125,7 @@ jobs:
       imageResourcePrefix: 'packer$(Build.BuildId)w22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       retryCount: ${{ parameters.retryCount }}
+      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
 - ${{ if parameters.destroy }}:

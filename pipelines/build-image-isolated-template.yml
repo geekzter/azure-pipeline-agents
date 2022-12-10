@@ -28,6 +28,10 @@ parameters:
   displayName: Build task retry count
   type: number
   default: 1
+- name: upgradeAzureCLI
+  displayName: Upgrade Azure CLI to latest version
+  type: boolean
+  default: false
 - name: waitForReplication
   displayName: Wait for image replication to finish
   type: boolean
@@ -96,6 +100,11 @@ jobs:
   steps:
   - checkout: self
   - checkout: runner-images
+
+  - ${{ if parameters.upgradeAzureCLI }}:
+  - pwsh: |
+      az upgrade --all --yes
+    displayName: 'Upgrade Azure CLI'
 
   - task: AzureCLI@2
     name: servicePrincipal

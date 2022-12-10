@@ -102,9 +102,9 @@ jobs:
   - checkout: runner-images
 
   - ${{ if parameters.upgradeAzureCLI }}:
-  - pwsh: |
-      az upgrade --all --yes
-    displayName: 'Upgrade Azure CLI'
+    - pwsh: |
+        az upgrade --all --yes
+      displayName: 'Upgrade Azure CLI'
 
   - task: AzureCLI@2
     name: servicePrincipal

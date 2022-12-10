@@ -123,8 +123,6 @@ jobs:
 - ${{ if parameters.destroy }}:
   - job: 'CleanUp'
     dependsOn:
-      - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu1804') }}:
-        - Ubuntu1804
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
         - Ubuntu2004
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:

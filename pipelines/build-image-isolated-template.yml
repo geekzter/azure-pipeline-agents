@@ -28,6 +28,10 @@ parameters:
   displayName: Build task retry count
   type: number
   default: 1
+- name: upgradeAzureCLI
+  displayName: Upgrade Azure CLI to latest version
+  type: boolean
+  default: false
 - name: waitForReplication
   displayName: Wait for image replication to finish
   type: boolean
@@ -90,12 +94,26 @@ jobs:
     value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
-  - name: 'retryCount' 
-    value: ${{ parameters.retryCount }}
 
   steps:
   - checkout: self
   - checkout: runner-images
+
+  - pwsh: |
+      $PSNativeCommandArgumentPassing = "Legacy"
+      $preInstalledAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
+      Write-Host "Azure CLI pre-installed version is '${preInstalledAzVersion}'"
+      if ($${{ parameters.upgradeAzureCLI }} -or ($preInstalledAzVersion -in (Get-Content $(agentRepository)/pipelines/azure-cli-versions-to-avoid.txt))) {
+        Write-Host "Upgrading Azure CLI version '${preInstalledAzVersion}' to latest..."
+        if ($IsLinux) {
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        } else {
+          az upgrade --yes
+        }
+        $installedAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
+        Write-Host "Upgraded Azure CLI version '${preInstalledAzVersion}' to '${installedAzVersion}'"
+      }
+    displayName: 'Upgrade Azure CLI'
 
   - task: AzureCLI@2
     name: servicePrincipal
@@ -249,6 +267,7 @@ jobs:
     displayName: 'Build image'
     # condition: false
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -288,7 +307,6 @@ jobs:
         }
       addSpnToEnvironment: true
       failOnStandardError: true
-      retryCountOnTaskFailure: $(retryCount)
       workingDirectory: $(imageTemplateDirectory)
     env:
       PACKER_LOG: 1
@@ -379,7 +397,7 @@ jobs:
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
+                                    --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_ID `
                                     --query id -o tsv | Set-Variable imageVersionId
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"

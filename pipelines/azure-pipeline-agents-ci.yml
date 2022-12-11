@@ -37,6 +37,10 @@ parameters:
   - Never 
   - 'On failure'
   - 'On success'
+- name: retryCount
+  displayName: Terraform task retry count
+  type: number
+  default: 1
 - name: testReentrance
   displayName: Test Terraform re-entrance (apply twice)
   type: boolean
@@ -143,7 +147,7 @@ jobs:
       matrix:
         alternate:
           resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}b-$(Build.BuildId)'
-          terraformArtifactName: 'terraformAlternate'
+          terraformArtifactPrefix: 'terraformAlternate'
           substituteAlternateVariables: true
           TF_VAR_resource_suffix: '$(Build.BuildId)'
           TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
@@ -152,7 +156,7 @@ jobs:
           # variableGroup: 'pipeline-agents-ci'
         primary:
           resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}a-$(Build.BuildId)'
-          terraformArtifactName: 'terraformPrimary'
+          terraformArtifactPrefix: 'terraformPrimary'
           substituteAlternateVariables: false
           TF_VAR_resource_suffix: '$(Build.BuildId)'
           TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
@@ -165,7 +169,7 @@ jobs:
   # - group: '$(variableGroup)'
     ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
       # Not running as strategy
-      terraformArtifactName: 'terraformPrimary'
+      terraformArtifactPrefix: 'terraformPrimary'
       TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
       ${{ if parameters.clear }}:  # Don't reset suffix if we want to keep existing resources
         TF_VAR_resource_suffix: '$(Build.BuildId)'
@@ -228,7 +232,7 @@ jobs:
 
     - publish: $(terraformDirectory)
       displayName: 'Publish Terraform workspace'
-      artifact: $(terraformArtifactName)
+      artifact: $(terraformArtifactPrefix)$(System.PlanId)
 
     - ${{ if eq(parameters.clear, true) }}:
       - task: AzureCLI@2
@@ -362,6 +366,7 @@ jobs:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply (deploy_firewall:$(TF_VAR_deploy_firewall))'
       name: apply
+      retryCountOnTaskFailure: ${{ parameters.retryCount }}
       inputs:
         azureSubscription: '$(subscriptionConnection)'
         scriptType: pscore
@@ -372,7 +377,6 @@ jobs:
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true
-        retryCountOnTaskFailure: 3
         workingDirectory: '$(scriptDirectory)'
 
     - ${{ if parameters.deploy }}:
@@ -407,6 +411,7 @@ jobs:
     - ${{ if parameters.testReentrance }}:
       - task: AzureCLI@2
         displayName: 'Terraform plan & apply (re-entrance test)'
+        retryCountOnTaskFailure: ${{ parameters.retryCount }}
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: pscore
@@ -420,7 +425,6 @@ jobs:
           addSpnToEnvironment: true
           useGlobalConfig: true
           failOnStandardError: true
-          retryCountOnTaskFailure: 3
           workingDirectory: '$(scriptDirectory)'
           
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
@@ -440,13 +444,13 @@ jobs:
         ${{ if eq(parameters.destroy, 'On success') }}:
           condition: succeeded()
         continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
+        retryCountOnTaskFailure: ${{ parameters.retryCount }}
         inputs:
           command: 'destroy'
           workingDirectory: '$(terraformDirectory)'
           environmentServiceName: '$(subscriptionConnection)'
           runAzLogin: true
           allowTelemetryCollection: true
-          retryCountOnTaskFailure: 3
 
     - ${{ if ne(parameters.destroy, 'Never') }}:
       - task: AzureCLI@2

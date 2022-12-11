@@ -40,6 +40,8 @@ jobs:
   timeoutInMinutes: 360
 
   variables:
+  - name: 'agentRepository'
+    value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: AZURE_CORE_ONLY_SHOW_ERRORS
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
@@ -98,6 +100,22 @@ jobs:
       }
     name: variableValidation
     displayName: 'Validate variables'
+
+  - pwsh: |
+      $PSNativeCommandArgumentPassing = "Legacy"
+      $preInstalledAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
+      Write-Host "Azure CLI pre-installed version is '${preInstalledAzVersion}'"
+      if ($preInstalledAzVersion -in (Get-Content $(agentRepository)/pipelines/azure-cli-versions-to-avoid.txt)) {
+        Write-Host "Upgrading Azure CLI version '${preInstalledAzVersion}' to latest..."
+        if ($IsLinux) {
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        } else {
+          az upgrade --yes
+        }
+        $installedAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
+        Write-Host "Upgraded Azure CLI version '${preInstalledAzVersion}' to '${installedAzVersion}'"
+      }
+    displayName: 'Upgrade Azure CLI'
 
   - task: AzureCLI@2
     name: githubRelease
@@ -209,6 +227,7 @@ jobs:
         if ($vhdPath) {
           $vhdUrl = "${vhdBaseUrl}/${vhdPath}"
           Write-Host "vhdUrl: $vhdUrl"
+          Write-Host "##vso[task.setvariable variable=storageAccountId;isoutput=true]$($storageAccount.id)"
           Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
           Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
         } else {
@@ -261,7 +280,7 @@ jobs:
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $(vhd.storageAccountName) `
+                                    --os-vhd-storage-account $(vhd.storageAccountId) `
                                     --query id -o tsv | Set-Variable imageVersionId
 
           # BUG: https://github.com/Azure/azure-cli/issues/23194

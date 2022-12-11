@@ -75,7 +75,6 @@ jobs:
         ./deploy.ps1 -apply -force
       addSpnToEnvironment: true
       failOnStandardError: true
-      retryCountOnTaskFailure: 3
       workingDirectory: '$(scriptDirectory)'
     env: # Maintain casing of Terraform variable names
       TF_VAR_application_name: $(TF_VAR_application_name)
@@ -104,7 +103,6 @@ jobs:
         ./deploy.ps1 -destroy -force
       addSpnToEnvironment: true
       failOnStandardError: true
-      retryCountOnTaskFailure: 3
       workingDirectory: '$(scriptDirectory)'
     env: # Maintain casing of Terraform variable names
       TF_VAR_application_name: $(TF_VAR_application_name)

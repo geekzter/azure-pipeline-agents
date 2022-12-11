@@ -37,6 +37,10 @@ parameters:
   - Never 
   - 'On failure'
   - 'On success'
+- name: retryCount
+  displayName: Terraform task retry count
+  type: number
+  default: 1
 - name: testReentrance
   displayName: Test Terraform re-entrance (apply twice)
   type: boolean
@@ -362,7 +366,7 @@ jobs:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply (deploy_firewall:$(TF_VAR_deploy_firewall))'
       name: apply
-      retryCountOnTaskFailure: 3
+      retryCountOnTaskFailure: ${{ parameters.retryCount }}
       inputs:
         azureSubscription: '$(subscriptionConnection)'
         scriptType: pscore
@@ -407,7 +411,7 @@ jobs:
     - ${{ if parameters.testReentrance }}:
       - task: AzureCLI@2
         displayName: 'Terraform plan & apply (re-entrance test)'
-        retryCountOnTaskFailure: 3
+        retryCountOnTaskFailure: ${{ parameters.retryCount }}
         inputs:
           azureSubscription: '$(subscriptionConnection)'
           scriptType: pscore
@@ -440,7 +444,7 @@ jobs:
         ${{ if eq(parameters.destroy, 'On success') }}:
           condition: succeeded()
         continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
-        retryCountOnTaskFailure: 3
+        retryCountOnTaskFailure: ${{ parameters.retryCount }}
         inputs:
           command: 'destroy'
           workingDirectory: '$(terraformDirectory)'

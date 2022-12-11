@@ -94,8 +94,6 @@ jobs:
     value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
-  - name: 'retryCount' 
-    value: ${{ parameters.retryCount }}
 
   steps:
   - checkout: self
@@ -268,7 +266,7 @@ jobs:
     displayName: 'Build image'
     # condition: false
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
-    retryCountOnTaskFailure: $(retryCount)
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore

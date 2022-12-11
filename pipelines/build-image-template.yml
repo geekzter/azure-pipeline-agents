@@ -104,6 +104,7 @@ jobs:
   - pwsh: |
       $PSNativeCommandArgumentPassing = "Legacy"
       $preInstalledAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
+      Write-Host "Azure CLI pre-installed version is '${preInstalledAzVersion}'"
       if ($preInstalledAzVersion -in (Get-Content $(agentRepository)/pipelines/azure-cli-versions-to-avoid.txt)) {
         Write-Host "Upgrading Azure CLI version '${preInstalledAzVersion}' to latest..."
         if ($IsLinux) {
@@ -112,7 +113,7 @@ jobs:
           az upgrade --yes
         }
         $installedAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
-        Write-Host "Upgrading Azure CLI version '${preInstalledAzVersion}' to '${installedAzVersion}'"
+        Write-Host "Upgraded Azure CLI version '${preInstalledAzVersion}' to '${installedAzVersion}'"
       }
     displayName: 'Upgrade Azure CLI'
 

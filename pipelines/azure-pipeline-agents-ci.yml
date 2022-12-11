@@ -143,7 +143,7 @@ jobs:
       matrix:
         alternate:
           resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}b-$(Build.BuildId)'
-          terraformArtifactName: 'terraformAlternate'
+          terraformArtifactPrefix: 'terraformAlternate'
           substituteAlternateVariables: true
           TF_VAR_resource_suffix: '$(Build.BuildId)'
           TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
@@ -152,7 +152,7 @@ jobs:
           # variableGroup: 'pipeline-agents-ci'
         primary:
           resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}a-$(Build.BuildId)'
-          terraformArtifactName: 'terraformPrimary'
+          terraformArtifactPrefix: 'terraformPrimary'
           substituteAlternateVariables: false
           TF_VAR_resource_suffix: '$(Build.BuildId)'
           TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
@@ -165,7 +165,7 @@ jobs:
   # - group: '$(variableGroup)'
     ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
       # Not running as strategy
-      terraformArtifactName: 'terraformPrimary'
+      terraformArtifactPrefix: 'terraformPrimary'
       TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
       ${{ if parameters.clear }}:  # Don't reset suffix if we want to keep existing resources
         TF_VAR_resource_suffix: '$(Build.BuildId)'
@@ -228,7 +228,7 @@ jobs:
 
     - publish: $(terraformDirectory)
       displayName: 'Publish Terraform workspace'
-      artifact: $(terraformArtifactName)
+      artifact: $(terraformArtifactPrefix)$(System.PlanId)
 
     - ${{ if eq(parameters.clear, true) }}:
       - task: AzureCLI@2

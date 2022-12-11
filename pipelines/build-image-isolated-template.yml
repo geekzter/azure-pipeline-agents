@@ -102,12 +102,17 @@ jobs:
   - checkout: runner-images
 
   - pwsh: |
-      if (${{ parameters.upgradeAzureCLI }} -or ($(az version --query '"azure-cli"' -o tsv) -replace "\.\d+$","") -in $(Get-Content $(agentRepository)/pipelines/azure-cli-versions-to-avoid.txt)))
+      $PSNativeCommandArgumentPassing = "Legacy"
+      $preInstalledAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
+      if (${{ parameters.upgradeAzureCLI }} -or ($preInstalledAzVersion -in (Get-Content $(agentRepository)/pipelines/azure-cli-versions-to-avoid.txt))) {
+        Write-Host "Upgrading Azure CLI version '${preInstalledAzVersion}' to latest..."
         if ($IsLinux) {
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
         } else {
           az upgrade --yes
         }
+        $installedAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
+        Write-Host "Upgrading Azure CLI version '${preInstalledAzVersion}' to '${installedAzVersion}'"
       }
     displayName: 'Upgrade Azure CLI'
 

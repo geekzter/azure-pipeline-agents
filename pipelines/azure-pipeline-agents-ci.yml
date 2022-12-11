@@ -159,7 +159,7 @@ jobs:
           TF_WORKSPACE: '${{ parameters.workspace }}a'
           unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
           # variableGroup: 'pipeline-agents-ci'
-      maxParallel: 2
+      maxParallel: 1
 
   variables:
   # - group: '$(variableGroup)'

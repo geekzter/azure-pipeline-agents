@@ -188,10 +188,9 @@ jobs:
     name: '$(pool)'
     vmImage: $(vmImage)
 
-  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual')) }}:
-    strategy:
-      matrix: $[ dependencies.createStrategy.outputs['pwsh.strategy'] ]
-      maxParallel: 1
+  strategy:
+    matrix: $[ dependencies.createStrategy.outputs['pwsh.strategy'] ]
+    maxParallel: 1
 
   workspace:
     clean: all

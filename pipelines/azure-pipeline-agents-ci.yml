@@ -165,6 +165,7 @@ jobs:
     displayName: 'Create strategy'
 
 - job: 'Provision'
+  dependsOn: createStrategy
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
   ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:

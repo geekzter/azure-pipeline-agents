@@ -118,7 +118,57 @@ variables:
   value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
 
 jobs:
+- job: createStrategy
+  displayName: Create strategy
+  pool:
+    name: Azure Pipelines
+  steps:
+  - pwsh: |
+      $strategyHash = @{}
+      if ($${{ not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}) {
+        $strategyHash.Add("primary",
+          @{
+            resourceGroup = '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}-$(Build.BuildId)'
+            terraformArtifactPrefix = 'terraformPrimary'
+            substituteAlternateVariables = $false
+            TF_VAR_deploy_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+            TF_VAR_resource_suffix = '$(Build.BuildId)'
+            TF_WORKSPACE = '${{ parameters.workspace }}'
+            unpinTerraformProviders = $${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
+          }
+        )
+      } else {
+        $strategyHash.Add("primary",
+          @{
+            resourceGroup = '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}a-$(Build.BuildId)'
+            terraformArtifactPrefix = 'terraformPrimary'
+            substituteAlternateVariables = $false
+            TF_VAR_deploy_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+            TF_VAR_resource_suffix = '$(Build.BuildId)'
+            TF_WORKSPACE = '${{ parameters.workspace }}a'
+            unpinTerraformProviders = $${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
+          }
+        )
+        $strategyHash.Add("alternate",
+          @{
+            resourceGroup = '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}b-$(Build.BuildId)'
+            terraformArtifactPrefix = 'terraformAlternate'
+            substituteAlternateVariables = $true
+            TF_VAR_deploy_firewall = $${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
+            TF_VAR_resource_suffix = '$(Build.BuildId)'
+            TF_WORKSPACE = '${{ parameters.workspace }}b'
+            unpinTerraformProviders = $${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
+          }
+        )
+      }
+      $strategyHash | ConvertTo-Json
+      $strategyHash | ConvertTo-Json -Compress | Set-Variable strategyJson
+      Write-Host "##vso[task.setvariable variable=strategy;isOutput=true]${strategyJson}"
+    name: pwsh
+    displayName: 'Create strategy'
+
 - job: 'Provision'
+  dependsOn: createStrategy
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
   ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
@@ -142,40 +192,9 @@ jobs:
     name: '$(pool)'
     vmImage: $(vmImage)
 
-  ${{ if or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual')) }}:
-    strategy:
-      matrix:
-        alternate:
-          resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}b-$(Build.BuildId)'
-          terraformArtifactPrefix: 'terraformAlternate'
-          substituteAlternateVariables: true
-          TF_VAR_resource_suffix: '$(Build.BuildId)'
-          TF_VAR_deploy_firewall: ${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
-          TF_WORKSPACE: '${{ parameters.workspace }}b'
-          unpinTerraformProviders: ${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
-          # variableGroup: 'pipeline-agents-ci'
-        primary:
-          resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}a-$(Build.BuildId)'
-          terraformArtifactPrefix: 'terraformPrimary'
-          substituteAlternateVariables: false
-          TF_VAR_resource_suffix: '$(Build.BuildId)'
-          TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
-          TF_WORKSPACE: '${{ parameters.workspace }}a'
-          unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
-          # variableGroup: 'pipeline-agents-ci'
-      maxParallel: 1
-
-  variables:
-  # - group: '$(variableGroup)'
-    ${{ if not(or(eq(parameters.unpinTerraformProviders, 'Strategy'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}:
-      # Not running as strategy
-      terraformArtifactPrefix: 'terraformPrimary'
-      TF_VAR_deploy_firewall: ${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
-      ${{ if parameters.clear }}:  # Don't reset suffix if we want to keep existing resources
-        TF_VAR_resource_suffix: '$(Build.BuildId)'
-      TF_WORKSPACE: '${{ parameters.workspace }}'
-      unpinTerraformProviders: ${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
-      resourceGroup: '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}-$(Build.BuildId)'
+  strategy:
+    matrix: $[ dependencies.createStrategy.outputs['pwsh.strategy'] ]
+    maxParallel: 1
 
   workspace:
     clean: all

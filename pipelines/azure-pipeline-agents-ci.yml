@@ -161,6 +161,8 @@ jobs:
           }
         )
       }
+      $strategyHash | Format-Table
+      $strategyHash | ForEach-Object {[PSCustomObject]$_} | Format-Table
       $strategyHash | ConvertTo-Json
       $strategyHash | ConvertTo-Json -Compress | Set-Variable strategyJson
       Write-Host "##vso[task.setvariable variable=strategy;isOutput=true]${strategyJson}"

@@ -26,25 +26,22 @@ resource azurerm_monitor_diagnostic_setting nat_egress {
   target_resource_id           = azurerm_public_ip.nat_egress.0.id
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
 
-  log {
+  enabled_log {
     category                   = "DDoSProtectionNotifications"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false
     }
   }
-  log {
+  enabled_log {
     category                   = "DDoSMitigationFlowLogs"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false
     }
   }
-  log {
+  enabled_log {
     category                   = "DDoSMitigationReports"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false

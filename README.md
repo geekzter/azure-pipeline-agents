@@ -1,6 +1,9 @@
 # Azure Pipeline Agents for Private Network Connectivity
 
-[![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/azure-pipeline-agents-ci?branchName=master)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=135&branchName=master)
+[![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/azure-pipeline-agents-ci?branchName=master&label=terraform-ci)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=135&branchName=master)
+[![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/vm/azure-pipeline-agents-ci-simple?branchName=master&label=terraform-ci-simple)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=140&branchName=master)
+[![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/vm/build-vm-images?repoName=geekzter%2Fazure-pipeline-agents&branchName=master&label=build-vm-images-hosted)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=134&repoName=geekzter%2Fazure-pipeline-agents&branchName=master)
+[![Build Status](https://dev.azure.com/ericvan/PipelineAgents/_apis/build/status/vm/build-vm-images-isolated?repoName=geekzter%2Fazure-pipeline-agents&branchName=master&label=build-vm-images-self-hosted)](https://dev.azure.com/ericvan/PipelineAgents/_build/latest?definitionId=138&repoName=geekzter%2Fazure-pipeline-agents&branchName=master)
 
 Azure Pipelines includes [Microsoft-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml) as a managed service. If you can use these agents I recommend you do so as they provide the best managed experience.
 

@@ -3,7 +3,8 @@ param (
     [parameter(Mandatory=$false)][string]$FilesShareUrl,
     [parameter(Mandatory=$false)][string]$LocalPath,
     [parameter(Mandatory=$false)][switch]$Purge,
-    [parameter(Mandatory=$false)][string]$Workspace=($env:TF_WORKSPACE ?? "default")
+    [parameter(Mandatory=$false)][string]$Workspace=($env:TF_WORKSPACE ?? "default"),
+    [parameter(Mandatory=$false)][ValidateNotNull()][int]$MaxMegabitsPerSecond=4
 ) 
 . (Join-Path $PSScriptRoot functions.ps1)
 function Create-SasToken (
@@ -61,7 +62,9 @@ AzLogin -DisplayMessages
 # Process parameters
 $terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")
 Push-Location $terraformDirectory
-terraform workspace select $Workspace
+if (!$env:TF_WORKSPACE) {
+    terraform workspace select $Workspace
+}
 if (!$FilesShareUrl) {
     $FilesShareUrl = (Get-TerraformOutput agent_diagnostics_file_share_url)
 }
@@ -93,6 +96,7 @@ if (!(Test-Path $LocalPath)) {
 }
 azcopy copy "${sourceUrlWithToken}" `
             $LocalPath `
+            --cap-mbps $MaxMegabitsPerSecond `
             --overwrite false `
             --recursive
 

@@ -21,9 +21,8 @@ resource azurerm_monitor_diagnostic_setting pipeline_network {
   target_resource_id           = azurerm_virtual_network.pipeline_network.id
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
 
-  log {
+  enabled_log {
     category                   = "VMProtectionAlerts"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false

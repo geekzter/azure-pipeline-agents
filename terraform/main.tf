@@ -252,9 +252,8 @@ resource azurerm_monitor_diagnostic_setting key_vault {
   target_resource_id           = azurerm_key_vault.vault.id
   log_analytics_workspace_id   = local.log_analytics_workspace_id
 
-  log {
+  enabled_log {
     category                   = "AuditEvent"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false

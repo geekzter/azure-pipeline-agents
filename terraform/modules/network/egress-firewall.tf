@@ -998,27 +998,24 @@ resource azurerm_monitor_diagnostic_setting firewall_ip_logs {
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
   storage_account_id           = var.diagnostics_storage_id
 
-  log {
+  enabled_log {
     category                   = "DDoSProtectionNotifications"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false
     }
   }
 
-  log {
+  enabled_log {
     category                   = "DDoSMitigationFlowLogs"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false
     }
   }
 
-  log {
+  enabled_log {
     category                   = "DDoSMitigationReports"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false
@@ -1042,27 +1039,24 @@ resource azurerm_monitor_diagnostic_setting firewall_logs {
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
   storage_account_id           = var.diagnostics_storage_id
 
-  log {
+  enabled_log {
     category                   = "AzureFirewallDnsProxy"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false
     }
   }
 
-  log {
+  enabled_log {
     category                   = "AzureFirewallApplicationRule"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false
     }
   }
 
-  log {
+  enabled_log {
     category                   = "AzureFirewallNetworkRule"
-    enabled                    = true
 
     retention_policy {
       enabled                  = false

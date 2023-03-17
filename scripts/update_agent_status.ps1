@@ -64,6 +64,7 @@ if ($DebugPreference -ine "SilentlyContinue") {
 
 # Configure az cli for devops
 az extension add --name azure-devops --upgrade
+$Token | az devops login --organization $OrganizationUrl
 az devops configure --defaults organization="$OrganizationUrl"
 
 # Get identifiers using az devops cli

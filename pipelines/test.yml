@@ -142,20 +142,29 @@ jobs:
           $InformationPreference = "Continue"
           $VerbosePreference     = "Continue"
 
+          Invoke-RestMethod -Uri "https://login.microsoftonline.com/${env:tenantId}/oauth2/token" `
+                            -Method Post `
+                            -Body @{"grant_type"="client_credentials";
+                                    "client_id"="${env:servicePrincipalId}";
+                                    "client_secret"="${env:servicePrincipalKey}";
+                                    "resource"="499b84ac-1321-427f-aa17-267ca6975798"} `
+                            -Headers @{"Content-Type"="application/x-www-form-urlencoded"} `
+                            | Select-Object -ExpandProperty access_token `
+                            | Set-Variable aadToken
+          $env:AZURE_DEVOPS_EXT_PAT = $aadToken
+
+
           Write-Host "update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)"
           ./update_agent_status.ps1 -Enabled:$false `
                                     -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
                                     -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
-                                    -Token "$(System.AccessToken)"
+                                    -Token $aadToken
 
           Write-Host "update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)"
           ./update_agent_status.ps1 -Enabled:$false `
                                     -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
                                     -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
-                                    -Token "$(System.AccessToken)"
+                                    -Token $aadToken
         addSpnToEnvironment: true
         useGlobalConfig: true
         workingDirectory: '$(scriptDirectory)'
-      env:
-        # Use Pipeline token to access Azure DevOps
-        AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'

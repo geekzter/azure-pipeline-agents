@@ -137,15 +137,18 @@ jobs:
         scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
-            $DebugPreference       = "Continue"
-            $InformationPreference = "Continue"
-            $VerbosePreference     = "Continue"
-          }
+          Set-PSDebug -Trace 1
+          $DebugPreference       = "Continue"
+          $InformationPreference = "Continue"
+          $VerbosePreference     = "Continue"
+
+          Write-Host "update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)"
           ./update_agent_status.ps1 -Enabled:$false `
                                     -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
                                     -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
                                     -Token "$(System.AccessToken)"
+
+          Write-Host "update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)"
           ./update_agent_status.ps1 -Enabled:$false `
                                     -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
                                     -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `

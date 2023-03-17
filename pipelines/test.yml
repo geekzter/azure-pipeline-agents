@@ -1,25 +1,64 @@
+# This pipeline is for CI/CD
 parameters:
-- name: waitForReplication
-  displayName: Wait for image replication to finish
+- name: workspace
+  displayName: Pipeline Environment / Terraform Workspace prefix
+  type: string
+  default: ci
+  values:
+  - ci
+  - ci1
+  - ci2
+  - ci3
+  - cd1
+  - cd2
+  - cd3
+- name: clear
+  displayName: Clear State
+  type: boolean
+  default: false
+- name: egressDevice
+  displayName: Egress device
+  type: string
+  default: 'NAT Gateway'
+  values:
+  - Firewall
+  - 'NAT Gateway'
+  - Strategy
+- name: deploy
+  displayName: Deploy Agents
   type: boolean
   default: true
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: string
+  default: Always
+  values:
+  - Always
+  - Never 
+  - 'On failure'
+  - 'On success'
+- name: retryCount
+  displayName: Terraform task retry count
+  type: number
+  default: 1
+- name: testReentrance
+  displayName: Test Terraform re-entrance (apply twice)
+  type: boolean
+  default: true
+- name: unpinTerraform
+  displayName: Unpin Terraform version
+  type: boolean
+  default: false
+- name: unpinTerraformProviders
+  displayName: Unpin Terraform provider versions
+  type: string
+  default: No
+  values:
+  - No
+  - Yes
+  - Strategy
 
-name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-$(Build.BuildId)
-
-resources:
-  repositories:
-  - repository: runner-images
-    type: github
-    endpoint: github.com # Service Connection name
-    name: actions/runner-images
-    trigger:
-      branches:
-        include:
-        - main
-      paths:
-        include:
-        - 'images/linux/**'
-        - 'images/win/**'
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ parameters.workspace }}-$(Build.BuildId)
 
 trigger: none
 
@@ -28,6 +67,7 @@ pr:
   branches:
     include:
     - '*'
+  drafts: false
   paths:
     exclude:
     - '.devcontainer/**'  
@@ -35,22 +75,82 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 2 * * *'
-  displayName: 'Nightly build (UTC)'
-  always: 'true' # Run if there are no changes
+- cron: '0 0 * * Mon,Thu'
+  displayName: 'Bi-weekly build (UTC)'
+  # Run if there are no changes
+  always: 'true'
   branches:
     include:
     - master
 
 variables:
-  - group: 'build-images-isolated'
+- group: 'pipeline-agents-ci'
+- name: 'jobTimeOutMinutes'
+  value: 180
+- name: 'repository'
+  value: 'azure-pipeline-agents'
+- name: AZURE_CORE_ONLY_SHOW_ERRORS
+  value: 'true'
+- name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
+  value: 'yes_without_prompt'
+- name: 'substituteAlternateVariables'
+  value: 'false'
+- name: 'TF_IN_AUTOMATION'
+  value: 'true'
+- name: 'TF_INPUT'
+  value: 0
+- name: 'scriptDirectory'
+  value: '$(Build.SourcesDirectory)/scripts'
+- name: 'terraformDirectory'
+  value: '$(Build.SourcesDirectory)/terraform'
+- name: 'TF_VAR_linux_pipeline_agent_name_prefix'
+  value: 'ubuntu-agent'
+- name: 'TF_VAR_run_id'
+  value: '$(Build.BuildId)'
+- name: 'TF_VAR_ssh_private_key'
+  value: '$(Build.SourcesDirectory)/.ssh/id_rsa_ci'
+- name: 'TF_VAR_ssh_public_key'
+  value: '$(Build.SourcesDirectory)/.ssh/id_rsa_ci.pub'
+- name: 'TF_VAR_windows_pipeline_agent_name_prefix'
+  value: 'windows-agent'
+
+- name: 'resourceGroup' 
+  value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
 
 jobs:
-  - template: build-image-isolated-template.yml
-    parameters:
-      destroy: true
-      image: Ubuntu2004
-      imageReleaseName: ubuntu20
-      imageResourcePrefix: 'packer12850u20'
-      retryCount: 1
-      waitForReplication: ${{ parameters.waitForReplication }}
+- job: 'Provision'
+  pool:
+    name: '$(pool)'
+    vmImage: $(vmImage)
+
+  steps:
+    - task: AzureCLI@2
+      displayName: 'Disable Self-Hosted Agent(s)'
+      name: 'agentConfig'
+      condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
+      continueOnError: false
+      retryCountOnTaskFailure: 5
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+            $DebugPreference       = "Continue"
+            $InformationPreference = "Continue"
+            $VerbosePreference     = "Continue"
+          }
+          ./update_agent_status.ps1 -Enabled:$false `
+                                    -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
+                                    -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
+                                    -Token "$(System.AccessToken)"
+          ./update_agent_status.ps1 -Enabled:$false `
+                                    -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
+                                    -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
+                                    -Token "$(System.AccessToken)"
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        workingDirectory: '$(scriptDirectory)'
+      env:
+        # Use Pipeline token to access Azure DevOps
+        AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'

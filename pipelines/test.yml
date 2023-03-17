@@ -113,6 +113,8 @@ variables:
   value: '$(Build.SourcesDirectory)/.ssh/id_rsa_ci.pub'
 - name: 'TF_VAR_windows_pipeline_agent_name_prefix'
   value: 'windows-agent'
+- name: 'TF_WORKSPACE'
+  value: '${{ parameters.workspace }}'
 
 - name: 'resourceGroup' 
   value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'

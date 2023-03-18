@@ -11,6 +11,7 @@ param (
     [parameter(Mandatory=$false)][switch]$Enabled,
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI
 ) 
+Write-Verbose $MyInvocation.line 
 . (Join-Path $PSScriptRoot functions.ps1)
 
 function UpdateAgent(
@@ -41,9 +42,8 @@ function UpdateAgent(
     if ($DebugPreference -ine "SilentlyContinue") {
         Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Get | Write-Host -ForegroundColor Yellow 
     }
-    #Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
     $updateResponse = Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
-    Write-Information "Response status: $($updateResponse.StatusDescription)"
+    Write-Verbose "Response status: $($updateResponse.StatusDescription)"
     Write-Debug $updateResponse | Out-String
     $updateResponseContent = $updateResponse.Content | ConvertFrom-Json
     Write-Debug $updateResponseContent | Out-String
@@ -51,7 +51,8 @@ function UpdateAgent(
     return $updateResponseContent
 }
 
-Write-Host "DebugPreference: $DebugPreference"
+Write-Information "VerbosePreference: $VerbosePreference"
+Write-Verbose "DebugPreference: $DebugPreference"
 Write-Debug "AgentNamePrefix: '$AgentNamePrefix'"
 Write-Debug "AgentPoolName: '$AgentPoolName'"
 Write-Debug "Enabled: '$Enabled'"
@@ -89,7 +90,7 @@ foreach ($agentId in $agentIds) {
     }
     
     $initialEnabledStatus = $($agent.enabled)
-    Write-Information "Agent $($agent.name) ($agentId) enabled status before update is '$initialEnabledStatus'"
+    Write-Host "Agent $($agent.name) ($agentId) enabled status before update is '$initialEnabledStatus'"
 
     # Check whether current and desired status is different, otherwise skip update
     if ([System.Convert]::ToBoolean($initialEnabledStatus) -ne $Enabled) {
@@ -104,5 +105,5 @@ foreach ($agentId in $agentIds) {
     } else {
         $enabledStatus = $initialEnabledStatus
     }
-    Write-Information "Agent $($agent.name) ($agentId) enabled status after update is '$enabledStatus'"
+    Write-Host "Agent $($agent.name) ($agentId) enabled status after update is '$enabledStatus'"
 }

@@ -40,7 +40,7 @@ if (!(Get-Command terraform -ErrorAction SilentlyContinue)) {
     throw $tfMissingMessage
 }
 
-Write-Information $MyInvocation.line 
+Write-Verbose $MyInvocation.line 
 $script:ErrorActionPreference = "Stop"
 
 $workspace = Get-TerraformWorkspace

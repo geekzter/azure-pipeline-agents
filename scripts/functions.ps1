@@ -184,7 +184,7 @@ function Login-Az (
 }
 
 function Login-AzDO (
-    [parameter(Mandatory=$true)][string]$OrganizationUrl#=$env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI
+    [parameter(Mandatory=$true)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI
 )
 {
     $resource="499b84ac-1321-427f-aa17-267ca6975798"
@@ -195,7 +195,7 @@ function Login-AzDO (
                           -Body @{"grant_type"="client_credentials";
                                   "client_id"="${env:servicePrincipalId}";
                                   "client_secret"="${env:servicePrincipalKey}";
-                                  "resource"="499b84ac-1321-427f-aa17-267ca6975798"} `
+                                  "resource"="${resource}"} `
                           -Headers @{"Content-Type"="application/x-www-form-urlencoded"} `
                           | Select-Object -ExpandProperty access_token `
                           | Set-Variable aadToken
@@ -207,7 +207,7 @@ function Login-AzDO (
         if ($(az account show --query "user.type" -o tsv) -ine "user") {
             Write-Warning "Not logged into Azure ClI as a user, unable to get AAD token"
         } else {
-            az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 `
+            az account get-access-token --resource $resource `
                                         --query "accessToken" `
                                         --output tsv `
                                         | Set-Variable aadToken
@@ -232,13 +232,21 @@ function Login-AzDO (
 
 function New-ScaleSetPool(
     [parameter(Mandatory=$true)][string]$OrganizationUrl,
+
     [parameter(Mandatory=$true)][string]$OS,
+
     [parameter(Mandatory=$false)][string]$PoolName,
+
     [parameter(Mandatory=$false)][string]$RequestJson,
+
     [parameter(Mandatory=$false)][bool]$AuthorizeAllPipelines=$true,
     [parameter(Mandatory=$false)][bool]$AutoProvisionProjectPools=$true,
     [parameter(Mandatory=$false)][int]$ProjectId,
-    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
+
+    [parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
 )
 {
     "Creating scale set pool '$PoolName'..." | Write-Host

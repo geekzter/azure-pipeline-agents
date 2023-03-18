@@ -369,12 +369,10 @@ jobs:
             }
             ./update_agent_status.ps1 -Enabled:$false `
                                       -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
-                                      -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)- `
-                                      -Token "$(System.AccessToken)"
+                                      -AgentNamePrefix "$(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
             ./update_agent_status.ps1 -Enabled:$false `
                                       -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
-                                      -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)- `
-                                      -Token "$(System.AccessToken)"
+                                      -AgentNamePrefix "$(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
           addSpnToEnvironment: true
           useGlobalConfig: true
           workingDirectory: '$(scriptDirectory)'
@@ -411,18 +409,14 @@ jobs:
             }
             ./update_agent_status.ps1 -Enabled:$true `
                                       -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
-                                      -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)  `
-                                      -Token "$(System.AccessToken)"
+                                      -AgentNamePrefix "$(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
             ./update_agent_status.ps1 -Enabled:$true `
                                       -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
-                                      -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
-                                      -Token "$(System.AccessToken)"
+                                      -AgentNamePrefix "$(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+
           addSpnToEnvironment: true
           useGlobalConfig: true
-          workingDirectory: '$(scriptDirectory)'
-        env:
-          # Use Pipeline token to access Azure DevOps
-          AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'        
+          workingDirectory: '$(scriptDirectory)'      
 
     - ${{ if parameters.testReentrance }}:
       - task: AzureCLI@2

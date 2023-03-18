@@ -157,14 +157,12 @@ jobs:
           Write-Host "update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)"
           ./update_agent_status.ps1 -Enabled:$false `
                                     -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
-                                    -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
-                                    -Token $aadToken
+                                    -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)
 
           Write-Host "update_agent_status.ps1 -Enabled:$false -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)"
           ./update_agent_status.ps1 -Enabled:$false `
                                     -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
-                                    -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
-                                    -Token $aadToken
+                                    -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)
         addSpnToEnvironment: true
         useGlobalConfig: true
         workingDirectory: '$(scriptDirectory)'

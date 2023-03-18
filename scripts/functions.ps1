@@ -3,7 +3,10 @@
 $apiVersion="7.1-preview.1"
 
 function Create-RequestHeaders(
-    [parameter(Mandatory=$true)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
+    [parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
 )
 {
     $base64AuthInfo = [Convert]::ToBase64String([System.Text.ASCIIEncoding]::ASCII.GetBytes(":${Token}"))
@@ -20,7 +23,13 @@ function Create-RequestHeaders(
 
 function Get-Pool(
     [parameter(Mandatory=$true)][string]$OrganizationUrl,
-    [parameter(Mandatory=$true)][int[]]$PoolId
+
+    [parameter(Mandatory=$true)][int[]]$PoolId,
+
+    [parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
 )
 {
     $poolIdString = ($PoolId -join ",")
@@ -74,7 +83,11 @@ function Get-TerraformWorkspace () {
 
 function Get-ScaleSetPools(
     [parameter(Mandatory=$true)][string]$OrganizationUrl,
-    [parameter(Mandatory=$true)][string]$Token
+
+    [parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
 )
 {
     $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?api-version=${apiVersion}"
@@ -224,7 +237,8 @@ function New-ScaleSetPool(
     [parameter(Mandatory=$false)][string]$RequestJson,
     [parameter(Mandatory=$false)][bool]$AuthorizeAllPipelines=$true,
     [parameter(Mandatory=$false)][bool]$AutoProvisionProjectPools=$true,
-    [parameter(Mandatory=$false)][int]$ProjectId
+    [parameter(Mandatory=$false)][int]$ProjectId,
+    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
 )
 {
     "Creating scale set pool '$PoolName'..." | Write-Host

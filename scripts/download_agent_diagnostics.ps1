@@ -57,7 +57,7 @@ function Parse-StorageAccountName (
     return $storageAccountName
 }
 
-AzLogin -DisplayMessages
+Login-Az -DisplayMessages
 
 # Process parameters
 $terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")

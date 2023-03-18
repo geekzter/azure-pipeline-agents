@@ -9,14 +9,16 @@ param (
     [parameter(Mandatory=$true)][string]$AgentNamePrefix,
     [parameter(Mandatory=$true)][string]$AgentPoolName,
     [parameter(Mandatory=$false)][switch]$Enabled,
-    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI,
-    [parameter(Mandatory=$false)][string]$Token=$env:SYSTEM_ACCESSTOKEN
+    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI
 ) 
+Write-Verbose $MyInvocation.line 
+. (Join-Path $PSScriptRoot functions.ps1)
 
 function UpdateAgent(
     [parameter(Mandatory=$true)][int]$AgentId,
     [parameter(Mandatory=$true)][int]$AgentPoolId,
-    [parameter(Mandatory=$true)][hashtable]$Settings
+    [parameter(Mandatory=$true)][hashtable]$Settings,
+    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
 )
 {
     # az devops cli does not (yet) allow updates, so using the REST API
@@ -40,9 +42,8 @@ function UpdateAgent(
     if ($DebugPreference -ine "SilentlyContinue") {
         Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Get | Write-Host -ForegroundColor Yellow 
     }
-    #Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
     $updateResponse = Invoke-WebRequest -Uri $apiUrl -Headers $requestHeaders -Body $requestBody -Method Patch
-    Write-Information "Response status: $($updateResponse.StatusDescription)"
+    Write-Verbose "Response status: $($updateResponse.StatusDescription)"
     Write-Debug $updateResponse | Out-String
     $updateResponseContent = $updateResponse.Content | ConvertFrom-Json
     Write-Debug $updateResponseContent | Out-String
@@ -50,21 +51,19 @@ function UpdateAgent(
     return $updateResponseContent
 }
 
-Write-Host "DebugPreference: $DebugPreference"
+Write-Information "VerbosePreference: $VerbosePreference"
+Write-Verbose "DebugPreference: $DebugPreference"
 Write-Debug "AgentNamePrefix: '$AgentNamePrefix'"
 Write-Debug "AgentPoolName: '$AgentPoolName'"
 Write-Debug "Enabled: '$Enabled'"
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
-Write-Debug "Token: '$Token'"
 
 # List environment variables (debug)
 if ($DebugPreference -ine "SilentlyContinue") {
     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_*,SYSTEM_* | Sort-Object -Property Name | Out-String | Write-Host -ForegroundColor Yellow 
 }
 
-# Configure az cli for devops
-az extension add --name azure-devops 
-az devops configure --defaults organization="$OrganizationUrl"
+Login-AzDO -OrganizationUrl $OrganizationUrl
 
 # Get identifiers using az devops cli
 $agentPoolId = $(az pipelines pool list --query="[?name=='$AgentPoolName'].id | [0]")
@@ -91,7 +90,7 @@ foreach ($agentId in $agentIds) {
     }
     
     $initialEnabledStatus = $($agent.enabled)
-    Write-Information "Agent $($agent.name) ($agentId) enabled status before update is '$initialEnabledStatus'"
+    Write-Host "Agent $($agent.name) ($agentId) enabled status before update is '$initialEnabledStatus'"
 
     # Check whether current and desired status is different, otherwise skip update
     if ([System.Convert]::ToBoolean($initialEnabledStatus) -ne $Enabled) {
@@ -106,5 +105,5 @@ foreach ($agentId in $agentIds) {
     } else {
         $enabledStatus = $initialEnabledStatus
     }
-    Write-Information "Agent $($agent.name) ($agentId) enabled status after update is '$enabledStatus'"
+    Write-Host "Agent $($agent.name) ($agentId) enabled status after update is '$enabledStatus'"
 }

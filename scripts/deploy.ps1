@@ -40,7 +40,7 @@ if (!(Get-Command terraform -ErrorAction SilentlyContinue)) {
     throw $tfMissingMessage
 }
 
-Write-Information $MyInvocation.line 
+Write-Verbose $MyInvocation.line 
 $script:ErrorActionPreference = "Stop"
 
 $workspace = Get-TerraformWorkspace
@@ -117,7 +117,7 @@ try {
     }
 
     if ($Plan -or $Apply -or $Destroy) {
-        AzLogin -DisplayMessages
+        Login-Az -DisplayMessages
 
         # FIX: Start VM's to prevent https://github.com/terraform-providers/terraform-provider-azurerm/issues/8311
         $terraformDirectory = (Join-Path (Split-Path -parent -Path $PSScriptRoot) "terraform")

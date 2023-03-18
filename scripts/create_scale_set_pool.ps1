@@ -18,8 +18,7 @@ param (
     [parameter(Mandatory=$false)][string]$PoolName,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionName,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionProjectName,
-    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default",
-    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN
+    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default"
 ) 
 
 ### Internal Functions
@@ -31,10 +30,6 @@ if (!$OrganizationUrl) {
     exit 1
 }
 $OrganizationUrl = $OrganizationUrl -replace "/$","" # Strip trailing '/'
-if (!$Token) {
-    Write-Warning "No access token found. Please specify -Token or set the AZURE_DEVOPS_EXT_PAT or AZDO_PERSONAL_ACCESS_TOKEN environment variable."
-    exit 1
-}
 if (!$Workspace) {
     Write-Warning "Workspace is required. Please specify -OrganizationUrl or set the TF_WORKSPACE environment variable."
     exit 1
@@ -42,7 +37,7 @@ if (!$Workspace) {
 
 # Retrieve service connection GUID's
 if ($ServiceConnectionName -and $ServiceConnectionProjectName) {
-    $Token | az devops login --organization $OrganizationUrl
+    Login-AzDO -OrganizationUrl $OrganizationUrl
     az devops service-endpoint list --org $OrganizationUrl `
                                     --project $ServiceConnectionProjectName `
                                     --query "[?name=='$ServiceConnectionName']" `

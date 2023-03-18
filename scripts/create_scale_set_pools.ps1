@@ -16,8 +16,7 @@ param (
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionName,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionProjectName,
-    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default",
-    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN
+    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default"
 ) 
 
 $jsonDirectory = Join-Path (Split-Path $PSScriptRoot -Parent) data $Workspace
@@ -33,6 +32,5 @@ $jsonFiles | ForEach-Object {
                                                           -ServiceConnectionName $ServiceConnectionName `
                                                           -ServiceConnectionProjectName $ServiceConnectionProjectName `
                                                           -Workspace $Workspace `
-                                                          -Token $Token `
                                                           -OS $os
 }

@@ -9,14 +9,15 @@ param (
     [parameter(Mandatory=$true)][string]$AgentNamePrefix,
     [parameter(Mandatory=$true)][string]$AgentPoolName,
     [parameter(Mandatory=$false)][switch]$Enabled,
-    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI,
-    [parameter(Mandatory=$false)][string]$Token=$env:SYSTEM_ACCESSTOKEN
+    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI
 ) 
+. (Join-Path $PSScriptRoot functions.ps1)
 
 function UpdateAgent(
     [parameter(Mandatory=$true)][int]$AgentId,
     [parameter(Mandatory=$true)][int]$AgentPoolId,
-    [parameter(Mandatory=$true)][hashtable]$Settings
+    [parameter(Mandatory=$true)][hashtable]$Settings,
+    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
 )
 {
     # az devops cli does not (yet) allow updates, so using the REST API
@@ -55,17 +56,13 @@ Write-Debug "AgentNamePrefix: '$AgentNamePrefix'"
 Write-Debug "AgentPoolName: '$AgentPoolName'"
 Write-Debug "Enabled: '$Enabled'"
 Write-Debug "OrganizationUrl: '$OrganizationUrl'"
-Write-Debug "Token: '$Token'"
 
 # List environment variables (debug)
 if ($DebugPreference -ine "SilentlyContinue") {
     Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,TF_*,SYSTEM_* | Sort-Object -Property Name | Out-String | Write-Host -ForegroundColor Yellow 
 }
 
-# Configure az cli for devops
-az extension add --name azure-devops --upgrade
-$Token | az devops login --organization $OrganizationUrl
-az devops configure --defaults organization="$OrganizationUrl"
+Login-AzDO -OrganizationUrl $OrganizationUrl
 
 # Get identifiers using az devops cli
 $agentPoolId = $(az pipelines pool list --query="[?name=='$AgentPoolName'].id | [0]")

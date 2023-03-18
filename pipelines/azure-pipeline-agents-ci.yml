@@ -369,18 +369,15 @@ jobs:
             }
             ./update_agent_status.ps1 -Enabled:$false `
                                       -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
-                                      -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
+                                      -AgentNamePrefix $(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)- `
                                       -Token "$(System.AccessToken)"
             ./update_agent_status.ps1 -Enabled:$false `
                                       -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
-                                      -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE) `
+                                      -AgentNamePrefix $(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)- `
                                       -Token "$(System.AccessToken)"
           addSpnToEnvironment: true
           useGlobalConfig: true
           workingDirectory: '$(scriptDirectory)'
-        env:
-          # Use Pipeline token to access Azure DevOps
-          AZURE_DEVOPS_EXT_PAT: '$(System.AccessToken)'
 
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply (deploy_firewall:$(TF_VAR_deploy_firewall))'

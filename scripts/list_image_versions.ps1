@@ -2,7 +2,7 @@
 
 <# 
 .EXAMPLE
-    ./list_image_versions.ps1 -GalleryResourceGroupName Shared -GalleryName testgal -ImageDefinitionName Ubuntu1804
+    ./list_image_versions.ps1 -GalleryResourceGroupName Shared -GalleryName testgal -ImageDefinitionName Ubuntu2204
 #> 
 #Requires -Version 7
 

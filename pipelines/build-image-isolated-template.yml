@@ -3,7 +3,6 @@ parameters:
   displayName: Image
   type: string
   values:
-  - Ubuntu1804
   - Ubuntu2004
   - Ubuntu2204
   - Windows2019

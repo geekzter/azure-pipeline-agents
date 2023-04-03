@@ -2,9 +2,8 @@ parameters:
 - name: image
   displayName: Image
   type: string
-  default: Ubuntu1804
+  default: Ubuntu2004
   values:
-  - Ubuntu1804
   - Ubuntu2004
   - Ubuntu2204
   - Windows2019

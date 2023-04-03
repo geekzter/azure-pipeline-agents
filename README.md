@@ -139,7 +139,7 @@ Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and 
 |`deploy_self_hosted_vms`|Deploy Self-Hosted agent VMs.|
 |`deploy_self_hosted_vm_agents`|Deploy Self-Hosted agent VM extensions.|
 |`linux_tools`|Uses [cloud-init](https://cloudinit.readthedocs.io/) to instal tools (e.g. AzCopy, Packer, PowerShell, PowerShell Azure modules). Should not be used when using a pre-baked image.|
-|`linux_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Ubuntu1804/versions/latest|
+|`linux_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Ubuntu2204/versions/latest|
 |`log_analytics_workspace_id`|Providing a value of an existing Log Analytics workspace allows you to retain logs after infrastructure is destroyed.|
 |`windows_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Windows2022/versions/latest|
 

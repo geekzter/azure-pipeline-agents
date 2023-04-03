@@ -11,7 +11,6 @@ parameters:
   - Latest
   - Stable
   - Ubuntu
-  - Ubuntu1804
   - Ubuntu2004
   - Ubuntu2204
   - Windows

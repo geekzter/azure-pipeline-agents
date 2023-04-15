@@ -281,11 +281,10 @@ jobs:
         }
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
         Write-Host "`nCustom template parameters:"
-        $packerTemplateParametersToDisplay = $packerTemplateParameters
-        $packerTemplateParametersToDisplay['client_secret'] = '***'
-        $packerTemplateParametersToDisplay['install_password'] = '***'
-        $packerTemplateParametersToDisplay | Format-Table
-        $packerTemplateParametersToDisplay | ConvertTo-Json | Write-Host
+        $packerTemplateParameters['client_secret'] = '***'
+        $packerTemplateParameters['install_password'] = '***'
+        $packerTemplateParameters | Format-Table
+        $packerTemplateParameters | ConvertTo-Json | Write-Host
 
         Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"

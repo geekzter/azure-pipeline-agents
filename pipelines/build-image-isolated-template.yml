@@ -267,13 +267,13 @@ jobs:
         packer inspect $packerTemplateArgument
 
         # Create custom template parameters
-        $installPassword = [system.guid]::NewGuid().ToString().ToUpper()
+        $imageVMPassword = [system.guid]::NewGuid().ToString().ToUpper()
         $packerTemplateParameters = @{
           build_resource_group_name           = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
           capture_name_prefix                 = '$(imageResourcePrefix)'
           client_id                           = $env:servicePrincipalId
           client_secret                       = $env:servicePrincipalKey
-          install_password                    = $installPassword
+          install_password                    = $imageVMPassword
           resource_group                      = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME
           storage_account                     = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME
           subscription_id                     = $(az account show --query id -o tsv)
@@ -284,10 +284,10 @@ jobs:
         }
         Write-Host "`nCustom template parameters:"
         $packerTemplateParameters | Format-Table
-        ($packerTemplateParameters | ConvertTo-Json) -replace $installPassword, '***' | Write-Host
+        ($packerTemplateParameters | ConvertTo-Json) -replace $imageVMPassword, '***' -replace $env:servicePrincipalKey, '***' | Write-Host
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
 
-        Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
+        Write-Host "##vso[task.setvariable variable=packerTemplateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
 
   # - pwsh: |

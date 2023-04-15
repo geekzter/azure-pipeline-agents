@@ -351,6 +351,7 @@ jobs:
 
   - task: AzureCLI@2
     name: vhd
+    condition: and(succeeded(), ne(coalesce(variables['packerConfig.packerTemplateParametersJson'],'null'),'null'))
     displayName: 'Get VHD url'
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'

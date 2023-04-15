@@ -287,7 +287,6 @@ jobs:
         ($packerTemplateParameters | ConvertTo-Json) -replace $imageVMPassword, '***' -replace $env:servicePrincipalKey, '***' | Write-Host
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
 
-        Write-Host "##vso[task.setvariable variable=packerTemplateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
 
   # - pwsh: |
@@ -367,7 +366,7 @@ jobs:
     retryCountOnTaskFailure: ${{ parameters.retryCount }}
     inputs:
       templateType: 'custom'
-      customTemplateLocation: '$(packerConfig.packerTemplateArgument)'
+      customTemplateLocation: '$(imageTemplate)'
       customTemplateParameters: '$(packerConfig.packerTemplateParametersJson)'
       connectedServiceName: '$(packerSubscriptionConnection)'
       # isManagedImage: false

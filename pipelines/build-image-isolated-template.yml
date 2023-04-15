@@ -271,7 +271,7 @@ jobs:
           capture_name_prefix=$(imageResourcePrefix)
           client_id=${env:servicePrincipalId}
           client_secret=${env:servicePrincipalKey}
-          install_password=$([system.guid]::NewGuid().ToString().ToUpper()))
+          install_password=$([system.guid]::NewGuid().ToString().ToUpper())
           resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}
           storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}
           subscription_id=$(az account show --query id -o tsv)
@@ -282,8 +282,8 @@ jobs:
         }
         $packerTemplateParameters | ConvertTo-Json -Compress| Set-Variable packerTemplateParametersJson
 
-        Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
-        Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson
+        Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]${packerTemplateArgument}"
+        Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]${packerTemplateParametersJson}"
         failOnStandardError: true
 
   # - pwsh: |

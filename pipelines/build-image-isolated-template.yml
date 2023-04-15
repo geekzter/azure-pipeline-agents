@@ -268,7 +268,7 @@ jobs:
         # Create custom template parameters
         $packerTemplateParameters = @{
           build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}
-          capture_name_prefix=$(imageResourcePrefix)
+          capture_name_prefix='$(imageResourcePrefix)'
           client_id=${env:servicePrincipalId}
           client_secret=${env:servicePrincipalKey}
           install_password=$([system.guid]::NewGuid().ToString().ToUpper())
@@ -280,7 +280,9 @@ jobs:
           virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}
           virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}
         }
-        $packerTemplateParameters | ConvertTo-Json -Compress| Set-Variable packerTemplateParametersJson
+        Write-Host "`nCustom template parameters:"
+        $packerTemplateParameters | ConvertTo-Json
+        $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
 
         Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]${packerTemplateArgument}"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]${packerTemplateParametersJson}"

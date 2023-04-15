@@ -214,9 +214,9 @@ jobs:
     name: packerConfig
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
+    addSpnToEnvironment: true
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
-      addSpnToEnvironment: true
       failOnStandardError: true
       scriptType: pscore
       scriptLocation: inlineScript

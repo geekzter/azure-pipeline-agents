@@ -212,10 +212,8 @@ jobs:
 
   - task: AzureCLI@2
     name: packerConfig
-    addSpnToEnvironment: true
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
-    workingDirectory: $(imageTemplateDirectory)
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       addSpnToEnvironment: true

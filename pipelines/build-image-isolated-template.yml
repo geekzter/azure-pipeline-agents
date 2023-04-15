@@ -215,14 +215,10 @@ jobs:
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
     inputs:
-      azureSubscription: '$(gallerySubscriptionConnection)'
+      azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        if (!$env:servicePrincipalKey) {
-          throw "Service Principal Key not found in environment variables. Exiting..."
-        }
-
         $packerTemplateFileName = "$(imageTemplateFileName)"
 
         # Update template to override configuration not accessible as variables

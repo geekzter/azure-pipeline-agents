@@ -214,14 +214,15 @@ jobs:
     name: packerConfig
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
-    addSpnToEnvironment: true
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
-      failOnStandardError: true
       scriptType: pscore
       scriptLocation: inlineScript
-      workingDirectory: $(imageTemplateDirectory)
       inlineScript: |
+        if (!$env:servicePrincipalKey) {
+          throw "Service Principal Key not found in environment variables. Exiting..."
+        }
+
         $packerTemplateFileName = "$(imageTemplateFileName)"
 
         # Update template to override configuration not accessible as variables
@@ -288,6 +289,9 @@ jobs:
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
 
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
+      addSpnToEnvironment: true
+      failOnStandardError: true
+      workingDirectory: $(imageTemplateDirectory)
 
   # - pwsh: |
   #     $packerTemplateFileName = "$(imageTemplateFileName)"

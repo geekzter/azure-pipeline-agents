@@ -210,62 +210,102 @@ jobs:
         }
       failOnStandardError: true
 
-  - pwsh: |
-      $packerTemplateFileName = "$(imageTemplateFileName)"
-
-      # Update template to override configuration not accessible as variables
-      $azureTags = @{
-        application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
-        build = "$(Build.BuildId)"
-        commit = "$(git rev-parse HEAD)"
-        qualifiedVersion = "$(githubRelease.qualifiedVersion)"
-        image = "$(imageName)"
-        owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
-        pipeline = "$(Build.DefinitionName)"
-        shutdown = "false"
-        versionlabel = "$(githubRelease.version)"
-      }
-      if ($packerTemplateFileName -match "json") {
-        # This only works for JSON
-        Get-Content $packerTemplateFileName | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
-        $packerTemplate.builders[0]["azure_tags"] = $azureTags
-        Write-Host "`nTags that will be applied to build resources:"
-        $packerTemplate.builders[0]["azure_tags"] | Format-Table
-        Write-Host "`nPacker template:"
-        $packerTemplate | ConvertTo-Json -Depth 5
-        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
-        $packerTemplateArgument = $packerTemplateFileName
-      } else {
-        # HCL
-        $packerHCLVarsContent="azure_tag = {"
-        foreach ($key in $azureTags.Keys) {
-          $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
-        }
-        $packerHCLVarsContent+="`n}"
-        $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
-        $packerHCLVarsContent | Set-Content $packerHCLVarsFile
-        Get-Content $packerHCLVarsFile
-
-        $packerTemplateArgument = "."
-      }
-
-      # Remove HCL files from other image templates residing in the same directory
-      Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
-
-      # Test Packer configuration, listing variables
-      packer inspect $packerTemplateArgument
-
-      Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
+  - task: AzureCLI@2
+    name: packerConfig
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
-    name: packerConfig
-    workingDirectory: $(imageTemplateDirectory)
+    inputs:
+      azureSubscription: '$(packerSubscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $packerTemplateFileName = "$(imageTemplateFileName)"
+
+        # Update template to override configuration not accessible as variables
+        $azureTags = @{
+          application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
+          build = "$(Build.BuildId)"
+          commit = "$(git rev-parse HEAD)"
+          qualifiedVersion = "$(githubRelease.qualifiedVersion)"
+          image = "$(imageName)"
+          owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
+          pipeline = "$(Build.DefinitionName)"
+          shutdown = "false"
+          versionlabel = "$(githubRelease.version)"
+        }
+        if ($packerTemplateFileName -match "json") {
+          # This only works for JSON
+          Get-Content $packerTemplateFileName | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
+          $packerTemplate.builders[0]["azure_tags"] = $azureTags
+          Write-Host "`nTags that will be applied to build resources:"
+          $packerTemplate.builders[0]["azure_tags"] | Format-Table
+          Write-Host "`nPacker template:"
+          $packerTemplate | ConvertTo-Json -Depth 5
+          $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
+          $packerTemplateArgument = $packerTemplateFileName
+        } else {
+          # HCL
+          $packerHCLVarsContent="azure_tag = {"
+          foreach ($key in $azureTags.Keys) {
+            $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
+          }
+          $packerHCLVarsContent+="`n}"
+          $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
+          $packerHCLVarsContent | Set-Content $packerHCLVarsFile
+          Get-Content $packerHCLVarsFile
+
+          $packerTemplateArgument = "."
+        }
+
+        # Remove HCL files from other image templates residing in the same directory
+        Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
+
+        # Test Packer configuration, listing variables
+        packer inspect $packerTemplateArgument
+
+        # Create custom template parameters
+        $imageVMPassword = [system.guid]::NewGuid().ToString().ToUpper()
+        $packerTemplateParameters = @{
+          build_resource_group_name           = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
+          capture_name_prefix                 = '$(imageResourcePrefix)'
+          client_id                           = $env:servicePrincipalId
+          client_secret                       = $env:servicePrincipalKey
+          install_password                    = $imageVMPassword
+          resource_group                      = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME
+          storage_account                     = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME
+          subscription_id                     = $(az account show --query id -o tsv)
+          tenant_id                           = $env:tenantId
+          virtual_network_name                = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME
+          virtual_network_resource_group_name = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
+          virtual_network_subnet_name         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
+        }
+        $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
+        Write-Host "`nCustom template parameters:"
+        $packerTemplateParameters['client_secret'] = '***'
+        $packerTemplateParameters['install_password'] = '***'
+        $packerTemplateParameters | Format-Table
+        $packerTemplateParameters | ConvertTo-Json | Write-Host
+
+        Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
+        Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
+      addSpnToEnvironment: true
+      failOnStandardError: true
+      workingDirectory: $(imageTemplateDirectory)
+
+  # Does not support HCL files and therefore Ubuntu 22.04
+  - task: PackerBuild@1
+    displayName: 'Packer build (JSON)'
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'), endsWith(variables['imageTemplate'],'json'))
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
+    inputs:
+      templateType: 'custom'
+      customTemplateLocation: '$(imageTemplate)'
+      customTemplateParameters: '$(packerConfig.packerTemplateParametersJson)'
+      connectedServiceName: '$(packerSubscriptionConnection)'
 
   - task: AzureCLI@2
-    name: imageBuild
-    displayName: 'Build image'
-    # condition: false
-    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+    displayName: 'Packer build (HCL)'
+    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'), endsWith(variables['imageTemplate'],'hcl'))
     retryCountOnTaskFailure: ${{ parameters.retryCount }}
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
@@ -277,10 +317,7 @@ jobs:
         # https://github.com/actions/runner-images/discussions/4362
         # We assume main branch is the latest released version
 
-        # TODO: Use Managed Identity? Packer does not work with an User Assigned Managed Identity
-        # https://www.packer.io/plugins/builders/azure#azure-managed-identity
-        # System Assigned Managed Identity is shared amongst all pipelines running onm the same agent, regardless of Service Connection
-        # A System Assigned Managed Identity will have the superset of all privileges for all pipelines (opposite of 'least privilege')
+        # TODO: Secret-free authentication
 
         # Build
         packer build -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
@@ -302,6 +339,7 @@ jobs:
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$(git rev-parse HEAD)"
           Write-Host "##vso[task.setvariable variable=shortCommit;isoutput=true]$(git rev-parse --short HEAD)"
         } else {
+          Write-Host "##vso[task.logissue type=error]'packer build' exited with status $exitCode"
           throw "'packer build' exited with status $exitCode"
         }
       addSpnToEnvironment: true
@@ -313,8 +351,8 @@ jobs:
 
   - task: AzureCLI@2
     name: vhd
+    condition: and(succeeded(), ne(coalesce(variables['packerConfig.packerTemplateParametersJson'],'null'),'null'))
     displayName: 'Get VHD url'
-    condition: and(succeeded(), ne(coalesce(variables['imageBuild.commit'],'null'),'null'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
@@ -351,7 +389,6 @@ jobs:
           "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
           "build=$(Build.BuildId)",`
           "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
-          "commit=$(imageBuild.commit)",`
           "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
           "pipeline=$(Build.DefinitionName)",`
           "provisioner=azure-cli",`
@@ -459,7 +496,6 @@ jobs:
             "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
             "build=$(Build.BuildId)",`
             "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
-            "commit=$(imageBuild.commit)",`
             "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
             "pipeline=$(Build.DefinitionName)",`
             "provisioner=azure-cli",`

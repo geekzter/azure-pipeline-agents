@@ -279,13 +279,13 @@ jobs:
           virtual_network_resource_group_name = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
           virtual_network_subnet_name         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
         }
+        $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
         Write-Host "`nCustom template parameters:"
         $packerTemplateParametersToDisplay = $packerTemplateParameters
         $packerTemplateParametersToDisplay['client_secret'] = '***'
         $packerTemplateParametersToDisplay['install_password'] = '***'
         $packerTemplateParametersToDisplay | Format-Table
         $packerTemplateParametersToDisplay | ConvertTo-Json | Write-Host
-        $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
 
         Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"

@@ -287,6 +287,7 @@ jobs:
         $packerTemplateParametersToDisplay | ConvertTo-Json | Write-Host
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
 
+        Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
       addSpnToEnvironment: true
       failOnStandardError: true

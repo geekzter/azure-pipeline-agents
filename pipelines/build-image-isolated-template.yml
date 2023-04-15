@@ -210,77 +210,153 @@ jobs:
         }
       failOnStandardError: true
 
-  - pwsh: |
-      $packerTemplateFileName = "$(imageTemplateFileName)"
-
-      # Update template to override configuration not accessible as variables
-      $azureTags = @{
-        application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
-        build = "$(Build.BuildId)"
-        commit = "$(git rev-parse HEAD)"
-        qualifiedVersion = "$(githubRelease.qualifiedVersion)"
-        image = "$(imageName)"
-        owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
-        pipeline = "$(Build.DefinitionName)"
-        shutdown = "false"
-        versionlabel = "$(githubRelease.version)"
-      }
-      if ($packerTemplateFileName -match "json") {
-        # This only works for JSON
-        Get-Content $packerTemplateFileName | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
-        $packerTemplate.builders[0]["azure_tags"] = $azureTags
-        Write-Host "`nTags that will be applied to build resources:"
-        $packerTemplate.builders[0]["azure_tags"] | Format-Table
-        Write-Host "`nPacker template:"
-        $packerTemplate | ConvertTo-Json -Depth 5
-        $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
-        $packerTemplateArgument = $packerTemplateFileName
-      } else {
-        # HCL
-        $packerHCLVarsContent="azure_tag = {"
-        foreach ($key in $azureTags.Keys) {
-          $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
-        }
-        $packerHCLVarsContent+="`n}"
-        $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
-        $packerHCLVarsContent | Set-Content $packerHCLVarsFile
-        Get-Content $packerHCLVarsFile
-
-        $packerTemplateArgument = "."
-      }
-
-      # Remove HCL files from other image templates residing in the same directory
-      Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
-
-      # Test Packer configuration, listing variables
-      packer inspect $packerTemplateArgument
-
-      # Create custom template parameters
-      $packerTemplateParameters = @{
-        "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}"
-        "capture_name_prefix=$(imageResourcePrefix)"
-        "client_id=${env:servicePrincipalId}"
-        "client_secret=${env:servicePrincipalKey}"
-        "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))"
-        "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}"
-        "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}"
-        "subscription_id=$(az account show --query id -o tsv)"
-        "tenant_id=${env:tenantId}"
-        "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}"
-        "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}"
-        "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" 
-      }
-      $packerTemplateParameters | ConvertTo-Json -Compress| Set-Variable packerTemplateParametersJson
-
-      Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
-      Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson
-      Write-Host "##vso[task.setvariable variable=servicePrincipalId;isoutput=true;issecret=true]${env:servicePrincipalId}"
-      Write-Host "##vso[task.setvariable variable=servicePrincipalKey;isoutput=true;issecret=true]${env:servicePrincipalKey}"
+  - task: AzureCLI@2
+    name: packerConfig
     addSpnToEnvironment: true
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     displayName: 'Update Packer configuration'
-    name: packerConfig
     workingDirectory: $(imageTemplateDirectory)
+    inputs:
+      azureSubscription: '$(gallerySubscriptionConnection)'
+      addSpnToEnvironment: true
+      scriptType: pscore
+      scriptLocation: inlineScript
+      workingDirectory: $(imageTemplateDirectory)
+      inlineScript: |
+        $packerTemplateFileName = "$(imageTemplateFileName)"
+
+        # Update template to override configuration not accessible as variables
+        $azureTags = @{
+          application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
+          build = "$(Build.BuildId)"
+          commit = "$(git rev-parse HEAD)"
+          qualifiedVersion = "$(githubRelease.qualifiedVersion)"
+          image = "$(imageName)"
+          owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
+          pipeline = "$(Build.DefinitionName)"
+          shutdown = "false"
+          versionlabel = "$(githubRelease.version)"
+        }
+        if ($packerTemplateFileName -match "json") {
+          # This only works for JSON
+          Get-Content $packerTemplateFileName | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
+          $packerTemplate.builders[0]["azure_tags"] = $azureTags
+          Write-Host "`nTags that will be applied to build resources:"
+          $packerTemplate.builders[0]["azure_tags"] | Format-Table
+          Write-Host "`nPacker template:"
+          $packerTemplate | ConvertTo-Json -Depth 5
+          $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
+          $packerTemplateArgument = $packerTemplateFileName
+        } else {
+          # HCL
+          $packerHCLVarsContent="azure_tag = {"
+          foreach ($key in $azureTags.Keys) {
+            $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
+          }
+          $packerHCLVarsContent+="`n}"
+          $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
+          $packerHCLVarsContent | Set-Content $packerHCLVarsFile
+          Get-Content $packerHCLVarsFile
+
+          $packerTemplateArgument = "."
+        }
+
+        # Remove HCL files from other image templates residing in the same directory
+        Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
+
+        # Test Packer configuration, listing variables
+        packer inspect $packerTemplateArgument
+
+        # Create custom template parameters
+        $packerTemplateParameters = @{
+          "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}"
+          "capture_name_prefix=$(imageResourcePrefix)"
+          "client_id=${env:servicePrincipalId}"
+          "client_secret=${env:servicePrincipalKey}"
+          "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))"
+          "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}"
+          "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}"
+          "subscription_id=$(az account show --query id -o tsv)"
+          "tenant_id=${env:tenantId}"
+          "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}"
+          "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}"
+          "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" 
+        }
+        $packerTemplateParameters | ConvertTo-Json -Compress| Set-Variable packerTemplateParametersJson
+
+        Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
+        Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson
+        failOnStandardError: true
+
+  # - pwsh: |
+  #     $packerTemplateFileName = "$(imageTemplateFileName)"
+
+  #     # Update template to override configuration not accessible as variables
+  #     $azureTags = @{
+  #       application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
+  #       build = "$(Build.BuildId)"
+  #       commit = "$(git rev-parse HEAD)"
+  #       qualifiedVersion = "$(githubRelease.qualifiedVersion)"
+  #       image = "$(imageName)"
+  #       owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
+  #       pipeline = "$(Build.DefinitionName)"
+  #       shutdown = "false"
+  #       versionlabel = "$(githubRelease.version)"
+  #     }
+  #     if ($packerTemplateFileName -match "json") {
+  #       # This only works for JSON
+  #       Get-Content $packerTemplateFileName | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
+  #       $packerTemplate.builders[0]["azure_tags"] = $azureTags
+  #       Write-Host "`nTags that will be applied to build resources:"
+  #       $packerTemplate.builders[0]["azure_tags"] | Format-Table
+  #       Write-Host "`nPacker template:"
+  #       $packerTemplate | ConvertTo-Json -Depth 5
+  #       $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
+  #       $packerTemplateArgument = $packerTemplateFileName
+  #     } else {
+  #       # HCL
+  #       $packerHCLVarsContent="azure_tag = {"
+  #       foreach ($key in $azureTags.Keys) {
+  #         $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
+  #       }
+  #       $packerHCLVarsContent+="`n}"
+  #       $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
+  #       $packerHCLVarsContent | Set-Content $packerHCLVarsFile
+  #       Get-Content $packerHCLVarsFile
+
+  #       $packerTemplateArgument = "."
+  #     }
+
+  #     # Remove HCL files from other image templates residing in the same directory
+  #     Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
+
+  #     # Test Packer configuration, listing variables
+  #     packer inspect $packerTemplateArgument
+
+  #     # Create custom template parameters
+  #     $packerTemplateParameters = @{
+  #       "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}"
+  #       "capture_name_prefix=$(imageResourcePrefix)"
+  #       "client_id=${env:servicePrincipalId}"
+  #       "client_secret=${env:servicePrincipalKey}"
+  #       "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))"
+  #       "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}"
+  #       "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}"
+  #       "subscription_id=$(az account show --query id -o tsv)"
+  #       "tenant_id=${env:tenantId}"
+  #       "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}"
+  #       "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}"
+  #       "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" 
+  #     }
+  #     $packerTemplateParameters | ConvertTo-Json -Compress| Set-Variable packerTemplateParametersJson
+
+  #     Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
+  #     Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson
+  #   addSpnToEnvironment: true
+  #   condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+  #   displayName: 'Update Packer configuration'
+  #   name: packerConfig
+  #   workingDirectory: $(imageTemplateDirectory)
 
   - task: PackerBuild@1
     # name: imageBuild

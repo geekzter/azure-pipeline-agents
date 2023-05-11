@@ -16,7 +16,8 @@ param (
     [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionName,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionProjectName,
-    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default"
+    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default",
+    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
 ) 
 
 $jsonDirectory = Join-Path (Split-Path $PSScriptRoot -Parent) data $Workspace
@@ -31,6 +32,7 @@ $jsonFiles | ForEach-Object {
     . (Join-Path $PSScriptRoot create_scale_set_pool.ps1) -OrganizationUrl $OrganizationUrl `
                                                           -ServiceConnectionName $ServiceConnectionName `
                                                           -ServiceConnectionProjectName $ServiceConnectionProjectName `
+                                                          -Token $Token `
                                                           -Workspace $Workspace `
                                                           -OS $os
 }

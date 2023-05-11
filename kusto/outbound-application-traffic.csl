@@ -9,7 +9,7 @@ AzureDiagnostics
 | parse TempDetails with * "Deny." RuleCollection2b ". Proceeding with" Rule2b
 | parse RuleDetails with * "Rule Collection: " RuleCollection2a ". Rule:" Rule2a " (config:" ConfigurationString ")"
 | parse RuleDetails with Rule2c "."
-| where ipv4_is_match("192.168.0.128/21", SourceIP)
+// | where ipv4_is_match("192.168.0.128/21", SourceIP)
 | extend Action = coalesce(Action1,Action2,Action3,"Unknown"),
          Rule = coalesce(Rule2a,Rule2b,Rule1,Rule2c,"N/A"),
          RuleCollection = case(RuleCollection2b == "",case(RuleCollection2a == "","No rule matched",RuleCollection2a), RuleCollection2b),

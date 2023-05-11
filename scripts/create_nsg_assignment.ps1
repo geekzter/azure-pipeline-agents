@@ -13,7 +13,8 @@ $tries = 0
 while (($NsgId -ine $existingNsgId) -and ($tries -le $MaxTries)) {
     Start-Sleep -Seconds $WaitSeconds
     $tries++
-    az network vnet subnet update --ids ${SubnetId} --nsg ${NsgId} --query networkSecurityGroup.id -o tsv 2>&1 | Set-Variable existingNsgId
+    az resource wait --updated --ids ${SubnetId}
+    az network vnet subnet update --ids ${SubnetId} --nsg ${NsgId} 2>&1
     az resource wait --updated --ids ${SubnetId}
 }
 

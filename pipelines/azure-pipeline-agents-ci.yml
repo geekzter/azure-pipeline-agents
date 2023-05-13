@@ -361,7 +361,8 @@ jobs:
             }
           } 
           Write-Host "Contents of ci.auto.tfvars:"
-          Get-Content ci.auto.tfvars | Sort-Object        addSpnToEnvironment: true
+          Get-Content ci.auto.tfvars | Sort-Object        
+        addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true
         workingDirectory: '$(terraformDirectory)'

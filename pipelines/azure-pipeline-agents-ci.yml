@@ -315,49 +315,56 @@ jobs:
       displayName: 'Generate SSH key pair'
       workingDirectory: '$(terraformDirectory)'
 
-    - pwsh: |
-        Set-PSDebug -Trace 1
-        $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
-
-        terraform output
-        if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
-          $env:TF_VAR_RESOURCE_SUFFIX = $null
-          $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
-        }
-
-        # Parse alternate strategy variables
-        if ($$(substituteAlternateVariables)) {
-          foreach ($alternateVar in $(Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_TF_VAR_*)) {
-            $primaryTerraformVariableName = $alternateVar.Name.Substring(17).ToLowerInvariant()
-            $primaryVariableName = "TF_VAR_${primaryTerraformVariableName}"
-            $variableValue = $alternateVar.Value
-
-            # Replace primary value with alternate
-            Get-ChildItem -path env: -Recurse -Include $primaryVariableName | Remove-Item
-            Set-Item env:${primaryVariableName} -Value $variableValue
-          } 
-        }
-
-        # List environment variables
-        Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
-
-        # Convert uppercased Terraform environment variables to .auto.tfvars file
-        foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
-          $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
-          $terraformVariableValue = $tfVar.Value
-
-          if ($terraformVariableValue -imatch "^\W*(true|false|\[[^\]]*\]|\{[^\}]*\})\W*$") {
-            # Boolean or List, write as-is
-            Write-Output "${terraformVariableName} = ${terraformVariableValue}" | Out-File ci.auto.tfvars -Append -Force
-          } else {
-            Write-Output "${terraformVariableName} = `"${terraformVariableValue}`"" | Out-File ci.auto.tfvars -Append -Force
-          }
-        } 
-        Write-Host "Contents of ci.auto.tfvars:"
-        Get-Content ci.auto.tfvars | Sort-Object
+    - task: AzureCLI@2
       name: terraformVariables
       displayName: 'Prepare Terraform variables'
-      workingDirectory: '$(terraformDirectory)'
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          Set-PSDebug -Trace 1
+          $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+
+          terraform output
+          if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
+            $env:TF_VAR_RESOURCE_SUFFIX = $null
+            $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
+          }
+
+          # Parse alternate strategy variables
+          if ($$(substituteAlternateVariables)) {
+            foreach ($alternateVar in $(Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_TF_VAR_*)) {
+              $primaryTerraformVariableName = $alternateVar.Name.Substring(17).ToLowerInvariant()
+              $primaryVariableName = "TF_VAR_${primaryTerraformVariableName}"
+              $variableValue = $alternateVar.Value
+
+              # Replace primary value with alternate
+              Get-ChildItem -path env: -Recurse -Include $primaryVariableName | Remove-Item
+              Set-Item env:${primaryVariableName} -Value $variableValue
+            } 
+          }
+
+          # List environment variables
+          Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
+
+          # Convert uppercased Terraform environment variables to .auto.tfvars file
+          foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
+            $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
+            $terraformVariableValue = $tfVar.Value
+
+            if ($terraformVariableValue -imatch "^\W*(true|false|\[[^\]]*\]|\{[^\}]*\})\W*$") {
+              # Boolean or List, write as-is
+              Write-Output "${terraformVariableName} = ${terraformVariableValue}" | Out-File ci.auto.tfvars -Append -Force
+            } else {
+              Write-Output "${terraformVariableName} = `"${terraformVariableValue}`"" | Out-File ci.auto.tfvars -Append -Force
+            }
+          } 
+          Write-Host "Contents of ci.auto.tfvars:"
+          Get-Content ci.auto.tfvars | Sort-Object        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(terraformDirectory)'
 
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2

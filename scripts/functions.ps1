@@ -189,31 +189,14 @@ function Login-AzDO (
 {
     $resource="499b84ac-1321-427f-aa17-267ca6975798"
 
-    if ($env:servicePrincipalKey -and $env:servicePrincipalId -and $env:tenantId) {
-        Invoke-RestMethod -Uri "https://login.microsoftonline.com/${env:tenantId}/oauth2/token" `
-                          -Method Post `
-                          -Body @{"grant_type"="client_credentials";
-                                  "client_id"="${env:servicePrincipalId}";
-                                  "client_secret"="${env:servicePrincipalKey}";
-                                  "resource"="${resource}"} `
-                          -Headers @{"Content-Type"="application/x-www-form-urlencoded"} `
-                          | Select-Object -ExpandProperty access_token `
-                          | Set-Variable aadToken
+    Login-Az
+    if ($(az account show --query "user.type" -o tsv) -ine "user") {
+        az account get-access-token --resource $resource `
+                                    --query "accessToken" `
+                                    --output tsv `
+                                    | Set-Variable aadToken
         if ($aadToken) {
-            Write-Debug "Obtained AAD token with service principal client credential flow"
-        }
-    } else {
-        Login-Az
-        if ($(az account show --query "user.type" -o tsv) -ine "user") {
-            Write-Warning "Not logged into Azure ClI as a user, unable to get AAD token"
-        } else {
-            az account get-access-token --resource $resource `
-                                        --query "accessToken" `
-                                        --output tsv `
-                                        | Set-Variable aadToken
-            if ($aadToken) {
-                Write-Debug "Obtained AAD token with 'az account get-access-token'"
-            }
+            Write-Debug "Obtained AAD token with 'az account get-access-token'"
         }
     }
     if ($aadToken) {

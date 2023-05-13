@@ -462,10 +462,7 @@ jobs:
           scriptLocation: inlineScript
           inlineScript: |
             ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
-
-            # Swap NAT Gateway <-> Azure Firewall
-            # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
-            ./deploy.ps1 -apply -force
+            ./deploy.ps1 -destroy -force
           addSpnToEnvironment: true
           useGlobalConfig: true
           failOnStandardError: true

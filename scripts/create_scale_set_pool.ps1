@@ -18,7 +18,8 @@ param (
     [parameter(Mandatory=$false)][string]$PoolName,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionName,
     [parameter(Mandatory=$false,ParameterSetName='ServiceConnection')][string]$ServiceConnectionProjectName,
-    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default"
+    [parameter(Mandatory=$false)][string]$Workspace=$env:TF_WORKSPACE ?? "default",
+    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
 ) 
 
 ### Internal Functions
@@ -107,7 +108,7 @@ $existingScaleSets.value | ForEach-Object {
 Write-Debug "poolIds: $existingPoolIds"
 
 if ($existingPoolIds) {
-    Get-Pool -OrganizationUrl $OrganizationUrl -PoolId $existingPoolIds | Set-Variable pools
+    Get-Pool -OrganizationUrl $OrganizationUrl -PoolId $existingPoolIds -Token $Token | Set-Variable pools
     $pools.value | ForEach-Object {
         $_.name
     } | Set-Variable existingPoolNames
@@ -122,6 +123,7 @@ New-ScaleSetPool -OrganizationUrl $OrganizationUrl `
                  -OS $OS.ToLowerInvariant() `
                  -PoolName $PoolName `
                  -RequestJson $RequestJson `
+                 -Token $Token `
                  | Set-Variable scaleSet
 
 if ($scaleSet.elasticPool) {

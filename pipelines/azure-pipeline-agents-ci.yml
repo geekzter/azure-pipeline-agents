@@ -262,7 +262,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            $(scriptDirectory)/set_terraform_azurerm_vars.ps1
+            $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
 
             $terraformState = (terraform state pull | ConvertFrom-Json)
             if ($terraformState.resources) {
@@ -288,7 +288,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            ./set_terraform_azurerm_vars.ps1
+            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
             ./get_ssh_key_pair.ps1 -Keyname $(TF_VAR_ssh_private_key) -Force
             $keyDirectory = (Split-Path $(TF_VAR_ssh_private_key) -Parent)
             if (Test-Path $keyDirectory) {
@@ -386,7 +386,7 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          ./set_terraform_azurerm_vars.ps1
+          ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
           ./deploy.ps1 -apply -force
         addSpnToEnvironment: true
         useGlobalConfig: true
@@ -427,7 +427,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            ./set_terraform_azurerm_vars.ps1
+            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
 
             # Swap NAT Gateway <-> Azure Firewall
             # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
@@ -528,7 +528,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            $(scriptDirectory)/set_terraform_azurerm_vars.ps1
+            $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
 
             $terraformState = (terraform state pull | ConvertFrom-Json)
             if ($terraformState.resources) {

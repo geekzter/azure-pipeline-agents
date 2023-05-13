@@ -236,18 +236,19 @@ jobs:
         condition: and(succeeded(), eq(variables['unpinTerraformProviders'],'true'))
         workingDirectory: '$(terraformDirectory)'
 
-    - task: TerraformCLI@0
+    - task: AzureCLI@2
       displayName: 'Terraform init'
       inputs:
-        command: 'init'
-        workingDirectory: '$(terraformDirectory)'
-        backendType: 'azurerm'
-        backendServiceArm: '$(subscriptionConnection)'
-        backendAzureRmResourceGroupName: '$(TF_STATE_RESOURCE_GROUP_NAME)'
-        backendAzureRmStorageAccountName: '$(TF_STATE_STORAGE_ACCOUNT_NAME)'
-        backendAzureRmContainerName: '$(TF_STATE_CONTAINER_NAME)'
-        backendAzureRmKey: 'terraform.tfstate'
-        allowTelemetryCollection: true
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+          ./deploy.ps1 -init
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
 
     - publish: $(terraformDirectory)
       displayName: 'Publish Terraform workspace'
@@ -445,7 +446,7 @@ jobs:
         condition: succeeded()
 
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
-      - task: TerraformCLI@0
+      - task: AzureCLI@2
         displayName: 'Terraform destroy (${{ lower(parameters.destroy) }})'
         ${{ if eq(parameters.destroy, 'Always') }}:
           condition: succeededOrFailed()
@@ -456,11 +457,19 @@ jobs:
         continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
         retryCountOnTaskFailure: ${{ parameters.retryCount }}
         inputs:
-          command: 'destroy'
-          workingDirectory: '$(terraformDirectory)'
-          environmentServiceName: '$(subscriptionConnection)'
-          runAzLogin: true
-          allowTelemetryCollection: true
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+
+            # Swap NAT Gateway <-> Azure Firewall
+            # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
+            ./deploy.ps1 -apply -force
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          failOnStandardError: true
+          workingDirectory: '$(scriptDirectory)'
 
     - ${{ if ne(parameters.destroy, 'Never') }}:
       - task: AzureCLI@2

@@ -246,6 +246,8 @@ jobs:
           ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
           Set-PSDebug -Trace 1
           ./deploy.ps1 -init
+
+          terraform -chdir='$(terraformDirectory)' output
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true

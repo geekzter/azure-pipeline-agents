@@ -236,18 +236,19 @@ jobs:
         condition: and(succeeded(), eq(variables['unpinTerraformProviders'],'true'))
         workingDirectory: '$(terraformDirectory)'
 
-    - task: TerraformCLI@0
+    - task: AzureCLI@2
       displayName: 'Terraform init'
       inputs:
-        command: 'init'
-        workingDirectory: '$(terraformDirectory)'
-        backendType: 'azurerm'
-        backendServiceArm: '$(subscriptionConnection)'
-        backendAzureRmResourceGroupName: '$(TF_STATE_RESOURCE_GROUP_NAME)'
-        backendAzureRmStorageAccountName: '$(TF_STATE_STORAGE_ACCOUNT_NAME)'
-        backendAzureRmContainerName: '$(TF_STATE_CONTAINER_NAME)'
-        backendAzureRmKey: 'terraform.tfstate'
-        allowTelemetryCollection: true
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+          ./deploy.ps1 -Init
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
 
     - publish: $(terraformDirectory)
       displayName: 'Publish Terraform workspace'
@@ -262,7 +263,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            $(scriptDirectory)/set_terraform_azurerm_vars.ps1
+            $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
 
             $terraformState = (terraform state pull | ConvertFrom-Json)
             if ($terraformState.resources) {
@@ -288,7 +289,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            ./set_terraform_azurerm_vars.ps1
+            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
             ./get_ssh_key_pair.ps1 -Keyname $(TF_VAR_ssh_private_key) -Force
             $keyDirectory = (Split-Path $(TF_VAR_ssh_private_key) -Parent)
             if (Test-Path $keyDirectory) {
@@ -311,45 +312,55 @@ jobs:
       displayName: 'Generate SSH key pair'
       workingDirectory: '$(terraformDirectory)'
 
-    - pwsh: |
-        if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
-          $env:TF_VAR_RESOURCE_SUFFIX = $null
-          $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
-        }
-
-        # Parse alternate strategy variables
-        if ($$(substituteAlternateVariables)) {
-          foreach ($alternateVar in $(Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_TF_VAR_*)) {
-            $primaryTerraformVariableName = $alternateVar.Name.Substring(17).ToLowerInvariant()
-            $primaryVariableName = "TF_VAR_${primaryTerraformVariableName}"
-            $variableValue = $alternateVar.Value
-
-            # Replace primary value with alternate
-            Get-ChildItem -path env: -Recurse -Include $primaryVariableName | Remove-Item
-            Set-Item env:${primaryVariableName} -Value $variableValue
-          } 
-        }
-
-        # List environment variables
-        Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
-
-        # Convert uppercased Terraform environment variables to .auto.tfvars file
-        foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
-          $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
-          $terraformVariableValue = $tfVar.Value
-
-          if ($terraformVariableValue -imatch "^\W*(true|false|\[[^\]]*\]|\{[^\}]*\})\W*$") {
-            # Boolean or List, write as-is
-            Write-Output "${terraformVariableName} = ${terraformVariableValue}" | Out-File ci.auto.tfvars -Append -Force
-          } else {
-            Write-Output "${terraformVariableName} = `"${terraformVariableValue}`"" | Out-File ci.auto.tfvars -Append -Force
-          }
-        } 
-        Write-Host "Contents of ci.auto.tfvars:"
-        Get-Content ci.auto.tfvars | Sort-Object
+    - task: AzureCLI@2
       name: terraformVariables
       displayName: 'Prepare Terraform variables'
-      workingDirectory: '$(terraformDirectory)'
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+
+          if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
+            $env:TF_VAR_RESOURCE_SUFFIX = $null
+            $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
+          }
+
+          # Parse alternate strategy variables
+          if ($$(substituteAlternateVariables)) {
+            foreach ($alternateVar in $(Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_TF_VAR_*)) {
+              $primaryTerraformVariableName = $alternateVar.Name.Substring(17).ToLowerInvariant()
+              $primaryVariableName = "TF_VAR_${primaryTerraformVariableName}"
+              $variableValue = $alternateVar.Value
+
+              # Replace primary value with alternate
+              Get-ChildItem -path env: -Recurse -Include $primaryVariableName | Remove-Item
+              Set-Item env:${primaryVariableName} -Value $variableValue
+            } 
+          }
+
+          # List environment variables
+          Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
+
+          # Convert uppercased Terraform environment variables to .auto.tfvars file
+          foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
+            $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
+            $terraformVariableValue = $tfVar.Value
+
+            if ($terraformVariableValue -imatch "^\W*(true|false|\[[^\]]*\]|\{[^\}]*\})\W*$") {
+              # Boolean or List, write as-is
+              Write-Output "${terraformVariableName} = ${terraformVariableValue}" | Out-File ci.auto.tfvars -Append -Force
+            } else {
+              Write-Output "${terraformVariableName} = `"${terraformVariableValue}`"" | Out-File ci.auto.tfvars -Append -Force
+            }
+          } 
+          Write-Host "Contents of ci.auto.tfvars:"
+          Get-Content ci.auto.tfvars | Sort-Object        
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(terraformDirectory)'
 
     - ${{ if parameters.deploy }}:
       - task: AzureCLI@2
@@ -358,7 +369,7 @@ jobs:
         condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
         continueOnError: false
         inputs:
-          azureSubscription: '$(subscriptionConnection)'
+          azureSubscription: '$(azdoConnection)'
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
@@ -386,7 +397,7 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          ./set_terraform_azurerm_vars.ps1
+          ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
           ./deploy.ps1 -apply -force
         addSpnToEnvironment: true
         useGlobalConfig: true
@@ -398,7 +409,7 @@ jobs:
         displayName: 'Enable Self-Hosted Agent(s)'
         condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
         inputs:
-          azureSubscription: '$(subscriptionConnection)'
+          azureSubscription: '$(azdoConnection)'
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
@@ -427,7 +438,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            ./set_terraform_azurerm_vars.ps1
+            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
 
             # Swap NAT Gateway <-> Azure Firewall
             # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
@@ -445,7 +456,7 @@ jobs:
         condition: succeeded()
 
     - ${{ if not(eq(parameters.destroy, 'Never')) }}:
-      - task: TerraformCLI@0
+      - task: AzureCLI@2
         displayName: 'Terraform destroy (${{ lower(parameters.destroy) }})'
         ${{ if eq(parameters.destroy, 'Always') }}:
           condition: succeededOrFailed()
@@ -456,11 +467,16 @@ jobs:
         continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
         retryCountOnTaskFailure: ${{ parameters.retryCount }}
         inputs:
-          command: 'destroy'
-          workingDirectory: '$(terraformDirectory)'
-          environmentServiceName: '$(subscriptionConnection)'
-          runAzLogin: true
-          allowTelemetryCollection: true
+          azureSubscription: '$(subscriptionConnection)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+            ./deploy.ps1 -destroy -force
+          addSpnToEnvironment: true
+          useGlobalConfig: true
+          failOnStandardError: true
+          workingDirectory: '$(scriptDirectory)'
 
     - ${{ if ne(parameters.destroy, 'Never') }}:
       - task: AzureCLI@2
@@ -528,7 +544,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            $(scriptDirectory)/set_terraform_azurerm_vars.ps1
+            $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
 
             $terraformState = (terraform state pull | ConvertFrom-Json)
             if ($terraformState.resources) {

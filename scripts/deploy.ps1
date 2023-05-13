@@ -100,6 +100,12 @@ try {
                 $tfbackendArgs += " -backend-config=`"container_name=${env:TF_STATE_backend_storage_container_name}`""
             }
         }
+        
+        $initCmd = "terraform init $tfbackendArgs"
+        if ($Upgrade) {
+            $initCmd += " -upgrade"
+        }
+        Invoke "$initCmd" 
     }
 
     if ($Validate) {
@@ -138,7 +144,7 @@ try {
     }
 
     if ($Plan -or $Apply) {
-            # Create plan
+        # Create plan
         Invoke "terraform plan $varArgs -out='$planFile' -var=""script_wrapper_check=false"" "
     }
 

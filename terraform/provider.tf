@@ -32,6 +32,8 @@ provider azurerm {
 
   storage_use_azuread          = true
 
+  use_oidc                     = true
+
 # Requires admin consent:
 # https://login.microsoftonline.com/${data.azurerm_subscription.default.tenant_id}/adminconsent?client_id=${var.packer_tenant_id}
   auxiliary_tenant_ids         = local.use_peer && var.packer_tenant_id != null && var.packer_tenant_id != "" ? [var.packer_tenant_id] : []

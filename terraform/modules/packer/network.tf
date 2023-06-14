@@ -81,20 +81,7 @@ resource azurerm_network_security_group default {
 
   tags                         = var.tags
 }
-# Address race condition where policy assigned NSG before we can assign our own
-# Let's wait for any updates to happen, then overwrite our own
-# This removes the need to use azurerm_subnet_network_security_group_association
-# resource null_resource private_endpoint_nsg_association {
-#   triggers                     = {
-#     nsg                        = coalesce(data.azurerm_subnet.private_endpoint_subnet.network_security_group_id,azurerm_network_security_group.default.id)
-#   }
 
-#   provisioner local-exec {
-#     # command                    = "az network vnet subnet update --ids ${azurerm_subnet.private_endpoint_subnet.id} --nsg ${azurerm_network_security_group.default.id} --query 'networkSecurityGroup'"
-#     command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.private_endpoint_subnet.id} -NsgId ${azurerm_network_security_group.default.id}"
-#     interpreter                = ["pwsh","-nop","-command"]
-#   }  
-# }
 resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
   network_security_group_id    = azurerm_network_security_group.default.id
@@ -103,15 +90,6 @@ resource azurerm_subnet_network_security_group_association private_endpoint_subn
     azurerm_subnet_network_security_group_association.private_endpoint_subnet
   ]
 }
-
-# FIX: Resource is in Updating state and the last operation that updated/is updating the resource is PutSubnetOperation"
-# resource time_sleep private_endpoint_subnet {
-#   depends_on                   = [
-#     # azurerm_subnet_network_security_group_association.private_endpoint_subnet,
-#     null_resource.private_endpoint_nsg_association
-#   ]
-#   create_duration              = "2m"
-# }
 
 resource azurerm_virtual_network_peering packer_to_agents {
   name                         = "${azurerm_virtual_network.packer.name}-peering"

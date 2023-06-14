@@ -100,44 +100,40 @@ resource azurerm_network_security_rule agent_rdp {
 # Address race condition where policy assigned NSG before we can assign our own
 # Let's wait for any updates to happen, then overwrite our own
 # This removes the need to use azurerm_subnet_network_security_group_association
-resource null_resource scale_set_nsg_association {
-  triggers                     = {
-    nsg                        = coalesce(data.azurerm_subnet.scale_set_agents.network_security_group_id,azurerm_network_security_group.agent_nsg.id)
-  }
+# resource null_resource scale_set_nsg_association {
+#   triggers                     = {
+#     nsg                        = coalesce(data.azurerm_subnet.scale_set_agents.network_security_group_id,azurerm_network_security_group.agent_nsg.id)
+#   }
 
-  provisioner local-exec {
-    # command                    = "az network vnet subnet update --ids ${azurerm_subnet.scale_set_agents.id} --nsg ${azurerm_network_security_group.agent_nsg.id} --query 'networkSecurityGroup'"
-    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.scale_set_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id}"
-    interpreter                = ["pwsh","-nop","-command"]
-  }  
-}
-# resource azurerm_subnet_network_security_group_association scale_set_agents {
-#   subnet_id                    = azurerm_subnet.scale_set_agents.id
-#   network_security_group_id    = azurerm_network_security_group.agent_nsg.id
-
-#   depends_on                   = [
-#     null_resource.scale_set_nsg_association
-#   ]
+#   provisioner local-exec {
+#     # command                    = "az network vnet subnet update --ids ${azurerm_subnet.scale_set_agents.id} --nsg ${azurerm_network_security_group.agent_nsg.id} --query 'networkSecurityGroup'"
+#     command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.scale_set_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id}"
+#     interpreter                = ["pwsh","-nop","-command"]
+#   }  
 # }
+resource azurerm_subnet_network_security_group_association scale_set_agents {
+  subnet_id                    = azurerm_subnet.scale_set_agents.id
+  network_security_group_id    = azurerm_network_security_group.agent_nsg.id
+}
 # Address race condition where policy assigned NSG before we can assign our own
 # Let's wait for any updates to happen, then overwrite our own
 # This removes the need to use azurerm_subnet_network_security_group_association
-resource null_resource self_hosted_nsg_association {
-  triggers                     = {
-    nsg                        = coalesce(data.azurerm_subnet.self_hosted_agents.network_security_group_id,azurerm_network_security_group.agent_nsg.id)
-  }
+# resource null_resource self_hosted_nsg_association {
+#   triggers                     = {
+#     nsg                        = coalesce(data.azurerm_subnet.self_hosted_agents.network_security_group_id,azurerm_network_security_group.agent_nsg.id)
+#   }
 
-  provisioner local-exec {
-    # command                    = "az network vnet subnet update --ids ${azurerm_subnet.self_hosted_agents.id} --nsg ${azurerm_network_security_group.agent_nsg.id} --query 'networkSecurityGroup'"
-    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.self_hosted_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id}"
-    interpreter                = ["pwsh","-nop","-command"]
-  }  
-}
-# resource azurerm_subnet_network_security_group_association self_hosted_agents {
-#   subnet_id                    = azurerm_subnet.self_hosted_agents.id
-#   network_security_group_id    = azurerm_network_security_group.agent_nsg.id
-
-#   depends_on                   = [
-#     null_resource.self_hosted_nsg_association
-#   ]
+#   provisioner local-exec {
+#     # command                    = "az network vnet subnet update --ids ${azurerm_subnet.self_hosted_agents.id} --nsg ${azurerm_network_security_group.agent_nsg.id} --query 'networkSecurityGroup'"
+#     command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.self_hosted_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id}"
+#     interpreter                = ["pwsh","-nop","-command"]
+#   }  
 # }
+resource azurerm_subnet_network_security_group_association self_hosted_agents {
+  subnet_id                    = azurerm_subnet.self_hosted_agents.id
+  network_security_group_id    = azurerm_network_security_group.agent_nsg.id
+
+  depends_on                   = [
+    azurerm_subnet_network_security_group_association.scale_set_agents
+  ]
+}

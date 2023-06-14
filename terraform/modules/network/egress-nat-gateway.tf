@@ -72,7 +72,7 @@ resource azurerm_subnet_nat_gateway_association scale_set_agents {
 
   depends_on                   = [
     azurerm_nat_gateway_public_ip_association.egress,
-    null_resource.scale_set_nsg_association
+    azurerm_subnet_network_security_group_association.scale_set_agents
   ]
 
   count                        = var.deploy_firewall ? 0 : 1
@@ -83,7 +83,7 @@ resource azurerm_subnet_nat_gateway_association self_hosted_agents {
 
   depends_on                   = [
     azurerm_nat_gateway_public_ip_association.egress,
-    null_resource.self_hosted_nsg_association
+    azurerm_subnet_network_security_group_association.self_hosted_agents
   ]
 
   count                        = var.deploy_firewall ? 0 : 1

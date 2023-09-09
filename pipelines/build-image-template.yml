@@ -81,19 +81,18 @@ jobs:
   - checkout: self
   - checkout: runner-images
 
-  - ${{ if eq(variables['System.Debug'], 'True') }}:
-    - pwsh: |
-        if ($env:SYSTEM_DEBUG -eq "true") {
-            $InformationPreference = "Continue"
-            $VerbosePreference = "Continue"
-            $DebugPreference = "Continue"
-            
-            Get-ChildItem -Path Env: -Force -Recurse -Include * | Sort-Object -Property Name | Format-Table -AutoSize | Out-String
-        }
-      displayName: 'Set debug preferences'
+  # - ${{ if eq(variables['System.Debug'], 'True') }}:
+  - pwsh: |
+      # if ($env:SYSTEM_DEBUG -eq "true") {
+          $InformationPreference = "Continue"
+          $VerbosePreference = "Continue"
+          $DebugPreference = "Continue"
+      # }
+    enabled: eq(variables['System.Debug'], 'true')
+    displayName: 'Set debug preferences'
 
   - pwsh: |
-      Write-Host "System.Debug = '$(System.Debug)"
+      Write-Host "System.Debug = $(System.Debug)"
       Write-Host "variables[System.Debug] = ${{ variables['System.Debug'] }}"
       Get-ChildItem -Path Env: -Force -Recurse -Include SYSTEM_* | Sort-Object -Property Name | Format-Table -AutoSize | Out-String
     displayName: 'Debug'

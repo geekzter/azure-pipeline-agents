@@ -101,6 +101,7 @@ jobs:
 
       Get-Content $userProfile
     condition: eq(variables['System.Debug'], 'true')
+    continueOnError: true
     displayName: 'Set debug preferences'
 
   - pwsh: |

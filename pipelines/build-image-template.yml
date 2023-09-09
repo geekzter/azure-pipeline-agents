@@ -83,9 +83,17 @@ jobs:
 
   # - ${{ if eq(variables['System.Debug'], 'True') }}:
   - pwsh: |
+      Set-PSDebug -Trace 1
       $InformationPreference = "Continue"
       $VerbosePreference = "Continue"
       $DebugPreference = "Continue"
+
+      Add-Content -Path $Profile -Value "Set-PSDebug -Trace 1"
+      Add-Content -Path $Profile -Value "`$InformationPreference = `"Continue`""
+      Add-Content -Path $Profile -Value "`$VerbosePreference = `"Continue`""
+      Add-Content -Path $Profile -Value "`$DebugPreference = `"Continue`""
+
+      Get-Content $Profile
     condition: eq(variables['System.Debug'], 'true')
     displayName: 'Set debug preferences'
 

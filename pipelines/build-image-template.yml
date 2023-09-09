@@ -88,6 +88,10 @@ jobs:
       $VerbosePreference = "Continue"
       $DebugPreference = "Continue"
 
+      if (!(Test-Path $Profile)) {
+        New-Item -Path $Profile -ItemType File
+      }
+
       Add-Content -Path $Profile -Value "Set-PSDebug -Trace 1"
       Add-Content -Path $Profile -Value "`$InformationPreference = `"Continue`""
       Add-Content -Path $Profile -Value "`$VerbosePreference = `"Continue`""

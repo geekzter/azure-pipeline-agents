@@ -88,18 +88,19 @@ jobs:
       $VerbosePreference = "Continue"
       $DebugPreference = "Continue"
 
-      $userProfile = '~/.config/powershell/Microsoft.PowerShell_profile.ps1'
+      # $pwshProfile = '~/.config/powershell/Microsoft.PowerShell_profile.ps1'
+      $pwshProfile = $Profile
 
-      if (!(Test-Path $userProfile)) {
-        New-Item -Path $userProfile -ItemType File -Force
+      if (!(Test-Path $pwshProfile)) {
+        New-Item -Path $pwshProfile -ItemType File -Force
       }
 
-      Add-Content -Path $userProfile -Value "Set-PSDebug -Trace 1"
-      Add-Content -Path $userProfile -Value "`$InformationPreference = `"Continue`""
-      Add-Content -Path $userProfile -Value "`$VerbosePreference = `"Continue`""
-      Add-Content -Path $userProfile -Value "`$DebugPreference = `"Continue`""
+      Add-Content -Path $pwshProfile -Value "Set-PSDebug -Trace 1"
+      Add-Content -Path $pwshProfile -Value "`$InformationPreference = `"Continue`""
+      Add-Content -Path $pwshProfile -Value "`$VerbosePreference = `"Continue`""
+      Add-Content -Path $pwshProfile -Value "`$DebugPreference = `"Continue`""
 
-      Get-Content $userProfile
+      Get-Content $pwshProfile
     condition: eq(variables['System.Debug'], 'true')
     continueOnError: true
     displayName: 'Set debug preferences'

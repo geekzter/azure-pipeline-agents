@@ -96,8 +96,6 @@ jobs:
       Write-Host "System.Debug = '$(System.Debug)"
       Write-Host "variables[System.Debug] = 'variables['System.Debug']"
       Get-ChildItem -Path Env: -Force -Recurse -Include SYSTEM_* | Sort-Object -Property Name | Format-Table -AutoSize | Out-String
-
-    name: variableValidation
     displayName: 'Debug'
 
   - pwsh: |

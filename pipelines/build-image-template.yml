@@ -88,8 +88,8 @@ jobs:
       $VerbosePreference = "Continue"
       $DebugPreference = "Continue"
 
-      # $pwshProfile = '~/.config/powershell/Microsoft.PowerShell_profile.ps1'
-      $pwshProfile = $Profile
+      $pwshProfile = '~/.config/powershell/Microsoft.PowerShell_profile.ps1'
+      # $pwshProfile = $Profile
 
       if (!(Test-Path $pwshProfile)) {
         New-Item -Path $pwshProfile -ItemType File -Force

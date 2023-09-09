@@ -81,7 +81,7 @@ jobs:
   - checkout: self
   - checkout: runner-images
 
-  - ${{ if eq(variables['System.Debug'], 'true') }}:
+  - ${{ if eq(variables['System.Debug'], 'True') }}:
     - pwsh: |
         if ($env:SYSTEM_DEBUG -eq "true") {
             $InformationPreference = "Continue"

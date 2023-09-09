@@ -88,7 +88,7 @@ jobs:
           $VerbosePreference = "Continue"
           $DebugPreference = "Continue"
       # }
-    enabled: $[ eq(variables['System.Debug'], 'true') ]
+    enabled: $(System.Debug)
     displayName: 'Set debug preferences'
 
   - pwsh: |

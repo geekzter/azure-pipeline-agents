@@ -99,6 +99,8 @@ jobs:
   - checkout: runner-images
 
   - pwsh: |
+      $(scriptDirectory)/configure_pwsh_trace.ps1
+      
       $PSNativeCommandArgumentPassing = "Legacy"
       $preInstalledAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
       Write-Host "Azure CLI pre-installed version is '${preInstalledAzVersion}'"
@@ -122,6 +124,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Check access
         az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
         az role assignment list --assignee $spObjectId `
@@ -152,6 +156,8 @@ jobs:
       failOnStandardError: true
 
   - pwsh: |
+      $(scriptDirectory)/configure_pwsh_trace.ps1
+      
       $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
       $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
       $vmMetadata | Format-List
@@ -171,6 +177,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft} `
                                                                                              | Sort-Object -Property @{Expression = "created_at"; Descending = $true}, @{Expression = "prerelease"; Ascending = $true}
                                                                                              | Select-Object -First 1 `
@@ -219,6 +227,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         $packerTemplateFileName = "$(imageTemplateFileName)"
 
         # Update template to override configuration not accessible as variables
@@ -312,6 +322,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Checkout source pertaining to release is not recommended
         # https://github.com/actions/runner-images/issues/4238#issuecomment-939732274
         # https://github.com/actions/runner-images/discussions/4362
@@ -358,6 +370,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Find VHD 
         az storage blob directory list -c "system" `
                                        -d "Microsoft.Compute/Images/images" `
@@ -384,6 +398,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Publish
         $imageDefinitionVersionTags = @(`
           "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
@@ -448,6 +464,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         Write-Host "Starting replication of $(imageName) $(publish.qualifiedVersion) to: $(targetRegions)..."
         az sig image-version update --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -466,6 +484,8 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
+          $(scriptDirectory)/configure_pwsh_trace.ps1
+      
           Write-Host "Waiting for replication of $(imageName) $(publish.qualifiedVersion) to $(targetRegions) to finish..."
           az sig image-version wait --updated `
                                     --gallery-image-definition $(imageName) `
@@ -483,6 +503,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Determine whether image with same config already exists
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -517,6 +539,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         $numberOfVersionsToKeep = [math]::Max($(numberOfVersionsToKeep),1)
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -539,6 +563,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         az sig image-version list --gallery-image-definition $(imageName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
@@ -557,6 +583,8 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
+          $(scriptDirectory)/configure_pwsh_trace.ps1
+      
           # Remove resources
           az resource list -g $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME `
                            --query "[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)' && tags.image=='$(imageName)'].id" `

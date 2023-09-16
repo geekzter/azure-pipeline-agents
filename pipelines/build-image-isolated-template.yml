@@ -93,6 +93,8 @@ jobs:
     value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
+  - name: 'scriptDirectory'
+    value: '$(agentRepository)/scripts'
 
   steps:
   - checkout: self

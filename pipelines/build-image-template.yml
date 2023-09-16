@@ -76,36 +76,16 @@ jobs:
     value: $[replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))]
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
+  - name: 'scriptDirectory'
+    value: '$(agentRepository)/scripts'
 
   steps:
   - checkout: self
   - checkout: runner-images
 
-  # - ${{ if eq(variables['System.Debug'], 'True') }}:
-  - pwsh: |
-      Set-PSDebug -Trace 1
-      $InformationPreference = "Continue"
-      $VerbosePreference = "Continue"
-      $DebugPreference = "Continue"
-
-      $pwshProfile = '~/.config/powershell/Microsoft.PowerShell_profile.ps1'
-      # $pwshProfile = $Profile
-
-      if (!(Test-Path $pwshProfile)) {
-        New-Item -Path $pwshProfile -ItemType File -Force
-      }
-
-      Add-Content -Path $pwshProfile -Value "Set-PSDebug -Trace 1"
-      Add-Content -Path $pwshProfile -Value "`$InformationPreference = `"Continue`""
-      Add-Content -Path $pwshProfile -Value "`$VerbosePreference = `"Continue`""
-      Add-Content -Path $pwshProfile -Value "`$DebugPreference = `"Continue`""
-
-      Get-Content $pwshProfile
-    condition: eq(variables['System.Debug'], 'true')
-    continueOnError: true
-    displayName: 'Set debug preferences'
 
   - pwsh: |
+      $(scriptDirectory)/configure_pwsh_trace.ps1
       Write-Host "System.Debug = $(System.Debug)"
       Write-Host "variables[System.Debug] = ${{ variables['System.Debug'] }}"
       Get-ChildItem -Path Env: -Force -Recurse -Include SYSTEM_* | Sort-Object -Property Name | Format-Table -AutoSize | Out-String

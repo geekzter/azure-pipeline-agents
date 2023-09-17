@@ -198,9 +198,9 @@ jobs:
         # Required for GenerateResourcesAndImage
         $PSVersionTable | Format-Table
         Enable-ExperimentalFeature -Name PSNativeCommandArgumentPassing
-        $PSNativeCommandArgumentPassing = "Legacy"
+        # $PSNativeCommandArgumentPassing = "Legacy"
         # $PSNativeCommandArgumentPassing = "Standard"
-        # $PSNativeCommandArgumentPassing = "Windows"
+        $PSNativeCommandArgumentPassing = "Windows"
 
         # Build
         Import-Module ./GenerateResourcesAndImage.ps1

@@ -130,6 +130,7 @@ jobs:
         Write-Host "pwsh version: $(pwsh -v)"
       }
     displayName: 'Upgrade PowerShell'
+    retryCountOnTaskFailure: 2
 
   - task: AzureCLI@2
     name: githubRelease

@@ -118,45 +118,6 @@ jobs:
       }
     displayName: 'Upgrade Azure CLI'
 
-  - task: AzureCLI@2
-    name: servicePrincipal
-    displayName: 'Check access'
-    inputs:
-      azureSubscription: '$(packerSubscriptionConnection)'
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        $(scriptDirectory)/configure_pwsh_trace.ps1
-      
-        # Check access
-        az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
-        az role assignment list --assignee $spObjectId `
-                                --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} `
-                                --include-inherited `
-                                --query "[?roleDefinitionName=='Storage Blob Data Owner' || roleDefinitionName=='Storage Blob Data Contributor']" `
-                                -o json | ConvertFrom-Json | Set-Variable dataAccess
-
-        if ($dataAccess) {
-          Write-Host "Service Principal has Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}"
-        } else {
-          az role assignment list --assignee $spObjectId `
-                                  --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} `
-                                  --include-inherited `
-                                  --query "[?roleDefinitionName=='Owner']" `
-                                  -o json | ConvertFrom-Json | Set-Variable owner
-          if ($owner) {
-            az role assignment create --role "Storage Blob Data Contributor" `
-                                      --assignee ${env:servicePrincipalId} `
-                                      --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}
-            Write-Host "Granted Storage Data access on resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} to Service Principal"
-          } else {
-            Write-Warning "Service Principal does not have Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}, nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
-            exit 1
-          }
-        }
-      addSpnToEnvironment: true
-      failOnStandardError: true
-
   - pwsh: |
       $(scriptDirectory)/configure_pwsh_trace.ps1
       
@@ -279,12 +240,11 @@ jobs:
         $imageVMPassword = [system.guid]::NewGuid().ToString().ToUpper()
         $packerTemplateParameters = @{
           build_resource_group_name           = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
-          capture_name_prefix                 = '$(imageResourcePrefix)'
           client_id                           = $env:servicePrincipalId
           client_secret                       = $env:servicePrincipalKey
           install_password                    = $imageVMPassword
-          resource_group                      = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME
-          storage_account                     = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME
+          managed_image_name                  = "$(imageName)-$(githubRelease.qualifiedVersion)"
+          managed_image_resource_group_name   = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
           subscription_id                     = $(az account show --query id -o tsv)
           tenant_id                           = $env:tenantId
           virtual_network_name                = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME
@@ -339,8 +299,8 @@ jobs:
                      -var "client_id=${env:servicePrincipalId}" `
                      -var "client_secret=${env:servicePrincipalKey}" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
-                     -var "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
-                     -var "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
+                     -var "managed_image_name=$(imageName)-$(githubRelease.qualifiedVersion)" `
+                     -var "managed_image_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "subscription_id=$(az account show --query id -o tsv)" `
                      -var "tenant_id=${env:tenantId}" `
                      -var "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
@@ -364,37 +324,28 @@ jobs:
       PACKER_LOG_PATH: $(Build.ArtifactStagingDirectory)/packer-log.txt
 
   - task: AzureCLI@2
-    name: vhd
+    name: managedImage
+    displayName: 'Get image resource id'
     condition: and(succeeded(), ne(coalesce(variables['packerConfig.packerTemplateParametersJson'],'null'),'null'))
-    displayName: 'Get VHD url'
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
-      
-        # Find VHD 
-        az storage blob directory list -c "system" `
-                                       -d "Microsoft.Compute/Images/images" `
-                                       --account-name $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
-                                       --query "[?contains(@.name, '$(imageResourcePrefix)') && ends_with(@.name, 'vhd')].name" `
-                                       -o tsv | Set-Variable vhdPath
-        $vhdBaseUrl = "https://${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/system"
-        if ($vhdPath) {
-          $vhdUrl = "${vhdBaseUrl}/${vhdPath}"
-          Write-Host "vhdUrl: $vhdUrl"
-          Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"        
-        } else {
-          throw "VHD not found in ${vhdBaseUrl}, image build of '$(imageName)' was not successful"
-        }
 
+        "{0}/providers/Microsoft.Compute/images/{1}-{2}" -f $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME,'$(imageName)','$(githubRelease.qualifiedVersion)' `
+                                                         | Set-Variable imageResourceId
+
+        az image show --ids $imageResourceId 
+        Write-Host "##vso[task.setvariable variable=imageResourceId;isoutput=true]$imageResourceId"
+      useGlobalConfig: true
       failOnStandardError: true
 
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['managedImage.imageResourceId'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -450,8 +401,7 @@ jobs:
                                     --location $env:PIPELINE_DEMO_PACKER_LOCATION `
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                    --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_ID `
+                                    --managed-image $(managedImage.imageResourceId) `
                                     --query id -o tsv | Set-Variable imageVersionId
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"

@@ -196,6 +196,7 @@ jobs:
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
         # Required for GenerateResourcesAndImage
+        sudo apt upgrade powershell -y
         $PSVersionTable | Format-Table
         Enable-ExperimentalFeature -Name PSNativeCommandArgumentPassing
         Write-Host "PSNativeCommandArgumentPassing: ${PSNativeCommandArgumentPassing}"

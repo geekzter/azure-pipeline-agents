@@ -130,6 +130,8 @@ jobs:
         Write-Host "`npwsh version: $(pwsh -v)"
       }
     displayName: 'Upgrade PowerShell'
+    failOnStderr: true
+    ignoreLASTEXITCODE: false
     retryCountOnTaskFailure: 2
 
   - task: AzureCLI@2

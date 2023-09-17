@@ -226,6 +226,7 @@ jobs:
 
         az group show -g $(imageResourceGroup) `
                       --query id `
+                      -o tsv `
                       | Set-Variable imageResourceGroupId
         "{0}/providers/Microsoft.Compute/images/Runner-Image-{1}" -f $imageResourceGroupId,'$(imageName)' `
                                                                   | Set-Variable imageResourceId

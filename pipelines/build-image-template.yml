@@ -72,8 +72,8 @@ jobs:
   - name: 'imageReleaseName' 
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourceGroup' 
-    # value: '${{ parameters.imageResourceGroup }}'
-    value: $[replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))]
+    value: 'ericvan-image-31330-u20'
+    # value: $[replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))]
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'scriptDirectory'
@@ -193,29 +193,29 @@ jobs:
       inline: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
       
-        # Patch GenerateResourcesAndImage.ps1 to decrease build time
-        (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
+        # # Patch GenerateResourcesAndImage.ps1 to decrease build time
+        # (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
-        # Build
-        Import-Module ./GenerateResourcesAndImage.ps1
-        Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
-        GenerateResourcesAndImage -SubscriptionId $subscriptionId `
-                                  -ResourceGroupName $(imageResourceGroup) `
-                                  -ImageGenerationRepositoryRoot "$(Build.SourcesDirectory)/runner-images" `
-                                  -ImageType $(imageName) `
-                                  -AzureLocation $env:PIPELINE_DEMO_PACKER_LOCATION `
-                                  -AzureClientId $(servicePrincipal.clientId) `
-                                  -AzureClientSecret "$(servicePrincipal.clientSecret)" `
-                                  -AzureTenantId $(servicePrincipal.tenantId) `
-                                  -RestrictToAgentIpAddress
+        # # Build
+        # Import-Module ./GenerateResourcesAndImage.ps1
+        # Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id | Set-Variable subscriptionId
+        # GenerateResourcesAndImage -SubscriptionId $subscriptionId `
+        #                           -ResourceGroupName $(imageResourceGroup) `
+        #                           -ImageGenerationRepositoryRoot "$(Build.SourcesDirectory)/runner-images" `
+        #                           -ImageType $(imageName) `
+        #                           -AzureLocation $env:PIPELINE_DEMO_PACKER_LOCATION `
+        #                           -AzureClientId $(servicePrincipal.clientId) `
+        #                           -AzureClientSecret "$(servicePrincipal.clientSecret)" `
+        #                           -AzureTenantId $(servicePrincipal.tenantId) `
+        #                           -RestrictToAgentIpAddress
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
       workingDirectory: '$(Build.SourcesDirectory)/runner-images/helpers'
 
   - task: AzureCLI@2
-    name: vhd
-    displayName: 'Get VHD url'
+    name: managedImage
+    displayName: 'Get image resource id'
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
@@ -223,36 +223,22 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
-      
-        # Find storage account created
-        az storage account list -g $packerResourceGroupName $(imageResourceGroup) `
-                                --query "[0]" -o json | ConvertFrom-Json `
-                                | Set-Variable storageAccount
 
-        # Find VHD 
-        az storage blob directory list -c "system" `
-                                       -d "Microsoft.Compute/Images/images" `
-                                       --account-name $($storageAccount.name) `
-                                       --query "[?ends_with(@.name, 'vhd')].name" `
-                                       -o tsv | Set-Variable vhdPath
+        az group show -g $(imageResourceGroup) `
+                      --query id `
+                      | Set-Variable imageResourceGroupId
+        "{0}/providers/Microsoft.Compute/images/Runner-Image-{1}" -f $imageResourceGroupId,$(imageName) `
+                                                                  | Set-Variable imageResourceId
 
-        $vhdBaseUrl = "$($storageAccount.primaryEndpoints.blob)system"
-        if ($vhdPath) {
-          $vhdUrl = "${vhdBaseUrl}/${vhdPath}"
-          Write-Host "vhdUrl: $vhdUrl"
-          Write-Host "##vso[task.setvariable variable=storageAccountId;isoutput=true]$($storageAccount.id)"
-          Write-Host "##vso[task.setvariable variable=storageAccountName;isoutput=true]$($storageAccount.name)"
-          Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"
-        } else {
-          throw "VHD not found in ${vhdBaseUrl}, image build of '$(imageName)' was not successful"
-        }
+        az image show --ids $imageResourceId 
+        Write-Host "##vso[task.setvariable variable=imageResourceId;isoutput=true]$imageResourceId"
       useGlobalConfig: true
       failOnStandardError: true
 
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['managedImage.imageResourceId'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -294,8 +280,7 @@ jobs:
                                     --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                    --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $(vhd.storageAccountId) `
+                                    --managed-image $(managedImage.imageResourceId) `
                                     --query id -o tsv | Set-Variable imageVersionId
 
           # BUG: https://github.com/Azure/azure-cli/issues/23194
@@ -324,7 +309,7 @@ jobs:
 
   - task: AzureCLI@2
     displayName: 'Purge older (than $(numberOfVersionsToKeep) newest) image versions'
-    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['managedImage.imageResourceId'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

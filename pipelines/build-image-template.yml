@@ -196,7 +196,11 @@ jobs:
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
         # Required for GenerateResourcesAndImage
-        Enable-ExperimentalFeature -Name PSNativeCommandArgumentPassing
+        $PSVersionTable | Format-Table
+        # Enable-ExperimentalFeature -Name PSNativeCommandArgumentPassing
+        # $PSNativeCommandArgumentPassing = "Legacy"
+        $PSNativeCommandArgumentPassing = "Standard"
+        # $PSNativeCommandArgumentPassing = "Windows"
 
         # Build
         Import-Module ./GenerateResourcesAndImage.ps1

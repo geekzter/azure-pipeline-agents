@@ -121,10 +121,14 @@ jobs:
       }
     displayName: 'Upgrade Azure CLI'
 
-  - bash: |
-      pwsh -v
-      sudo apt upgrade powershell -y
-      pwsh -v
+  - pwsh: |
+      Write-Host "pwsh version: $($PSVersionTable.PSVersion)"
+      if (($PSVersionTable.PSVersion -lt 7.3) -and $IsLinux) {
+        Write-Host "GenerateResourcesAndImage.ps1 assumes PSNativeCommandArgumentPassing"
+        Write-Host "Upgrading PowerShell to 7.3..."
+        sudo apt upgrade powershell -y
+        Write-Host "pwsh version: $(pwsh -v)"
+      }
     displayName: 'Upgrade PowerShell'
 
   - task: AzureCLI@2
@@ -202,13 +206,7 @@ jobs:
         (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
         # Required for GenerateResourcesAndImage
-        $PSVersionTable | Format-Table
-        # Enable-ExperimentalFeature -Name PSNativeCommandArgumentPassing
-        # Write-Host "PSNativeCommandArgumentPassing: ${PSNativeCommandArgumentPassing}"
-        # $PSNativeCommandArgumentPassing = 'Legacy'
         $PSNativeCommandArgumentPassing = 'Standard'
-        # $PSNativeCommandArgumentPassing = 'Windows'
-        Write-Host "PSNativeCommandArgumentPassing: ${PSNativeCommandArgumentPassing}"
 
         # Build
         Import-Module ./GenerateResourcesAndImage.ps1

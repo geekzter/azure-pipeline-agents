@@ -122,7 +122,9 @@ jobs:
     displayName: 'Upgrade Azure CLI'
 
   - bash: |
+      pwsh -v
       sudo apt upgrade powershell -y
+      pwsh -v
     displayName: 'Upgrade PowerShell'
 
   - task: AzureCLI@2
@@ -201,8 +203,8 @@ jobs:
 
         # Required for GenerateResourcesAndImage
         $PSVersionTable | Format-Table
-        Enable-ExperimentalFeature -Name PSNativeCommandArgumentPassing
-        Write-Host "PSNativeCommandArgumentPassing: ${PSNativeCommandArgumentPassing}"
+        # Enable-ExperimentalFeature -Name PSNativeCommandArgumentPassing
+        # Write-Host "PSNativeCommandArgumentPassing: ${PSNativeCommandArgumentPassing}"
         # $PSNativeCommandArgumentPassing = 'Legacy'
         $PSNativeCommandArgumentPassing = 'Standard'
         # $PSNativeCommandArgumentPassing = 'Windows'

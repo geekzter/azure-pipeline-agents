@@ -122,12 +122,12 @@ jobs:
     displayName: 'Upgrade Azure CLI'
 
   - pwsh: |
-      Write-Host "pwsh version: $($PSVersionTable.PSVersion)"
+      Write-Host "`npwsh version: $($PSVersionTable.PSVersion)"
       if (($PSVersionTable.PSVersion -lt 7.3) -and $IsLinux) {
         Write-Host "GenerateResourcesAndImage.ps1 assumes PSNativeCommandArgumentPassing"
         Write-Host "Upgrading PowerShell to 7.3..."
         sudo apt upgrade powershell -y
-        Write-Host "pwsh version: $(pwsh -v)"
+        Write-Host "`npwsh version: $(pwsh -v)"
       }
     displayName: 'Upgrade PowerShell'
     retryCountOnTaskFailure: 2

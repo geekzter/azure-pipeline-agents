@@ -126,13 +126,13 @@ jobs:
       if (($PSVersionTable.PSVersion -lt 7.3) -and $IsLinux) {
         Write-Host "GenerateResourcesAndImage.ps1 assumes PSNativeCommandArgumentPassing"
         Write-Host "Upgrading PowerShell to 7.3..."
-        sudo apt upgrade powershell -y
+        bash -c 'sudo apt upgrade powershell -y'
         Write-Host "`npwsh version: $(pwsh -v)"
       }
     displayName: 'Upgrade PowerShell'
     failOnStderr: true
     ignoreLASTEXITCODE: false
-    retryCountOnTaskFailure: 2
+    retryCountOnTaskFailure: 3
 
   - task: AzureCLI@2
     name: githubRelease

@@ -129,6 +129,8 @@ jobs:
         bash -c 'sudo apt-get update --fix-missing'
         bash -c 'sudo apt upgrade powershell -y'
         Write-Host "`npwsh version: $(pwsh -v)"
+      } else {
+        Write-Host "PowerShell version is $($PSVersionTable.PSVersion), no upgrade required"
       }
     displayName: 'Upgrade PowerShell'
     failOnStderr: true

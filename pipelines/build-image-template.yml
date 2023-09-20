@@ -126,6 +126,7 @@ jobs:
       if (($PSVersionTable.PSVersion -lt 7.3) -and $IsLinux) {
         Write-Host "GenerateResourcesAndImage.ps1 assumes PSNativeCommandArgumentPassing"
         Write-Host "Upgrading PowerShell to 7.3..."
+        bash -c 'sudo apt-get update --fix-missing'
         bash -c 'sudo apt upgrade powershell -y'
         Write-Host "`npwsh version: $(pwsh -v)"
       }

@@ -4,6 +4,7 @@ variable admin_cidr_ranges {
 }
 
 variable azdo_deployment_group_name {}
+variable azdo_environment_name {}
 variable azdo_org {}
 variable azdo_pat {}
 variable azdo_project {}

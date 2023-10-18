@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+
 echo $(basename $0) "$@"
 
 # Process arguments
@@ -48,6 +48,9 @@ while [ "$1" != "" ]; do
                                         ;;
         --deployment-group)             shift
                                         AGENT_GROUP=$1
+                                        ;;
+        --environment)             shift
+                                        AGENT_ENVIRONMENT=$1
                                         ;;
         --project)                      shift
                                         PROJECT=$1
@@ -101,7 +104,17 @@ sudo ./bin/installdependencies.sh
 
 # Unattended config
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops#unattended-config
-if [[ -n $AGENT_GROUP ]]; then
+if [[ -n $AGENT_ENVIRONMENT ]]; then
+    echo "Creating agent ${AGENT_NAME} and adding it to environment ${AGENT_ENVIRONMENT} in project ${PROJECT} in organization ${ORG}..."
+    ./config.sh --unattended \
+                --url https://dev.azure.com/${ORG} \
+                --auth pat --token $PAT \
+                --environment --environmentname "${AGENT_ENVIRONMENT}" \
+                --projectname "${PROJECT}" \
+                --agent $AGENT_NAME --replace \
+                --acceptteeeula \
+                --work $AGENT_DATA_DIRECTORY/work
+elif [[ -n $AGENT_GROUP ]]; then
     echo "Creating agent ${AGENT_NAME} and adding it to deployment group ${AGENT_GROUP} in project ${PROJECT} in organization ${ORG}..."
     ./config.sh --unattended \
                 --url https://dev.azure.com/${ORG} \
@@ -121,7 +134,7 @@ elif [ ! -z $AGENT_POOL ]; then
                 --acceptteeeula \
                 --work $AGENT_DATA_DIRECTORY/work
 else
-    echo "Neither --agent-pool or --deployment-group specified, nothing to do"
+    echo "Neither --agent-pool, --deployment-group or --environment specified. Nothing to do"
     exit 1
 fi
 

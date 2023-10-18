@@ -17,7 +17,7 @@ runcmd:
   - chmod +x /home/${user}/install_agent.sh
   - chown ${user}:${user} /home/${user}
   - chown ${user}:${user} /home/${user}/install_agent.sh
-  - sudo -u ${user} /home/${user}/install_agent.sh --agent-name ${agent_name} --agent-pool ${agent_pool} --deployment-group "${deployment_group}" --project ${project} --agent-version-id ${agent_version_id} --org ${org} --pat ${pat}
+  - sudo -u ${user} /home/${user}/install_agent.sh --agent-name ${agent_name} --agent-pool ${agent_pool} --deployment-group "${deployment_group}" --environment "${environment}" --project ${project} --agent-version-id ${agent_version_id} --org ${org} --pat ${pat}
   # https://github.com/actions/runner-images/blob/main/docs/create-image-and-azure-resources.md#post-generation-scripts
 # - [ -d /opt/post-generation ] && sudo "find /opt/post-generation -mindepth 1 -maxdepth 1 -type f -name '*.sh' -exec bash {} \;"
   - echo Installed Pipelines Agent

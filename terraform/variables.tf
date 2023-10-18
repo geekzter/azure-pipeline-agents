@@ -22,7 +22,11 @@ variable application_owner {
 
 variable azdo_deployment_group_name {
   default                      = null
-  description                  = "Azure DevOps Deployment group. Only affects self-hosted agents, not scale set agents."
+  description                  = "Azure DevOps deployment group. Only affects self-hosted agents, not scale set agents."
+}
+variable azdo_environment_name {
+  default                      = null
+  description                  = "Azure DevOps environment. Only affects self-hosted agents, not scale set agents."
 }
 variable azdo_org {
   description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"

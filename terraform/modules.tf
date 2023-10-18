@@ -149,6 +149,7 @@ module self_hosted_linux_agents {
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   azdo_deployment_group_name   = var.azdo_deployment_group_name
+  azdo_environment_name        = var.azdo_environment_name
   azdo_org                     = var.azdo_org
   azdo_pat                     = var.azdo_pat
   azdo_project                 = var.azdo_project
@@ -211,6 +212,7 @@ module self_hosted_windows_agents {
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   azdo_deployment_group_name   = var.azdo_deployment_group_name
+  azdo_environment_name        = var.azdo_environment_name
   azdo_org                     = var.azdo_org
   azdo_pat                     = var.azdo_pat
   azdo_project                 = var.azdo_project

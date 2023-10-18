@@ -4,11 +4,41 @@
     Installs and Configures Azure Pipeline Agent on Target
 #> 
 param ( 
-    [parameter(Mandatory=$false)][string]$AgentName=$env:COMPUTERNAME,
-    [parameter(Mandatory=$true)][string]$AgentPool,
-    [parameter(Mandatory=$true)][string]$AgentVersionId="latest",
-    [parameter(Mandatory=$true)][string]$Organization,
-    [parameter(Mandatory=$true)][string]$PAT
+    [parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $AgentName=$env:COMPUTERNAME,
+
+    [parameter(Mandatory=$false)]
+    [string]
+    $AgentPool,
+
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $AgentVersionId="latest",
+
+    [parameter(Mandatory=$false)]
+    [string]
+    $DeploymentGroup,
+
+    [parameter(Mandatory=$false)]
+    [string]
+    $Environment,
+
+    [parameter(Mandatory=$false)]
+    [string]
+    $Project,
+
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $Organization,
+
+    [parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    [string]
+    $PAT
 ) 
 $ProgressPreference = 'SilentlyContinue' # Improves batch performance in Windows PowerShell
 
@@ -28,7 +58,7 @@ if (Test-Path C:\post-generation) {
     }
 }
 
-# Set environment variables
+# Set system environment variables
 %{ for name, value in environment }
     [Environment]::SetEnvironmentVariable("${name}", "${value}", "Machine")
 %{ endfor ~}
@@ -102,16 +132,31 @@ $null = New-Item -ItemType symboliclink -path "$pipelineDirectory\_diag" -value 
 
 # Unattended config
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops#unattended-config
-Write-Host "Creating agent $AgentName and adding it to pool $AgentPool in organization $Organization..."
-.\config.cmd --unattended `
-             --url https://dev.azure.com/$Organization `
-             --auth pat --token $PAT `
-             --pool $AgentPool `
-             --agent $AgentName --replace `
-             --acceptTeeEula `
-             --runAsService `
-             --windowsLogonAccount "NT AUTHORITY\NETWORK SERVICE" `
-             --work $pipelineWorkDirectory
+if ($Environment) {
+    Write-Host "Creating agent $AgentName and adding it to environment $Environment in project $Project in organization $Organization..."
+    $poolArgs = "--environment --environmentname '$Environment' --projectname '$Project'"
+} elseif ($DeploymentGroup) {
+    Write-Host "Creating agent $AgentName and adding it to deployment group $DeploymentGroup in project $Project in organization $Organization..."
+    $poolArgs = "--deploymentgroup --deploymentgroupname '$DeploymentGroup' --projectname '$Project'"
+} elseif ($AgentPool) {
+    Write-Host "Creating agent $AgentName and adding it to pool $AgentPool in organization $Organization..."
+    $poolArgs = "--pool $AgentPool"
+} else {
+    Write-Error "No pool, environment or deployment group specified"
+    exit 1
+}
+$agentConfigCommand = ".\config.cmd --unattended `
+                                    --url https://dev.azure.com/$Organization `
+                                    --auth pat --token '$PAT' `
+                                    $($poolArgs) `
+                                    --agent $AgentName --replace `
+                                    --acceptTeeEula `
+                                    --runAsService `
+                                    --windowsLogonAccount 'NT AUTHORITY\NETWORK SERVICE' `
+                                    --work $pipelineWorkDirectory"
+$agentConfigCommand -replace "\s+"," " | Set-Variable agentConfigCommand
+"Running: $agentConfigCommand" -replace "--token +(\S+)","--token ***" | Write-Host
+Invoke-Expression -Command $agentConfigCommand
 
 # Start Service
 Start-Service $agentService

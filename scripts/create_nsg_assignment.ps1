@@ -6,7 +6,7 @@ param (
     [parameter(Mandatory=$false)][int]$WaitSeconds=10
 ) 
 
-Set-PSDebug -Trace 2
+# Set-PSDebug -Trace 2
 
 Write-Debug "NsgId: $NsgId"
 Write-Debug "SubnetId: $SubnetId"

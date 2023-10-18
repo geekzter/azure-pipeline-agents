@@ -37,6 +37,10 @@ variable azdo_pat {
   default                      = null
 }
 variable azdo_project {
+  description                  = "The Azure DevOps project where for deployment Group or Environment"
+  default                      = ""
+}
+variable azdo_project_id {
   description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
   default                      = ""
 }

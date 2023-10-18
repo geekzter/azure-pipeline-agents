@@ -107,7 +107,7 @@ resource null_resource scale_set_nsg_association {
 
   provisioner local-exec {
     # command                    = "az network vnet subnet update --ids ${azurerm_subnet.scale_set_agents.id} --nsg ${azurerm_network_security_group.agent_nsg.id} --query 'networkSecurityGroup'"
-    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.scale_set_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id}"
+    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.scale_set_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id} -Verbose -Debug"
     interpreter                = ["pwsh","-nop","-command"]
   }  
 }
@@ -129,7 +129,7 @@ resource null_resource self_hosted_nsg_association {
 
   provisioner local-exec {
     # command                    = "az network vnet subnet update --ids ${azurerm_subnet.self_hosted_agents.id} --nsg ${azurerm_network_security_group.agent_nsg.id} --query 'networkSecurityGroup'"
-    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.self_hosted_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id}"
+    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.self_hosted_agents.id} -NsgId ${azurerm_network_security_group.agent_nsg.id} -Verbose -Debug"
     interpreter                = ["pwsh","-nop","-command"]
   }  
 }

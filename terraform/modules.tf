@@ -148,8 +148,10 @@ module self_hosted_linux_agents {
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
+  azdo_deployment_group_name   = var.azdo_deployment_group_name
   azdo_org                     = var.azdo_org
   azdo_pat                     = var.azdo_pat
+  azdo_project                 = var.azdo_project
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
@@ -208,8 +210,10 @@ module self_hosted_windows_agents {
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
+  azdo_deployment_group_name   = var.azdo_deployment_group_name
   azdo_org                     = var.azdo_org
   azdo_pat                     = var.azdo_pat
+  azdo_project                 = var.azdo_project
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   environment_variables        = local.environment_variables

@@ -3,8 +3,10 @@ variable admin_cidr_ranges {
   default                      = []
 }
 
+variable azdo_deployment_group_name {}
 variable azdo_org {}
 variable azdo_pat {}
+variable azdo_project {}
 
 variable create_public_ip_address {
   type                         = bool

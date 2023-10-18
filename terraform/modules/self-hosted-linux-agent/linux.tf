@@ -69,7 +69,9 @@ data cloudinit_config user_data {
         agent_name             = var.pipeline_agent_name
         agent_pool             = var.pipeline_agent_pool
         agent_version_id       = var.pipeline_agent_version_id
+        deployment_group       = var.azdo_deployment_group_name != null ? var.azdo_deployment_group_name : ""
         install_agent_script_b64= filebase64("${path.root}/../scripts/host/install_agent.sh")
+        project                = var.azdo_project
         org                    = var.azdo_org
         pat                    = var.azdo_pat
         user                   = var.user_name

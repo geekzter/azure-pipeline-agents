@@ -20,6 +20,10 @@ variable application_owner {
   default                      = "" # Empty string takes objectId of current user
 }
 
+variable azdo_deployment_group_name {
+  default                      = null
+  description                  = "Azure DevOps Deployment group. Only affects self-hosted agents, not scale set agents."
+}
 variable azdo_org {
   description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
   default                      = null
@@ -178,9 +182,6 @@ variable linux_scale_set_agent_max_saved_count {
 variable linux_self_hosted_agent_count {
   default                      = 1
   type                         = number
-}
-variable linux_self_hosted_agent_deployment_group_name {
-  default                      = null
 }
 variable linux_storage_type {
   default                      = "Standard_LRS"
@@ -361,9 +362,6 @@ variable windows_scale_set_agent_interactive_ui {
 variable windows_self_hosted_agent_count {
   default                      = 1
   type                         = number
-}
-variable windows_self_hosted_agent_deployment_group_name {
-  default                      = null
 }
 variable windows_storage_type {
   default                      = "Standard_LRS"

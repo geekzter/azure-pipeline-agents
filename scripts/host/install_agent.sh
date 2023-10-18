@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -x
 echo $(basename $0) "$@"
 
 # Process arguments
@@ -11,11 +11,6 @@ function validate {
         echo "No agent name. Use --agent-name to specify agent name"
         valid=0
     fi               
-    if [[ "$AGENT_POOL" == "" ]] 
-    then
-        echo "No agent pool. Use --agent-pool to specify agent pool"
-        valid=0
-    fi    
     if [[ "$AGENT_VERSION_ID" == "" ]] 
     then
         echo "No agent version. Use --agent-version-id to specify agent version"
@@ -50,6 +45,12 @@ while [ "$1" != "" ]; do
                                         ;;
         --agent-version-id)             shift
                                         AGENT_VERSION_ID=$1
+                                        ;;
+        --deployment-group)             shift
+                                        AGENT_GROUP=$1
+                                        ;;
+        --project)                      shift
+                                        PROJECT=$1
                                         ;;
         --org)                          shift
                                         ORG=$1
@@ -100,14 +101,29 @@ sudo ./bin/installdependencies.sh
 
 # Unattended config
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops#unattended-config
-echo "Creating agent ${AGENT_NAME} and adding it to pool ${AGENT_POOL} in organization ${ORG}..."
-./config.sh --unattended \
-            --url https://dev.azure.com/${ORG} \
-            --auth pat --token $PAT \
-            --pool $AGENT_POOL \
-            --agent $AGENT_NAME --replace \
-            --acceptTeeEula \
-            --work $AGENT_DATA_DIRECTORY/work
+if [[ -n $AGENT_GROUP ]]; then
+    echo "Creating agent ${AGENT_NAME} and adding it to deployment group ${AGENT_GROUP} in project ${PROJECT} in organization ${ORG}..."
+    ./config.sh --unattended \
+                --url https://dev.azure.com/${ORG} \
+                --auth pat --token $PAT \
+                --deploymentgroup --deploymentgroupname "${AGENT_GROUP}" \
+                --projectname "${PROJECT}" \
+                --agent $AGENT_NAME --replace \
+                --acceptteeeula \
+                --work $AGENT_DATA_DIRECTORY/work
+elif [ ! -z $AGENT_POOL ]; then
+    echo "Creating agent ${AGENT_NAME} and adding it to pool ${AGENT_POOL} in organization ${ORG}..."
+    ./config.sh --unattended \
+                --url https://dev.azure.com/${ORG} \
+                --auth pat --token $PAT \
+                --pool $AGENT_POOL \
+                --agent $AGENT_NAME --replace \
+                --acceptteeeula \
+                --work $AGENT_DATA_DIRECTORY/work
+else
+    echo "Neither --agent-pool or --deployment-group specified, nothing to do"
+    exit 1
+fi
 
 if [ ! -f /etc/systemd/system/vsts.agent.${ORG}.* ]; then
     # Run as systemd service

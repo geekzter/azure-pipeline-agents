@@ -11,7 +11,7 @@ module network {
   deploy_bastion               = var.deploy_bastion
   deploy_firewall              = var.deploy_firewall
   destroy_wait_minutes         = var.destroy_wait_minutes
-  devops_org                   = var.devops_org
+  azdo_org                     = var.azdo_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   dns_host_suffix              = var.dns_host_suffix
   enable_firewall_dns_proxy    = var.enable_firewall_dns_proxy
@@ -144,12 +144,12 @@ module self_hosted_linux_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent                 = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
+  deploy_agent                 = var.azdo_org != null && var.azdo_pat != null && var.deploy_self_hosted_vm_agents
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  devops_org                   = var.devops_org
-  devops_pat                   = var.devops_pat
+  azdo_org                     = var.azdo_org
+  azdo_pat                     = var.azdo_pat
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
@@ -204,12 +204,12 @@ module self_hosted_windows_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent_vm_extension    = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
+  deploy_agent_vm_extension    = var.azdo_org != null && var.azdo_pat != null && var.deploy_self_hosted_vm_agents
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  devops_org                   = var.devops_org
-  devops_pat                   = var.devops_pat
+  azdo_org                     = var.azdo_org
+  azdo_pat                     = var.azdo_pat
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   environment_variables        = local.environment_variables

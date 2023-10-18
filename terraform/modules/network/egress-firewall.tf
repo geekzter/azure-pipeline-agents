@@ -389,7 +389,7 @@ resource azurerm_firewall_application_rule_collection agent_app_rules {
   }
 
   dynamic "rule" {
-    for_each = range(var.devops_org != null && var.devops_org != "" ? 1 : 0) 
+    for_each = range(var.azdo_org != null && var.azdo_org != "" ? 1 : 0) 
     content {
       name                     = "Allow Azure DevOps Organization (config:${var.configuration_name})"
 
@@ -398,12 +398,12 @@ resource azurerm_firewall_application_rule_collection agent_app_rules {
       ]
 
       target_fqdns             = [
-        "${var.devops_org}.pkgs.visualstudio.com",
-        "${var.devops_org}.visualstudio.com",
-        "${var.devops_org}.vsblob.visualstudio.com",
-        "${var.devops_org}.vsrm.visualstudio.com",
-        "${var.devops_org}.vssps.visualstudio.com",
-        "${var.devops_org}.vstmr.visualstudio.com",
+        "${var.azdo_org}.pkgs.visualstudio.com",
+        "${var.azdo_org}.visualstudio.com",
+        "${var.azdo_org}.vsblob.visualstudio.com",
+        "${var.azdo_org}.vsrm.visualstudio.com",
+        "${var.azdo_org}.vssps.visualstudio.com",
+        "${var.azdo_org}.vstmr.visualstudio.com",
       ]
 
       protocol {

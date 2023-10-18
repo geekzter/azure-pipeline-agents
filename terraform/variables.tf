@@ -20,6 +20,23 @@ variable application_owner {
   default                      = "" # Empty string takes objectId of current user
 }
 
+variable azdo_org {
+  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+  default                      = null
+}
+variable azdo_pat {
+  description                  = "A Personal Access Token to access the Azure DevOps organization"
+  default                      = null
+}
+variable azdo_project {
+  description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
+  default                      = ""
+}
+variable azdo_service_connection_id {
+  description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
+  default                      = ""
+}
+
 variable bastion_tags {
   description                  = "A map of the tags to use for the bastion resources that are deployed"
   type                         = map
@@ -81,7 +98,7 @@ variable deploy_self_hosted_vms {
   type                         = bool
 }
 variable deploy_self_hosted_vm_agents {
-  description                  = "Deploys Pipeline Agent on self-hosted VMs. Variables devops_org and devops_pat should also be specified."
+  description                  = "Deploys Pipeline Agent on self-hosted VMs. Variables azdo_org and azdo_pat should also be specified."
   default                      = true
   type                         = bool
 }
@@ -89,14 +106,6 @@ variable deploy_self_hosted_vm_agents {
 variable destroy_wait_minutes {
   default                      = 2
   type                         = number
-}
-variable devops_org {
-  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
-  default                      = null
-}
-variable devops_pat {
-  description                  = "A Personal Access Token to access the Azure DevOps organization"
-  default                      = null
 }
 
 variable dns_host_suffix {
@@ -170,6 +179,9 @@ variable linux_self_hosted_agent_count {
   default                      = 1
   type                         = number
 }
+variable linux_self_hosted_agent_deployment_group_name {
+  default                      = null
+}
 variable linux_storage_type {
   default                      = "Standard_LRS"
 }
@@ -241,16 +253,6 @@ variable script_wrapper_check {
   description                  = "Set to true in a .auto.tfvars file to force Terraform to check whether it's run from deploy.ps1"
   type                         = bool
   default                      = false
-}
-
-variable service_connection_id {
-  description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
-  default                      = ""
-}
-
-variable service_connection_project {
-  description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
-  default                      = ""
 }
 
 variable shared_image_gallery_id {
@@ -359,6 +361,9 @@ variable windows_scale_set_agent_interactive_ui {
 variable windows_self_hosted_agent_count {
   default                      = 1
   type                         = number
+}
+variable windows_self_hosted_agent_deployment_group_name {
+  default                      = null
 }
 variable windows_storage_type {
   default                      = "Standard_LRS"

@@ -30,8 +30,8 @@ locals {
 
   elastic_pools                = {
     for vmss in local.virtual_machine_scale_sets : vmss.os => {
-      "serviceEndpointId"      = var.service_connection_id
-      "serviceEndpointScope"   = var.service_connection_project
+      "serviceEndpointId"      = var.azdo_service_connection_id
+      "serviceEndpointScope"   = var.azdo_project
       "azureId"                = vmss.id
       "maxCapacity"            = vmss.max_count
       "desiredIdle"            = min(vmss.count,vmss.max_count,coalesce(vmss.os == "windows" ? var.windows_scale_set_agent_idle_count : var.linux_scale_set_agent_idle_count),vmss.count)

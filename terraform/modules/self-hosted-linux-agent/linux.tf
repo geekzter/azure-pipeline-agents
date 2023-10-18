@@ -70,8 +70,8 @@ data cloudinit_config user_data {
         agent_pool             = var.pipeline_agent_pool
         agent_version_id       = var.pipeline_agent_version_id
         install_agent_script_b64= filebase64("${path.root}/../scripts/host/install_agent.sh")
-        org                    = var.devops_org
-        pat                    = var.devops_pat
+        org                    = var.azdo_org
+        pat                    = var.azdo_pat
         user                   = var.user_name
       })
       content_type             = "text/cloud-config"

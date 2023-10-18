@@ -3,6 +3,9 @@ variable admin_cidr_ranges {
   default                      = []
 }
 
+variable azdo_org {}
+variable azdo_pat {}
+
 variable create_public_ip_address {
   type                         = bool
 }
@@ -15,9 +18,6 @@ variable deploy_files_share {
 variable deploy_non_essential_vm_extensions {
   type                         = bool
 }
-
-variable devops_org {}
-variable devops_pat {}
 
 variable diagnostics_smb_share {}
 variable diagnostics_smb_share_mount_point {}

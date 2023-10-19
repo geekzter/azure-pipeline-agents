@@ -145,7 +145,7 @@ resource null_resource private_endpoint_nsg_association {
 
   provisioner local-exec {
     # command                    = "az network vnet subnet update --ids ${azurerm_subnet.private_endpoint_subnet.id} --nsg ${azurerm_network_security_group.default.id} --query 'networkSecurityGroup'"
-    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.private_endpoint_subnet.id} -NsgId ${azurerm_network_security_group.default.id}"
+    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.private_endpoint_subnet.id} -NsgId ${azurerm_network_security_group.default.id} -Verbose -Debug"
     interpreter                = ["pwsh","-nop","-command"]
   }  
 }

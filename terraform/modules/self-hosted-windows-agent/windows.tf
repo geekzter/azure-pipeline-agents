@@ -1,4 +1,7 @@
 locals {
+  azdo_deployment_group_name   = var.azdo_deployment_group_name != null ? var.azdo_deployment_group_name : ""
+  azdo_environment_name        = var.azdo_environment_name != null ? var.azdo_environment_name : ""
+  azdo_pipeline_agent_pool     = var.azdo_pipeline_agent_pool != null ? var.azdo_pipeline_agent_pool : ""
   prepare_agent_script         = templatefile("${path.root}/../scripts/host/prepare_agent.ps1",
     {
       diagnostics_directory    = "C:\\ProgramData\\pipeline-agent\\diag"
@@ -240,7 +243,7 @@ resource azurerm_virtual_machine_extension pipeline_agent {
   auto_upgrade_minor_version   = true
 
   protected_settings           = jsonencode({
-    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./prepare_agent.ps1 -Force;./prepare_agent.ps1 -AgentName ${var.pipeline_agent_name} -AgentPool ${var.pipeline_agent_pool} -AgentVersionId ${var.pipeline_agent_version_id} -Organization ${var.devops_org} -PAT ${var.devops_pat} *> C:/WindowsAzure/Logs/prepare_agent.log\""
+    "commandToExecute"         = "powershell.exe -ExecutionPolicy Unrestricted -Command \"Copy-Item C:/AzureData/CustomData.bin ./prepare_agent.ps1 -Force;./prepare_agent.ps1 -AgentName ${var.azdo_pipeline_agent_name} -AgentPool '${local.azdo_pipeline_agent_pool}' -DeploymentGroup '${local.azdo_deployment_group_name}' -Environment '${local.azdo_environment_name}' -AgentVersionId ${var.azdo_pipeline_agent_version_id} -Organization ${var.azdo_org} -PAT ${var.azdo_pat} -Project '${var.azdo_project}' *> C:/WindowsAzure/Logs/prepare_agent.log\""
   })
 
   # Start VM, so we can update/destroy the extension

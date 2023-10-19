@@ -189,10 +189,6 @@ try {
                 $defaultChoice = 1
                 Write-Warning "You're about to remove or replace these Virtual Machines in workspace '${workspace}':"
                 $vmsReplaced
-                if ($Force) {
-                    $Force = $false # Ignore force if resources with state get replaced
-                    Write-Warning "Ignoring -force"
-                }
             }
 
             if (!$Force) {

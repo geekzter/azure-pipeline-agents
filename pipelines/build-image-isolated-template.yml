@@ -280,7 +280,7 @@ jobs:
           virtual_network_subnet_name         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
         }
 
-        if ($${{ equals(parameters.hyperVGeneration,"V2") }}) {
+        if ($${{ eq(parameters.hyperVGeneration,"V2") }}) {
           $packerTemplateParameters['image_sku'] = "$(baseImageSKU)"
         }
         

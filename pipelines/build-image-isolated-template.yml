@@ -251,7 +251,9 @@ jobs:
             $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
           }
           $packerHCLVarsContent += "`n}"
-          $packerHCLVarsContent += "`nimage_sku=`"$(baseImageSKU)`""
+          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
+            $packerHCLVarsContent += "`nimage_sku=`"$(baseImageSKU)`""
+          }
           $packerHCLVarsContent += "`n"
           $packerHCLVarsFile = "overrides.auto.pkrvars.hcl"
           $packerHCLVarsContent | Set-Content $packerHCLVarsFile

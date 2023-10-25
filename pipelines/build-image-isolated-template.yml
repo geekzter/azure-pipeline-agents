@@ -71,6 +71,18 @@ jobs:
       value: '${{ parameters.image }}${{ parameters.hyperVGeneration }}'
     - name: 'imagePublisher'
       value: 'PrivatePipelineImages${{ parameters.hyperVGeneration }}'
+    - ${{ if eq(parameters.image,'Windows2019') }}:
+      - name: 'baseImageSKU'
+        value: '2019-datacenter-gensecond'
+    - ${{ elseif eq(parameters.image,'Windows2022') }}:
+      - name: 'baseImageSKU'
+        value: '2022-datacenter-azure-edition'
+    - ${{ elseif eq(parameters.image,'Ubuntu2004') }}:
+      - name: 'baseImageSKU'
+        value: '20_04-lts-gen2'
+    - ${{ elseif eq(parameters.image,'Ubuntu2204') }}:
+      - name: 'baseImageSKU'
+        value: '22_04-lts-gen2'
   - ${{ if contains(parameters.image,'buntu') }}:
     - name: 'imageOffer'
       value: 'Ubuntu'
@@ -267,6 +279,11 @@ jobs:
           virtual_network_resource_group_name = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
           virtual_network_subnet_name         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
         }
+
+        if ($${{ equals(parameters.hyperVGeneration,"V2" }}) {
+          $packerTemplateParameters['image_sku'] = "$(baseImageSKU)"
+        }
+        
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
         Write-Host "`nCustom template parameters:"
         $packerTemplateParameters['client_secret'] = '***'

@@ -57,14 +57,20 @@ jobs:
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
     value: 'yes_without_prompt'
+  - name: 'imageGeneration'
+    value: '${{ parameters.hyperVGeneration }}'
   - name: 'imageName'
     value: '${{ parameters.image }}'
   - ${{ if eq(parameters.hyperVGeneration,'V1') }}:
     - name: 'imageDefinitionName'
       value: '${{ parameters.image }}'
+    - name: 'imagePublisher'
+      value: 'PrivatePipelineImages'
   - ${{ else }}:
     - name: 'imageDefinitionName'
       value: '${{ parameters.image }}${{ parameters.hyperVGeneration }}'
+    - name: 'imagePublisher'
+      value: 'PrivatePipelineImages${{ parameters.hyperVGeneration }}'
   - ${{ if contains(parameters.image,'buntu') }}:
     - name: 'imageOffer'
       value: 'Ubuntu'
@@ -83,8 +89,6 @@ jobs:
       value: ${{ replace(parameters.image,'Windows', '') }}
     - name: 'imageSubDirectory'
       value: 'win'
-  - name: 'imagePublisher'
-    value: 'PrivatePipelineImages'
   - name: 'imageRepository'
     value: '$(Build.SourcesDirectory)/runner-images'
   - name: 'imageReleaseName' 
@@ -386,7 +390,7 @@ jobs:
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
                                          --os-type $(imageOSType) --os-state Generalized `
-                                         --hyper-v-generation V2 `
+                                         --hyper-v-generation $(imageGeneration) `
                                          --query id -o tsv | Set-Variable imageDefinitionId
                                          
           # BUG: https://github.com/Azure/azure-cli/issues/23194

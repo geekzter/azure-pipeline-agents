@@ -250,8 +250,9 @@ jobs:
           foreach ($key in $azureTags.Keys) {
             $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
           }
-          $packerHCLVarsContent+="`n}"
-          $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
+          $packerHCLVarsContent += "`n}"
+          $packerHCLVarsContent += "image_sku=$(baseImageSKU)"
+          $packerHCLVarsFile = "overrides.auto.pkrvars.hcl"
           $packerHCLVarsContent | Set-Content $packerHCLVarsFile
           Get-Content $packerHCLVarsFile
 
@@ -331,7 +332,6 @@ jobs:
                      -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "client_id=${env:servicePrincipalId}" `
                      -var "client_secret=${env:servicePrincipalKey}" `
-                     -var "image_sku=$(baseImageSKU)" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
                      -var "managed_image_name=$(imageName)-$(githubRelease.qualifiedVersion)" `
                      -var "managed_image_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `

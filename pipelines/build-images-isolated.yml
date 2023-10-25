@@ -19,6 +19,7 @@ parameters:
 - name: hyperVGeneration
   displayName: VM generation
   type: string
+  default: V1
   values:
   - V1
   - V2

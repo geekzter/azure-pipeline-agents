@@ -437,10 +437,10 @@ jobs:
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --gallery-image-version $qualifiedVersionString `
                                     --location $env:PIPELINE_DEMO_PACKER_LOCATION `
-                                    --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --managed-image $(managedImage.imageResourceId) `
                                     --query id -o tsv | Set-Variable imageVersionId
+                                    # --no-wait
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
       addSpnToEnvironment: true

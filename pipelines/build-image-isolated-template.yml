@@ -240,6 +240,9 @@ jobs:
           $packerTemplate.builders[0]["azure_tags"] = $azureTags
           Write-Host "`nTags that will be applied to build resources:"
           $packerTemplate.builders[0]["azure_tags"] | Format-Table
+          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
+            $packerTemplate.builders[0]["image_sku"] = "$(baseImageSKU)"
+          }
           Write-Host "`nPacker template:"
           $packerTemplate | ConvertTo-Json -Depth 5
           $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
@@ -251,13 +254,12 @@ jobs:
             $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
           }
           $packerHCLVarsContent += "`n}"
-          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
-            $packerHCLVarsContent += "`nimage_sku=`"$(baseImageSKU)`""
-          }
           $packerHCLVarsContent += "`n"
           $packerHCLVarsFile = "overrides.auto.pkrvars.hcl"
           $packerHCLVarsContent | Set-Content $packerHCLVarsFile
           Get-Content $packerHCLVarsFile
+
+          # TODO: replace image_sku value in .pkr.hcl
 
           $packerTemplateArgument = "."
         }
@@ -282,10 +284,6 @@ jobs:
           virtual_network_name                = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME
           virtual_network_resource_group_name = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
           virtual_network_subnet_name         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
-        }
-
-        if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
-          $packerTemplateParameters['image_sku'] = "$(baseImageSKU)"
         }
         
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson

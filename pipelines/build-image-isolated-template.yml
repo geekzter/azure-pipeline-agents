@@ -260,9 +260,11 @@ jobs:
           Get-Content $packerHCLVarsFile
 
           # replace image_sku value in .pkr.hcl
-          (Get-Content $packerTemplateFileName) -replace "image_sku\W*=.*$","image_sku = `"$(baseImageSKU)`"" `
-                                                | Tee-Object -Variable packerTemplateContent
-          Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
+          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
+            (Get-Content $packerTemplateFileName) -replace "image_sku\W*=.*$","image_sku = `"$(baseImageSKU)`"" `
+                                                  | Tee-Object -Variable packerTemplateContent
+            Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
+          }
 
           $packerTemplateArgument = "."
         }

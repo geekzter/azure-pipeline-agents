@@ -260,7 +260,8 @@ jobs:
           Get-Content $packerHCLVarsFile
 
           # replace image_sku value in .pkr.hcl
-          (Get-Content -Raw $packerTemplateFileName) -replace "image_sku\W*=.*$","image_sku = `"$(baseImageSKU)`"" `
+          # (Get-Content -Raw $packerTemplateFileName) -replace "image_sku\W*=.*$","image_sku = `"$(baseImageSKU)`"" `
+          (Get-Content -Raw $packerTemplateFileName) -replace "image_sku*$","image_sku = `"$(baseImageSKU)`"" `
                                                      | Tee-Object -Variable packerTemplateContent
           Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
           Get-Content $packerTemplateFileName
@@ -442,8 +443,8 @@ jobs:
   #                                   --location $env:PIPELINE_DEMO_PACKER_LOCATION `
   #                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
   #                                   --managed-image $(managedImage.imageResourceId) `
+  #                                   --no-wait `
   #                                   --query id -o tsv | Set-Variable imageVersionId
-  #                                   # --no-wait
 
   #       Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
   #     addSpnToEnvironment: true

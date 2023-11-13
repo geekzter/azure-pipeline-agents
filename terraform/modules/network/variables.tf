@@ -20,6 +20,9 @@ variable configure_crl_oscp_rules {
 variable configure_wildcard_allow_rules {
   type                         = bool
 }
+variable create_packer_infrastructure {
+  type                         = bool
+}
 variable deploy_bastion {
   type                         = bool
 }

@@ -8,6 +8,7 @@ module network {
   configure_cidr_allow_rules   = var.configure_cidr_allow_rules
   configure_crl_oscp_rules     = var.configure_crl_oscp_rules
   configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
+  create_packer_infrastructure = var.create_packer_infrastructure
   deploy_bastion               = var.deploy_bastion
   deploy_firewall              = var.deploy_firewall
   destroy_wait_minutes         = var.destroy_wait_minutes
@@ -19,7 +20,7 @@ module network {
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   packer_address_space         = var.packer_address_space
-  peer_virtual_network_id      = module.packer.virtual_network_id
+  peer_virtual_network_id      = var.create_packer_infrastructure ? module.packer.0.virtual_network_id : null
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
 }
@@ -46,6 +47,8 @@ module packer {
   depends_on                   = [
     time_sleep.script_wrapper_check
   ]
+
+  count                        = var.create_packer_infrastructure ? 1 : 0
 }
 
 module scale_set_linux_agents {
@@ -278,4 +281,6 @@ module gallery {
     module.network,
     module.packer
   ]
+
+  count                        = var.create_packer_infrastructure ? 1 : 0
 }

@@ -17,11 +17,11 @@ resource azurerm_role_assignment agent_storage_contributors {
   for_each                     = var.configure_access_control ? toset(local.storage_contributors) : toset([])
 }
 resource azurerm_role_assignment packer_storage_contributors {
-  scope                        = module.packer.network_resource_group_id
+  scope                        = module.packer.0.network_resource_group_id
   role_definition_name         = "Storage Blob Data Contributor"
   principal_id                 = each.value
 
-  for_each                     = var.configure_access_control ? toset(local.storage_contributors) : toset([])
+  for_each                     = var.create_packer_infrastructure && var.configure_access_control ? toset(local.storage_contributors) : toset([])
 }
 
 resource azurerm_role_assignment agent_viewer {
@@ -33,18 +33,18 @@ resource azurerm_role_assignment agent_viewer {
 }
 
 resource azurerm_role_assignment build_viewer {
-  scope                        = module.packer.build_resource_group_id
+  scope                        = module.packer.0.build_resource_group_id
   role_definition_name         = "Reader"
   principal_id                 = each.key
 
-  for_each                     = var.configure_access_control ? toset(var.demo_viewers) : toset([])
+  for_each                     = var.create_packer_infrastructure && var.configure_access_control ? toset(var.demo_viewers) : toset([])
 }
 resource azurerm_role_assignment network_viewer {
-  scope                        = module.packer.network_resource_group_id
+  scope                        = module.packer.0.network_resource_group_id
   role_definition_name         = "Reader"
   principal_id                 = each.key
 
-  for_each                     = var.configure_access_control ? toset(var.demo_viewers) : toset([])
+  for_each                     = var.create_packer_infrastructure && var.configure_access_control ? toset(var.demo_viewers) : toset([])
 }
 
 resource azurerm_role_assignment vm_admin {

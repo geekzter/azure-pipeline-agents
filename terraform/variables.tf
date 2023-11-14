@@ -75,6 +75,11 @@ variable configure_wildcard_allow_rules {
   type                         = bool
 }
 
+variable create_packer_infrastructure {
+  default                      = true
+  type                         = bool
+}
+
 variable demo_viewers {
   description                  = "Object ID's of AAD groups/users to be granted reader access"
   default                      = []

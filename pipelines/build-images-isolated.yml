@@ -86,7 +86,7 @@ variables:
   - group: 'build-images-isolated'
 
 jobs:
-- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
+- ${{ if in(parameters.image,'All','Ubuntu','Ubuntu2004') }}:
   - template: build-image-isolated-template.yml
     parameters:
       destroy: ${{ parameters.destroy }}

@@ -30,7 +30,7 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 2
+  default: 5
 - name: retryCount
   displayName: Build task retry count
   type: number

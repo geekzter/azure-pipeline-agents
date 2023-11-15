@@ -55,6 +55,8 @@ jobs:
   timeoutInMinutes: 1430
 
   variables:
+  - name: 'addMinorImageVersion'
+    value: ${{ lower(or(parameters.addMinorImageVersion,eq(variables['Build.Reason'], 'Schedule'))) }}
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: AZURE_CORE_ONLY_SHOW_ERRORS
@@ -127,9 +129,6 @@ jobs:
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'scriptDirectory'
     value: '$(agentRepository)/scripts'
-  - name: 'update'
-    value: ${{ lower(or(parameters.update,eq(variables['Build.Reason'], 'Schedule'))) }}
-
 
   steps:
   - checkout: self

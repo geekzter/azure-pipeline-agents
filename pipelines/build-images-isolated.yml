@@ -39,6 +39,10 @@ parameters:
   displayName: Upgrade Azure CLI to latest version
   type: boolean
   default: false
+- name: addMinorImageVersion
+  displayName: Create minor version of major version exists
+  type: boolean
+  default: false
 - name: waitForReplication
   displayName: Wait for image replication to finish
   type: boolean
@@ -89,6 +93,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Ubuntu','Ubuntu2004') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.update }}
       destroy: ${{ parameters.destroy }}
       image: Ubuntu2004
       hyperVGeneration: ${{ parameters.hyperVGeneration }}
@@ -102,6 +107,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.update }}
       destroy: ${{ parameters.destroy }}
       hyperVGeneration: ${{ parameters.hyperVGeneration }}
       image: Ubuntu2204
@@ -115,6 +121,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.update }}
       destroy: ${{ parameters.destroy }}
       hyperVGeneration: ${{ parameters.hyperVGeneration }}
       image: Windows2019
@@ -128,6 +135,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.update }}
       destroy: ${{ parameters.destroy }}
       hyperVGeneration: ${{ parameters.hyperVGeneration }}
       image: Windows2022

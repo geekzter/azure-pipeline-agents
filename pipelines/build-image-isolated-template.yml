@@ -37,6 +37,10 @@ parameters:
   displayName: Upgrade Azure CLI to latest version
   type: boolean
   default: false
+- name: addMinorImageVersion
+  displayName: Create minor version of major version exists
+  type: boolean
+  default: false
 - name: waitForReplication
   displayName: Wait for image replication to finish
   type: boolean
@@ -123,6 +127,9 @@ jobs:
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'scriptDirectory'
     value: '$(agentRepository)/scripts'
+  - name: 'update'
+    value: ${{ lower(or(parameters.update,eq(variables['Build.Reason'], 'Schedule'))) }}
+
 
   steps:
   - checkout: self
@@ -195,17 +202,25 @@ jobs:
                                   --query "[?starts_with(name,'${twoPartVersionString}') && (provisioningState=='Creating' || provisioningState=='Succeeded') && !(publishingProfile.excludeFromLatest)]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
 
+        $addMinorImageVersion = $$(addMinorImageVersion)
         if ($imageVersion) {
           Write-Host "Image Definition '$(imageDefinitionName)' with version '$twoPartVersionString' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          if ($addMinorImageVersion) {
+            Write-Host "Adding new minor image version to existing major image version"
+          }
           $imageVersion | Format-List
-          Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
-          Write-Warning "Image Definition '$(imageDefinitionName)' with version '$twoPartVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Host "Image Definition '$(imageDefinitionName)' with version '$twoPartVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+        }
+
+        $createImage = ($addMinorImageVersion -or !$imageVersion)
+        if ($createImage) {
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$threePartVersionString"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
+        } else {
+          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         }
       failOnStandardError: true
 

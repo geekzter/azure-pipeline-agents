@@ -90,7 +90,7 @@ variables:
   - group: 'build-images-isolated'
 
 jobs:
-- ${{ if in(parameters.image,'All','Ubuntu','Ubuntu2004') }}:
+- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
   - template: build-image-isolated-template.yml
     parameters:
       addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
@@ -149,7 +149,7 @@ jobs:
 - ${{ if parameters.destroy }}:
   - job: 'CleanUp'
     dependsOn:
-      - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
+      - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
         - Ubuntu2004
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
         - Ubuntu2204

@@ -106,7 +106,7 @@ jobs:
     - name: 'imageSKU'
       value: ${{ replace(parameters.image,'Windows', '') }}
     - name: 'imageSubDirectory'
-      value: 'win'
+      value: 'windows'
   - name: 'imageRepository'
     value: '$(Build.SourcesDirectory)/runner-images'
   - name: 'imageReleaseName' 

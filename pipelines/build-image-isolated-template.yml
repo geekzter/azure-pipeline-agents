@@ -321,9 +321,10 @@ jobs:
       workingDirectory: $(imageTemplateDirectory)
 
   - bash: |
-      find . *.ps1
-      find . *.ps1 | xargs chmod +x
+      # find . *.ps1
+      # find . *.ps1 | xargs chmod +x
       ls -alR $(imageTemplateDirectory)/../scripts
+      find $(Build.SourcesDirectory)
       ls /agent/_work/1/s/runner-images/images/windows/templates/../scripts/build/Install-PowershellModules.ps1
       ls /agent/_work/1/s/runner-images/images/windows/scripts/build/Install-PowershellModules.ps1
       ls -al /agent/_work/1/s/runner-images/images/windows/scripts/build

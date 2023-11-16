@@ -320,7 +320,10 @@ jobs:
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
 
-  - bash: find . *.ps1 | xargs chmod +x
+  - bash: |
+      find . *.ps1
+      find . *.ps1 | xargs chmod +x
+      ls -alR $(imageTemplateDirectory)/../scripts
     displayName: 'Make PowerShell scripts executable'
     workingDirectory: $(imageRepository)
 

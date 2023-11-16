@@ -231,6 +231,8 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
+
+        Get-ChildItem -Path $(Build.SourcesDirectory) -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object FullName
       
         $packerTemplateFileName = "$(imageTemplateFileName)"
 

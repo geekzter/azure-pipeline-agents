@@ -326,6 +326,7 @@ jobs:
       ls -alR $(imageTemplateDirectory)/../scripts
       ls /agent/_work/1/s/runner-images/images/windows/templates/../scripts/build/Install-PowershellModules.ps1
       ls /agent/_work/1/s/runner-images/images/windows/scripts/build/Install-PowershellModules.ps1
+      ls -al /agent/_work/1/s/runner-images/images/windows/scripts/build
     continueOnError: true
     displayName: 'Make PowerShell scripts executable'
     workingDirectory: $(imageRepository)

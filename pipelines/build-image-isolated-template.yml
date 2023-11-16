@@ -115,12 +115,12 @@ jobs:
     value: '${{ parameters.imageResourcePrefix }}'
   - ${{ if eq(parameters.image,'Ubuntu2204') }}:
     - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.pkr.hcl'
+      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/templates/${{ lower(parameters.image) }}.pkr.hcl'
     - name: 'imageTemplateFileName'
       value: '${{ lower(parameters.image) }}.pkr.hcl'
   - ${{ else }}:
     - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
+      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/templates/${{ lower(parameters.image) }}.json'
     - name: 'imageTemplateFileName'
       value: '${{ lower(parameters.image) }}.json'
   - name: 'imageTemplateDirectory'
@@ -233,8 +233,6 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
-
-        ls -alR $(Build.SourcesDirectory)/runner-images/images
       
         $packerTemplateFileName = "$(imageTemplateFileName)"
 

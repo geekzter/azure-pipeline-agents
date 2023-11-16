@@ -29,12 +29,13 @@ parameters:
   displayName: Number of image versions to keep
   type: number
   default: 5
-- name: imageResourcePrefix
-  displayName: Image Resource Prefix
-  type: string
 - name: packerTemplate
   displayName: Packer template # relative path
   type: string
+- name: retryCount
+  displayName: Build task retry count
+  type: number
+  default: 1
 - name: upgradeAzureCLI
   displayName: Upgrade Azure CLI to latest version
   type: boolean

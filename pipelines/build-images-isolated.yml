@@ -100,7 +100,8 @@ jobs:
       imageReleaseName: ubuntu20
       imageResourcePrefix: 'packer$(Build.BuildId)u20'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-      packerTemplate: 'images/ubuntu/templates/ubuntu-20.04.json'
+      packerTemplateDirectory: 'images/ubuntu/templates'
+      packerTemplateFile: 'ubuntu-20.04.json'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -115,7 +116,8 @@ jobs:
       imageReleaseName: ubuntu22
       imageResourcePrefix: 'packer$(Build.BuildId)u22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-      packerTemplate: 'images/ubuntu/templates/ubuntu-22.04.pkr.hcl'
+      packerTemplateDirectory: 'images/ubuntu/templates'
+      packerTemplateFile: 'ubuntu-22.04.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -130,7 +132,8 @@ jobs:
       imageReleaseName: win19
       imageResourcePrefix: 'packer$(Build.BuildId)w19'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-      packerTemplate: 'images/windows/templates/windows-2019.json'
+      packerTemplateDirectory: 'images/windows/templates'
+      packerTemplateFile: 'windows-2019.json'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -145,7 +148,8 @@ jobs:
       imageReleaseName: win22
       imageResourcePrefix: 'packer$(Build.BuildId)w22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-      packerTemplate: 'images/windows/templates/windows-2022.json'
+      packerTemplateDirectory: 'images/windows/templates'
+      packerTemplateFile: 'windows-2022.json'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}

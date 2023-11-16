@@ -320,6 +320,10 @@ jobs:
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
 
+  - bash: find ../scripts *.ps1 | xargs chmod +x
+    displayName: 'Make PowerShell scripts executable'
+    workingDirectory: $(imageTemplateDirectory)
+
   # Does not support HCL files and therefore Ubuntu 22.04
   - task: PackerBuild@1
     displayName: 'Packer build (JSON)'

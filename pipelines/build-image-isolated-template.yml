@@ -29,10 +29,12 @@ parameters:
   displayName: Number of image versions to keep
   type: number
   default: 5
-- name: retryCount
-  displayName: Build task retry count
-  type: number
-  default: 1
+- name: imageResourcePrefix
+  displayName: Image Resource Prefix
+  type: string
+- name: packerTemplate
+  displayName: Packer template # relative path
+  type: string
 - name: upgradeAzureCLI
   displayName: Upgrade Azure CLI to latest version
   type: boolean
@@ -113,18 +115,13 @@ jobs:
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
-  - ${{ if eq(parameters.image,'Ubuntu2204') }}:
-    - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/templates/${{ lower(parameters.image) }}.pkr.hcl'
-    - name: 'imageTemplateFileName'
-      value: '${{ lower(parameters.image) }}.pkr.hcl'
-  - ${{ else }}:
-    - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/templates/${{ lower(parameters.image) }}.json'
-    - name: 'imageTemplateFileName'
-      value: '${{ lower(parameters.image) }}.json'
+  - name: 'imageTemplate'
+    value: '$(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplate }}'
+  - name: 'imageTemplateFileName'
+    value: ${{ split(parameters.packerTemplate,'/')[3] }}
   - name: 'imageTemplateDirectory'
-    value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
+    # value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
+    value: ${{ replace(parameters.packerTemplate,'/${{ variables.imageTemplateFileName }}','') }
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'scriptDirectory'

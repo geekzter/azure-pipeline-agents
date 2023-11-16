@@ -325,6 +325,8 @@ jobs:
       find . *.ps1 | xargs chmod +x
       ls -alR $(imageTemplateDirectory)/../scripts
       ls /home/vsts/work/1/s/runner-images/images/windows/templates/../scripts/build/Install-PowershellModules.ps1
+      ls /home/vsts/work/1/s/runner-images/images/windows/scripts/build/Install-PowershellModules.ps1
+    continueOnError: true
     displayName: 'Make PowerShell scripts executable'
     workingDirectory: $(imageRepository)
 

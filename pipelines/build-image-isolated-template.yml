@@ -121,7 +121,7 @@ jobs:
     value: ${{ split(parameters.packerTemplate,'/')[3] }}
   - name: 'imageTemplateDirectory'
     # value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
-    value: ${{ replace(parameters.packerTemplate,'/${{ variables.imageTemplateFileName }}','') }
+    value: ${{ replace(parameters.packerTemplate,'/${{ variables.imageTemplateFileName }}','') }}
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'scriptDirectory'

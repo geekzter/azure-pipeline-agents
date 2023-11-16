@@ -233,6 +233,8 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
+
+        dir $(Build.SourcesDirectory)/runner-images/images -s
       
         $packerTemplateFileName = "$(imageTemplateFileName)"
 

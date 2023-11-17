@@ -29,6 +29,12 @@ parameters:
   displayName: Number of image versions to keep
   type: number
   default: 5
+- name: packerTemplateDirectory
+  displayName: Packer template directory # relative path
+  type: string
+- name: packerTemplateFile
+  displayName: Packer template file
+  type: string
 - name: retryCount
   displayName: Build task retry count
   type: number
@@ -106,25 +112,19 @@ jobs:
     - name: 'imageSKU'
       value: ${{ replace(parameters.image,'Windows', '') }}
     - name: 'imageSubDirectory'
-      value: 'win'
+      value: 'windows'
   - name: 'imageRepository'
     value: '$(Build.SourcesDirectory)/runner-images'
   - name: 'imageReleaseName' 
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
-  - ${{ if eq(parameters.image,'Ubuntu2204') }}:
-    - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.pkr.hcl'
-    - name: 'imageTemplateFileName'
-      value: '${{ lower(parameters.image) }}.pkr.hcl'
-  - ${{ else }}:
-    - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
-    - name: 'imageTemplateFileName'
-      value: '${{ lower(parameters.image) }}.json'
+  - name: 'imageTemplate'
+    value: '$(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}/${{ parameters.packerTemplateFile }}'
+  - name: 'imageTemplateFileName'
+    value: ${{ parameters.packerTemplateFile }}
   - name: 'imageTemplateDirectory'
-    value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
+    value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'scriptDirectory'
@@ -233,7 +233,7 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
-      
+
         $packerTemplateFileName = "$(imageTemplateFileName)"
 
         # Update template to override configuration not accessible as variables

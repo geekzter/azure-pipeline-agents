@@ -234,8 +234,6 @@ jobs:
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
 
-        Get-ChildItem -Path $(Build.SourcesDirectory) -Recurse -Force -ErrorAction SilentlyContinue | Select-Object FullName
-      
         $packerTemplateFileName = "$(imageTemplateFileName)"
 
         # Update template to override configuration not accessible as variables
@@ -319,19 +317,6 @@ jobs:
       addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
-
-  - bash: |
-      # find . *.ps1
-      # find . *.ps1 | xargs chmod +x
-      # ls -alR $(imageTemplateDirectory)/../scripts
-      # find $(Build.SourcesDirectory)
-      # ls /agent/_work/1/s/runner-images/images/windows/templates/../scripts/build/Install-PowershellModules.ps1
-      ls /agent/_work/1/s/runner-images/images/windows/scripts/build/Install-PowershellModules.ps1
-      ls /agent/_work/1/s/runner-images/images/windows/scripts/build/Install-PowerShellModules.ps1
-      # ls -al /agent/_work/1/s/runner-images/images/windows/scripts/build
-    continueOnError: true
-    displayName: 'Make PowerShell scripts executable'
-    workingDirectory: $(imageRepository)
 
   # Does not support HCL files and therefore Ubuntu 22.04
   - task: PackerBuild@1

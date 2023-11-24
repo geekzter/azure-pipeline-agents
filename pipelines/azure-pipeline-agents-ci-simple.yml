@@ -39,6 +39,7 @@ jobs:
   variables:
     AZURE_CORE_ONLY_SHOW_ERRORS: true
     AZURE_EXTENSION_USE_DYNAMIC_INSTALL: yes_without_prompt
+    identityScriptDirectory: $(Build.SourcesDirectory)/scripts/identity/scripts/azure-devops
     repository: azure-pipeline-agents
     resourceGroup: pipelines-agents-$(TF_WORKSPACE)-$(Build.BuildId)
     scriptDirectory: $(Build.SourcesDirectory)/scripts
@@ -50,6 +51,9 @@ jobs:
     TF_WORKSPACE: cis
 
   steps:
+  - checkout: self
+    submodules: true
+
   - bash: |
       ssh-keygen -q -m PEM -N '' -f ~/.ssh/id_rsa
     displayName: 'Generate SSH Key Pair'
@@ -71,7 +75,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
         ./deploy.ps1 -apply -force
       addSpnToEnvironment: true
       failOnStandardError: true
@@ -99,7 +103,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
         ./deploy.ps1 -destroy -force
       addSpnToEnvironment: true
       failOnStandardError: true
@@ -173,7 +177,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
 
         $terraformState = (terraform state pull | ConvertFrom-Json)
         if ($terraformState.resources) {

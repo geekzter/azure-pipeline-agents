@@ -99,6 +99,8 @@ variables:
   value: 'true'
 - name: 'TF_INPUT'
   value: 0
+- name: 'identityScriptDirectory'
+  value: '$(Build.SourcesDirectory)/scripts/identity/scripts/azure-devops'
 - name: 'scriptDirectory'
   value: '$(Build.SourcesDirectory)/scripts'
 - name: 'terraformDirectory'
@@ -243,7 +245,7 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
           ./deploy.ps1 -Init
         addSpnToEnvironment: true
         useGlobalConfig: true
@@ -289,7 +291,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+            $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
             ./get_ssh_key_pair.ps1 -Keyname $(TF_VAR_ssh_private_key) -Force
             $keyDirectory = (Split-Path $(TF_VAR_ssh_private_key) -Parent)
             if (Test-Path $keyDirectory) {
@@ -397,7 +399,7 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
           ./deploy.ps1 -apply -force
         addSpnToEnvironment: true
         useGlobalConfig: true
@@ -438,7 +440,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+            $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
 
             # Swap NAT Gateway <-> Azure Firewall
             # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
@@ -471,7 +473,7 @@ jobs:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
+            $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
             ./deploy.ps1 -destroy -force
           addSpnToEnvironment: true
           useGlobalConfig: true

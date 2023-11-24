@@ -202,6 +202,9 @@ jobs:
     clean: all
 
   steps:
+    - checkout: self
+      submodules: true
+
     - ${{ if not(parameters.unpinTerraform) }}:
       - pwsh: |
           $terraformVersion = (Get-Content .terraform-version)

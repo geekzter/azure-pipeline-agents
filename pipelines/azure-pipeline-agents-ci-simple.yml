@@ -51,6 +51,9 @@ jobs:
     TF_WORKSPACE: cis
 
   steps:
+  - checkout: self
+    submodules: true
+
   - bash: |
       ssh-keygen -q -m PEM -N '' -f ~/.ssh/id_rsa
     displayName: 'Generate SSH Key Pair'

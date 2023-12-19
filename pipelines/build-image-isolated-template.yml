@@ -128,7 +128,7 @@ jobs:
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'PACKER_CONFIG_DIR' 
-    value: '~/.config/packer/plugins'
+    value: '~/.config/packer'
   - name: 'scriptDirectory'
     value: '$(agentRepository)/scripts'
 

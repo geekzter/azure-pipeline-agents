@@ -101,7 +101,7 @@ jobs:
       imageResourcePrefix: 'packer$(Build.BuildId)u20'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/ubuntu/templates'
-      packerTemplateFile: 'ubuntu-20.04.json'
+      packerTemplateFile: 'ubuntu-20.04.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -133,7 +133,7 @@ jobs:
       imageResourcePrefix: 'packer$(Build.BuildId)w19'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/windows/templates'
-      packerTemplateFile: 'windows-2019.json'
+      packerTemplateFile: 'windows-2019.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -149,7 +149,7 @@ jobs:
       imageResourcePrefix: 'packer$(Build.BuildId)w22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/windows/templates'
-      packerTemplateFile: 'windows-2022.json'
+      packerTemplateFile: 'windows-2022.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}

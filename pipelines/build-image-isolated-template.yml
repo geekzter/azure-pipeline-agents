@@ -347,6 +347,9 @@ jobs:
 
         # TODO: Secret-free authentication
 
+        # Init
+        packer init
+
         # Build
         packer build -force `
                      -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `

@@ -127,6 +127,8 @@ jobs:
     value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
+  - name: 'PACKER_CONFIG_DIR' 
+    value: '~/.config/packer'
   - name: 'scriptDirectory'
     value: '$(agentRepository)/scripts'
 
@@ -346,6 +348,9 @@ jobs:
         # We assume main branch is the latest released version
 
         # TODO: Secret-free authentication
+
+        # Init
+        packer init $(imageTemplateFileName)
 
         # Build
         packer build -force `

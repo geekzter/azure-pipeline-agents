@@ -127,11 +127,8 @@ jobs:
     value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
-  # https://developer.hashicorp.com/packer/docs/configure#packer-s-plugin-directory
   - name: 'PACKER_CONFIG_DIR' 
     value: '~/.config/packer/plugins'
-  # - name: 'PACKER_PLUGIN_PATH' 
-  #   value: 
   - name: 'scriptDirectory'
     value: '$(agentRepository)/scripts'
 

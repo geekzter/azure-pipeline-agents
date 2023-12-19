@@ -348,7 +348,7 @@ jobs:
         # TODO: Secret-free authentication
 
         # Init
-        packer init
+        packer init $(imageTemplateFileName)
 
         # Build
         packer build -force `

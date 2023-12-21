@@ -8,10 +8,11 @@ module network {
   configure_cidr_allow_rules   = var.configure_cidr_allow_rules
   configure_crl_oscp_rules     = var.configure_crl_oscp_rules
   configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
+  create_packer_infrastructure = var.create_packer_infrastructure
   deploy_bastion               = var.deploy_bastion
   deploy_firewall              = var.deploy_firewall
   destroy_wait_minutes         = var.destroy_wait_minutes
-  devops_org                   = var.devops_org
+  azdo_org                     = var.azdo_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   dns_host_suffix              = var.dns_host_suffix
   enable_firewall_dns_proxy    = var.enable_firewall_dns_proxy
@@ -19,10 +20,8 @@ module network {
   location                     = var.location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   packer_address_space         = var.packer_address_space
-  peer_virtual_network_id      = module.packer.virtual_network_id
+  peer_virtual_network_id      = var.create_packer_infrastructure ? module.packer.0.virtual_network_id : null
   resource_group_name          = azurerm_resource_group.rg.name
-  packer_storage_account_name  = module.packer.storage_account_name
-  packer_storage_ip_address    = module.packer.storage_blob_ip_address
   tags                         = local.tags
 }
 
@@ -48,6 +47,8 @@ module packer {
   depends_on                   = [
     time_sleep.script_wrapper_check
   ]
+
+  count                        = var.create_packer_infrastructure ? 1 : 0
 }
 
 module scale_set_linux_agents {
@@ -146,12 +147,18 @@ module self_hosted_linux_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent                 = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
+  deploy_agent                 = var.azdo_org != null && var.azdo_pat != null && var.deploy_self_hosted_vm_agents
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  devops_org                   = var.devops_org
-  devops_pat                   = var.devops_pat
+  azdo_deployment_group_name   = var.azdo_deployment_group_name
+  azdo_environment_name        = var.azdo_environment_name
+  azdo_org                     = var.azdo_org
+  azdo_pat                     = var.azdo_pat
+  azdo_pipeline_agent_name     = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
+  azdo_pipeline_agent_pool     = var.linux_pipeline_agent_pool
+  azdo_pipeline_agent_version_id= var.pipeline_agent_version_id
+  azdo_project                 = var.azdo_project
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
@@ -167,9 +174,6 @@ module self_hosted_linux_agents {
   os_publisher                 = var.linux_os_publisher
   os_sku                       = var.linux_os_sku
   os_version                   = var.linux_os_version
-  pipeline_agent_name          = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
-  pipeline_agent_pool          = var.linux_pipeline_agent_pool
-  pipeline_agent_version_id    = var.pipeline_agent_version_id
   storage_type                 = var.linux_storage_type
   vm_size                      = var.linux_vm_size
 
@@ -206,12 +210,18 @@ module self_hosted_windows_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent_vm_extension    = var.devops_org != null && var.devops_pat != null && var.deploy_self_hosted_vm_agents
+  deploy_agent_vm_extension    = var.azdo_org != null && var.azdo_pat != null && var.deploy_self_hosted_vm_agents
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  devops_org                   = var.devops_org
-  devops_pat                   = var.devops_pat
+  azdo_deployment_group_name   = var.azdo_deployment_group_name
+  azdo_environment_name        = var.azdo_environment_name
+  azdo_org                     = var.azdo_org
+  azdo_pat                     = var.azdo_pat
+  azdo_pipeline_agent_name     = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
+  azdo_pipeline_agent_pool     = var.windows_pipeline_agent_pool
+  azdo_pipeline_agent_version_id= var.pipeline_agent_version_id
+  azdo_project                 = var.azdo_project
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   environment_variables        = local.environment_variables
@@ -226,9 +236,6 @@ module self_hosted_windows_agents {
   os_publisher                 = var.windows_os_publisher
   os_sku                       = var.windows_os_sku
   os_version                   = var.windows_os_version
-  pipeline_agent_name          = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
-  pipeline_agent_pool          = var.windows_pipeline_agent_pool
-  pipeline_agent_version_id    = var.pipeline_agent_version_id
   storage_type                 = var.windows_storage_type
   vm_size                      = var.windows_vm_size
 
@@ -274,4 +281,6 @@ module gallery {
     module.network,
     module.packer
   ]
+
+  count                        = var.create_packer_infrastructure ? 1 : 0
 }

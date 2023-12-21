@@ -1,0 +1,3 @@
+[submodule "scripts/identity"]
+	path = scripts/identity
+	url = https://github.com/geekzter/azure-identity-scripts

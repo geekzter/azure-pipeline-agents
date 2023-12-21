@@ -37,6 +37,7 @@ jobs:
     vmImage: ubuntu-latest
 
   variables:
+    ARM_USE_CLI: true
     AZURE_CORE_ONLY_SHOW_ERRORS: true
     AZURE_EXTENSION_USE_DYNAMIC_INSTALL: yes_without_prompt
     repository: azure-pipeline-agents
@@ -50,6 +51,9 @@ jobs:
     TF_WORKSPACE: cis
 
   steps:
+  - checkout: self
+    submodules: true
+
   - bash: |
       ssh-keygen -q -m PEM -N '' -f ~/.ssh/id_rsa
     displayName: 'Generate SSH Key Pair'
@@ -70,10 +74,7 @@ jobs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
-      inlineScript: |
-        ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
-        ./deploy.ps1 -apply -force
-      addSpnToEnvironment: true
+      inlineScript: ./deploy.ps1 -apply -force
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
     env: # Maintain casing of Terraform variable names
@@ -98,10 +99,7 @@ jobs:
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
-      inlineScript: |
-        ./set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
-        ./deploy.ps1 -destroy -force
-      addSpnToEnvironment: true
+      inlineScript: ./deploy.ps1 -destroy -force
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
     env: # Maintain casing of Terraform variable names
@@ -152,7 +150,6 @@ jobs:
 
         # Remove policy definition
         ./delete_policy.ps1 -Workspace $(TF_WORKSPACE) -Suffix $(Build.BuildId)
-      addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
 
@@ -173,8 +170,6 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        $(scriptDirectory)/set_terraform_azurerm_vars.ps1 -Token $(System.AccessToken)
-
         $terraformState = (terraform state pull | ConvertFrom-Json)
         if ($terraformState.resources) {
           Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
@@ -186,6 +181,5 @@ jobs:
           Write-Host "No resources in Terraform state in workspace ${env:TF_WORKSPACE}..."
         }
         terraform state pull 
-      addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: '$(terraformDirectory)'

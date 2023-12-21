@@ -43,6 +43,8 @@ resource azurerm_virtual_network_peering agents_to_packer {
   depends_on                   = [
     azurerm_private_endpoint.diag_blob_storage_endpoint
   ]
+
+  count                        = var.create_packer_infrastructure ? 1 : 0
 }
 
 resource azurerm_network_security_group default {

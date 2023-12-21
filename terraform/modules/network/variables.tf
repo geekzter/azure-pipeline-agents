@@ -3,6 +3,7 @@ variable admin_cidr_ranges {
   type                         = list
   default                      = []
 }
+variable azdo_org {}
 variable bastion_tags {
   description                  = "A map of the tags to use for the bastion resources that are deployed"
   type                         = map
@@ -19,6 +20,9 @@ variable configure_crl_oscp_rules {
 variable configure_wildcard_allow_rules {
   type                         = bool
 }
+variable create_packer_infrastructure {
+  type                         = bool
+}
 variable deploy_bastion {
   type                         = bool
 }
@@ -28,7 +32,6 @@ variable deploy_firewall {
 variable destroy_wait_minutes {
   type                         = number
 }
-variable devops_org {}
 variable diagnostics_storage_id {}
 variable dns_host_suffix {}
 variable enable_firewall_dns_proxy {
@@ -42,8 +45,6 @@ variable log_analytics_workspace_resource_id {}
 variable packer_address_space {}
 variable peer_virtual_network_id {}
 variable resource_group_name {}
-variable packer_storage_account_name {}
-variable packer_storage_ip_address {}
 variable tags {
   type                         = map
 }

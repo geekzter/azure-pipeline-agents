@@ -12,13 +12,13 @@ output agent_identity_object_id {
 }
 
 output build_network_resource_group_id {
-  value                        = module.packer.network_resource_group_id
+  value                        = var.create_packer_infrastructure ? module.packer.0.network_resource_group_id : null
 }
 output build_resource_group_id {
-  value                        = module.packer.build_resource_group_id
+  value                        = var.create_packer_infrastructure ? module.packer.0.build_resource_group_id : null
 }
 output build_resource_ids {
-  value                        = module.packer.build_resource_ids
+  value                        = var.create_packer_infrastructure ? module.packer.0.build_resource_ids : null
 }
 
 output diagnostics_storage_account {

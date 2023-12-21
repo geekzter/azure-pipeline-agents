@@ -100,8 +100,4 @@ resource azurerm_virtual_network_peering packer_to_agents {
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
   use_remote_gateways          = false
-
-  depends_on                   = [
-    azurerm_private_endpoint.images_blob_storage_endpoint
-  ]
 }

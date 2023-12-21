@@ -16,6 +16,13 @@ parameters:
   - Windows
   - Windows2019
   - Windows2022
+- name: hyperVGeneration
+  displayName: VM generation
+  type: string
+  default: V1
+  values:
+  - V1
+  - V2
 - name: destroy
   displayName: Destroy Infrastructure
   type: boolean
@@ -23,13 +30,17 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 2
+  default: 5
 - name: retryCount
   displayName: Build task retry count
   type: number
   default: 1
 - name: upgradeAzureCLI
   displayName: Upgrade Azure CLI to latest version
+  type: boolean
+  default: false
+- name: addMinorImageVersion
+  displayName: Add minor version if major version exists
   type: boolean
   default: false
 - name: waitForReplication
@@ -68,7 +79,7 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 2 * * Thu'
+- cron: '0 2 * * Sun,Tue,Thu'
   displayName: 'Weekly build (UTC)'
   always: 'true' # Run if there are no changes
   branches:
@@ -79,14 +90,18 @@ variables:
   - group: 'build-images-isolated'
 
 jobs:
-- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
+- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       image: Ubuntu2004
+      hyperVGeneration: ${{ parameters.hyperVGeneration }}
       imageReleaseName: ubuntu20
       imageResourcePrefix: 'packer$(Build.BuildId)u20'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      packerTemplateDirectory: 'images/ubuntu/templates'
+      packerTemplateFile: 'ubuntu-20.04.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -94,11 +109,15 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
+      hyperVGeneration: ${{ parameters.hyperVGeneration }}
       image: Ubuntu2204
       imageReleaseName: ubuntu22
       imageResourcePrefix: 'packer$(Build.BuildId)u22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      packerTemplateDirectory: 'images/ubuntu/templates'
+      packerTemplateFile: 'ubuntu-22.04.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -106,11 +125,15 @@ jobs:
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
+      hyperVGeneration: ${{ parameters.hyperVGeneration }}
       image: Windows2019
       imageReleaseName: win19
       imageResourcePrefix: 'packer$(Build.BuildId)w19'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      packerTemplateDirectory: 'images/windows/templates'
+      packerTemplateFile: 'windows-2019.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -118,11 +141,15 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-isolated-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
+      hyperVGeneration: ${{ parameters.hyperVGeneration }}
       image: Windows2022
       imageReleaseName: win22
       imageResourcePrefix: 'packer$(Build.BuildId)w22'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      packerTemplateDirectory: 'images/windows/templates'
+      packerTemplateFile: 'windows-2022.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -130,7 +157,7 @@ jobs:
 - ${{ if parameters.destroy }}:
   - job: 'CleanUp'
     dependsOn:
-      - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2004') }}:
+      - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
         - Ubuntu2004
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
         - Ubuntu2204

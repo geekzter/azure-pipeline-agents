@@ -151,7 +151,8 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
       custom_data,
       extension,
       instances,
-      tags # Modified by Azure Pipelines
+      tags["__AzureDevOpsElasticPool"],
+      tags["__AzureDevOpsElasticPoolTimeStamp"]
     ]
   }
   tags                         = var.tags

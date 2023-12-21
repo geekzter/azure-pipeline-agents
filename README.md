@@ -47,7 +47,7 @@ To enable Virtual Network integrated image builds with [build-image-isolated.yml
 <img src="visuals/image-lifecycle.png" width="640">
 </p>      
 
-The [build-image.yml](pipelines/build-images.yml) pipeline uses the [method and scripts described on the actions/runner-images GitHub repo](https://github.com/actions/runner-images/blob/main/docs/create-image-and-azure-resources.md) to build a VHD with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/runner-images/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the VHD with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
+The [build-image.yml](pipelines/build-images.yml) pipeline uses the [method and scripts described on the actions/runner-images GitHub repo](https://github.com/actions/runner-images/blob/main/docs/create-image-and-azure-resources.md) to build a managed image with the same configuration Azure DevOps and GitHub Actions are using for Microsoft-hosted agents and GitHub-hosted runners. The [GenerateResourcesAndImage.ps1](https://github.com/actions/runner-images/blob/main/helpers/GenerateResourcesAndImage.ps1) script does the heavy lifting of building the managed image with Packer. This pipeline can run on Microsoft-hosted agents ('Azure Pipelines' pool). 
 
 In Enterprise you will have isolation requirements (e.g. no public endpoints), build in a Virtual Network, protect the identity used for the build, etc. To accommodate such requirements the [build-image-isolated.yml](pipelines/build-image-isolated.yml) takes the [packer templates](https://github.com/actions/runner-images/tree/main/images/linux) and provides the variables required to customize the VM that is used to create the image from. This pipeline needs to run on a self-hosted agent such as the scale set agents deployed by this repository.
 
@@ -103,7 +103,7 @@ To create an Azure Pipeline pool from the scale set, use the instructions provid
 Alteratively, you can run [create_scale_set_pools.ps1](scripts/create_scale_set_pools.ps1). This requires:
 - `AZURE_DEVOPS_EXT_PAT` or `AZDO_PERSONAL_ACCESS_TOKEN` to be set
 - `AZDO_ORG_SERVICE_URL` to be set
-- Terraform variables `service_connection_id` and `service_connection_scope` to be set, or the generated `*.elastic_pool.json` files in `data/TF_WORKSPACE` to be modified.
+- Terraform variables `azdo_azdo_service_connection_id` and `service_connection_scope` to be set, or the generated `*.elastic_pool.json` files in `data/TF_WORKSPACE` to be modified.
 ## Provision from Pipeline
 This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. You'll need the [Azure Pipelines Terraform Tasks](https://marketplace.visualstudio.com/items?itemName=charleszipp.azure-pipelines-tasks-terraform) extension installed.
 To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool, and 'Limit job authorization scope to current project for non-release pipelines' disabled. For this reason, it is recommended to have a dedicated project for this pipeline.
@@ -113,7 +113,7 @@ To be able to create Self-Hosted Agents, the 'Project Collection Build Service (
 ## Self-hosted Agents
 [Self-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) are the predecessor to Scale Set Agents. They also provide the ability to run agents anywhere (including outside Azure). However, you have to manage the full lifecycle of each agent instance. I still include this approach as separate Terraform modules for [Ubuntu](terraform/modules/self-hosted-linux-agent) & [Windows](terraform/modules/self-hosted-windows-agent). It involves installing the VM agent as described on this [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) for Linux. 
 
-Set Terraform variable `use_self_hosted` to `true` to provision self-hosted agents. You will also need to set `devops_pat` and `devops_org`.
+Set Terraform variable `use_self_hosted` to `true` to provision self-hosted agents. You will also need to set `azdo_pat` and `azdo_org`.
 
 ## Scale Set Agents
 [Scale Set Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) leverage Azure Virtual Machine Scale Sets. The lifecycle of individual agents is managed by Azure DevOps, therefore I recommend Scale Set Agents over Self-hosted agents. 

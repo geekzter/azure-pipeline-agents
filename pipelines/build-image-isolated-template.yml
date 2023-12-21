@@ -7,6 +7,12 @@ parameters:
   - Ubuntu2204
   - Windows2019
   - Windows2022
+- name: hyperVGeneration
+  displayName: VM generation
+  type: string
+  values:
+  - V1
+  - V2
 - name: imageReleaseName
 # Image Release Name as defined in GitHUb release feed
 # https://api.github.com/repos/actions/runner-images/releases
@@ -22,13 +28,23 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 4
+  default: 5
+- name: packerTemplateDirectory
+  displayName: Packer template directory # relative path
+  type: string
+- name: packerTemplateFile
+  displayName: Packer template file
+  type: string
 - name: retryCount
   displayName: Build task retry count
   type: number
   default: 1
 - name: upgradeAzureCLI
   displayName: Upgrade Azure CLI to latest version
+  type: boolean
+  default: false
+- name: addMinorImageVersion
+  displayName: Create minor version of major version exists
   type: boolean
   default: false
 - name: waitForReplication
@@ -45,14 +61,40 @@ jobs:
   timeoutInMinutes: 1430
 
   variables:
+  - name: 'addMinorImageVersion'
+    value: ${{ lower(or(parameters.addMinorImageVersion,eq(variables['Build.Reason'], 'Schedule'))) }}
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: AZURE_CORE_ONLY_SHOW_ERRORS
     value: 'true'
   - name: AZURE_EXTENSION_USE_DYNAMIC_INSTALL
     value: 'yes_without_prompt'
+  - name: 'imageGeneration'
+    value: '${{ parameters.hyperVGeneration }}'
   - name: 'imageName'
     value: '${{ parameters.image }}'
+  - ${{ if eq(parameters.hyperVGeneration,'V1') }}:
+    - name: 'imageDefinitionName'
+      value: '${{ parameters.image }}'
+    - name: 'imagePublisher'
+      value: 'PrivatePipelineImages'
+  - ${{ else }}:
+    - name: 'imageDefinitionName'
+      value: '${{ parameters.image }}${{ parameters.hyperVGeneration }}'
+    - name: 'imagePublisher'
+      value: 'PrivatePipelineImages${{ parameters.hyperVGeneration }}'
+    - ${{ if eq(parameters.image,'Windows2019') }}:
+      - name: 'baseImageSKU'
+        value: '2019-datacenter-gensecond'
+    - ${{ elseif eq(parameters.image,'Windows2022') }}:
+      - name: 'baseImageSKU'
+        value: '2022-datacenter-azure-edition'
+    - ${{ elseif eq(parameters.image,'Ubuntu2004') }}:
+      - name: 'baseImageSKU'
+        value: '20_04-lts-gen2'
+    - ${{ elseif eq(parameters.image,'Ubuntu2204') }}:
+      - name: 'baseImageSKU'
+        value: '22_04-lts-gen2'
   - ${{ if contains(parameters.image,'buntu') }}:
     - name: 'imageOffer'
       value: 'Ubuntu'
@@ -70,35 +112,33 @@ jobs:
     - name: 'imageSKU'
       value: ${{ replace(parameters.image,'Windows', '') }}
     - name: 'imageSubDirectory'
-      value: 'win'
-  - name: 'imagePublisher'
-    value: 'PrivatePipelineImages'
+      value: 'windows'
   - name: 'imageRepository'
     value: '$(Build.SourcesDirectory)/runner-images'
   - name: 'imageReleaseName' 
     value: '${{ parameters.imageReleaseName }}'
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
-  - ${{ if eq(parameters.image,'Ubuntu2204') }}:
-    - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.pkr.hcl'
-    - name: 'imageTemplateFileName'
-      value: '${{ lower(parameters.image) }}.pkr.hcl'
-  - ${{ else }}:
-    - name: 'imageTemplate'
-      value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)/${{ lower(parameters.image) }}.json'
-    - name: 'imageTemplateFileName'
-      value: '${{ lower(parameters.image) }}.json'
+  - name: 'imageTemplate'
+    value: '$(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}/${{ parameters.packerTemplateFile }}'
+  - name: 'imageTemplateFileName'
+    value: ${{ parameters.packerTemplateFile }}
   - name: 'imageTemplateDirectory'
-    value: '$(Build.SourcesDirectory)/runner-images/images/$(imageSubDirectory)'
+    value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
+  - name: 'PACKER_CONFIG_DIR' 
+    value: '~/.config/packer'
+  - name: 'scriptDirectory'
+    value: '$(agentRepository)/scripts'
 
   steps:
   - checkout: self
   - checkout: runner-images
 
   - pwsh: |
+      $(scriptDirectory)/configure_pwsh_trace.ps1
+      
       $PSNativeCommandArgumentPassing = "Legacy"
       $preInstalledAzVersion = ($(az version --query '\"azure-cli\"' -o tsv) -replace "\.\d+$","")
       Write-Host "Azure CLI pre-installed version is '${preInstalledAzVersion}'"
@@ -114,44 +154,9 @@ jobs:
       }
     displayName: 'Upgrade Azure CLI'
 
-  - task: AzureCLI@2
-    name: servicePrincipal
-    displayName: 'Check access'
-    inputs:
-      azureSubscription: '$(packerSubscriptionConnection)'
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        # Check access
-        az ad sp list --filter "appId eq '${env:servicePrincipalId}'" --query "[0].id" -o tsv | Set-Variable spObjectId
-        az role assignment list --assignee $spObjectId `
-                                --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} `
-                                --include-inherited `
-                                --query "[?roleDefinitionName=='Storage Blob Data Owner' || roleDefinitionName=='Storage Blob Data Contributor']" `
-                                -o json | ConvertFrom-Json | Set-Variable dataAccess
-
-        if ($dataAccess) {
-          Write-Host "Service Principal has Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}"
-        } else {
-          az role assignment list --assignee $spObjectId `
-                                  --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} `
-                                  --include-inherited `
-                                  --query "[?roleDefinitionName=='Owner']" `
-                                  -o json | ConvertFrom-Json | Set-Variable owner
-          if ($owner) {
-            az role assignment create --role "Storage Blob Data Contributor" `
-                                      --assignee ${env:servicePrincipalId} `
-                                      --resource-group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}
-            Write-Host "Granted Storage Data access on resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME} to Service Principal"
-          } else {
-            Write-Warning "Service Principal does not have Storage Data access to resource group ${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}, nor the (Owner) permission to grant it. VHD blob creation will fail. Exiting..."
-            exit 1
-          }
-        }
-      addSpnToEnvironment: true
-      failOnStandardError: true
-
   - pwsh: |
+      $(scriptDirectory)/configure_pwsh_trace.ps1
+      
       $vmMetadata = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -NoProxy -Uri "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" -TimeoutSec 1)
       $vmMetadata | Add-Member -NotePropertyName hostName -NotePropertyValue $([System.Net.Dns]::GetHostName())
       $vmMetadata | Format-List
@@ -171,6 +176,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft} `
                                                                                              | Sort-Object -Property @{Expression = "created_at"; Descending = $true}, @{Expression = "prerelease"; Ascending = $true}
                                                                                              | Select-Object -First 1 `
@@ -190,23 +197,31 @@ jobs:
         $threePartVersionString = $version.ToString(3)
 
         # Determine whether image with same config already exists
-        az sig image-version list --gallery-image-definition $(imageName) `
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[?starts_with(name,'${twoPartVersionString}') && (provisioningState=='Creating' || provisioningState=='Succeeded') && !(publishingProfile.excludeFromLatest)]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
 
+        $addMinorImageVersion = $$(addMinorImageVersion)
         if ($imageVersion) {
-          Write-Host "Image Definition '$(imageName)' with version '$twoPartVersionString' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          Write-Host "Image Definition '$(imageDefinitionName)' with version '$twoPartVersionString' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          if ($addMinorImageVersion) {
+            Write-Host "Adding new minor image version to existing major image version"
+          }
           $imageVersion | Format-List
-          Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
-          Write-Warning "Image Definition '$(imageName)' with version '$twoPartVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+          Write-Host "Image Definition '$(imageDefinitionName)' with version '$twoPartVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
+        }
+
+        $createImage = ($addMinorImageVersion -or !$imageVersion)
+        if ($createImage) {
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
           Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$threePartVersionString"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
+        } else {
+          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         }
       failOnStandardError: true
 
@@ -219,6 +234,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+
         $packerTemplateFileName = "$(imageTemplateFileName)"
 
         # Update template to override configuration not accessible as variables
@@ -239,6 +256,9 @@ jobs:
           $packerTemplate.builders[0]["azure_tags"] = $azureTags
           Write-Host "`nTags that will be applied to build resources:"
           $packerTemplate.builders[0]["azure_tags"] | Format-Table
+          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
+            $packerTemplate.builders[0]["image_sku"] = "$(baseImageSKU)"
+          }
           Write-Host "`nPacker template:"
           $packerTemplate | ConvertTo-Json -Depth 5
           $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
@@ -249,10 +269,18 @@ jobs:
           foreach ($key in $azureTags.Keys) {
             $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
           }
-          $packerHCLVarsContent+="`n}"
-          $packerHCLVarsFile = "azuretags.auto.pkrvars.hcl"
+          $packerHCLVarsContent += "`n}"
+          $packerHCLVarsContent += "`n"
+          $packerHCLVarsFile = "overrides.auto.pkrvars.hcl"
           $packerHCLVarsContent | Set-Content $packerHCLVarsFile
           Get-Content $packerHCLVarsFile
+
+          # replace image_sku value in .pkr.hcl
+          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
+            (Get-Content $packerTemplateFileName) -replace "image_sku\W*=.*$","image_sku = `"$(baseImageSKU)`"" `
+                                                  | Tee-Object -Variable packerTemplateContent
+            Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
+          }
 
           $packerTemplateArgument = "."
         }
@@ -267,18 +295,18 @@ jobs:
         $imageVMPassword = [system.guid]::NewGuid().ToString().ToUpper()
         $packerTemplateParameters = @{
           build_resource_group_name           = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
-          capture_name_prefix                 = '$(imageResourcePrefix)'
           client_id                           = $env:servicePrincipalId
           client_secret                       = $env:servicePrincipalKey
           install_password                    = $imageVMPassword
-          resource_group                      = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME
-          storage_account                     = $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME
+          managed_image_name                  = "$(imageName)-$(githubRelease.qualifiedVersion)"
+          managed_image_resource_group_name   = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
           subscription_id                     = $(az account show --query id -o tsv)
           tenant_id                           = $env:tenantId
           virtual_network_name                = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME
           virtual_network_resource_group_name = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
           virtual_network_subnet_name         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
         }
+        
         $packerTemplateParameters | ConvertTo-Json -Compress | Set-Variable packerTemplateParametersJson
         Write-Host "`nCustom template parameters:"
         $packerTemplateParameters['client_secret'] = '***'
@@ -312,6 +340,8 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Checkout source pertaining to release is not recommended
         # https://github.com/actions/runner-images/issues/4238#issuecomment-939732274
         # https://github.com/actions/runner-images/discussions/4362
@@ -319,14 +349,17 @@ jobs:
 
         # TODO: Secret-free authentication
 
+        # Init
+        packer init $(imageTemplateFileName)
+
         # Build
-        packer build -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
-                     -var "capture_name_prefix=$(imageResourcePrefix)" `
+        packer build -force `
+                     -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "client_id=${env:servicePrincipalId}" `
                      -var "client_secret=${env:servicePrincipalKey}" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
-                     -var "resource_group=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME}" `
-                     -var "storage_account=${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}" `
+                     -var "managed_image_name=$(imageName)-$(githubRelease.qualifiedVersion)" `
+                     -var "managed_image_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "subscription_id=$(az account show --query id -o tsv)" `
                      -var "tenant_id=${env:tenantId}" `
                      -var "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
@@ -350,40 +383,35 @@ jobs:
       PACKER_LOG_PATH: $(Build.ArtifactStagingDirectory)/packer-log.txt
 
   - task: AzureCLI@2
-    name: vhd
+    name: managedImage
+    displayName: 'Get image resource id'
     condition: and(succeeded(), ne(coalesce(variables['packerConfig.packerTemplateParametersJson'],'null'),'null'))
-    displayName: 'Get VHD url'
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        # Find VHD 
-        az storage blob directory list -c "system" `
-                                       -d "Microsoft.Compute/Images/images" `
-                                       --account-name $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME `
-                                       --query "[?contains(@.name, '$(imageResourcePrefix)') && ends_with(@.name, 'vhd')].name" `
-                                       -o tsv | Set-Variable vhdPath
-        $vhdBaseUrl = "https://${env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/system"
-        if ($vhdPath) {
-          $vhdUrl = "${vhdBaseUrl}/${vhdPath}"
-          Write-Host "vhdUrl: $vhdUrl"
-          Write-Host "##vso[task.setvariable variable=url;isoutput=true]$vhdUrl"        
-        } else {
-          throw "VHD not found in ${vhdBaseUrl}, image build of '$(imageName)' was not successful"
-        }
+        $(scriptDirectory)/configure_pwsh_trace.ps1
 
+        "{0}/providers/Microsoft.Compute/images/{1}-{2}" -f $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID,'$(imageName)','$(githubRelease.qualifiedVersion)' `
+                                                         | Set-Variable imageResourceId
+
+        az image show --ids $imageResourceId 
+        Write-Host "##vso[task.setvariable variable=imageResourceId;isoutput=true]$imageResourceId"
+      useGlobalConfig: true
       failOnStandardError: true
 
   - task: AzureCLI@2
     name: publish
     displayName: 'Publish image'
-    condition: and(succeeded(), ne(coalesce(variables['vhd.url'],'null'),'null'))
+    condition: and(succeeded(), ne(coalesce(variables['managedImage.imageResourceId'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Publish
         $imageDefinitionVersionTags = @(`
           "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
@@ -397,14 +425,15 @@ jobs:
         Write-Host "`nTags that will be applied to image version:"
         $imageDefinitionVersionTags | Format-Table
 
-        if (-not (az sig image-definition list --query "[?name=='$(imageName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
-          Write-Host "`nCreating image definition $(imageName)..."
-          az sig image-definition create --gallery-image-definition $(imageName) `
+        if (-not (az sig image-definition list --query "[?name=='$(imageDefinitionName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
+          Write-Host "`nCreating image definition $(imageDefinitionName)..."
+          az sig image-definition create --gallery-image-definition $(imageDefinitionName) `
                                          --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                          --location $env:PIPELINE_DEMO_PACKER_LOCATION `
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
                                          --os-type $(imageOSType) --os-state Generalized `
+                                         --hyper-v-generation $(imageGeneration) `
                                          --query id -o tsv | Set-Variable imageDefinitionId
                                          
           # BUG: https://github.com/Azure/azure-cli/issues/23194
@@ -415,7 +444,7 @@ jobs:
         # Check whether version exists. If so, increment build number.
         $qualifiedVersionString = "$(githubRelease.qualifiedVersion)"
         $qualifiedVersion = [version]$qualifiedVersionString
-        az sig image-version list --gallery-image-definition $(imageName) `
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "max_by([?starts_with(name,'$($qualifiedVersion.ToString(2))')],&name).name" `
@@ -425,15 +454,14 @@ jobs:
           $qualifiedVersionString = ("{0}.{1}" -f $existingVersion.ToString(2), ($existingVersion.Build+1))
         }
 
-        Write-Host "`nCreating image version $(imageName) ${qualifiedVersionString}..."
-        az sig image-version create --gallery-image-definition $(imageName) `
+        Write-Host "`nCreating image version $(imageDefinitionName) ${qualifiedVersionString}..."
+        az sig image-version create --gallery-image-definition $(imageDefinitionName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --gallery-image-version $qualifiedVersionString `
                                     --location $env:PIPELINE_DEMO_PACKER_LOCATION `
-                                    --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
-                                    --os-vhd-uri "$(vhd.url)" `
-                                    --os-vhd-storage-account $env:PIPELINE_DEMO_PACKER_STORAGE_ACCOUNT_ID `
+                                    --managed-image $(managedImage.imageResourceId) `
+                                    --no-wait `
                                     --query id -o tsv | Set-Variable imageVersionId
 
         Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$qualifiedVersionString"
@@ -448,8 +476,10 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        Write-Host "Starting replication of $(imageName) $(publish.qualifiedVersion) to: $(targetRegions)..."
-        az sig image-version update --gallery-image-definition $(imageName) `
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
+        Write-Host "Starting replication of $(imageDefinitionName) $(publish.qualifiedVersion) to: $(targetRegions)..."
+        az sig image-version update --gallery-image-definition $(imageDefinitionName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --gallery-image-version $(publish.qualifiedVersion) `
                                     --no-wait `
@@ -466,9 +496,11 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          Write-Host "Waiting for replication of $(imageName) $(publish.qualifiedVersion) to $(targetRegions) to finish..."
+          $(scriptDirectory)/configure_pwsh_trace.ps1
+      
+          Write-Host "Waiting for replication of $(imageDefinitionName) $(publish.qualifiedVersion) to $(targetRegions) to finish..."
           az sig image-version wait --updated `
-                                    --gallery-image-definition $(imageName) `
+                                    --gallery-image-definition $(imageDefinitionName) `
                                     --gallery-image-version $(publish.qualifiedVersion) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME 
@@ -476,15 +508,17 @@ jobs:
         failOnStandardError: true
 
   - task: AzureCLI@2
-    displayName: 'Check image version of $(imageName)'
+    displayName: 'Check image version of $(imageDefinitionName)'
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.version'],'null'),'null'))
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         # Determine whether image with same config already exists
-        az sig image-version list --gallery-image-definition $(imageName) `
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[?name=='$(publish.qualifiedVersion)' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
@@ -505,7 +539,7 @@ jobs:
 
           $imageVersion | Format-List
         } else {
-          Write-Error "$(imageName) version $(publish.qualifiedVersion) was not published!"
+          Write-Error "$(imageDefinitionName) version $(publish.qualifiedVersion) was not published!"
         }
       failOnStandardError: true
 
@@ -517,18 +551,20 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
         $numberOfVersionsToKeep = [math]::Max($(numberOfVersionsToKeep),1)
-        az sig image-version list --gallery-image-definition $(imageName) `
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "reverse(sort_by([],&name)) | [${numberOfVersionsToKeep}:].id" `
                                   -o tsv | Set-Variable imageVersionIDsToPurge
 
         if ($imageVersionIDsToPurge) {
-            Write-Host "`nDeleting $(imageName) version(s): ${imageVersionIDsToPurge}..."
+            Write-Host "`nDeleting $(imageDefinitionName) version(s): ${imageVersionIDsToPurge}..."
             az resource delete --ids $imageVersionIDsToPurge
         } else {
-            Write-Host "No $(imageName) versions to delete"
+            Write-Host "No $(imageDefinitionName) versions to delete"
         }
       failOnStandardError: true
 
@@ -539,7 +575,9 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        az sig image-version list --gallery-image-definition $(imageName) `
+        $(scriptDirectory)/configure_pwsh_trace.ps1
+      
+        az sig image-version list --gallery-image-definition $(imageDefinitionName) `
                                   --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[].{Name:'$ImageDefinitionName', Version:name, Build:tags.build, Label:tags.versionlabel, Commit:tags.commit, Date:publishingProfile.publishedDate, Regions:publishingProfile.targetRegions[*].name, Status:provisioningState}" `
@@ -557,6 +595,8 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
+          $(scriptDirectory)/configure_pwsh_trace.ps1
+      
           # Remove resources
           az resource list -g $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME `
                            --query "[?tags.application=='Pipeline Agents' && tags.build=='$(Build.BuildId)' && tags.image=='$(imageName)'].id" `

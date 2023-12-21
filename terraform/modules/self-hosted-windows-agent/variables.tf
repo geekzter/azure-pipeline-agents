@@ -3,6 +3,14 @@ variable admin_cidr_ranges {
     default                    = []
 }
 
+variable azdo_deployment_group_name {}
+variable azdo_environment_name {}
+variable azdo_org {}
+variable azdo_pat {}
+variable azdo_pipeline_agent_name {}
+variable azdo_pipeline_agent_pool {}
+variable azdo_pipeline_agent_version_id {}
+variable azdo_project {}
 
 variable create_public_ip_address {
   type                         = bool
@@ -16,9 +24,6 @@ variable deploy_files_share {
 variable deploy_non_essential_vm_extensions {
   type                         = bool
 }
-
-variable devops_org {}
-variable devops_pat {}
 
 variable diagnostics_smb_share {}
 variable enable_public_access {
@@ -38,10 +43,6 @@ variable os_version {}
 variable os_image_id {
   default                      = null
 }
-
-variable pipeline_agent_name {}
-variable pipeline_agent_pool {}
-variable pipeline_agent_version_id {}
 
 variable storage_type {}
 variable vm_size {}

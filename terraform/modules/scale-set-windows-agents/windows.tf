@@ -164,9 +164,5 @@ resource azurerm_monitor_diagnostic_setting windows_agents {
 
   metric {
     category                   = "AllMetrics"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
 } 

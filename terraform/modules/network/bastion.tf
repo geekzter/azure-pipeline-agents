@@ -176,32 +176,16 @@ resource azurerm_monitor_diagnostic_setting bastion_ip {
 
   enabled_log {
     category                   = "DDoSProtectionNotifications"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
   enabled_log {
     category                   = "DDoSMitigationFlowLogs"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
   enabled_log {
     category                   = "DDoSMitigationReports"
-
-    retention_policy {
-      enabled                  = false
-    }
   }  
 
   metric {
     category                   = "AllMetrics"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
 
   count                        = var.deploy_bastion ? 1 : 0
@@ -237,10 +221,6 @@ resource azurerm_monitor_diagnostic_setting bastion {
 
   enabled_log {
     category                   = "BastionAuditLogs"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
 
   count                        = var.deploy_bastion ? 1 : 0

@@ -254,18 +254,10 @@ resource azurerm_monitor_diagnostic_setting key_vault {
 
   enabled_log {
     category                   = "AuditEvent"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
 
   metric {
     category                   = "AllMetrics"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
 }
 

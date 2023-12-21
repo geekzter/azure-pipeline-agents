@@ -21,17 +21,9 @@ resource azurerm_monitor_diagnostic_setting monitor {
 
   enabled_log {
     category                   = "Audit"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
   metric {
     category                   = "AllMetrics"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
   count                        = var.log_analytics_workspace_id != "" && var.log_analytics_workspace_id != null ? 0 : 1
 }

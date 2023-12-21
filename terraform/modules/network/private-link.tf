@@ -135,28 +135,11 @@ data azurerm_subnet private_endpoint_subnet {
     time_sleep.private_endpoint_nsg_association
   ]
 }
-# Address race condition where policy assigned NSG before we can assign our own
-# Let's wait for any updates to happen, then overwrite our own
-# This removes the need to use azurerm_subnet_network_security_group_association
-resource null_resource private_endpoint_nsg_association {
-  triggers                     = {
-    nsg                        = coalesce(data.azurerm_subnet.private_endpoint_subnet.network_security_group_id,azurerm_network_security_group.default.id)
-  }
 
-  provisioner local-exec {
-    # command                    = "az network vnet subnet update --ids ${azurerm_subnet.private_endpoint_subnet.id} --nsg ${azurerm_network_security_group.default.id} --query 'networkSecurityGroup'"
-    command                    = "${path.root}/../scripts/create_nsg_assignment.ps1 -SubnetId ${azurerm_subnet.private_endpoint_subnet.id} -NsgId ${azurerm_network_security_group.default.id} -Verbose -Debug"
-    interpreter                = ["pwsh","-nop","-command"]
-  }  
+resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
+  subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
+  network_security_group_id    = azurerm_network_security_group.default.id
 }
-# resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
-#   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
-#   network_security_group_id    = azurerm_network_security_group.default.id
-
-#   depends_on                   = [
-#     null_resource.private_endpoint_nsg_association
-#   ]
-# }
 
 resource azurerm_monitor_private_link_scope monitor {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-ampls"
@@ -212,11 +195,6 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
     azurerm_private_dns_zone_virtual_network_link.ods,
     azurerm_private_dns_zone_virtual_network_link.agentsvc,
     azurerm_private_dns_zone_virtual_network_link.blob,
-    null_resource.private_endpoint_nsg_association,
+    azurerm_subnet_network_security_group_association.private_endpoint_subnet
   ]
-}
-# FIX: Error: deleting Private DNS Zone Group "azure-monitor-zones" (Private Endpoint "azure-pipelines-agents-ci-99999b-westeurope-network-ampls-endpoint" / Resource Group "azure-pipelines-agents-ci-99999b"): network.PrivateDNSZoneGroupsClient#Delete: Failure sending request: StatusCode=0 -- Original Error: autorest/azure: Service returned an error. Status=<nil> Code="AnotherOperationInProgress" Message="Another operation on this or dependent resource is in progress. To retrieve status of the operation use uri: https://management.azure.com/subscriptions/84c1a2c7-585a-4753-ad28-97f69618cf12/providers/Microsoft.Network/locations/westeurope/operations/e2bff2ad-cfad-4bfa-971f-3cb2a34df13c?api-version=2019-02-01." Details=[]
-resource time_sleep diag_blob_storage_endpoint_destroy_race_condition {
-  depends_on                   = [azurerm_private_endpoint.diag_blob_storage_endpoint]
-  destroy_duration             = "${var.destroy_wait_minutes}m"
 }

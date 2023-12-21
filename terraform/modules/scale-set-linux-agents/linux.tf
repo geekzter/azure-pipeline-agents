@@ -244,9 +244,5 @@ resource azurerm_monitor_diagnostic_setting linux_agents {
 
   metric {
     category                   = "AllMetrics"
-
-    retention_policy {
-      enabled                  = false
-    }
   }
 } 

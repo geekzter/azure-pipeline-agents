@@ -30,6 +30,8 @@ resource random_string password {
 }
 
 locals {
+  azdo_org_url                 = "https://dev.azure.com/${var.azdo_org}"
+  azdo_project_url             = "https://dev.azure.com/${var.azdo_org}/${var.azdo_project_id}"
   configuration_bitmask        = (
                                   (var.configure_cidr_allow_rules         ? pow(2,0) : 0) +
                                   (var.configure_wildcard_allow_rules     ? pow(2,1) : 0) +
@@ -43,7 +45,9 @@ locals {
                                   (var.configure_crl_oscp_rules           ? pow(2,9) : 0) +
                                   0
   )
-
+  create_app_registration      = !(var.entra_application_id != "" && var.entra_application_id != null && var.entra_application_secret != "" && var.entra_application_secret != null)
+  create_linux_scale_set_pool  = (var.create_azdo_resources && var.deploy_scale_set && var.linux_scale_set_agent_count > 0)
+  create_windows_scale_set_pool= (var.create_azdo_resources && var.deploy_scale_set && var.windows_scale_set_agent_count > 0)
   environment                  = "dev"
   environment_variables        = merge(
     {
@@ -138,7 +142,6 @@ resource azurerm_resource_group rg {
 
   depends_on                   = [time_sleep.script_wrapper_check]
 }
-
 
 resource azurerm_key_vault vault {
   name                         = substr(lower(replace("${azurerm_resource_group.rg.name}-vlt","/-|a|e|i|o|u|y/","")),0,24)

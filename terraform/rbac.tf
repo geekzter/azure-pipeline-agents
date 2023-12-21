@@ -70,3 +70,11 @@ resource azurerm_user_assigned_identity agents {
 
   tags                         = local.tags
 }
+
+resource azurerm_role_assignment scale_set_service_connection {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Virtual Machine Contributor"
+  principal_id                 = module.service_principal.0.principal_id
+
+  count                        = var.configure_access_control && var.create_azdo_resources ? 1 : 0
+}

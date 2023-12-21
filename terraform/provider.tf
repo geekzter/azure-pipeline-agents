@@ -1,6 +1,10 @@
 terraform {
   required_providers {
     azuread                    = "~> 2.35"
+    azuredevops                = {
+      source                   = "microsoft/azuredevops"
+      version                  = "~> 0.10"
+    }
     azurerm                    = "~> 3.18"
     cloudinit                  = "~> 2.2"
     http                       = "~> 2.2"
@@ -10,6 +14,20 @@ terraform {
     time                       = "~> 0.7"
   }
   required_version             = "~> 1.0"
+}
+
+# Azure DevOps provider
+data external azdo_token {
+  program                      = [
+    "az", "account", "get-access-token", 
+    "--resource", "499b84ac-1321-427f-aa17-267ca6975798", # Azure DevOps
+    "--query","{accessToken:accessToken}",
+    "-o","json"
+  ]
+}
+provider azuredevops {
+  org_service_url              = local.azdo_org_url
+  personal_access_token        = data.external.azdo_token.result.accessToken
 }
 
 # Microsoft Azure Resource Manager Provider

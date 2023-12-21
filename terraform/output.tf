@@ -11,6 +11,25 @@ output agent_identity_object_id {
   value                        = azurerm_user_assigned_identity.agents.principal_id
 }
 
+output azdo_linux_scale_set_pool_id {
+  value                        = local.create_linux_scale_set_pool ? module.linux_scale_set_pool.0.id : null
+}
+output azdo_linux_scale_set_pool_name {
+  value                        = local.create_linux_scale_set_pool ? module.linux_scale_set_pool.0.name : null
+}
+output azdo_linux_scale_set_pool_url {
+  value                        = local.create_linux_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.linux_scale_set_pool.0.id}&view=jobs": null
+}
+output azdo_windows_scale_set_pool_id {
+  value                        = local.create_windows_scale_set_pool ? module.windows_scale_set_pool.0.id : null
+}
+output azdo_windows_scale_set_pool_name {
+  value                        = local.create_windows_scale_set_pool ? module.windows_scale_set_pool.0.name : null
+}
+output azdo_windows_scale_set_pool_url {
+  value                        = local.create_windows_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.windows_scale_set_pool.0.id}&view=jobs": null
+}
+
 output build_network_resource_group_id {
   value                        = var.create_packer_infrastructure ? module.packer.0.network_resource_group_id : null
 }

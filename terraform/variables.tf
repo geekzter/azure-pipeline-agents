@@ -44,6 +44,11 @@ variable azdo_project_id {
   description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
   default                      = ""
 }
+# variable azdo_project_names {
+#   description                  = "The Azure DevOps projects where Scale Set pools should be enabled"
+#   default                      = []
+#   type                         = list
+# }
 variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
   default                      = ""
@@ -75,9 +80,24 @@ variable configure_wildcard_allow_rules {
   type                         = bool
 }
 
+variable create_azdo_resources {
+  description                  = "Creates VM Scale Set pool in Azure DevOps"
+  default                      = false
+  type                         = bool
+}
 variable create_packer_infrastructure {
   default                      = true
   type                         = bool
+}
+
+variable entra_application_id {
+  description                  = "Application ID of pre-created App Registration"
+  default                      = null
+}
+variable entra_application_secret {
+  description                  = "Secret of pre-created App Registration"
+  default                      = null
+  sensitive                    = true
 }
 
 variable demo_viewers {

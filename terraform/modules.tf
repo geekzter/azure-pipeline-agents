@@ -51,94 +51,26 @@ module packer {
   count                        = var.create_packer_infrastructure ? 1 : 0
 }
 
-module scale_set_linux_agents {
-  source                       = "./modules/scale-set-linux-agents"
+module gallery {
+  source                       = "./modules/gallery"
 
-  deploy_files_share           = var.deploy_files_share
-  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
-
-  diagnostics_smb_share        = local.diagnostics_smb_share
-  diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
-  environment_variables        = local.environment_variables
   location                     = var.location
-  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
-
-  linux_agent_count            = var.linux_scale_set_agent_count
-  linux_os_image_id            = local.linux_image_id
-  linux_os_offer               = var.linux_os_offer
-  linux_os_publisher           = var.linux_os_publisher
-  linux_os_sku                 = var.linux_os_sku
-  linux_os_version             = var.linux_os_version
-  linux_storage_type           = var.linux_storage_type
-  linux_vm_name_prefix         = "ubuntu-agent"
-  linux_vm_size                = var.linux_vm_size
-
-  outbound_ip_address          = module.network.outbound_ip_address
-  install_tools                = var.linux_tools
-  prepare_host                 = var.prepare_host
-  resource_group_name          = azurerm_resource_group.rg.name
-  ssh_public_key               = var.ssh_public_key
-  tags                         = local.tags
-  subnet_id                    = module.network.scale_set_agents_subnet_id
-  suffix                       = local.suffix
-  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
-  user_name                    = var.user_name
-  user_password                = local.password
-  vm_accelerated_networking    = var.vm_accelerated_networking
-
-  count                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? 1 : 0
-  depends_on                   = [
-    azurerm_private_endpoint.aut_blob_storage_endpoint,
-    azurerm_private_endpoint.diag_blob_storage_endpoint,
-    azurerm_private_endpoint.diagnostics_share,
-    azurerm_private_endpoint.disk_access_endpoint,
-    azurerm_private_endpoint.vault_endpoint,
-    module.network
-  ]
-}
-
-module scale_set_windows_agents {
-  source                       = "./modules/scale-set-windows-agents"
-
-  deploy_files_share           = var.deploy_files_share
-  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
-
-  diagnostics_smb_share        = local.diagnostics_smb_share
-  environment_variables        = local.environment_variables
-  location                     = var.location
-  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
-
-  windows_agent_count          = var.windows_scale_set_agent_count
-  windows_os_image_id          = local.windows_image_id
-  windows_os_offer             = var.windows_os_offer
-  windows_os_publisher         = var.windows_os_publisher
-  windows_os_sku               = var.windows_os_sku
-  windows_os_version           = var.windows_os_version
-  windows_storage_type         = var.windows_storage_type
-  windows_vm_name_prefix       = "windows-agent"
-  windows_vm_size              = var.windows_vm_size
-
-  outbound_ip_address          = module.network.outbound_ip_address
-  prepare_host                 = var.prepare_host
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
-  subnet_id                    = module.network.scale_set_agents_subnet_id
+  admin_cidr_ranges            = local.admin_cidr_ranges
+  blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
+  shared_image_gallery_id      = var.shared_image_gallery_id
+  storage_account_tier         = var.vhd_storage_account_tier
+  subnet_id                    = module.network.private_endpoint_subnet_id
   suffix                       = local.suffix
-  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
-  user_name                    = var.user_name
-  user_password                = local.password
-  vm_accelerated_networking    = var.vm_accelerated_networking
 
-  count                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? 1 : 0
   depends_on                   = [
-    azurerm_private_endpoint.aut_blob_storage_endpoint,
-    azurerm_private_endpoint.diag_blob_storage_endpoint,
-    azurerm_private_endpoint.diagnostics_share,
-    azurerm_private_endpoint.disk_access_endpoint,
-    azurerm_private_endpoint.vault_endpoint,
-    azurerm_storage_share_file.sync_windows_vm_logs_ps1,
-    module.network
+    azurerm_role_assignment.agent_storage_contributors,
+    module.network,
+    module.packer
   ]
+
+  count                        = var.create_packer_infrastructure ? 1 : 0
 }
 
 module self_hosted_linux_agents {
@@ -263,24 +195,148 @@ module self_hosted_windows_agents {
   ]
 }
 
-module gallery {
-  source                       = "./modules/gallery"
+module scale_set_linux_agents {
+  source                       = "./modules/scale-set-linux-agents"
 
+  deploy_files_share           = var.deploy_files_share
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+
+  diagnostics_smb_share        = local.diagnostics_smb_share
+  diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
+  environment_variables        = local.environment_variables
   location                     = var.location
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+
+  linux_agent_count            = var.linux_scale_set_agent_count
+  linux_os_image_id            = local.linux_image_id
+  linux_os_offer               = var.linux_os_offer
+  linux_os_publisher           = var.linux_os_publisher
+  linux_os_sku                 = var.linux_os_sku
+  linux_os_version             = var.linux_os_version
+  linux_storage_type           = var.linux_storage_type
+  linux_vm_name_prefix         = "ubuntu-agent"
+  linux_vm_size                = var.linux_vm_size
+
+  outbound_ip_address          = module.network.outbound_ip_address
+  install_tools                = var.linux_tools
+  prepare_host                 = var.prepare_host
+  resource_group_name          = azurerm_resource_group.rg.name
+  ssh_public_key               = var.ssh_public_key
+  tags                         = local.tags
+  subnet_id                    = module.network.scale_set_agents_subnet_id
+  suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
+  user_name                    = var.user_name
+  user_password                = local.password
+  vm_accelerated_networking    = var.vm_accelerated_networking
+
+  count                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? 1 : 0
+  depends_on                   = [
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_share,
+    azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_private_endpoint.vault_endpoint,
+    module.network
+  ]
+}
+
+module scale_set_windows_agents {
+  source                       = "./modules/scale-set-windows-agents"
+
+  deploy_files_share           = var.deploy_files_share
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+
+  diagnostics_smb_share        = local.diagnostics_smb_share
+  environment_variables        = local.environment_variables
+  location                     = var.location
+  log_analytics_workspace_resource_id = local.log_analytics_workspace_id
+
+  windows_agent_count          = var.windows_scale_set_agent_count
+  windows_os_image_id          = local.windows_image_id
+  windows_os_offer             = var.windows_os_offer
+  windows_os_publisher         = var.windows_os_publisher
+  windows_os_sku               = var.windows_os_sku
+  windows_os_version           = var.windows_os_version
+  windows_storage_type         = var.windows_storage_type
+  windows_vm_name_prefix       = "windows-agent"
+  windows_vm_size              = var.windows_vm_size
+
+  outbound_ip_address          = module.network.outbound_ip_address
+  prepare_host                 = var.prepare_host
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
-  admin_cidr_ranges            = local.admin_cidr_ranges
-  blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
-  shared_image_gallery_id      = var.shared_image_gallery_id
-  storage_account_tier         = var.vhd_storage_account_tier
-  subnet_id                    = module.network.private_endpoint_subnet_id
+  subnet_id                    = module.network.scale_set_agents_subnet_id
   suffix                       = local.suffix
+  user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
+  user_name                    = var.user_name
+  user_password                = local.password
+  vm_accelerated_networking    = var.vm_accelerated_networking
 
+  count                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? 1 : 0
   depends_on                   = [
-    azurerm_role_assignment.agent_storage_contributors,
-    module.network,
-    module.packer
+    azurerm_private_endpoint.aut_blob_storage_endpoint,
+    azurerm_private_endpoint.diag_blob_storage_endpoint,
+    azurerm_private_endpoint.diagnostics_share,
+    azurerm_private_endpoint.disk_access_endpoint,
+    azurerm_private_endpoint.vault_endpoint,
+    azurerm_storage_share_file.sync_windows_vm_logs_ps1,
+    module.network
   ]
+}
 
-  count                        = var.create_packer_infrastructure ? 1 : 0
+module service_principal {
+  source                       = "./modules/entra-app-registration"
+  create_federation            = true
+  federation_subject           = module.azure_devops_service_connection.0.service_connection_oidc_subject
+  issuer                       = module.azure_devops_service_connection.0.service_connection_oidc_issuer
+  multi_tenant                 = false
+  name                         = "${var.resource_prefix}-vmss-service-connection-${terraform.workspace}-${local.suffix}"
+  owner_object_id              = data.azuread_client_config.default.object_id
+
+  count                        = var.create_azdo_resources && local.create_app_registration ? 1 : 0
+}
+
+module azure_devops_service_connection {
+  source                       = "./modules/azure-devops-service-connection"
+  application_id               = module.service_principal.0.application_id
+  application_secret           = local.create_app_registration ? null : var.entra_application_secret
+  authentication_scheme        = local.create_app_registration ? "WorkloadIdentityFederation" : "ServicePrincipal"
+  create_identity              = false
+  project_id                   = var.azdo_project_id
+  tenant_id                    = data.azurerm_client_config.default.tenant_id
+  service_connection_name      = "${var.resource_prefix}-vmss-service-connection-${terraform.workspace}-${local.suffix}"
+  subscription_id              = data.azurerm_subscription.default.subscription_id
+  subscription_name            = data.azurerm_subscription.default.display_name
+
+  count                        = var.create_azdo_resources ? 1 : 0
+  depends_on                   = [azurerm_role_assignment.scale_set_service_connection]
+}
+
+module linux_scale_set_pool {
+  source                       = "./modules/azure-devops-scale-set-pool"
+
+  max_capacity                 = var.linux_scale_set_agent_count
+  min_capacity                 = var.linux_scale_set_agent_idle_count
+  name                         = module.scale_set_linux_agents.0.virtual_machine_scale_set_name
+  project_id                   = var.azdo_project_id
+  recycle_after_each_use       = false
+  service_connection_id        = module.azure_devops_service_connection.0.service_connection_id
+  vmss_id                      = module.scale_set_linux_agents.0.virtual_machine_scale_set_id
+
+  count                        = local.create_linux_scale_set_pool ? 1 : 0
+}
+
+module windows_scale_set_pool {
+  source                       = "./modules/azure-devops-scale-set-pool"
+
+  max_capacity                 = var.windows_scale_set_agent_count
+  min_capacity                 = var.windows_scale_set_agent_idle_count
+  name                         = module.scale_set_windows_agents.0.virtual_machine_scale_set_name
+  project_id                   = var.azdo_project_id
+  recycle_after_each_use       = false
+  service_connection_id        = module.azure_devops_service_connection.0.service_connection_id
+  vmss_id                      = module.scale_set_windows_agents.0.virtual_machine_scale_set_id
+
+  count                        = local.create_windows_scale_set_pool ? 1 : 0
 }

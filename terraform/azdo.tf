@@ -16,7 +16,7 @@ data azuredevops_project projects {
 }
 
 locals {
-  azdo_org_url                 = "https://dev.azure.com/${var.azdo_org}"
+  azdo_org_url                 = var.azdo_org != null ? "https://dev.azure.com/${var.azdo_org}" : null
   azdo_project_id              = length(local.azdo_project_ids) > 0 ? local.azdo_project_ids[0] : null
   azdo_project_ids             = [for project in data.azuredevops_project.projects : project.id]
   azdo_project_name            = length(var.azdo_project_names) > 0 ? var.azdo_project_names[0] : null

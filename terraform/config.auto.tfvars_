@@ -1,0 +1,12 @@
+azure_bastion_tags             = {
+  NRMSBastion                  = "true"
+} 
+
+azdo_org                       = "ericvan"
+# azdo_pat                       = "pcfhvercwi75t7cinyhpp3eky2epsr42xslot3m2q2y2fhi3eksa" # Self-Hosted Agent Build
+
+application_name               = "Pipeline Agents"
+application_owner              = "ericvan@microsoft.com"
+resource_prefix                = "ericvan"
+
+storage_contributors           = ["00d45fe8-427b-43a2-8027-a3c087f13169"] # Service Connection

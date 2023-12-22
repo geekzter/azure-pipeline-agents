@@ -5,12 +5,18 @@ variable admin_cidr_ranges {
 
 variable azdo_deployment_group_name {}
 variable azdo_environment_name {}
-variable azdo_org {}
-variable azdo_pat {}
+variable azdo_org {
+  nullable                     = false
+}
+variable azdo_pat {
+  nullable                     = false
+}
 variable azdo_pipeline_agent_name {}
 variable azdo_pipeline_agent_pool {}
 variable azdo_pipeline_agent_version_id {}
-variable azdo_project {}
+variable azdo_project {
+  nullable                     = false
+}
 
 variable create_public_ip_address {
   type                         = bool

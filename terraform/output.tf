@@ -20,6 +20,12 @@ output azdo_linux_scale_set_pool_name {
 output azdo_linux_scale_set_pool_url {
   value                        = local.create_linux_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.linux_scale_set_pool.0.id}&view=jobs": null
 }
+output azdo_service_connection_id {
+  value                        = local.azdo_service_connection_id
+}
+output azdo_service_connection_url {
+  value                        = "${data.azuredevops_client_config.current.organization_url}/${var.azdo_project_id}/_settings/adminservices?resourceId=${local.azdo_service_connection_id}"
+}
 output azdo_windows_scale_set_pool_id {
   value                        = local.create_windows_scale_set_pool ? module.windows_scale_set_pool.0.id : null
 }

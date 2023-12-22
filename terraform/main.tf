@@ -32,7 +32,7 @@ resource random_string password {
 locals {
   azdo_org_url                 = "https://dev.azure.com/${var.azdo_org}"
   azdo_project_url             = "https://dev.azure.com/${var.azdo_org}/${var.azdo_project_id}"
-  azdo_service_connection_id   = local.create_service_connection ? var.azdo_service_connection_id : module.azure_devops_service_connection.0.service_connection_id
+  azdo_service_connection_id   = local.create_service_connection ? module.azure_devops_service_connection.0.service_connection_id : var.azdo_service_connection_id
   configuration_bitmask        = (
                                   (var.configure_cidr_allow_rules         ? pow(2,0) : 0) +
                                   (var.configure_wildcard_allow_rules     ? pow(2,1) : 0) +

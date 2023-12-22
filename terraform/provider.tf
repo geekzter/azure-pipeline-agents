@@ -29,6 +29,7 @@ provider azuredevops {
   org_service_url              = local.azdo_org_url
   personal_access_token        = data.external.azdo_token.result.accessToken
 }
+data azuredevops_client_config current {}
 
 # Microsoft Azure Resource Manager Provider
 provider azurerm {

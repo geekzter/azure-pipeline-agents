@@ -59,8 +59,8 @@ module gallery {
   tags                         = local.tags
   admin_cidr_ranges            = local.admin_cidr_ranges
   blob_private_dns_zone_id     = module.network.azurerm_private_dns_zone_blob_id
-  shared_image_gallery_id      = var.shared_image_gallery_id
-  storage_account_tier         = var.vhd_storage_account_tier
+  shared_image_gallery_id      = var.azure_shared_image_gallery_id
+  storage_account_tier         = var.azure_vhd_storage_account_tier
   subnet_id                    = module.network.private_endpoint_subnet_id
   suffix                       = local.suffix
 
@@ -87,7 +87,7 @@ module self_hosted_linux_agents {
   azdo_environment_name        = var.azdo_environment_name
   azdo_org                     = var.azdo_org
   azdo_pat                     = var.azdo_pat
-  azdo_pipeline_agent_name     = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
+  azdo_pipeline_agent_name     = "${var.azure_linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = var.azdo_linux_pipeline_agent_pool
   azdo_pipeline_agent_version_id= var.pipeline_agent_version_id
   azdo_project                 = local.azdo_project_name
@@ -102,12 +102,12 @@ module self_hosted_linux_agents {
   disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-linux-agent${count.index+1}"
   os_image_id                  = local.linux_image_id
-  os_offer                     = var.linux_os_offer
-  os_publisher                 = var.linux_os_publisher
-  os_sku                       = var.linux_os_sku
-  os_version                   = var.linux_os_version
-  storage_type                 = var.linux_storage_type
-  vm_size                      = var.linux_vm_size
+  os_offer                     = var.azure_linux_os_offer
+  os_publisher                 = var.azure_linux_os_publisher
+  os_sku                       = var.azure_linux_os_sku
+  os_version                   = var.azure_linux_os_version
+  storage_type                 = var.azure_linux_storage_type
+  vm_size                      = var.azure_linux_vm_size
 
   enable_public_access         = var.enable_public_access
   install_tools                = var.linux_tools
@@ -123,9 +123,9 @@ module self_hosted_linux_agents {
   user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
-  vm_accelerated_networking    = var.vm_accelerated_networking
+  vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_self_hosted_vms ? var.linux_self_hosted_agent_count : 0
+  count                        = var.deploy_self_hosted_vms ? var.azure_linux_self_hosted_agent_count : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
@@ -164,12 +164,12 @@ module self_hosted_windows_agents {
   disk_access_name             = azurerm_disk_access.disk_access.name
   name                         = "${azurerm_resource_group.rg.name}-windows-agent${count.index+1}"
   os_image_id                  = local.windows_image_id
-  os_offer                     = var.windows_os_offer
-  os_publisher                 = var.windows_os_publisher
-  os_sku                       = var.windows_os_sku
-  os_version                   = var.windows_os_version
-  storage_type                 = var.windows_storage_type
-  vm_size                      = var.windows_vm_size
+  os_offer                     = var.azure_windows_os_offer
+  os_publisher                 = var.azure_windows_os_publisher
+  os_sku                       = var.azure_windows_os_sku
+  os_version                   = var.azure_windows_os_version
+  storage_type                 = var.azure_windows_storage_type
+  vm_size                      = var.azure_windows_vm_size
 
   enable_public_access         = var.enable_public_access
   resource_group_name          = azurerm_resource_group.rg.name
@@ -181,9 +181,9 @@ module self_hosted_windows_agents {
   user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
-  vm_accelerated_networking    = var.vm_accelerated_networking
+  vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_self_hosted_vms ? var.windows_self_hosted_agent_count : 0
+  count                        = var.deploy_self_hosted_vms ? var.azure_windows_self_hosted_agent_count : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
@@ -207,15 +207,15 @@ module scale_set_linux_agents {
   location                     = var.azure_location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
-  linux_agent_count            = var.azdo_linux_scale_set_agent_count
+  linux_agent_count            = var.azure_linux_scale_set_agent_count
   linux_os_image_id            = local.linux_image_id
-  linux_os_offer               = var.linux_os_offer
-  linux_os_publisher           = var.linux_os_publisher
-  linux_os_sku                 = var.linux_os_sku
-  linux_os_version             = var.linux_os_version
-  linux_storage_type           = var.linux_storage_type
+  linux_os_offer               = var.azure_linux_os_offer
+  linux_os_publisher           = var.azure_linux_os_publisher
+  linux_os_sku                 = var.azure_linux_os_sku
+  linux_os_version             = var.azure_linux_os_version
+  linux_storage_type           = var.azure_linux_storage_type
   linux_vm_name_prefix         = "ubuntu-agent"
-  linux_vm_size                = var.linux_vm_size
+  linux_vm_size                = var.azure_linux_vm_size
 
   outbound_ip_address          = module.network.outbound_ip_address
   install_tools                = var.linux_tools
@@ -228,9 +228,9 @@ module scale_set_linux_agents {
   user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
-  vm_accelerated_networking    = var.vm_accelerated_networking
+  vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_scale_set && var.azdo_linux_scale_set_agent_count > 0 ? 1 : 0
+  count                        = var.deploy_scale_set && var.azure_linux_scale_set_agent_count > 0 ? 1 : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
@@ -252,15 +252,15 @@ module scale_set_windows_agents {
   location                     = var.azure_location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
 
-  windows_agent_count          = var.azdo_windows_scale_set_agent_count
+  windows_agent_count          = var.azure_windows_scale_set_agent_count
   windows_os_image_id          = local.windows_image_id
-  windows_os_offer             = var.windows_os_offer
-  windows_os_publisher         = var.windows_os_publisher
-  windows_os_sku               = var.windows_os_sku
-  windows_os_version           = var.windows_os_version
-  windows_storage_type         = var.windows_storage_type
+  windows_os_offer             = var.azure_windows_os_offer
+  windows_os_publisher         = var.azure_windows_os_publisher
+  windows_os_sku               = var.azure_windows_os_sku
+  windows_os_version           = var.azure_windows_os_version
+  windows_storage_type         = var.azure_windows_storage_type
   windows_vm_name_prefix       = "windows-agent"
-  windows_vm_size              = var.windows_vm_size
+  windows_vm_size              = var.azure_windows_vm_size
 
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
@@ -271,9 +271,9 @@ module scale_set_windows_agents {
   user_assigned_identity_id    = azurerm_user_assigned_identity.agents.id
   user_name                    = var.user_name
   user_password                = local.password
-  vm_accelerated_networking    = var.vm_accelerated_networking
+  vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_scale_set && var.azdo_windows_scale_set_agent_count > 0 ? 1 : 0
+  count                        = var.deploy_scale_set && var.azure_windows_scale_set_agent_count > 0 ? 1 : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
@@ -317,8 +317,8 @@ module linux_scale_set_pool {
   source                       = "./modules/azure-devops-scale-set-pool"
 
   agent_interactive_ui         = false
-  max_capacity                 = var.azdo_linux_scale_set_agent_count
-  min_capacity                 = min(var.azdo_linux_scale_set_agent_count,var.azdo_linux_scale_set_agent_max_count,var.azdo_linux_scale_set_agent_idle_count)
+  max_capacity                 = var.azure_linux_scale_set_agent_count
+  min_capacity                 = min(var.azure_linux_scale_set_agent_count,var.azdo_linux_scale_set_agent_max_count,var.azdo_linux_scale_set_agent_idle_count)
   name                         = var.azdo_linux_scale_set_pool_name != null && var.azdo_linux_scale_set_pool_name != "" ? var.azdo_linux_scale_set_pool_name : module.scale_set_linux_agents.0.virtual_machine_scale_set_name
   project_ids                  = local.azdo_project_ids
   recycle_after_each_use       = true
@@ -332,8 +332,8 @@ module windows_scale_set_pool {
   source                       = "./modules/azure-devops-scale-set-pool"
 
   agent_interactive_ui         = var.azdo_windows_scale_set_agent_interactive_ui
-  max_capacity                 = var.azdo_windows_scale_set_agent_count
-  min_capacity                 = min(var.azdo_windows_scale_set_agent_count,var.azdo_windows_scale_set_agent_max_count,var.azdo_windows_scale_set_agent_idle_count)
+  max_capacity                 = var.azure_windows_scale_set_agent_count
+  min_capacity                 = min(var.azure_windows_scale_set_agent_count,var.azdo_windows_scale_set_agent_max_count,var.azdo_windows_scale_set_agent_idle_count)
   name                         = var.azdo_windows_scale_set_pool_name != null && var.azdo_windows_scale_set_pool_name != "" ? var.azdo_windows_scale_set_pool_name : module.scale_set_windows_agents.0.virtual_machine_scale_set_name
   project_ids                  = local.azdo_project_ids
   recycle_after_each_use       = true

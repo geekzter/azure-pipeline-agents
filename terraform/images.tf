@@ -1,12 +1,12 @@
 locals {
-  linux_image_id               = local.use_linux_image ? var.linux_os_image_id : (local.use_linux_vhd ? azurerm_image.linux_vhd.0.id : null)
-  windows_image_id             = local.use_windows_image ? var.windows_os_image_id : (local.use_windows_vhd ? azurerm_image.windows_vhd.0.id : null)
-  use_linux_image              = var.linux_os_image_id != null && var.linux_os_image_id != ""
+  linux_image_id               = local.use_linux_image ? var.azure_linux_os_image_id : (local.use_linux_vhd ? azurerm_image.linux_vhd.0.id : null)
+  windows_image_id             = local.use_windows_image ? var.azure_windows_os_image_id : (local.use_windows_vhd ? azurerm_image.windows_vhd.0.id : null)
+  use_linux_image              = var.azure_linux_os_image_id != null && var.azure_linux_os_image_id != ""
   use_linux_marketplace        = !local.use_linux_image && !local.use_linux_vhd
-  use_linux_vhd                = !local.use_linux_image && var.linux_os_vhd_url != null && var.linux_os_vhd_url != ""
-  use_windows_image            = var.windows_os_image_id != null && var.windows_os_image_id != ""
+  use_linux_vhd                = !local.use_linux_image && var.azure_linux_os_vhd_url != null && var.azure_linux_os_vhd_url != ""
+  use_windows_image            = var.azure_windows_os_image_id != null && var.azure_windows_os_image_id != ""
   use_windows_marketplace      = !local.use_windows_image && !local.use_windows_vhd
-  use_windows_vhd              = !local.use_windows_image && var.windows_os_vhd_url != null && var.windows_os_vhd_url != ""
+  use_windows_vhd              = !local.use_windows_image && var.azure_windows_os_vhd_url != null && var.azure_windows_os_vhd_url != ""
 }
 
 resource azurerm_image linux_vhd {
@@ -17,7 +17,7 @@ resource azurerm_image linux_vhd {
   os_disk {
     os_type                    = "Linux"
     os_state                   = "Generalized"
-    blob_uri                   = var.linux_os_vhd_url
+    blob_uri                   = var.azure_linux_os_vhd_url
     size_gb                    = 100
   }
 
@@ -32,7 +32,7 @@ resource azurerm_image windows_vhd {
   os_disk {
     os_type                    = "Windows"
     os_state                   = "Generalized"
-    blob_uri                   = var.windows_os_vhd_url
+    blob_uri                   = var.azure_windows_os_vhd_url
     size_gb                    = 256
   }
 

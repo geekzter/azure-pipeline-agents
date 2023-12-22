@@ -1,5 +1,5 @@
 locals {
-  log_analytics_workspace_id   = var.log_analytics_workspace_id != "" && var.log_analytics_workspace_id != null ? var.log_analytics_workspace_id : azurerm_log_analytics_workspace.monitor.0.id
+  log_analytics_workspace_id   = var.azure_log_analytics_workspace_id != "" && var.azure_log_analytics_workspace_id != null ? var.azure_log_analytics_workspace_id : azurerm_log_analytics_workspace.monitor.0.id
 }
 
 
@@ -11,7 +11,7 @@ resource azurerm_log_analytics_workspace monitor {
   sku                          = "PerGB2018"
   retention_in_days            = 30
 
-  count                        = var.log_analytics_workspace_id != "" && var.log_analytics_workspace_id != null ? 0 : 1
+  count                        = var.azure_log_analytics_workspace_id != "" && var.azure_log_analytics_workspace_id != null ? 0 : 1
   tags                         = local.tags
 }
 resource azurerm_monitor_diagnostic_setting monitor {
@@ -25,7 +25,7 @@ resource azurerm_monitor_diagnostic_setting monitor {
   metric {
     category                   = "AllMetrics"
   }
-  count                        = var.log_analytics_workspace_id != "" && var.log_analytics_workspace_id != null ? 0 : 1
+  count                        = var.azure_log_analytics_workspace_id != "" && var.azure_log_analytics_workspace_id != null ? 0 : 1
 }
 resource azurerm_log_analytics_solution solution {
   solution_name                 = each.value
@@ -41,7 +41,7 @@ resource azurerm_log_analytics_solution solution {
 
   tags                         = local.tags
 
-  for_each                     = var.log_analytics_workspace_id == "" || var.log_analytics_workspace_id == null ? toset([
+  for_each                     = var.azure_log_analytics_workspace_id == "" || var.azure_log_analytics_workspace_id == null ? toset([
     "ServiceMap",
     "VMInsights",
   ]) : toset([])

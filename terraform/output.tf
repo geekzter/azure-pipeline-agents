@@ -58,11 +58,11 @@ output environment_variables {
   value                        = local.environment_variables
 }
 
-output linux_os_image_id {
+output azure_linux_os_image_id {
   value                        = local.linux_image_id
 }
 output linux_virtual_machine_scale_set_id {
-  value                        = var.deploy_scale_set && var.azdo_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.virtual_machine_scale_set_id : null
+  value                        = var.deploy_scale_set && var.azure_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.virtual_machine_scale_set_id : null
 }
 
 output log_analytics_workspace_id {
@@ -81,11 +81,11 @@ output scale_set_agents_subnet_id {
 }
 output scale_set_linux_cloud_config {
   sensitive                    = true
-  value                        = var.deploy_scale_set && var.azdo_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
+  value                        = var.deploy_scale_set && var.azure_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
 }
 output scale_set_windows_host_configuration_script {
   sensitive                    = true
-  value                        = var.deploy_scale_set && var.azdo_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.host_configuration_script : null
+  value                        = var.deploy_scale_set && var.azure_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.host_configuration_script : null
 }
 output self_hosted_agents_subnet_id {
   value                        = module.network.self_hosted_agents_subnet_id
@@ -100,7 +100,7 @@ output self_hosted_vm_id {
 
 output self_hosted_linux_cloud_config {
   sensitive                    = true
-  value                        = var.deploy_self_hosted_vms && var.linux_self_hosted_agent_count > 0 ? module.self_hosted_linux_agents.0.cloud_config : null
+  value                        = var.deploy_self_hosted_vms && var.azure_linux_self_hosted_agent_count > 0 ? module.self_hosted_linux_agents.0.cloud_config : null
 }
 
 output ssh_private_key_id {
@@ -121,9 +121,9 @@ output virtual_network_id {
   value                        = module.network.virtual_network_id
 }
 
-output windows_os_image_id {
+output azure_windows_os_image_id {
   value                        = local.windows_image_id
 }
 output windows_virtual_machine_scale_set_id {
-  value                        = var.deploy_scale_set && var.azdo_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.virtual_machine_scale_set_id : null
+  value                        = var.deploy_scale_set && var.azure_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.virtual_machine_scale_set_id : null
 }

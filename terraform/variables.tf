@@ -15,13 +15,63 @@ variable azdo_environment_name {
   default                      = null
   description                  = "Azure DevOps environment for self-hosted agents, not scale set agents."
 }
+variable azure_linux_os_image_id {
+  default                      = null
+}
+# az vm image list-offers -l centralus -p "Canonical" -o table
+variable azure_linux_os_offer {
+  default                      = "0001-com-ubuntu-server-focal"
+}
+variable azure_linux_os_publisher {
+  default                      = "Canonical"
+}
+# az vm image list-skus -l centralus -f "0001-com-ubuntu-server-focal" -p "Canonical" -o table
+variable azure_linux_os_sku {
+  default                      = "20_04-lts"
+}
+variable azure_linux_os_version {
+  default                      = "latest"
+}
+variable azure_linux_os_vhd_url {
+  default                      = null
+}
 variable azdo_linux_pipeline_agent_pool {
   default                      = "Default"
 }
-variable azdo_linux_scale_set_agent_count {
+variable azure_linux_scale_set_agent_count {
   default                      = 2
   type                         = number
 }
+variable azure_shared_image_gallery_id {
+  description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
+  default                      = null
+}
+variable azure_windows_os_image_id {
+  default                      = null
+}
+# az vm image list-skus -l centralus -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -o table
+# az vm image list -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
+variable azure_windows_os_offer {
+  default                      = "visualstudio2022"
+}
+variable azure_windows_os_publisher {
+  default                      = "microsoftvisualstudio"
+}
+variable azure_windows_os_sku {
+  default                      = "vs-2022-ent-latest-ws2022"
+}
+variable azure_windows_os_version {
+  default                      = "latest"
+}
+variable azure_windows_os_vhd_url {
+  default                      = null
+}
+variable azure_windows_scale_set_agent_count {
+  default                      = 2
+  type                         = number
+}
+
 variable azdo_linux_scale_set_agent_idle_count {
   default                      = 1
   type                         = number
@@ -57,10 +107,6 @@ variable azdo_service_connection_id {
 }
 variable azdo_windows_pipeline_agent_pool {
   default                      = "Default"
-}
-variable azdo_windows_scale_set_agent_count {
-  default                      = 2
-  type                         = number
 }
 variable azdo_windows_scale_set_agent_idle_count {
   default                      = 1
@@ -197,44 +243,39 @@ variable linux_tools {
   type                         = bool
 }
 
-variable linux_os_image_id {
-  default                      = null
-}
-# az vm image list-offers -l centralus -p "Canonical" -o table
-variable linux_os_offer {
-  default                      = "0001-com-ubuntu-server-focal"
-}
-variable linux_os_publisher {
-  default                      = "Canonical"
-}
-# az vm image list-skus -l centralus -f "0001-com-ubuntu-server-focal" -p "Canonical" -o table
-variable linux_os_sku {
-  default                      = "20_04-lts"
-}
-variable linux_os_version {
-  default                      = "latest"
-}
-variable linux_os_vhd_url {
-  default                      = null
-}
-variable linux_pipeline_agent_name_prefix {
+variable azure_linux_pipeline_agent_name_prefix {
   default                      = "ubuntu-agent"
 }
 
-variable linux_self_hosted_agent_count {
+variable azure_linux_self_hosted_agent_count {
   default                      = 1
   type                         = number
 }
-variable linux_storage_type {
+variable azure_linux_storage_type {
   default                      = "Standard_LRS"
 }
-variable linux_vm_size {
+variable azure_linux_vm_size {
   default                      = "Standard_D2s_v3"
 }
-
-variable log_analytics_workspace_id {
+variable azure_log_analytics_workspace_id {
   description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
   default                      = ""
+}
+variable azure_vhd_storage_account_tier {
+  default                      = "Standard"
+}
+variable azure_vm_accelerated_networking {
+  default                      = false
+}
+variable azure_windows_self_hosted_agent_count {
+  default                      = 1
+  type                         = number
+}
+variable azure_windows_storage_type {
+  default                      = "Standard_LRS"
+}
+variable azure_windows_vm_size {
+  default                      = "Standard_D4s_v3"
 }
 
 variable packer_client_id {
@@ -294,10 +335,6 @@ variable script_wrapper_check {
   default                      = false
 }
 
-variable shared_image_gallery_id {
-  description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
-  default                      = null
-}
 variable shutdown_time {
   default                      = "" # Empty string doesn't triggers a shutdown
   description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
@@ -341,46 +378,7 @@ variable user_name {
   default                      = "devopsadmin"
 }
 
-variable vhd_storage_account_tier {
-  default                      = "Standard"
-}
-variable vm_accelerated_networking {
-  default                      = false
-}
-
-variable windows_os_image_id {
-  default                      = null
-}
-# az vm image list-skus -l centralus -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
-# az vm image list-skus -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -o table
-# az vm image list -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
-variable windows_os_offer {
-  default                      = "visualstudio2022"
-}
-variable windows_os_publisher {
-  default                      = "microsoftvisualstudio"
-}
-variable windows_os_sku {
-  default                      = "vs-2022-ent-latest-ws2022"
-}
-variable windows_os_version {
-  default                      = "latest"
-}
-variable windows_os_vhd_url {
-  default                      = null
-}
 
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"
-}
-
-variable windows_self_hosted_agent_count {
-  default                      = 1
-  type                         = number
-}
-variable windows_storage_type {
-  default                      = "Standard_LRS"
-}
-variable windows_vm_size {
-  default                      = "Standard_D4s_v3"
 }

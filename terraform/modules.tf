@@ -90,7 +90,7 @@ module self_hosted_linux_agents {
   azdo_pipeline_agent_name     = "${var.linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = var.linux_pipeline_agent_pool
   azdo_pipeline_agent_version_id= var.pipeline_agent_version_id
-  azdo_project                 = var.azdo_project
+  azdo_project                 = local.azdo_project_name
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
@@ -153,7 +153,7 @@ module self_hosted_windows_agents {
   azdo_pipeline_agent_name     = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = var.windows_pipeline_agent_pool
   azdo_pipeline_agent_version_id= var.pipeline_agent_version_id
-  azdo_project                 = var.azdo_project
+  azdo_project                 = local.azdo_project_name
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   environment_variables        = local.environment_variables
@@ -294,7 +294,7 @@ module service_principal {
   name                         = "${var.resource_prefix}-vmss-service-connection-${terraform.workspace}-${local.suffix}"
   owner_object_id              = data.azuread_client_config.default.object_id
 
-  count                        = var.create_azdo_resources && local.create_service_connection ? 1 : 0
+  count                        = local.create_azdo_resources && local.create_service_connection ? 1 : 0
 }
 
 module azure_devops_service_connection {
@@ -303,13 +303,13 @@ module azure_devops_service_connection {
   application_secret           = null
   authentication_scheme        = "WorkloadIdentityFederation"
   create_identity              = false
-  project_id                   = var.azdo_project_id
+  project_id                   = local.azdo_project_id
   tenant_id                    = data.azurerm_client_config.default.tenant_id
   service_connection_name      = "${var.resource_prefix}-vmss-service-connection-${terraform.workspace}-${local.suffix}"
   subscription_id              = data.azurerm_subscription.default.subscription_id
   subscription_name            = data.azurerm_subscription.default.display_name
 
-  count                        = var.create_azdo_resources && local.create_service_connection ? 1 : 0
+  count                        = local.create_azdo_resources && local.create_service_connection ? 1 : 0
   depends_on                   = [azurerm_role_assignment.scale_set_service_connection]
 }
 
@@ -319,7 +319,7 @@ module linux_scale_set_pool {
   max_capacity                 = var.linux_scale_set_agent_count
   min_capacity                 = min(var.linux_scale_set_agent_count,var.linux_scale_set_agent_max_count,var.linux_scale_set_agent_idle_count)
   name                         = module.scale_set_linux_agents.0.virtual_machine_scale_set_name
-  project_id                   = var.azdo_project_id
+  project_ids                  = local.azdo_project_ids
   recycle_after_each_use       = true
   service_connection_id        = local.azdo_service_connection_id
   vmss_id                      = module.scale_set_linux_agents.0.virtual_machine_scale_set_id
@@ -333,7 +333,7 @@ module windows_scale_set_pool {
   max_capacity                 = var.windows_scale_set_agent_count
   min_capacity                 = min(var.windows_scale_set_agent_count,var.windows_scale_set_agent_max_count,var.windows_scale_set_agent_idle_count)
   name                         = module.scale_set_windows_agents.0.virtual_machine_scale_set_name
-  project_id                   = var.azdo_project_id
+  project_ids                  = local.azdo_project_ids
   recycle_after_each_use       = true
   service_connection_id        = local.azdo_service_connection_id
   vmss_id                      = module.scale_set_windows_agents.0.virtual_machine_scale_set_id

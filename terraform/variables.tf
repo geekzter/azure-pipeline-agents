@@ -36,19 +36,11 @@ variable azdo_pat {
   description                  = "A Personal Access Token to access the Azure DevOps organization"
   default                      = null
 }
-variable azdo_project {
-  description                  = "The Azure DevOps project where for deployment Group or Environment"
-  default                      = ""
+variable azdo_project_names {
+  description                  = "The Azure DevOps projects where Scale Set pools should be enabled"
+  default                      = [] # Empty list disables scale set pools
+  type                         = list
 }
-variable azdo_project_id {
-  description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
-  default                      = ""
-}
-# variable azdo_project_names {
-#   description                  = "The Azure DevOps projects where Scale Set pools should be enabled"
-#   default                      = []
-#   type                         = list
-# }
 variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
   default                      = null
@@ -80,11 +72,6 @@ variable configure_wildcard_allow_rules {
   type                         = bool
 }
 
-variable create_azdo_resources {
-  description                  = "Creates VM Scale Set pool in Azure DevOps"
-  default                      = false
-  type                         = bool
-}
 variable create_packer_infrastructure {
   default                      = true
   type                         = bool

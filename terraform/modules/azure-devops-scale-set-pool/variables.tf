@@ -5,7 +5,9 @@ variable min_capacity {
     type = number
 }
 variable name {}
-variable project_id {}
+variable project_ids {
+    type = list(string)
+}
 variable service_connection_id {}
 variable vmss_id {}
 variable recycle_after_each_use {

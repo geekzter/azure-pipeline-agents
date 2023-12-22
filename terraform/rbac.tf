@@ -76,5 +76,5 @@ resource azurerm_role_assignment scale_set_service_connection {
   role_definition_name         = "Virtual Machine Contributor"
   principal_id                 = module.service_principal.0.principal_id
 
-  count                        = var.configure_access_control && var.create_azdo_resources && local.create_service_connection ? 1 : 0
+  count                        = var.configure_access_control && local.create_azdo_resources && local.create_service_connection ? 1 : 0
 }

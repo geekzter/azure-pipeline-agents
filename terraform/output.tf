@@ -24,7 +24,7 @@ output azdo_service_connection_id {
   value                        = local.azdo_service_connection_id
 }
 output azdo_service_connection_url {
-  value                        = "${data.azuredevops_client_config.current.organization_url}/${var.azdo_project_id}/_settings/adminservices?resourceId=${local.azdo_service_connection_id}"
+  value                        = local.create_azdo_resources ? "${data.azuredevops_client_config.current.organization_url}/${local.azdo_project_id}/_settings/adminservices?resourceId=${local.azdo_service_connection_id}" : null
 }
 output azdo_windows_scale_set_pool_id {
   value                        = local.create_windows_scale_set_pool ? module.windows_scale_set_pool.0.id : null

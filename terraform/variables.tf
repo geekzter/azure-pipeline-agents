@@ -51,7 +51,7 @@ variable azdo_project_id {
 # }
 variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
-  default                      = ""
+  default                      = null
 }
 
 variable bastion_tags {
@@ -88,16 +88,6 @@ variable create_azdo_resources {
 variable create_packer_infrastructure {
   default                      = true
   type                         = bool
-}
-
-variable entra_application_id {
-  description                  = "Application ID of pre-created App Registration"
-  default                      = null
-}
-variable entra_application_secret {
-  description                  = "Secret of pre-created App Registration"
-  default                      = null
-  sensitive                    = true
 }
 
 variable demo_viewers {

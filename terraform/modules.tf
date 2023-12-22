@@ -294,14 +294,14 @@ module service_principal {
   name                         = "${var.resource_prefix}-vmss-service-connection-${terraform.workspace}-${local.suffix}"
   owner_object_id              = data.azuread_client_config.default.object_id
 
-  count                        = var.create_azdo_resources && local.create_app_registration ? 1 : 0
+  count                        = var.create_azdo_resources && local.create_service_connection ? 1 : 0
 }
 
 module azure_devops_service_connection {
   source                       = "./modules/azure-devops-service-connection"
   application_id               = module.service_principal.0.application_id
-  application_secret           = local.create_app_registration ? null : var.entra_application_secret
-  authentication_scheme        = local.create_app_registration ? "WorkloadIdentityFederation" : "ServicePrincipal"
+  application_secret           = null
+  authentication_scheme        = "WorkloadIdentityFederation"
   create_identity              = false
   project_id                   = var.azdo_project_id
   tenant_id                    = data.azurerm_client_config.default.tenant_id
@@ -309,7 +309,7 @@ module azure_devops_service_connection {
   subscription_id              = data.azurerm_subscription.default.subscription_id
   subscription_name            = data.azurerm_subscription.default.display_name
 
-  count                        = var.create_azdo_resources ? 1 : 0
+  count                        = var.create_azdo_resources && local.create_service_connection ? 1 : 0
   depends_on                   = [azurerm_role_assignment.scale_set_service_connection]
 }
 
@@ -317,11 +317,11 @@ module linux_scale_set_pool {
   source                       = "./modules/azure-devops-scale-set-pool"
 
   max_capacity                 = var.linux_scale_set_agent_count
-  min_capacity                 = var.linux_scale_set_agent_idle_count
+  min_capacity                 = min(var.linux_scale_set_agent_count,var.linux_scale_set_agent_max_count,var.linux_scale_set_agent_idle_count)
   name                         = module.scale_set_linux_agents.0.virtual_machine_scale_set_name
   project_id                   = var.azdo_project_id
-  recycle_after_each_use       = false
-  service_connection_id        = module.azure_devops_service_connection.0.service_connection_id
+  recycle_after_each_use       = true
+  service_connection_id        = local.azdo_service_connection_id
   vmss_id                      = module.scale_set_linux_agents.0.virtual_machine_scale_set_id
 
   count                        = local.create_linux_scale_set_pool ? 1 : 0
@@ -331,11 +331,11 @@ module windows_scale_set_pool {
   source                       = "./modules/azure-devops-scale-set-pool"
 
   max_capacity                 = var.windows_scale_set_agent_count
-  min_capacity                 = var.windows_scale_set_agent_idle_count
+  min_capacity                 = min(var.windows_scale_set_agent_count,var.windows_scale_set_agent_max_count,var.windows_scale_set_agent_idle_count)
   name                         = module.scale_set_windows_agents.0.virtual_machine_scale_set_name
   project_id                   = var.azdo_project_id
-  recycle_after_each_use       = false
-  service_connection_id        = module.azure_devops_service_connection.0.service_connection_id
+  recycle_after_each_use       = true
+  service_connection_id        = local.azdo_service_connection_id
   vmss_id                      = module.scale_set_windows_agents.0.virtual_machine_scale_set_id
 
   count                        = local.create_windows_scale_set_pool ? 1 : 0

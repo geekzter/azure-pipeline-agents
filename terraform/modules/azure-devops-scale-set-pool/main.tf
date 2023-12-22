@@ -6,6 +6,7 @@ resource  azuredevops_elastic_pool scale_set_pool {
   max_capacity                 = var.max_capacity
   azure_resource_id            = var.vmss_id
   recycle_after_each_use       = var.recycle_after_each_use
+  time_to_live_minutes         = 30
 }
 
 resource azuredevops_agent_queue project_pool {
@@ -14,9 +15,8 @@ resource azuredevops_agent_queue project_pool {
 }
 
 # Grant access to queue to all pipelines in the project
-resource azuredevops_resource_authorization project_pool {
+resource azuredevops_pipeline_authorization project_pool {
   project_id                   = var.project_id
   resource_id                  = azuredevops_agent_queue.project_pool.id
   type                         = "queue"
-  authorized                   = true
 }

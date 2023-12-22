@@ -332,6 +332,11 @@ jobs:
             $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
           }
 
+          # Re-use service connection
+          Get-ChildItem -Path Env: -Recurse -Include ENDPOINT_DATA_* | Select-Object -First 1 -ExpandProperty Name `
+                                                                     | ForEach-Object { $_.Split("_")[2] }
+                                                                     | Set-Variable TF_VAR_azdo_service_connection_id
+
           # Parse alternate strategy variables
           if ($$(substituteAlternateVariables)) {
             foreach ($alternateVar in $(Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_TF_VAR_*)) {

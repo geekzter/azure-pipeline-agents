@@ -98,12 +98,6 @@ Run:
 `scripts/deploy.ps1 -Apply`   
 This will also log into Azure and let you select a subscription in case `ARM_SUBSCRIPTION_ID` is not set.
 
-### Pool
-To create an Azure Pipeline pool from the scale set, use the instructions provided [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops#create-the-scale-set-agent-pool).   
-Alteratively, you can run [create_scale_set_pools.ps1](scripts/create_scale_set_pools.ps1). This requires:
-- `AZURE_DEVOPS_EXT_PAT` or `AZDO_PERSONAL_ACCESS_TOKEN` to be set
-- `AZDO_ORG_SERVICE_URL` to be set
-- Terraform variables `azdo_azdo_service_connection_id` and `service_connection_scope` to be set, or the generated `*.elastic_pool.json` files in `data/TF_WORKSPACE` to be modified.
 ## Provision from Pipeline
 This repo contains a [pipeline](pipelines/azure-pipeline-agents-ci.yml) that can be used for CI/CD. You'll need the [Azure Pipelines Terraform Tasks](https://marketplace.visualstudio.com/items?itemName=charleszipp.azure-pipelines-tasks-terraform) extension installed.
 To be able to create Self-Hosted Agents, the 'Project Collection Build Service (org)' group needs to be given 'Administrator' permission to the Agent Pool, and 'Limit job authorization scope to current project for non-release pipelines' disabled. For this reason, it is recommended to have a dedicated project for this pipeline.
@@ -139,9 +133,9 @@ Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and 
 |`deploy_self_hosted_vms`|Deploy Self-Hosted agent VMs.|
 |`deploy_self_hosted_vm_agents`|Deploy Self-Hosted agent VM extensions.|
 |`linux_tools`|Uses [cloud-init](https://cloudinit.readthedocs.io/) to instal tools (e.g. AzCopy, Packer, PowerShell, PowerShell Azure modules). Should not be used when using a pre-baked image.|
-|`linux_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Ubuntu2204/versions/latest|
+|`azure_linux_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Ubuntu2204/versions/latest|
 |`log_analytics_workspace_id`|Providing a value of an existing Log Analytics workspace allows you to retain logs after infrastructure is destroyed.|
-|`windows_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Windows2022/versions/latest|
+|`azure_windows_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Windows2022/versions/latest|
 
 ## Pipeline use
 This yaml snippet shows how to reference the scale set pool and use the environment variables set by the agent:

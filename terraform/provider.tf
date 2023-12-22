@@ -17,19 +17,10 @@ terraform {
 }
 
 # Azure DevOps provider
-data external azdo_token {
-  program                      = [
-    "az", "account", "get-access-token", 
-    "--resource", "499b84ac-1321-427f-aa17-267ca6975798", # Azure DevOps
-    "--query","{accessToken:accessToken}",
-    "-o","json"
-  ]
-}
 provider azuredevops {
   org_service_url              = local.azdo_org_url
-  personal_access_token        = data.external.azdo_token.result.accessToken
+  personal_access_token        = local.azdo_token
 }
-data azuredevops_client_config current {}
 
 # Microsoft Azure Resource Manager Provider
 provider azurerm {

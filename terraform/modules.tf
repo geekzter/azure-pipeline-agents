@@ -316,9 +316,10 @@ module azure_devops_service_connection {
 module linux_scale_set_pool {
   source                       = "./modules/azure-devops-scale-set-pool"
 
+  agent_interactive_ui         = false
   max_capacity                 = var.linux_scale_set_agent_count
   min_capacity                 = min(var.linux_scale_set_agent_count,var.linux_scale_set_agent_max_count,var.linux_scale_set_agent_idle_count)
-  name                         = module.scale_set_linux_agents.0.virtual_machine_scale_set_name
+  name                         = var.azdo_linux_scale_set_pool_name != null && var.azdo_linux_scale_set_pool_name != "" ? var.azdo_linux_scale_set_pool_name : module.scale_set_linux_agents.0.virtual_machine_scale_set_name
   project_ids                  = local.azdo_project_ids
   recycle_after_each_use       = true
   service_connection_id        = local.azdo_service_connection_id
@@ -330,9 +331,10 @@ module linux_scale_set_pool {
 module windows_scale_set_pool {
   source                       = "./modules/azure-devops-scale-set-pool"
 
+  agent_interactive_ui         = var.windows_scale_set_agent_interactive_ui
   max_capacity                 = var.windows_scale_set_agent_count
   min_capacity                 = min(var.windows_scale_set_agent_count,var.windows_scale_set_agent_max_count,var.windows_scale_set_agent_idle_count)
-  name                         = module.scale_set_windows_agents.0.virtual_machine_scale_set_name
+  name                         = var.azdo_windows_scale_set_pool_name != null && var.azdo_windows_scale_set_pool_name != "" ? var.azdo_windows_scale_set_pool_name : module.scale_set_windows_agents.0.virtual_machine_scale_set_name
   project_ids                  = local.azdo_project_ids
   recycle_after_each_use       = true
   service_connection_id        = local.azdo_service_connection_id

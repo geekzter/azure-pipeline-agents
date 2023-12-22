@@ -28,6 +28,10 @@ variable azdo_environment_name {
   default                      = null
   description                  = "Azure DevOps environment. Only affects self-hosted agents, not scale set agents."
 }
+variable azdo_linux_scale_set_pool_name {
+  description                  = "The name of the Azure DevOps Scale St pool"
+  default                      = null
+}
 variable azdo_org {
   description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
   default                      = null
@@ -43,6 +47,10 @@ variable azdo_project_names {
 }
 variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
+  default                      = null
+}
+variable azdo_windows_scale_set_pool_name {
+  description                  = "The name of the Azure DevOps Scale St pool"
   default                      = null
 }
 

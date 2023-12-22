@@ -1,5 +1,6 @@
 resource  azuredevops_elastic_pool scale_set_pool {
   name                         = var.name
+  agent_interactive_ui         = var.agent_interactive_ui
   service_endpoint_id          = var.service_connection_id
   service_endpoint_scope       = var.project_ids[0]
   desired_idle                 = var.min_capacity

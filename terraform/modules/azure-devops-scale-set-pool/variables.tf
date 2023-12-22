@@ -1,3 +1,6 @@
+variable agent_interactive_ui {
+    type = bool
+}
 variable max_capacity {
     type = number
 }

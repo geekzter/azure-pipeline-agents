@@ -48,7 +48,7 @@ locals {
     {
       # "Agent.Diagnostic"                                        = tostring(var.pipeline_agent_diagnostics)
       AGENT_DIAGNOSTIC                                          = tostring(var.pipeline_agent_diagnostics)
-      PIPELINE_DEMO_AGENT_LOCATION                              = var.location
+      PIPELINE_DEMO_AGENT_LOCATION                              = var.azure_location
       PIPELINE_DEMO_AGENT_OUTBOUND_IP                           = module.network.outbound_ip_address
       PIPELINE_DEMO_AGENT_SUBNET_ID                             = module.network.scale_set_agents_subnet_id
       PIPELINE_DEMO_AGENT_USER_ASSIGNED_IDENTITY_CLIENT_ID      = azurerm_user_assigned_identity.agents.client_id
@@ -64,7 +64,7 @@ locals {
       PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME         = var.create_packer_infrastructure ? split("/",module.gallery.0.shared_image_gallery_id)[4] : ""
       PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID              = var.create_packer_infrastructure ? join("/",slice(split("/",module.packer.0.build_resource_group_id),0,5)) : ""
       PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME            = var.create_packer_infrastructure ? split("/",module.packer.0.build_resource_group_id)[4] : ""
-      PIPELINE_DEMO_PACKER_LOCATION                             = var.create_packer_infrastructure ? var.location : ""
+      PIPELINE_DEMO_PACKER_LOCATION                             = var.create_packer_infrastructure ? var.azure_location : ""
       PIPELINE_DEMO_PACKER_POLICY_SET_NAME                      = var.create_packer_infrastructure && var.configure_access_control ? module.packer.0.policy_set_name : ""
       PIPELINE_DEMO_PACKER_SUBNET_NAME                          = var.create_packer_infrastructure ? module.packer.0.packer_subnet_name : ""
       PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_ID                   = var.create_packer_infrastructure ? module.packer.0.virtual_network_id : ""
@@ -104,7 +104,7 @@ locals {
   terraform_ip_prefix          = jsondecode(chomp(data.http.terraform_ip_prefix.response_body)).data.prefix
 
   # Networking
-  admin_cidr_ranges            = sort(distinct(concat([for range in var.admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.terraform_ip_address])))) # Make sure ranges have correct base address
+  admin_cidr_ranges            = sort(distinct(concat([for range in var.azure_admin_ip_ranges : cidrsubnet(range,0,0)],tolist([local.terraform_ip_address])))) # Make sure ranges have correct base address
 }
 
 resource null_resource script_wrapper_check {
@@ -132,7 +132,7 @@ resource time_sleep script_wrapper_check {
 
 resource azurerm_resource_group rg {
   name                         = terraform.workspace == "default" ? "${var.resource_prefix}-agents-${local.suffix}" : "${var.resource_prefix}-${terraform.workspace}-agents-${local.suffix}"
-  location                     = var.location
+  location                     = var.azure_location
   tags                         = local.tags
 
   depends_on                   = [time_sleep.script_wrapper_check]
@@ -174,10 +174,10 @@ resource azurerm_key_vault vault {
 
   # Grant access to admin, if defined
   dynamic "access_policy" {
-    for_each = range(var.admin_object_id != null && var.admin_object_id != "" ? 1 : 0) 
+    for_each = range(var.azure_admin_object_id != null && var.azure_admin_object_id != "" ? 1 : 0) 
     content {
       tenant_id                = data.azurerm_client_config.default.tenant_id
-      object_id                = var.admin_object_id
+      object_id                = var.azure_admin_object_id
 
       key_permissions          = [
                                 "Create",

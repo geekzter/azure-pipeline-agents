@@ -62,7 +62,7 @@ output linux_os_image_id {
   value                        = local.linux_image_id
 }
 output linux_virtual_machine_scale_set_id {
-  value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.virtual_machine_scale_set_id : null
+  value                        = var.deploy_scale_set && var.azdo_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.virtual_machine_scale_set_id : null
 }
 
 output log_analytics_workspace_id {
@@ -81,11 +81,11 @@ output scale_set_agents_subnet_id {
 }
 output scale_set_linux_cloud_config {
   sensitive                    = true
-  value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
+  value                        = var.deploy_scale_set && var.azdo_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
 }
 output scale_set_windows_host_configuration_script {
   sensitive                    = true
-  value                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.host_configuration_script : null
+  value                        = var.deploy_scale_set && var.azdo_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.host_configuration_script : null
 }
 output self_hosted_agents_subnet_id {
   value                        = module.network.self_hosted_agents_subnet_id
@@ -125,5 +125,5 @@ output windows_os_image_id {
   value                        = local.windows_image_id
 }
 output windows_virtual_machine_scale_set_id {
-  value                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.virtual_machine_scale_set_id : null
+  value                        = var.deploy_scale_set && var.azdo_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.virtual_machine_scale_set_id : null
 }

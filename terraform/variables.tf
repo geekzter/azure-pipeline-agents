@@ -1,20 +1,7 @@
-variable address_space {
-  default                      = "10.201.0.0/22"
-}
-
-variable admin_ip_ranges {
-  default                      = []
-  type                         = list
-}
-variable admin_object_id {
-  default                      = null
-}
-
 variable application_name {
   description                  = "Value of 'application' resource tag"
   default                      = "Pipeline Agents"
 }
-
 variable application_owner {
   description                  = "Value of 'owner' resource tag"
   default                      = "" # Empty string takes objectId of current user
@@ -22,18 +9,37 @@ variable application_owner {
 
 variable azdo_deployment_group_name {
   default                      = null
-  description                  = "Azure DevOps deployment group. Only affects self-hosted agents, not scale set agents."
+  description                  = "Azure DevOps deployment group for self-hosted agents, not scale set agents."
 }
 variable azdo_environment_name {
   default                      = null
-  description                  = "Azure DevOps environment. Only affects self-hosted agents, not scale set agents."
+  description                  = "Azure DevOps environment for self-hosted agents, not scale set agents."
+}
+variable azdo_linux_pipeline_agent_pool {
+  default                      = "Default"
+}
+variable azdo_linux_scale_set_agent_count {
+  default                      = 2
+  type                         = number
+}
+variable azdo_linux_scale_set_agent_idle_count {
+  default                      = 1
+  type                         = number
+}
+variable azdo_linux_scale_set_agent_max_count {
+  default                      = 8
+  type                         = number
+}
+variable azdo_linux_scale_set_agent_max_saved_count {
+  default                      = 1
+  type                         = number
 }
 variable azdo_linux_scale_set_pool_name {
   description                  = "The name of the Azure DevOps Scale St pool"
   default                      = null
 }
 variable azdo_org {
-  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see azdo_linux_pipeline_agent_pool/azdo_windows_pipeline_agent_pool)"
   default                      = null
 }
 variable azdo_pat {
@@ -49,17 +55,53 @@ variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
   default                      = null
 }
+variable azdo_windows_pipeline_agent_pool {
+  default                      = "Default"
+}
+variable azdo_windows_scale_set_agent_count {
+  default                      = 2
+  type                         = number
+}
+variable azdo_windows_scale_set_agent_idle_count {
+  default                      = 1
+  type                         = number
+}
+variable azdo_windows_scale_set_agent_max_count {
+  default                      = 8
+  type                         = number
+}
+variable azdo_windows_scale_set_agent_max_saved_count {
+  default                      = 1
+  type                         = number
+}
+variable azdo_windows_scale_set_agent_interactive_ui {
+  default                      = false
+  type                         = bool
+}
 variable azdo_windows_scale_set_pool_name {
   description                  = "The name of the Azure DevOps Scale St pool"
   default                      = null
 }
 
-variable bastion_tags {
+variable azure_address_space {
+  default                      = "10.201.0.0/22"
+}
+variable azure_admin_ip_ranges {
+  default                      = []
+  type                         = list
+}
+variable azure_admin_object_id {
+  default                      = null
+}
+variable azure_bastion_tags {
   description                  = "A map of the tags to use for the bastion resources that are deployed"
   type                         = map
 
   default                      = {}  
 } 
+variable azure_location {
+  default                      = "centralus"
+}
 
 variable configure_access_control {
   description                  = "Assumes the Terraform user is an owner of the subscription."
@@ -178,25 +220,7 @@ variable linux_os_vhd_url {
 variable linux_pipeline_agent_name_prefix {
   default                      = "ubuntu-agent"
 }
-variable linux_pipeline_agent_pool {
-  default                      = "Default"
-}
-variable linux_scale_set_agent_count {
-  default                      = 2
-  type                         = number
-}
-variable linux_scale_set_agent_idle_count {
-  default                      = 1
-  type                         = number
-}
-variable linux_scale_set_agent_max_count {
-  default                      = 8
-  type                         = number
-}
-variable linux_scale_set_agent_max_saved_count {
-  default                      = 1
-  type                         = number
-}
+
 variable linux_self_hosted_agent_count {
   default                      = 1
   type                         = number
@@ -206,10 +230,6 @@ variable linux_storage_type {
 }
 variable linux_vm_size {
   default                      = "Standard_D2s_v3"
-}
-
-variable location {
-  default                      = "centralus"
 }
 
 variable log_analytics_workspace_id {
@@ -352,29 +372,6 @@ variable windows_os_vhd_url {
 
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"
-}
-variable windows_pipeline_agent_pool {
-  default                      = "Default"
-}
-variable windows_scale_set_agent_count {
-  default                      = 2
-  type                         = number
-}
-variable windows_scale_set_agent_idle_count {
-  default                      = 1
-  type                         = number
-}
-variable windows_scale_set_agent_max_count {
-  default                      = 8
-  type                         = number
-}
-variable windows_scale_set_agent_max_saved_count {
-  default                      = 1
-  type                         = number
-}
-variable windows_scale_set_agent_interactive_ui {
-  default                      = false
-  type                         = bool
 }
 
 variable windows_self_hosted_agent_count {

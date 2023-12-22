@@ -389,10 +389,10 @@ jobs:
               $VerbosePreference     = "Continue"
             }
             ./update_agent_status.ps1 -Enabled:$false `
-                                      -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
+                                      -AgentPoolName $(TF_VAR_azdo_linux_pipeline_agent_pool) `
                                       -AgentNamePrefix "$(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
             ./update_agent_status.ps1 -Enabled:$false `
-                                      -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
+                                      -AgentPoolName $(TF_VAR_azdo_azdo_windows_pipeline_agent_pool) `
                                       -AgentNamePrefix "$(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
           addSpnToEnvironment: true
           useGlobalConfig: true
@@ -429,10 +429,10 @@ jobs:
               $VerbosePreference     = "Continue"
             }
             ./update_agent_status.ps1 -Enabled:$true `
-                                      -AgentPoolName $(TF_VAR_linux_pipeline_agent_pool) `
+                                      -AgentPoolName $(TF_VAR_azdo_linux_pipeline_agent_pool) `
                                       -AgentNamePrefix "$(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
             ./update_agent_status.ps1 -Enabled:$true `
-                                      -AgentPoolName $(TF_VAR_windows_pipeline_agent_pool) `
+                                      -AgentPoolName $(TF_VAR_azdo_azdo_windows_pipeline_agent_pool) `
                                       -AgentNamePrefix "$(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
 
           addSpnToEnvironment: true

@@ -105,21 +105,21 @@ To be able to create Self-Hosted Agents, the 'Project Collection Build Service (
 # Configuration
 
 ## Self-hosted Agents
-[Self-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) are the predecessor to Scale Set Agents. They also provide the ability to run agents anywhere (including outside Azure). However, you have to manage the full lifecycle of each agent instance. I still include this approach as separate Terraform modules for [Ubuntu](terraform/modules/self-hosted-linux-agent) & [Windows](terraform/modules/self-hosted-windows-agent). It involves installing the VM agent as described on this [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) for Linux. 
+[Self-hosted Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops) are the predecessor to Scale Set Agents. They also provide the ability to run agents anywhere (including outside Azure). However, you have to manage the full lifecycle of each agent instance. I still include this approach as separate Terraform modules for [Ubuntu](terraform/modules/azure-self-hosted-linux-agent) & [Windows](terraform/modules/azure-self-hosted-windows-agent). It involves installing the VM agent as described on this [page](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux) for Linux. 
 
-Set Terraform variable `use_self_hosted` to `true` to provision self-hosted agents. You will also need to set `azdo_pat` and `azdo_org`.
+Set Terraform variable `deploy_self_hosted` to `true` to provision self-hosted agents. You will also need to set `azdo_pat` and `azdo_org`.
 
 ## Scale Set Agents
 [Scale Set Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) leverage Azure Virtual Machine Scale Sets. The lifecycle of individual agents is managed by Azure DevOps, therefore I recommend Scale Set Agents over Self-hosted agents. 
 
-Set Terraform variable `use_scale_set` to `true` to provision scale set agents. 
+Set Terraform variable `deploy_scale_set` to `true` to provision scale set agents. 
 
 The software in the scale set (I use Ubuntu only), is installed using [cloud-init](cloudinit/cloud-config-userdata.yaml). 
 
 Note this also sets up some environment variables on the agent e.g. `PIPELINE_DEMO_AGENT_VIRTUAL_NETWORK_ID` that can be used in pipelines to set up a peering connection from (see example below).
 
 ## Feature toggles
-Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and can be overridden by creating a `.auto.tfvars` file (see [config.auto.tfvars.sample](terraform/config.auto.tfvars.sample)), or environemt variables e.g. `TF_VAR_use_self_hosted="true"`.
+Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and can be overridden by creating a `.auto.tfvars` file (see [config.auto.tfvars.sample](terraform/config.auto.tfvars.sample)), or environemt variables e.g. `TF_VAR_deploy_self_hosted="true"`.
 |Terraform variable|Feature|
 |---|---|
 |`configure_cidr_allow_rules`|Configure allow rules for IP ranges documented [here](https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions). When enabled traffic allowed by this rule will not have FQDN's shown in the logs.|

@@ -105,6 +105,8 @@ variables:
   value: '$(Build.SourcesDirectory)/scripts'
 - name: 'terraformDirectory'
   value: '$(Build.SourcesDirectory)/terraform'
+- name: 'TF_VAR_azdo_org_url'
+  value: '$(System.CollectionUri)'
 - name: 'TF_VAR_linux_pipeline_agent_name_prefix'
   value: 'ubuntu-agent'
 - name: 'TF_VAR_run_id'

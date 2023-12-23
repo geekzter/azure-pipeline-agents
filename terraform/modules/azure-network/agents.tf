@@ -17,19 +17,7 @@ resource azurerm_subnet scale_set_agents {
     time_sleep.fw_route_table_destroy_race_condition
   ]
 }
-resource time_sleep scale_set_nsg_association {
-  depends_on                   = [azurerm_subnet.scale_set_agents]
-  create_duration              = "1s"
-}
-data azurerm_subnet scale_set_agents {
-  name                         = azurerm_subnet.scale_set_agents.name
-  resource_group_name          = azurerm_subnet.scale_set_agents.resource_group_name
-  virtual_network_name         = azurerm_subnet.scale_set_agents.virtual_network_name
 
-  depends_on                   = [
-    time_sleep.scale_set_nsg_association
-  ]
-}
 resource azurerm_subnet self_hosted_agents {
   name                         = "SelfHostedAgents"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
@@ -41,19 +29,6 @@ resource azurerm_subnet self_hosted_agents {
     time_sleep.agent_nsg_destroy_race_condition,
     azurerm_route_table.fw_route_table,
     time_sleep.fw_route_table_destroy_race_condition
-  ]
-}
-resource time_sleep self_hosted_nsg_association {
-  depends_on                   = [azurerm_subnet.scale_set_agents]
-  create_duration              = "1s"
-}
-data azurerm_subnet self_hosted_agents {
-  name                         = azurerm_subnet.self_hosted_agents.name
-  resource_group_name          = azurerm_subnet.self_hosted_agents.resource_group_name
-  virtual_network_name         = azurerm_subnet.self_hosted_agents.virtual_network_name
-
-  depends_on                   = [
-    time_sleep.self_hosted_nsg_association
   ]
 }
 

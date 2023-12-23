@@ -48,5 +48,5 @@ locals {
   )
 }
 output virtual_network_id {
-  value                        = join("/",slice(split("/",local.depend_on_subnet_id ),0,9))
+  value                        = join("/",slice(split("/",local.depend_on_subnet_id),0,9))
 }

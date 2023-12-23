@@ -41,6 +41,7 @@ locals {
   # HACK depend on subnet operations to complete before exposing virtual_network_id
   depend_on_subnet_id          = coalesce(
     try(azurerm_subnet_network_security_group_association.bastion_nsg.0.subnet_id,null),
+    try(azurerm_private_endpoint.diag_blob_storage_endpoint.0.subnet_id,null),
     try(azurerm_subnet_network_security_group_association.private_endpoint_subnet.subnet_id,null),
     azurerm_subnet_network_security_group_association.scale_set_agents.subnet_id,
     azurerm_subnet_network_security_group_association.self_hosted_agents.subnet_id,

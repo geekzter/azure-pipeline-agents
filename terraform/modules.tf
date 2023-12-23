@@ -12,7 +12,7 @@ module network {
   deploy_bastion               = var.deploy_bastion
   deploy_firewall              = var.deploy_firewall
   destroy_wait_minutes         = var.destroy_wait_minutes
-  azdo_org                     = var.azdo_org
+  azdo_org                     = local.azdo_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
   dns_host_suffix              = var.dns_host_suffix
   enable_firewall_dns_proxy    = var.enable_firewall_dns_proxy
@@ -79,13 +79,13 @@ module self_hosted_linux_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent                 = var.azdo_org != null && var.deploy_self_hosted_vm_agents
+  deploy_agent                 = var.azdo_org_url != null && var.deploy_self_hosted_vm_agents
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   azdo_deployment_group_name   = var.azdo_deployment_group_name
   azdo_environment_name        = var.azdo_environment_name
-  azdo_org                     = var.azdo_org
+  azdo_org                     = local.azdo_org
   azdo_pat                     = local.azdo_token
   azdo_pipeline_agent_name     = "${var.azure_linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = var.azdo_linux_pipeline_agent_pool
@@ -142,13 +142,13 @@ module self_hosted_windows_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_firewall
-  deploy_agent_vm_extension    = var.azdo_org != null && var.deploy_self_hosted_vm_agents
+  deploy_agent_vm_extension    = var.azdo_org_url != null && var.deploy_self_hosted_vm_agents
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
   azdo_deployment_group_name   = var.azdo_deployment_group_name
   azdo_environment_name        = var.azdo_environment_name
-  azdo_org                     = var.azdo_org
+  azdo_org                     = local.azdo_org
   azdo_pat                     = local.azdo_token
   azdo_pipeline_agent_name     = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = var.azdo_windows_pipeline_agent_pool

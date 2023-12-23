@@ -31,9 +31,9 @@ variable azdo_linux_scale_set_pool_name {
   description                  = "The name of the Azure DevOps Scale St pool"
   default                      = null
 }
-variable azdo_org {
-  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see azdo_linux_pipeline_agent_pool/azdo_windows_pipeline_agent_pool)"
-  default                      = null
+variable azdo_org_url {
+  description                  = "The Azure DevOps organization url to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+  nullable                     = false
 }
 variable azdo_pat {
   description                  = "A Personal Access Token to access the Azure DevOps organization"

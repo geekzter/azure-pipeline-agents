@@ -6,7 +6,7 @@ function Create-RequestHeaders(
     [parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]
-    $Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
+    $Token=($env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN)
 )
 {
     $base64AuthInfo = [Convert]::ToBase64String([System.Text.ASCIIEncoding]::ASCII.GetBytes(":${Token}"))
@@ -184,22 +184,18 @@ function Login-Az (
 }
 
 function Login-AzDO (
-    [parameter(Mandatory=$true)][string]$OrganizationUrl=$env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI
+    [parameter(Mandatory=$true)][string]$OrganizationUrl=($env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI)
 )
 {
     $resource="499b84ac-1321-427f-aa17-267ca6975798"
 
     Login-Az
-    if ($(az account show --query "user.type" -o tsv) -ine "user") {
-        az account get-access-token --resource $resource `
-                                    --query "accessToken" `
-                                    --output tsv `
-                                    | Set-Variable aadToken
-        if ($aadToken) {
-            Write-Debug "Obtained AAD token with 'az account get-access-token'"
-        }
-    }
+    az account get-access-token --resource $resource `
+                                --query "accessToken" `
+                                --output tsv `
+                                | Set-Variable aadToken
     if ($aadToken) {
+        Write-Debug "Obtained AAD token with 'az account get-access-token'"
         $env:AZURE_DEVOPS_EXT_PAT = $aadToken
     } else {
         Write-Error "Unable to get AAD token"

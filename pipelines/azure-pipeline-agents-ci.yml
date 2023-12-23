@@ -107,16 +107,16 @@ variables:
   value: '$(Build.SourcesDirectory)/terraform'
 - name: 'TF_VAR_azdo_org_url'
   value: '$(System.CollectionUri)'
-- name: 'TF_VAR_linux_pipeline_agent_name_prefix'
+- name: 'TF_VAR_azure_linux_pipeline_agent_name_prefix'
   value: 'ubuntu-agent'
+- name: 'TF_VAR_azure_windows_pipeline_agent_name_prefix'
+  value: 'windows-agent'
 - name: 'TF_VAR_run_id'
   value: '$(Build.BuildId)'
 - name: 'TF_VAR_ssh_private_key'
   value: '$(Build.SourcesDirectory)/.ssh/id_rsa_ci'
 - name: 'TF_VAR_ssh_public_key'
   value: '$(Build.SourcesDirectory)/.ssh/id_rsa_ci.pub'
-- name: 'TF_VAR_windows_pipeline_agent_name_prefix'
-  value: 'windows-agent'
 
 - name: 'resourceGroup' 
   value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
@@ -392,10 +392,10 @@ jobs:
             }
             ./update_agent_status.ps1 -Enabled:$false `
                                       -AgentPoolName $(TF_VAR_azdo_linux_pipeline_agent_pool) `
-                                      -AgentNamePrefix "$(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+                                      -AgentNamePrefix "$(TF_VAR_azure_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
             ./update_agent_status.ps1 -Enabled:$false `
                                       -AgentPoolName $(TF_VAR_azdo_windows_pipeline_agent_pool) `
-                                      -AgentNamePrefix "$(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+                                      -AgentNamePrefix "$(TF_VAR_azure_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
           addSpnToEnvironment: true
           useGlobalConfig: true
           workingDirectory: '$(scriptDirectory)'
@@ -432,10 +432,10 @@ jobs:
             }
             ./update_agent_status.ps1 -Enabled:$true `
                                       -AgentPoolName $(TF_VAR_azdo_linux_pipeline_agent_pool) `
-                                      -AgentNamePrefix "$(TF_VAR_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+                                      -AgentNamePrefix "$(TF_VAR_azure_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
             ./update_agent_status.ps1 -Enabled:$true `
-                                      -AgentPoolName $(TF_VAR_azdo_azdo_windows_pipeline_agent_pool) `
-                                      -AgentNamePrefix "$(TF_VAR_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+                                      -AgentPoolName $(TF_VAR_azdo_windows_pipeline_agent_pool) `
+                                      -AgentNamePrefix "$(TF_VAR_azure_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
 
           addSpnToEnvironment: true
           useGlobalConfig: true

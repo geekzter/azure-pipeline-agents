@@ -337,7 +337,7 @@ jobs:
           # Re-use service connection
           Get-ChildItem -Path Env: -Recurse -Include ENDPOINT_DATA_* | Select-Object -First 1 -ExpandProperty Name `
                                                                      | ForEach-Object { $_.Split("_")[2] }
-                                                                     | Set-Variable TF_VAR_azdo_service_connection_id
+                                                                     | Set-Item env:TF_VAR_azdo_service_connection_id
 
           # Parse alternate strategy variables
           if ($$(substituteAlternateVariables)) {

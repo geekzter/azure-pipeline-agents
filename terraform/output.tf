@@ -20,6 +20,12 @@ output azdo_linux_scale_set_pool_name {
 output azdo_linux_scale_set_pool_url {
   value                        = local.create_linux_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.linux_scale_set_pool.0.id}&view=jobs": null
 }
+output azdo_self_hosted_pool_name {
+  value                        = local.azdo_self_hosted_pool_name
+}
+output azdo_self_hosted_pool_url {
+  value                        = local.create_azdo_resources && var.deploy_self_hosted_vm_agents ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.self_hosted_pool.0.id}&view=jobs": null
+}
 output azdo_service_connection_id {
   value                        = local.azdo_service_connection_id
 }

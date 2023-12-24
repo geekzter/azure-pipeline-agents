@@ -44,12 +44,13 @@ variable azdo_project_names {
   default                      = [] # Empty list disables scale set pools
   type                         = list
 }
+variable azdo_self_hosted_pool_name {
+  default                      = null
+  nullable                     = true # Creates new pool
+}
 variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
   default                      = null
-}
-variable azdo_windows_pipeline_agent_pool {
-  default                      = "Default"
 }
 variable azdo_windows_scale_set_agent_idle_count {
   default                      = 1
@@ -110,9 +111,6 @@ variable azure_linux_os_version {
 }
 variable azure_linux_os_vhd_url {
   default                      = null
-}
-variable azdo_linux_pipeline_agent_pool {
-  default                      = "Default"
 }
 variable azure_linux_scale_set_agent_count {
   default                      = 2

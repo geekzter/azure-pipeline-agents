@@ -7,7 +7,7 @@ terraform {
     }
     azurerm                    = "~> 3.18"
     cloudinit                  = "~> 2.2"
-    http                       = "~> 2.2"
+    http                       = "~> 3.4"
     local                      = "~> 2.1"
     null                       = "~> 3.1"
     random                     = "~> 3.1"

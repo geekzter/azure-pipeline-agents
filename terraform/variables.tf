@@ -7,14 +7,6 @@ variable application_owner {
   default                      = "" # Empty string takes objectId of current user
 }
 
-variable azdo_deployment_group_name {
-  default                      = null
-  description                  = "Azure DevOps deployment group for self-hosted agents, not scale set agents."
-}
-variable azdo_environment_name {
-  default                      = null
-  description                  = "Azure DevOps environment for self-hosted agents, not scale set agents."
-}
 variable azdo_linux_scale_set_agent_idle_count {
   default                      = 1
   type                         = number
@@ -47,6 +39,14 @@ variable azdo_project_names {
 variable azdo_self_hosted_pool_name {
   default                      = null
   nullable                     = true # Creates new pool
+}
+variable azdo_self_hosted_pool_type {
+  default                      = "AgentPool"
+  nullable                     = false
+  validation {
+    condition                  = var.azdo_self_hosted_pool_type == "AgentPool" || var.azdo_self_hosted_pool_type == "DeploymentGroup" || var.azdo_self_hosted_pool_type == "Environment"
+    error_message              = "The gateway_type must be 'AgentPool', 'DeploymentGroup' or 'Environment'"
+  }
 }
 variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"

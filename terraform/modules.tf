@@ -77,10 +77,20 @@ module self_hosted_pool {
   source                       = "./modules/azure-devops-agent-pool"
 
   create_pool                  = !(var.azdo_self_hosted_pool_name != null && var.azdo_self_hosted_pool_name != "")
-  name                         = local.create_self_hosted_pool ? var.azdo_self_hosted_pool_name : "${azurerm_resource_group.rg.name}-agents"
+  name                         = local.create_azdo_self_hosted_pool ? var.azdo_self_hosted_pool_name : "${azurerm_resource_group.rg.name}-agents"
   project_ids                  = local.azdo_project_ids
 
-  count                        = local.create_azdo_resources && var.deploy_self_hosted_vm_agents ? 1 : 0
+  count                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "AgentPool" && var.deploy_self_hosted_vm_agents ? 1 : 0
+}
+
+module azdo_environment {
+  source                       = "./modules/azure-devops-environment"
+
+  create_environment           = !(var.azdo_self_hosted_pool_name != null && var.azdo_self_hosted_pool_name != "")
+  name                         = coalesce(var.azdo_self_hosted_pool_name,"${azurerm_resource_group.rg.name}-agents")
+  project_id                   = local.azdo_project_id
+
+  count                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "Environment" && var.deploy_self_hosted_vm_agents ? 1 : 0
 }
 
 module self_hosted_linux_agents {
@@ -93,8 +103,8 @@ module self_hosted_linux_agents {
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  azdo_deployment_group_name   = var.azdo_deployment_group_name
-  azdo_environment_name        = var.azdo_environment_name
+  azdo_deployment_group_name   = local.azdo_deployment_group_name
+  azdo_environment_name        = local.azdo_environment_name
   azdo_org                     = local.azdo_org
   azdo_pat                     = local.azdo_token
   azdo_pipeline_agent_name     = "${var.azure_linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
@@ -156,8 +166,8 @@ module self_hosted_windows_agents {
   deploy_files_share           = var.deploy_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
 
-  azdo_deployment_group_name   = var.azdo_deployment_group_name
-  azdo_environment_name        = var.azdo_environment_name
+  azdo_deployment_group_name   = local.azdo_deployment_group_name
+  azdo_environment_name        = local.azdo_environment_name
   azdo_org                     = local.azdo_org
   azdo_pat                     = local.azdo_token
   azdo_pipeline_agent_name     = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
@@ -304,7 +314,7 @@ module service_principal {
   name                         = "${var.resource_prefix}-vmss-service-connection-${terraform.workspace}-${local.suffix}"
   owner_object_id              = data.azuread_client_config.default.object_id
 
-  count                        = local.create_azdo_resources && local.create_service_connection ? 1 : 0
+  count                        = local.create_azdo_resources && local.create_azdo_service_connection ? 1 : 0
 }
 
 module azure_devops_service_connection {
@@ -319,7 +329,7 @@ module azure_devops_service_connection {
   subscription_id              = data.azurerm_subscription.default.subscription_id
   subscription_name            = data.azurerm_subscription.default.display_name
 
-  count                        = local.create_azdo_resources && local.create_service_connection ? 1 : 0
+  count                        = local.create_azdo_resources && local.create_azdo_service_connection ? 1 : 0
   depends_on                   = [azurerm_role_assignment.scale_set_service_connection]
 }
 
@@ -335,7 +345,7 @@ module linux_scale_set_pool {
   service_connection_id        = local.azdo_service_connection_id
   vmss_id                      = module.scale_set_linux_agents.0.virtual_machine_scale_set_id
 
-  count                        = local.create_azdo_resources && local.create_linux_scale_set_pool ? 1 : 0
+  count                        = local.create_azdo_resources && local.create_azdo_linux_scale_set_pool ? 1 : 0
 }
 
 module windows_scale_set_pool {
@@ -350,5 +360,5 @@ module windows_scale_set_pool {
   service_connection_id        = local.azdo_service_connection_id
   vmss_id                      = module.scale_set_windows_agents.0.virtual_machine_scale_set_id
 
-  count                        = local.create_azdo_resources && local.create_windows_scale_set_pool ? 1 : 0
+  count                        = local.create_azdo_resources && local.create_azdo_windows_scale_set_pool ? 1 : 0
 }

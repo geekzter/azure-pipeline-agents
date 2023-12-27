@@ -11,20 +11,41 @@ output agent_identity_object_id {
   value                        = azurerm_user_assigned_identity.agents.principal_id
 }
 
+output azdo_environment_id {
+  value                        = local.azdo_environment_id
+}
+output azdo_environment_name {
+  value                        = local.azdo_environment_name
+}
+output azdo_environment_url {
+  value                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "Environment"  && var.deploy_self_hosted_vm_agents ? module.azdo_environment.0.url : null
+}
 output azdo_linux_scale_set_pool_id {
-  value                        = local.create_linux_scale_set_pool ? module.linux_scale_set_pool.0.id : null
+  value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.id : null
 }
 output azdo_linux_scale_set_pool_name {
-  value                        = local.create_linux_scale_set_pool ? module.linux_scale_set_pool.0.name : null
+  value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.name : null
 }
 output azdo_linux_scale_set_pool_url {
-  value                        = local.create_linux_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.linux_scale_set_pool.0.id}&view=jobs": null
+  value                        = local.create_azdo_linux_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.linux_scale_set_pool.0.id}&view=jobs": null
+}
+output azdo_project_id {
+  value                        = local.azdo_project_id
+}
+output azdo_project_ids {
+  value                        = local.azdo_project_ids
+}
+output azdo_project_name {
+  value                        = local.azdo_project_name
+}
+output azdo_project_names {
+  value                        = var.azdo_project_names
 }
 output azdo_self_hosted_pool_name {
   value                        = local.azdo_self_hosted_pool_name
 }
 output azdo_self_hosted_pool_url {
-  value                        = local.create_azdo_resources && var.deploy_self_hosted_vm_agents ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.self_hosted_pool.0.id}&view=jobs": null
+  value                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "AgentPool"  && var.deploy_self_hosted_vm_agents ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.self_hosted_pool.0.id}&view=agents": null
 }
 output azdo_service_connection_id {
   value                        = local.azdo_service_connection_id
@@ -33,13 +54,13 @@ output azdo_service_connection_url {
   value                        = local.create_azdo_resources ? "${data.azuredevops_client_config.current.organization_url}/${local.azdo_project_id}/_settings/adminservices?resourceId=${local.azdo_service_connection_id}" : null
 }
 output azdo_windows_scale_set_pool_id {
-  value                        = local.create_windows_scale_set_pool ? module.windows_scale_set_pool.0.id : null
+  value                        = local.create_azdo_windows_scale_set_pool ? module.windows_scale_set_pool.0.id : null
 }
 output azdo_windows_scale_set_pool_name {
-  value                        = local.create_windows_scale_set_pool ? module.windows_scale_set_pool.0.name : null
+  value                        = local.create_azdo_windows_scale_set_pool ? module.windows_scale_set_pool.0.name : null
 }
 output azdo_windows_scale_set_pool_url {
-  value                        = local.create_windows_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.windows_scale_set_pool.0.id}&view=jobs": null
+  value                        = local.create_azdo_windows_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.windows_scale_set_pool.0.id}&view=jobs": null
 }
 
 output build_network_resource_group_id {

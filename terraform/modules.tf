@@ -170,7 +170,7 @@ module self_hosted_windows_agents {
   azdo_environment_name        = local.azdo_environment_name
   azdo_org                     = local.azdo_org
   azdo_pat                     = local.azdo_token
-  azdo_pipeline_agent_name     = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
+  azdo_pipeline_agent_name     = "${var.azure_windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = local.azdo_self_hosted_pool_name
   azdo_pipeline_agent_version_id= var.azdo_pipeline_agent_version_id
   azdo_project                 = local.azdo_project_name

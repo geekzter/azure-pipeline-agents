@@ -167,6 +167,9 @@ variable azure_vhd_storage_account_tier {
 variable azure_vm_accelerated_networking {
   default                      = false
 }
+variable azure_windows_pipeline_agent_name_prefix {
+  default                      = "windows-agent"
+}
 variable azure_windows_os_image_id {
   default                      = null
 }
@@ -366,9 +369,4 @@ variable timezone {
 
 variable user_name {
   default                      = "devopsadmin"
-}
-
-
-variable windows_pipeline_agent_name_prefix {
-  default                      = "windows-agent"
 }

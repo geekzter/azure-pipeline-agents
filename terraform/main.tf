@@ -31,23 +31,23 @@ resource random_string password {
 
 locals {
   configuration_bitmask        = (
-                                  (var.configure_cidr_allow_rules         ? pow(2,0) : 0) +
-                                  (var.configure_wildcard_allow_rules     ? pow(2,1) : 0) +
-                                  (var.deploy_bastion                     ? pow(2,2) : 0) +
-                                  (var.deploy_firewall                    ? pow(2,3) : 0) +
-                                  (var.deploy_non_essential_vm_extensions ? pow(2,4) : 0) +
-                                  (var.deploy_scale_set                   ? pow(2,5) : 0) +
-                                  (var.deploy_self_hosted_vms             ? pow(2,6) : 0) +
-                                  (var.deploy_self_hosted_vm_agents       ? pow(2,7) : 0) +
-                                  (var.prepare_host                       ? pow(2,8) : 0) +
-                                  (var.configure_crl_oscp_rules           ? pow(2,9) : 0) +
+                                  (var.configure_azure_cidr_allow_rules         ? pow(2,0) : 0) +
+                                  (var.configure_azure_wildcard_allow_rules     ? pow(2,1) : 0) +
+                                  (var.deploy_azure_bastion                     ? pow(2,2) : 0) +
+                                  (var.deploy_azure_firewall                    ? pow(2,3) : 0) +
+                                  (var.deploy_non_essential_azure_vm_extensions ? pow(2,4) : 0) +
+                                  (var.deploy_azure_scale_set                   ? pow(2,5) : 0) +
+                                  (var.deploy_azure_self_hosted_vms             ? pow(2,6) : 0) +
+                                  (var.deploy_azdo_self_hosted_vm_agents        ? pow(2,7) : 0) +
+                                  (var.prepare_host                             ? pow(2,8) : 0) +
+                                  (var.configure_azure_crl_oscp_rules           ? pow(2,9) : 0) +
                                   0
   )
   environment                  = "dev"
   environment_variables        = merge(
     {
-      # "Agent.Diagnostic"                                        = tostring(var.pipeline_agent_diagnostics)
-      AGENT_DIAGNOSTIC                                          = tostring(var.pipeline_agent_diagnostics)
+      # "Agent.Diagnostic"                                        = tostring(var.azdo_pipeline_agent_diagnostics)
+      AGENT_DIAGNOSTIC                                          = tostring(var.azdo_pipeline_agent_diagnostics)
       PIPELINE_DEMO_AGENT_LOCATION                              = var.azure_location
       PIPELINE_DEMO_AGENT_OUTBOUND_IP                           = module.network.outbound_ip_address
       PIPELINE_DEMO_AGENT_SUBNET_ID                             = module.network.scale_set_agents_subnet_id
@@ -58,24 +58,24 @@ locals {
       PIPELINE_DEMO_AGENT_VIRTUAL_NETWORK_ID                    = module.network.virtual_network_id
       PIPELINE_DEMO_APPLICATION_NAME                            = var.application_name
       PIPELINE_DEMO_APPLICATION_OWNER                           = local.owner
-      PIPELINE_DEMO_COMPUTE_GALLERY_ID                          = var.create_packer_infrastructure ? module.gallery.0.shared_image_gallery_id : ""
-      PIPELINE_DEMO_COMPUTE_GALLERY_NAME                        = var.create_packer_infrastructure ? split("/",module.gallery.0.shared_image_gallery_id)[8] : ""
-      PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID           = var.create_packer_infrastructure ? join("/",slice(split("/",module.gallery.0.shared_image_gallery_id),0,5)) : ""
-      PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME         = var.create_packer_infrastructure ? split("/",module.gallery.0.shared_image_gallery_id)[4] : ""
-      PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID              = var.create_packer_infrastructure ? join("/",slice(split("/",module.packer.0.build_resource_group_id),0,5)) : ""
-      PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME            = var.create_packer_infrastructure ? split("/",module.packer.0.build_resource_group_id)[4] : ""
-      PIPELINE_DEMO_PACKER_LOCATION                             = var.create_packer_infrastructure ? var.azure_location : ""
-      PIPELINE_DEMO_PACKER_POLICY_SET_NAME                      = var.create_packer_infrastructure && var.configure_access_control ? module.packer.0.policy_set_name : ""
-      PIPELINE_DEMO_PACKER_SUBNET_NAME                          = var.create_packer_infrastructure ? module.packer.0.packer_subnet_name : ""
-      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_ID                   = var.create_packer_infrastructure ? module.packer.0.virtual_network_id : ""
-      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME                 = var.create_packer_infrastructure ? split("/",module.packer.0.virtual_network_id)[8] : ""
-      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID    = var.create_packer_infrastructure ? join("/",slice(split("/",module.packer.0.virtual_network_id),0,5)) : ""
-      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME  = var.create_packer_infrastructure ? split("/",module.packer.0.virtual_network_id)[4] : ""
+      PIPELINE_DEMO_COMPUTE_GALLERY_ID                          = var.create_azure_packer_infrastructure ? module.gallery.0.shared_image_gallery_id : ""
+      PIPELINE_DEMO_COMPUTE_GALLERY_NAME                        = var.create_azure_packer_infrastructure ? split("/",module.gallery.0.shared_image_gallery_id)[8] : ""
+      PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_ID           = var.create_azure_packer_infrastructure ? join("/",slice(split("/",module.gallery.0.shared_image_gallery_id),0,5)) : ""
+      PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME         = var.create_azure_packer_infrastructure ? split("/",module.gallery.0.shared_image_gallery_id)[4] : ""
+      PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_ID              = var.create_azure_packer_infrastructure ? join("/",slice(split("/",module.packer.0.build_resource_group_id),0,5)) : ""
+      PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME            = var.create_azure_packer_infrastructure ? split("/",module.packer.0.build_resource_group_id)[4] : ""
+      PIPELINE_DEMO_PACKER_LOCATION                             = var.create_azure_packer_infrastructure ? var.azure_location : ""
+      PIPELINE_DEMO_PACKER_POLICY_SET_NAME                      = var.create_azure_packer_infrastructure && var.configure_access_control ? module.packer.0.policy_set_name : ""
+      PIPELINE_DEMO_PACKER_SUBNET_NAME                          = var.create_azure_packer_infrastructure ? module.packer.0.packer_subnet_name : ""
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_ID                   = var.create_azure_packer_infrastructure ? module.packer.0.virtual_network_id : ""
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME                 = var.create_azure_packer_infrastructure ? split("/",module.packer.0.virtual_network_id)[8] : ""
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_ID    = var.create_azure_packer_infrastructure ? join("/",slice(split("/",module.packer.0.virtual_network_id),0,5)) : ""
+      PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME  = var.create_azure_packer_infrastructure ? split("/",module.packer.0.virtual_network_id)[4] : ""
       PIPELINE_DEMO_RESOURCE_PREFIX                             = var.resource_prefix
       # "System.Debug"                                            = tostring(var.pipeline_agent_diagnostics)
-      SYSTEM_DEBUG                                              = tostring(var.pipeline_agent_diagnostics)
-      VSTSAGENT_TRACE                                           = tostring(var.pipeline_agent_diagnostics)
-      VSTS_AGENT_HTTPTRACE                                      = tostring(var.pipeline_agent_diagnostics)
+      SYSTEM_DEBUG                                              = tostring(var.azdo_pipeline_agent_diagnostics)
+      VSTSAGENT_TRACE                                           = tostring(var.azdo_pipeline_agent_diagnostics)
+      VSTS_AGENT_HTTPTRACE                                      = tostring(var.azdo_pipeline_agent_diagnostics)
     },
     var.environment_variables
   )
@@ -98,7 +98,7 @@ locals {
       workspace                = terraform.workspace
       configuration-bitmask    = local.configuration_bitmask
     },
-    var.tags
+    var.azure_tags
   )  
   terraform_ip_address         = chomp(data.http.terraform_ip_address.response_body)
   terraform_ip_prefix          = jsondecode(chomp(data.http.terraform_ip_prefix.response_body)).data.prefix
@@ -195,7 +195,7 @@ resource azurerm_key_vault vault {
   }
 
   dynamic "network_acls" {
-    for_each = range(var.deploy_firewall ? 1 : 0) 
+    for_each = range(var.deploy_azure_firewall ? 1 : 0) 
     content {
       default_action           = "Deny"
       bypass                   = "AzureServices"
@@ -228,7 +228,7 @@ resource azurerm_private_endpoint vault_endpoint {
   depends_on                   = [
                                   module.network
   ]
-  count                        = var.deploy_firewall ? 1 : 0
+  count                        = var.deploy_azure_firewall ? 1 : 0
 }
 resource azurerm_private_dns_a_record vault_dns_record {
   name                         = azurerm_key_vault.vault.name
@@ -239,7 +239,7 @@ resource azurerm_private_dns_a_record vault_dns_record {
 
   tags                         = local.tags
 
-  count                        = var.deploy_firewall ? 1 : 0
+  count                        = var.deploy_azure_firewall ? 1 : 0
 }
 resource azurerm_monitor_diagnostic_setting key_vault {
   name                         = "${azurerm_key_vault.vault.name}-logs"

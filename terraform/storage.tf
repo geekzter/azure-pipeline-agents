@@ -79,7 +79,7 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
     azurerm_private_endpoint.vault_endpoint,
     module.network
   ]
-  count                        = var.deploy_firewall ? 1 : 0
+  count                        = var.deploy_azure_firewall ? 1 : 0
 }
 
 resource azurerm_storage_account automation_storage {
@@ -123,7 +123,7 @@ resource azurerm_private_endpoint aut_blob_storage_endpoint {
     azurerm_private_endpoint.diag_blob_storage_endpoint,
     module.network
   ]
-  count                        = var.deploy_firewall ? 1 : 0
+  count                        = var.deploy_azure_firewall ? 1 : 0
 }
 
 resource azurerm_disk_access disk_access {
@@ -163,7 +163,7 @@ resource azurerm_private_endpoint disk_access_endpoint {
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     module.network
   ]
-  count                        = var.deploy_firewall ? 1 : 0
+  count                        = var.deploy_azure_firewall ? 1 : 0
 }
 
 resource azurerm_storage_account share {
@@ -177,7 +177,7 @@ resource azurerm_storage_account share {
 
   tags                         = local.tags
 
-  count                        = var.deploy_files_share ? 1 : 0
+  count                        = var.deploy_azure_files_share ? 1 : 0
 }
 
 resource azurerm_storage_share diagnostics_smb_share {
@@ -186,7 +186,7 @@ resource azurerm_storage_share diagnostics_smb_share {
   enabled_protocol             = "SMB"
   quota                        = 128
 
-  count                        = var.deploy_files_share ? 1 : 0
+  count                        = var.deploy_azure_files_share ? 1 : 0
 }
 resource azurerm_private_endpoint diagnostics_share {
   name                         = "${azurerm_storage_account.share.0.name}-files-endpoint"
@@ -218,24 +218,24 @@ resource azurerm_private_endpoint diagnostics_share {
     module.network
   ]
 
-  count                        = var.deploy_files_share ? 1 : 0
+  count                        = var.deploy_azure_files_share ? 1 : 0
 }
 resource azurerm_storage_share_file sync_windows_vm_logs_cmd {
   name                         = "sync_windows_vm_logs.cmd"
   storage_share_id             = azurerm_storage_share.diagnostics_smb_share.0.id
   source                       = "${path.root}/../scripts/host/sync_windows_vm_logs.cmd"
 
-  count                        = var.deploy_files_share ? 1 : 0
+  count                        = var.deploy_azure_files_share ? 1 : 0
 }
 resource azurerm_storage_share_file sync_windows_vm_logs_ps1 {
   name                         = "sync_windows_vm_logs.ps1"
   storage_share_id             = azurerm_storage_share.diagnostics_smb_share.0.id
   source                       = "${path.root}/../scripts/host/sync_windows_vm_logs.ps1"
 
-  count                        = var.deploy_files_share ? 1 : 0
+  count                        = var.deploy_azure_files_share ? 1 : 0
 }
 
 locals {
-  diagnostics_smb_share        = var.deploy_files_share ? replace(azurerm_storage_share.diagnostics_smb_share.0.url,"https:","") : null
-  diagnostics_smb_share_mount_point= var.deploy_files_share ? "/mount/${azurerm_storage_account.share.0.name}/${azurerm_storage_share.diagnostics_smb_share.0.name}" : null
+  diagnostics_smb_share        = var.deploy_azure_files_share ? replace(azurerm_storage_share.diagnostics_smb_share.0.url,"https:","") : null
+  diagnostics_smb_share_mount_point= var.deploy_azure_files_share ? "/mount/${azurerm_storage_account.share.0.name}/${azurerm_storage_share.diagnostics_smb_share.0.name}" : null
 }

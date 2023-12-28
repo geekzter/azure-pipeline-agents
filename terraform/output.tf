@@ -27,7 +27,7 @@ output azdo_linux_scale_set_pool_name {
   value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.name : null
 }
 output azdo_linux_scale_set_pool_url {
-  value                        = local.create_azdo_linux_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.linux_scale_set_pool.0.id}&view=jobs": null
+  value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.url : null
 }
 output azdo_project_id {
   value                        = local.azdo_project_id
@@ -45,7 +45,7 @@ output azdo_self_hosted_pool_name {
   value                        = local.azdo_self_hosted_pool_name
 }
 output azdo_self_hosted_pool_url {
-  value                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "AgentPool"  && var.deploy_self_hosted_vm_agents ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.self_hosted_pool.0.id}&view=agents": null
+  value                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "AgentPool" && var.deploy_self_hosted_vm_agents ? module.self_hosted_pool.0.url : null
 }
 output azdo_service_connection_id {
   value                        = local.azdo_service_connection_id
@@ -60,7 +60,7 @@ output azdo_windows_scale_set_pool_name {
   value                        = local.create_azdo_windows_scale_set_pool ? module.windows_scale_set_pool.0.name : null
 }
 output azdo_windows_scale_set_pool_url {
-  value                        = local.create_azdo_windows_scale_set_pool ? "${local.azdo_org_url}/_settings/agentpools?poolId=${module.windows_scale_set_pool.0.id}&view=jobs": null
+  value                        = local.create_azdo_windows_scale_set_pool ? module.windows_scale_set_pool.0.url : null
 }
 
 output build_network_resource_group_id {

@@ -1,3 +1,5 @@
+data azuredevops_client_config current {}
+
 resource  azuredevops_elastic_pool scale_set_pool {
   name                         = var.name
   agent_interactive_ui         = var.agent_interactive_ui

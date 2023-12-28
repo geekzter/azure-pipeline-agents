@@ -1,3 +1,9 @@
+data azuredevops_client_config current {}
+
+locals {
+  pool_id                      = var.create_pool ? azuredevops_agent_pool.agent_pool.0.id : data.azuredevops_agent_pool.agent_pool.0.id
+}
+
 data azuredevops_agent_pool agent_pool {
   name                         = var.name
 

@@ -1,5 +1,4 @@
 variables:
-- group: 'pipeline-agents-ci'
 - name: 'jobTimeOutMinutes'
   value: 180
 - name: 'repository'
@@ -16,8 +15,6 @@ variables:
   value: 0
 - name: 'identityScriptDirectory'
   value: '$(Build.SourcesDirectory)/scripts/identity/scripts/azure-devops'
-- name: 'resourceGroup' 
-  value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
 - name: 'scriptDirectory'
   value: '$(Build.SourcesDirectory)/scripts'
 - name: 'terraformDirectory'

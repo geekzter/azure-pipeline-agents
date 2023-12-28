@@ -81,6 +81,8 @@ schedules:
     - master
 
 variables:
+- group: 'pipeline-agents-common'
+- group: 'pipeline-agents-ci'
 - template: azure-pipeline-agents-ci-variables.yml
 
 jobs:

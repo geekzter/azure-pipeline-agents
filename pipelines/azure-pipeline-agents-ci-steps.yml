@@ -31,12 +31,8 @@ parameters:
   default: false
 - name: unpinTerraformProviders
   displayName: Unpin Terraform provider versions
-  type: string
-  default: No
-  values:
-  - No
-  - Yes
-  - Strategy
+  type: boolean
+  default: false
 
 steps:
   - checkout: self
@@ -65,7 +61,7 @@ steps:
     inputs:
       terraformVersion: '$(terraformConfig.version)'
 
-  - ${{ if or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}:
+  - ${{ if parameters.unpinTerraformProviders }}:
     # Unpin version e.g. "= 2.56" -> "~> 2.56"
     - pwsh: |
         (Get-Content ./provider.tf) -replace " = `" *= +",' = "~> ' | Out-File provider.tf

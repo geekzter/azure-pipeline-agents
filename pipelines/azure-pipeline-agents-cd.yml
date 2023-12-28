@@ -106,4 +106,4 @@ jobs:
       retryCount: ${{ parameters.retryCount }}
       testReentrance: false
       unpinTerraform: false
-      unpinTerraformProviders: 'No'
+      unpinTerraformProviders: false

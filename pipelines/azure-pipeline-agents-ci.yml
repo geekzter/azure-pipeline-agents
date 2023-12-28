@@ -176,4 +176,4 @@ jobs:
       retryCount: ${{ parameters.retryCount }}
       testReentrance: ${{ parameters.testReentrance }}
       unpinTerraform: ${{ parameters.unpinTerraform }}
-      unpinTerraformProviders: ${{ parameters.unpinTerraformProviders }}
+      unpinTerraformProviders: ${{ or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}

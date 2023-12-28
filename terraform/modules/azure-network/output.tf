@@ -37,6 +37,16 @@ output self_hosted_agents_subnet_id {
 output outbound_ip_address {
   value                        = var.deploy_firewall ? azurerm_public_ip.firewall.0.ip_address : azurerm_public_ip.nat_egress.0.ip_address
 }
+locals {
+  # HACK depend on subnet operations to complete before exposing virtual_network_id
+  depend_on_subnet_id          = coalesce(
+    try(azurerm_subnet_network_security_group_association.bastion_nsg.0.subnet_id,null),
+    try(azurerm_private_endpoint.diag_blob_storage_endpoint.0.subnet_id,null),
+    try(azurerm_subnet_network_security_group_association.private_endpoint_subnet.subnet_id,null),
+    azurerm_subnet_network_security_group_association.scale_set_agents.subnet_id,
+    azurerm_subnet_network_security_group_association.self_hosted_agents.subnet_id,
+  )
+}
 output virtual_network_id {
-  value                        = azurerm_virtual_network.pipeline_network.id
+  value                        = join("/",slice(split("/",local.depend_on_subnet_id),0,9))
 }

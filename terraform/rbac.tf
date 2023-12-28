@@ -50,7 +50,7 @@ resource azurerm_role_assignment network_viewer {
 resource azurerm_role_assignment vm_admin {
   scope                        = azurerm_resource_group.rg.id
   role_definition_name         = "Virtual Machine Administrator Login"
-  principal_id                 = var.admin_object_id != null ? var.admin_object_id : data.azuread_client_config.default.object_id
+  principal_id                 = var.azure_admin_object_id != null ? var.azure_admin_object_id : data.azuread_client_config.default.object_id
 
   count                        = var.configure_access_control ? 1 : 0
 }
@@ -58,7 +58,7 @@ resource azurerm_role_assignment vm_admin {
 resource azurerm_role_assignment vm_contributor {
   scope                        = azurerm_resource_group.rg.id
   role_definition_name         = "Virtual Machine Contributor"
-  principal_id                 = var.admin_object_id != null ? var.admin_object_id : data.azuread_client_config.default.object_id
+  principal_id                 = var.azure_admin_object_id != null ? var.azure_admin_object_id : data.azuread_client_config.default.object_id
 
   count                        = var.configure_access_control ? 1 : 0
 }
@@ -69,4 +69,12 @@ resource azurerm_user_assigned_identity agents {
   location                     = azurerm_resource_group.rg.location
 
   tags                         = local.tags
+}
+
+resource azurerm_role_assignment scale_set_service_connection {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Virtual Machine Contributor"
+  principal_id                 = module.service_principal.0.principal_id
+
+  count                        = var.configure_access_control && local.create_azdo_resources && local.create_azdo_service_connection ? 1 : 0
 }

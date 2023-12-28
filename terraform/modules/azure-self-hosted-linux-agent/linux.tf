@@ -67,7 +67,7 @@ data cloudinit_config user_data {
       content                  = templatefile("${path.root}/../cloudinit/cloud-config-agent.yaml",
       {
         agent_name             = var.azdo_pipeline_agent_name
-        agent_pool             = var.azdo_pipeline_agent_pool
+        agent_pool             = var.azdo_pipeline_agent_pool != null ? var.azdo_pipeline_agent_pool : ""
         agent_version_id       = var.azdo_pipeline_agent_version_id
         deployment_group       = var.azdo_deployment_group_name != null ? var.azdo_deployment_group_name : ""
         environment            = var.azdo_environment_name != null ? var.azdo_environment_name : ""

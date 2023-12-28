@@ -1,6 +1,6 @@
 resource azurerm_storage_account diagnostics {
   name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,14)}${substr(local.suffix,-6,-1)}diag"
-  location                     = var.location
+  location                     = var.azure_location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"
   account_tier                 = "Standard"
@@ -84,7 +84,7 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
 
 resource azurerm_storage_account automation_storage {
   name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,15)}${substr(local.suffix,-6,-1)}aut"
-  location                     = var.location
+  location                     = var.azure_location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "StorageV2"
   account_tier                 = "Standard"
@@ -128,7 +128,7 @@ resource azurerm_private_endpoint aut_blob_storage_endpoint {
 
 resource azurerm_disk_access disk_access {
   name                         = "${azurerm_resource_group.rg.name}-disk-access"
-  location                     = var.location
+  location                     = var.azure_location
   resource_group_name          = azurerm_resource_group.rg.name
 
   tags                         = local.tags
@@ -136,7 +136,7 @@ resource azurerm_disk_access disk_access {
 
 resource azurerm_private_endpoint disk_access_endpoint {
   name                         = "${azurerm_disk_access.disk_access.name}-endpoint"
-  location                     = var.location
+  location                     = var.azure_location
   resource_group_name          = azurerm_resource_group.rg.name
   
   subnet_id                    = module.network.private_endpoint_subnet_id
@@ -168,7 +168,7 @@ resource azurerm_private_endpoint disk_access_endpoint {
 
 resource azurerm_storage_account share {
   name                         = "${substr(lower(replace(azurerm_resource_group.rg.name,"/a|e|i|o|u|y|-/","")),0,14)}${substr(local.suffix,-6,-1)}shar"
-  location                     = var.location
+  location                     = var.azure_location
   resource_group_name          = azurerm_resource_group.rg.name
   account_kind                 = "FileStorage"
   account_tier                 = "Premium"
@@ -190,7 +190,7 @@ resource azurerm_storage_share diagnostics_smb_share {
 }
 resource azurerm_private_endpoint diagnostics_share {
   name                         = "${azurerm_storage_account.share.0.name}-files-endpoint"
-  location                     = var.location
+  location                     = var.azure_location
   resource_group_name          = azurerm_resource_group.rg.name
   
   subnet_id                    = module.network.private_endpoint_subnet_id

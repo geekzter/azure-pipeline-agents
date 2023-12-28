@@ -11,6 +11,58 @@ output agent_identity_object_id {
   value                        = azurerm_user_assigned_identity.agents.principal_id
 }
 
+output azdo_environment_id {
+  value                        = local.azdo_environment_id
+}
+output azdo_environment_name {
+  value                        = local.azdo_environment_name
+}
+output azdo_environment_url {
+  value                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "Environment"  && var.deploy_self_hosted_vm_agents ? module.azdo_environment.0.url : null
+}
+output azdo_linux_scale_set_pool_id {
+  value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.id : null
+}
+output azdo_linux_scale_set_pool_name {
+  value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.name : null
+}
+output azdo_linux_scale_set_pool_url {
+  value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.url : null
+}
+output azdo_project_id {
+  value                        = local.azdo_project_id
+}
+output azdo_project_ids {
+  value                        = local.azdo_project_ids
+}
+output azdo_project_name {
+  value                        = local.azdo_project_name
+}
+output azdo_project_names {
+  value                        = var.azdo_project_names
+}
+output azdo_self_hosted_pool_name {
+  value                        = local.azdo_self_hosted_pool_name
+}
+output azdo_self_hosted_pool_url {
+  value                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "AgentPool" && var.deploy_self_hosted_vm_agents ? module.self_hosted_pool.0.url : null
+}
+output azdo_service_connection_id {
+  value                        = local.azdo_service_connection_id
+}
+output azdo_service_connection_url {
+  value                        = local.create_azdo_resources ? "${data.azuredevops_client_config.current.organization_url}/${local.azdo_project_id}/_settings/adminservices?resourceId=${local.azdo_service_connection_id}" : null
+}
+output azdo_windows_scale_set_pool_id {
+  value                        = local.create_azdo_windows_scale_set_pool ? module.windows_scale_set_pool.0.id : null
+}
+output azdo_windows_scale_set_pool_name {
+  value                        = local.create_azdo_windows_scale_set_pool ? module.windows_scale_set_pool.0.name : null
+}
+output azdo_windows_scale_set_pool_url {
+  value                        = local.create_azdo_windows_scale_set_pool ? module.windows_scale_set_pool.0.url : null
+}
+
 output build_network_resource_group_id {
   value                        = var.create_packer_infrastructure ? module.packer.0.network_resource_group_id : null
 }
@@ -33,11 +85,11 @@ output environment_variables {
   value                        = local.environment_variables
 }
 
-output linux_os_image_id {
+output azure_linux_os_image_id {
   value                        = local.linux_image_id
 }
 output linux_virtual_machine_scale_set_id {
-  value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.virtual_machine_scale_set_id : null
+  value                        = var.deploy_scale_set && var.azure_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.virtual_machine_scale_set_id : null
 }
 
 output log_analytics_workspace_id {
@@ -56,11 +108,11 @@ output scale_set_agents_subnet_id {
 }
 output scale_set_linux_cloud_config {
   sensitive                    = true
-  value                        = var.deploy_scale_set && var.linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
+  value                        = var.deploy_scale_set && var.azure_linux_scale_set_agent_count > 0 ? module.scale_set_linux_agents.0.cloud_config : null
 }
 output scale_set_windows_host_configuration_script {
   sensitive                    = true
-  value                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.host_configuration_script : null
+  value                        = var.deploy_scale_set && var.azure_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.host_configuration_script : null
 }
 output self_hosted_agents_subnet_id {
   value                        = module.network.self_hosted_agents_subnet_id
@@ -75,7 +127,7 @@ output self_hosted_vm_id {
 
 output self_hosted_linux_cloud_config {
   sensitive                    = true
-  value                        = var.deploy_self_hosted_vms && var.linux_self_hosted_agent_count > 0 ? module.self_hosted_linux_agents.0.cloud_config : null
+  value                        = var.deploy_self_hosted_vms && var.azure_linux_self_hosted_agent_count > 0 ? module.self_hosted_linux_agents.0.cloud_config : null
 }
 
 output ssh_private_key_id {
@@ -92,16 +144,13 @@ output user_password {
   value                        = local.password
 }
 
-output virtual_machine_scale_sets {
-  value                        = local.virtual_machine_scale_sets
-}
 output virtual_network_id {
   value                        = module.network.virtual_network_id
 }
 
-output windows_os_image_id {
+output azure_windows_os_image_id {
   value                        = local.windows_image_id
 }
 output windows_virtual_machine_scale_set_id {
-  value                        = var.deploy_scale_set && var.windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.virtual_machine_scale_set_id : null
+  value                        = var.deploy_scale_set && var.azure_windows_scale_set_agent_count > 0 ? module.scale_set_windows_agents.0.virtual_machine_scale_set_id : null
 }

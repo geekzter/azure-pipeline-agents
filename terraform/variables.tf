@@ -1,60 +1,150 @@
-variable address_space {
-  default                      = "10.201.0.0/22"
-}
-
-variable admin_ip_ranges {
-  default                      = []
-  type                         = list
-}
-variable admin_object_id {
-  default                      = null
-}
-
 variable application_name {
   description                  = "Value of 'application' resource tag"
   default                      = "Pipeline Agents"
 }
-
 variable application_owner {
   description                  = "Value of 'owner' resource tag"
   default                      = "" # Empty string takes objectId of current user
 }
 
-variable azdo_deployment_group_name {
-  default                      = null
-  description                  = "Azure DevOps deployment group. Only affects self-hosted agents, not scale set agents."
+variable azdo_linux_scale_set_agent_idle_count {
+  default                      = 1
+  type                         = number
 }
-variable azdo_environment_name {
-  default                      = null
-  description                  = "Azure DevOps environment. Only affects self-hosted agents, not scale set agents."
+variable azdo_linux_scale_set_agent_max_count {
+  default                      = 8
+  type                         = number
 }
-variable azdo_org {
-  description                  = "The Azure DevOps org to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+variable azdo_linux_scale_set_agent_max_saved_count {
+  default                      = 1
+  type                         = number
+}
+variable azdo_linux_scale_set_pool_name {
+  description                  = "The name of the Azure DevOps Scale St pool"
   default                      = null
+}
+variable azdo_org_url {
+  description                  = "The Azure DevOps organization url to join self-hosted agents to (default pool: 'Default', see linux_pipeline_agent_pool/windows_pipeline_agent_pool)"
+  nullable                     = false
 }
 variable azdo_pat {
   description                  = "A Personal Access Token to access the Azure DevOps organization"
   default                      = null
 }
-variable azdo_project {
-  description                  = "The Azure DevOps project where for deployment Group or Environment"
-  default                      = ""
+variable azdo_project_names {
+  description                  = "The Azure DevOps projects where Scale Set pools should be enabled"
+  default                      = [] # Empty list disables scale set pools
+  type                         = list
 }
-variable azdo_project_id {
-  description                  = "The Azure DevOps project where the Service Connection GUID to join the scale set agents resides"
-  default                      = ""
+variable azdo_self_hosted_pool_name {
+  default                      = null
+  nullable                     = true # Creates new pool
+}
+variable azdo_self_hosted_pool_type {
+  default                      = "AgentPool"
+  nullable                     = false
+  validation {
+    condition                  = var.azdo_self_hosted_pool_type == "AgentPool" || var.azdo_self_hosted_pool_type == "DeploymentGroup" || var.azdo_self_hosted_pool_type == "Environment"
+    error_message              = "The gateway_type must be 'AgentPool', 'DeploymentGroup' or 'Environment'"
+  }
 }
 variable azdo_service_connection_id {
   description                  = "The Azure DevOps Service Connection GUID to join the scale set agents"
-  default                      = ""
+  default                      = null
+}
+variable azdo_windows_scale_set_agent_idle_count {
+  default                      = 1
+  type                         = number
+}
+variable azdo_windows_scale_set_agent_max_count {
+  default                      = 8
+  type                         = number
+}
+variable azdo_windows_scale_set_agent_max_saved_count {
+  default                      = 1
+  type                         = number
+}
+variable azdo_windows_scale_set_agent_interactive_ui {
+  default                      = false
+  type                         = bool
+}
+variable azdo_windows_scale_set_pool_name {
+  description                  = "The name of the Azure DevOps Scale St pool"
+  default                      = null
 }
 
-variable bastion_tags {
+variable azure_address_space {
+  default                      = "10.201.0.0/22"
+}
+variable azure_admin_ip_ranges {
+  default                      = []
+  type                         = list
+}
+variable azure_admin_object_id {
+  default                      = null
+}
+variable azure_bastion_tags {
   description                  = "A map of the tags to use for the bastion resources that are deployed"
   type                         = map
 
   default                      = {}  
 } 
+variable azure_location {
+  default                      = "centralus"
+}
+variable azure_linux_os_image_id {
+  default                      = null
+}
+# az vm image list-offers -l centralus -p "Canonical" -o table
+variable azure_linux_os_offer {
+  default                      = "0001-com-ubuntu-server-focal"
+}
+variable azure_linux_os_publisher {
+  default                      = "Canonical"
+}
+# az vm image list-skus -l centralus -f "0001-com-ubuntu-server-focal" -p "Canonical" -o table
+variable azure_linux_os_sku {
+  default                      = "20_04-lts"
+}
+variable azure_linux_os_version {
+  default                      = "latest"
+}
+variable azure_linux_os_vhd_url {
+  default                      = null
+}
+variable azure_linux_scale_set_agent_count {
+  default                      = 2
+  type                         = number
+}
+variable azure_shared_image_gallery_id {
+  description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
+  default                      = null
+}
+variable azure_windows_os_image_id {
+  default                      = null
+}
+# az vm image list-skus -l centralus -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -o table
+# az vm image list -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
+variable azure_windows_os_offer {
+  default                      = "visualstudio2022"
+}
+variable azure_windows_os_publisher {
+  default                      = "microsoftvisualstudio"
+}
+variable azure_windows_os_sku {
+  default                      = "vs-2022-ent-latest-ws2022"
+}
+variable azure_windows_os_version {
+  default                      = "latest"
+}
+variable azure_windows_os_vhd_url {
+  default                      = null
+}
+variable azure_windows_scale_set_agent_count {
+  default                      = 2
+  type                         = number
+}
 
 variable configure_access_control {
   description                  = "Assumes the Terraform user is an owner of the subscription."
@@ -150,66 +240,39 @@ variable linux_tools {
   type                         = bool
 }
 
-variable linux_os_image_id {
-  default                      = null
-}
-# az vm image list-offers -l centralus -p "Canonical" -o table
-variable linux_os_offer {
-  default                      = "0001-com-ubuntu-server-focal"
-}
-variable linux_os_publisher {
-  default                      = "Canonical"
-}
-# az vm image list-skus -l centralus -f "0001-com-ubuntu-server-focal" -p "Canonical" -o table
-variable linux_os_sku {
-  default                      = "20_04-lts"
-}
-variable linux_os_version {
-  default                      = "latest"
-}
-variable linux_os_vhd_url {
-  default                      = null
-}
-variable linux_pipeline_agent_name_prefix {
+variable azure_linux_pipeline_agent_name_prefix {
   default                      = "ubuntu-agent"
 }
-variable linux_pipeline_agent_pool {
-  default                      = "Default"
-}
-variable linux_scale_set_agent_count {
-  default                      = 2
-  type                         = number
-}
-variable linux_scale_set_agent_idle_count {
+
+variable azure_linux_self_hosted_agent_count {
   default                      = 1
   type                         = number
 }
-variable linux_scale_set_agent_max_count {
-  default                      = 8
-  type                         = number
-}
-variable linux_scale_set_agent_max_saved_count {
-  default                      = 1
-  type                         = number
-}
-variable linux_self_hosted_agent_count {
-  default                      = 1
-  type                         = number
-}
-variable linux_storage_type {
+variable azure_linux_storage_type {
   default                      = "Standard_LRS"
 }
-variable linux_vm_size {
+variable azure_linux_vm_size {
   default                      = "Standard_D2s_v3"
 }
-
-variable location {
-  default                      = "centralus"
-}
-
-variable log_analytics_workspace_id {
+variable azure_log_analytics_workspace_id {
   description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
   default                      = ""
+}
+variable azure_vhd_storage_account_tier {
+  default                      = "Standard"
+}
+variable azure_vm_accelerated_networking {
+  default                      = false
+}
+variable azure_windows_self_hosted_agent_count {
+  default                      = 1
+  type                         = number
+}
+variable azure_windows_storage_type {
+  default                      = "Standard_LRS"
+}
+variable azure_windows_vm_size {
+  default                      = "Standard_D4s_v3"
 }
 
 variable packer_client_id {
@@ -269,10 +332,6 @@ variable script_wrapper_check {
   default                      = false
 }
 
-variable shared_image_gallery_id {
-  description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
-  default                      = null
-}
 variable shutdown_time {
   default                      = "" # Empty string doesn't triggers a shutdown
   description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
@@ -316,69 +375,7 @@ variable user_name {
   default                      = "devopsadmin"
 }
 
-variable vhd_storage_account_tier {
-  default                      = "Standard"
-}
-variable vm_accelerated_networking {
-  default                      = false
-}
-
-variable windows_os_image_id {
-  default                      = null
-}
-# az vm image list-skus -l centralus -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
-# az vm image list-skus -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -o table
-# az vm image list -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
-variable windows_os_offer {
-  default                      = "visualstudio2022"
-}
-variable windows_os_publisher {
-  default                      = "microsoftvisualstudio"
-}
-variable windows_os_sku {
-  default                      = "vs-2022-ent-latest-ws2022"
-}
-variable windows_os_version {
-  default                      = "latest"
-}
-variable windows_os_vhd_url {
-  default                      = null
-}
 
 variable windows_pipeline_agent_name_prefix {
   default                      = "windows-agent"
-}
-variable windows_pipeline_agent_pool {
-  default                      = "Default"
-}
-variable windows_scale_set_agent_count {
-  default                      = 2
-  type                         = number
-}
-variable windows_scale_set_agent_idle_count {
-  default                      = 1
-  type                         = number
-}
-variable windows_scale_set_agent_max_count {
-  default                      = 8
-  type                         = number
-}
-variable windows_scale_set_agent_max_saved_count {
-  default                      = 1
-  type                         = number
-}
-variable windows_scale_set_agent_interactive_ui {
-  default                      = false
-  type                         = bool
-}
-
-variable windows_self_hosted_agent_count {
-  default                      = 1
-  type                         = number
-}
-variable windows_storage_type {
-  default                      = "Standard_LRS"
-}
-variable windows_vm_size {
-  default                      = "Standard_D4s_v3"
 }

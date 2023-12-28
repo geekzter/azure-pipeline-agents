@@ -9,7 +9,7 @@ param (
     [parameter(Mandatory=$true)][string]$AgentNamePrefix,
     [parameter(Mandatory=$true)][string]$AgentPoolName,
     [parameter(Mandatory=$false)][switch]$Enabled,
-    [parameter(Mandatory=$false)][string]$OrganizationUrl=$env:SYSTEM_COLLECTIONURI
+    [parameter(Mandatory=$false)][string]$OrganizationUrl=($env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI)
 ) 
 Write-Verbose $MyInvocation.line 
 . (Join-Path $PSScriptRoot functions.ps1)
@@ -18,7 +18,7 @@ function UpdateAgent(
     [parameter(Mandatory=$true)][int]$AgentId,
     [parameter(Mandatory=$true)][int]$AgentPoolId,
     [parameter(Mandatory=$true)][hashtable]$Settings,
-    [parameter(Mandatory=$false)][string]$Token=$env:AZURE_DEVOPS_EXT_PAT
+    [parameter(Mandatory=$false)][string]$Token=($env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN)
 )
 {
     # az devops cli does not (yet) allow updates, so using the REST API

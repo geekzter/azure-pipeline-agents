@@ -61,19 +61,7 @@ resource azurerm_subnet private_endpoint_subnet {
     azurerm_network_security_group.default
   ]
 }
-resource time_sleep private_endpoint_nsg_association {
-  depends_on                   = [azurerm_subnet.private_endpoint_subnet]
-  create_duration              = "1s"
-}
-data azurerm_subnet private_endpoint_subnet {
-  name                         = azurerm_subnet.private_endpoint_subnet.name
-  resource_group_name          = azurerm_subnet.private_endpoint_subnet.resource_group_name
-  virtual_network_name         = azurerm_subnet.private_endpoint_subnet.virtual_network_name
 
-  depends_on                   = [
-    time_sleep.private_endpoint_nsg_association
-  ]
-}
 resource azurerm_network_security_group default {
   name                         = "${azurerm_virtual_network.packer.name}-default-nsg"
   location                     = var.location
@@ -100,4 +88,8 @@ resource azurerm_virtual_network_peering packer_to_agents {
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
   use_remote_gateways          = false
+
+  depends_on                   = [
+    azurerm_subnet_network_security_group_association.private_endpoint_subnet
+  ]
 }

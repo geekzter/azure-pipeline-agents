@@ -201,11 +201,6 @@ jobs:
       name: '$(pool)'
       vmImage: $(vmImage)
 
-    ${{ if parameters.asContainerJob }}:
-      container:
-        image: $(toolsImageFQName)
-        endpoint: containerEndpoint
-
     variables:
       terraformVersion: $[ coalesce(dependencies.provision.outputs['terraformConfig.version'],'latest') ]
 

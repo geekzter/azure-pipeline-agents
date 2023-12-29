@@ -119,10 +119,10 @@ jobs:
   #     Write-Host "$(terraform.azdo_pools_json)"
   #   env:
   #     STRATEGY: $[ variables['terraform.azdo_pools_json'] ]
-  - template: azure-pipeline-agents-ci-destroy-steps.yml
-    parameters:
-      destroy: ${{ parameters.destroy }}
-      retryCount: ${{ parameters.retryCount }}
+  # - template: azure-pipeline-agents-ci-destroy-steps.yml
+  #   parameters:
+  #     destroy: ${{ parameters.destroy }}
+  #     retryCount: ${{ parameters.retryCount }}
 
 
 # - job: testOutput
@@ -168,8 +168,7 @@ jobs:
     matrix: $[ variables['strategy'] ]
 
   steps:
-  - pwsh: |
-      Write-Host "Hoi"
+  - pwsh: Write-Host "Hello Agent"
 
 
 - ${{ if ne(parameters.destroy, 'Never') }}:

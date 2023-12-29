@@ -124,7 +124,7 @@ jobs:
     - agent.os -equals $os)
 
   strategy:
-    matrix: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'], {}) ]
+    matrix: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
     maxParallel: 1
 
   workspace:

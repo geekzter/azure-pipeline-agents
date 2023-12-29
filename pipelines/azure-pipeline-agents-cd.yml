@@ -73,26 +73,10 @@ variables:
 
 jobs:
 - job: provision
-  ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy'
-  ${{ elseif and(eq(parameters.destroy, 'If no prior resources exist'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ elseif and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy & Test'
-  ${{ elseif and(eq(parameters.destroy, 'On failure'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ elseif and(eq(parameters.destroy, 'On success'),parameters.deploy) }}:
-    displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ elseif and(eq(parameters.destroy, 'Always'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy'
-  ${{ elseif and(eq(parameters.destroy, 'If no prior resources exist'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ elseif and(eq(parameters.destroy, 'Never'),not(parameters.deploy)) }}:
+  ${{ if parameters.deploy }}:
+    displayName: 'Provision, Deploy'
+  ${{ else }}:
     displayName: 'Provision'
-  ${{ elseif and(eq(parameters.destroy, 'On failure'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ elseif and(eq(parameters.destroy, 'On success'),not(parameters.deploy)) }}:
-    displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
   pool:
@@ -191,10 +175,11 @@ jobs:
       condition: eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false')
     ${{ elseif eq(parameters.destroy, 'On failure') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      condition: or(ne(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['linuxSelfHostedAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsSelfHostedAgents.provisioningResult.result'],'success'))
+      # condition: or(ne(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['linuxSelfHostedAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsSelfHostedAgents.provisioningResult.result'],'success'))
+      condition: or(ne(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'))
     ${{ elseif eq(parameters.destroy, 'On success') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      condition: and(eq(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['linuxSelfHostedAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['windowsSelfHostedAgents.provisioningResult.result'],'success'))
+      condition: and(eq(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'))
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     pool:

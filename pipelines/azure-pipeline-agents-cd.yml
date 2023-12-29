@@ -75,23 +75,23 @@ jobs:
 - job: 'provision'
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
-  ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+  ${{ elseif and(eq(parameters.destroy, 'If no prior resources exist'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
+  ${{ elseif and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
     displayName: 'Provision, Deploy & Test'
-  ${{ if and(eq(parameters.destroy, 'On failure'),parameters.deploy) }}:
+  ${{ elseif and(eq(parameters.destroy, 'On failure'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'On success'),parameters.deploy) }}:
+  ${{ elseif and(eq(parameters.destroy, 'On success'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'Always'),not(parameters.deploy)) }}:
+  ${{ elseif and(eq(parameters.destroy, 'Always'),not(parameters.deploy)) }}:
     displayName: 'Provision & Destroy'
-  ${{ if and(eq(parameters.destroy, 'If no prior resources exist'),not(parameters.deploy)) }}:
+  ${{ elseif and(eq(parameters.destroy, 'If no prior resources exist'),not(parameters.deploy)) }}:
     displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'Never'),not(parameters.deploy)) }}:
+  ${{ elseif and(eq(parameters.destroy, 'Never'),not(parameters.deploy)) }}:
     displayName: 'Provision'
-  ${{ if and(eq(parameters.destroy, 'On failure'),not(parameters.deploy)) }}:
+  ${{ elseif and(eq(parameters.destroy, 'On failure'),not(parameters.deploy)) }}:
     displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'On success'),not(parameters.deploy)) }}:
+  ${{ elseif and(eq(parameters.destroy, 'On success'),not(parameters.deploy)) }}:
     displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 

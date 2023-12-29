@@ -73,7 +73,6 @@ variables:
 
 jobs:
 - job: 'Provision'
-  name: provision
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
   ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
@@ -111,7 +110,7 @@ jobs:
       unpinTerraformProviders: false
 
 - job: 'Test'
-  dependsOn: provision
+  dependsOn: 'Provision'
   condition: succeeded()
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 

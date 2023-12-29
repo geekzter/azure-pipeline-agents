@@ -72,7 +72,7 @@ variables:
 - template: azure-pipeline-agents-ci-variables.yml
 
 jobs:
-- job: 'provision'
+- job: provision
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
   ${{ elseif and(eq(parameters.destroy, 'If no prior resources exist'),parameters.deploy) }}:
@@ -121,7 +121,7 @@ jobs:
       STRATEGY: $[ variables['terraform.azdo_pools_json'] ]
 
 
-- job: 'testOutput'
+- job: testOutput
   condition: succeeded()
   dependsOn: 'provision'
   displayName: 'Debug strategy'
@@ -143,13 +143,16 @@ jobs:
       # FOO: $[ dependencies.provision.outputs['terraform.foo'] ]
 
 
-- job: 'test'
+- job: test
   condition: succeeded()
   dependsOn: 
     - 'provision'
     - 'testOutput'
   displayName: 'Test pool $(pool)'
+
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+  variables:
+    strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
 
   pool:
     name: '$(pool)'
@@ -157,7 +160,8 @@ jobs:
     - agent.os -equals $(os)
 
   strategy:
-    matrix: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+    # matrix: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+    matrix: $(strategy)
 
   steps:
   - pwsh: |

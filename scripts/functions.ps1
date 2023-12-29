@@ -209,46 +209,21 @@ function Login-AzDO (
     az devops configure --defaults organization="$OrganizationUrl"
 }
 
-function New-ScaleSetPool(
-    [parameter(Mandatory=$true)][string]$OrganizationUrl,
-
-    [parameter(Mandatory=$true)][string]$OS,
-
-    [parameter(Mandatory=$false)][string]$PoolName,
-
-    [parameter(Mandatory=$false)][string]$RequestJson,
-
-    [parameter(Mandatory=$false)][bool]$AuthorizeAllPipelines=$true,
-    [parameter(Mandatory=$false)][bool]$AutoProvisionProjectPools=$true,
-    [parameter(Mandatory=$false)][int]$ProjectId,
-
-    [parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]
-    $Token=$env:AZURE_DEVOPS_EXT_PAT ?? $env:AZDO_PERSONAL_ACCESS_TOKEN ?? $env:SYSTEM_ACCESSTOKEN
-)
-{
-    "Creating scale set pool '$PoolName'..." | Write-Host
-    Write-Debug "PoolName: $PoolName"
-    $apiUrl = "${OrganizationUrl}/_apis/distributedtask/elasticpools?poolName=${PoolName}&authorizeAllPipelines=${AuthorizeAllPipelines}&autoProvisionProjectPools=${AutoProvisionProjectPools}&projectId=${ProjectId}&api-version=${apiVersion}"
-    Write-Verbose "REST API Url: $apiUrl"
-
-    $requestHeaders = Create-RequestHeaders -Token $Token
-
-    Write-Debug "Request JSON: $RequestJson"
-    try {
-        $RequestJson | Invoke-RestMethod -Uri $apiUrl -Headers $requestHeaders -Method Post | Set-Variable createdScaleSet
-    } catch {
-        Write-RestError
-        exit 1
+function Set-PipelineVariablesFromTerraform () {
+    $json = terraform output -json | ConvertFrom-Json -AsHashtable
+    foreach ($outputVariable in $json.keys) {
+        $value = $json[$outputVariable].value
+        if ($value) {
+            if ($value -notmatch "`n") {
+                $sensitive = $json[$outputVariable].sensitive.ToString().ToLower()
+                # Write variable output in the format a Pipeline can understand
+                "##vso[task.setvariable variable={0};isOutput=true;issecret={2}]{1}" -f $outputVariable, $value, $sensitive  | Write-Host
+                Write-Host "##vso[task.setvariable variable=${outputVariable};isOutput=true;issecret=]${value}"
+            } else {
+                Write-Verbose "Ignoring multi-line output variable '${outputVariable}'"
+            }
+        }
     }
-
-    "Created scale set pool '$PoolName'" | Write-Host
-
-    if (($DebugPreference -ine "SilentlyContinue") -and $createdScaleSet.elasticPool) {
-        $createdScaleSet.elasticPool | Write-Debug
-    }
-    return $createdScaleSet
 }
 
 function Validate-ExitCode (

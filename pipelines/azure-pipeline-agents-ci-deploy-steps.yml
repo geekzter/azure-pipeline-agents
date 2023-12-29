@@ -89,10 +89,6 @@ steps:
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
 
-  - publish: $(terraformDirectory)
-    displayName: 'Publish Terraform workspace'
-    artifact: $(terraformArtifactName)
-
   - ${{ if eq(parameters.clear, true) }}:
     - task: AzureCLI@2
       name: clear
@@ -205,6 +201,10 @@ steps:
       useGlobalConfig: true
       failOnStandardError: true
       workingDirectory: '$(terraformDirectory)'
+
+  - publish: $(terraformDirectory)
+    displayName: 'Publish Terraform workspace'
+    artifact: $(terraformArtifactName)
 
   - ${{ if parameters.deploy }}:
     - task: AzureCLI@2

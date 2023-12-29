@@ -170,3 +170,76 @@ jobs:
   steps:
   - pwsh: |
       Write-Host "Hoi"
+
+
+- ${{ if ne(parameters.destroy, 'Never') }}:
+  - job: destroy
+    dependsOn: 
+      - provision
+      - ${{ if or(eq(parameters.containerEngine, 'Container App'),eq(parameters.containerEngine, 'Both')) }}:
+        - acaAgent
+      - ${{ if or(eq(parameters.containerEngine, 'Kubernetes'),eq(parameters.containerEngine, 'Both')) }}:
+        - aksAgent
+    ${{ if ne(variables['Build.Reason'],'Manual') }}:
+      displayName: 'Destroy infrastructure (always on pr/schedule)'
+      condition: succeededOrFailed()
+    ${{ elseif eq(parameters.destroy, 'Always') }}:
+      displayName: 'Destroy infrastructure'
+      condition: succeededOrFailed()
+    ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+      displayName: 'Destroy infrastructure (${{ lower(parameters.destroy) }})'
+      condition: eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false')
+    ${{ elseif eq(parameters.destroy, 'On failure') }}:
+      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+      ${{ if eq(parameters.containerEngine, 'Container App') }}:
+        condition: or(ne(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'))
+      ${{ if eq(parameters.containerEngine, 'Kubernetes') }}:
+        condition: or(ne(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
+      ${{ if eq(parameters.containerEngine, 'Both') }}:
+        condition: or(ne(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
+    ${{ elseif eq(parameters.destroy, 'On success') }}:
+      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+      ${{ if eq(parameters.containerEngine, 'Container App') }}:
+        condition: and(eq(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'))
+      ${{ if eq(parameters.containerEngine, 'Kubernetes') }}:
+        condition: and(eq(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
+      ${{ if eq(parameters.containerEngine, 'Both') }}:
+        condition: and(eq(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
+    timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+    pool:
+      name: '$(pool)'
+      vmImage: $(vmImage)
+
+    ${{ if parameters.asContainerJob }}:
+      container:
+        image: $(toolsImageFQName)
+        endpoint: containerEndpoint
+
+    variables:
+      terraformVersion: $[ coalesce(dependencies.provision.outputs['terraformConfig.version'],'latest') ]
+
+    steps:
+    - checkout: self
+      submodules: true
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: $(terraformArtifactName)
+        path: $(terraformDirectory)
+
+    - bash: |
+        echo Marking Terraform provider binaries as executable...
+        find . | xargs chmod +x
+      displayName: 'Make Terraform providers executable'
+      workingDirectory: $(terraformDirectory)/.terraform/providers
+
+    - task: TerraformInstaller@0
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: '$(terraformVersion)'
+
+    - template: azure-pipeline-agents-ci-destroy-steps.yml
+      parameters:
+        destroy: true # Overridden by job-level condition
+        retryCount: ${{ parameters.retryCount }}

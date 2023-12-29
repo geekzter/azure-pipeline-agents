@@ -91,7 +91,7 @@ steps:
 
   - publish: $(terraformDirectory)
     displayName: 'Publish Terraform workspace'
-    artifact: $(terraformArtifactPrefix)$(System.PlanId)
+    artifact: $(terraformArtifactName)
 
   - ${{ if eq(parameters.clear, true) }}:
     - task: AzureCLI@2

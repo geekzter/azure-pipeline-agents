@@ -19,6 +19,8 @@ variables:
   value: '$(Build.SourcesDirectory)/scripts'
 - name: 'terraformDirectory'
   value: '$(Build.SourcesDirectory)/terraform'
+- name: 'terraformArtifactName'
+  value: 'terraform-$(System.PlanId)'
 - name: 'TF_VAR_azdo_org_url'
   value: '$(System.CollectionUri)'
 - name: 'TF_VAR_azure_linux_pipeline_agent_name_prefix'

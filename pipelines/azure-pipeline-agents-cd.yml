@@ -127,6 +127,10 @@ jobs:
   displayName: 'Debug strategy'
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
+  variables:
+    foo: $[ dependencies.provision.outputs['terraform.foo'] ]
+    strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+
   pool:
     name: 'Azure Pipelines'
 
@@ -134,9 +138,9 @@ jobs:
   - pwsh: |
       Write-Host "Strategy:`n${env:STRATEGY}"
       Write-Host "foo: `"${env:FOO}`""
-    env:
-      STRATEGY: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-      FOO: $[ dependencies.provision.outputs['terraform.foo'] ]
+    # env:
+      # STRATEGY: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+      # FOO: $[ dependencies.provision.outputs['terraform.foo'] ]
 
 
 - job: 'test'

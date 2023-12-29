@@ -226,5 +226,5 @@ jobs:
 
     - template: azure-pipeline-agents-ci-destroy-steps.yml
       parameters:
-        destroy: true # Overridden by job-level condition
+        destroy: Always # Overridden by job-level condition
         retryCount: ${{ parameters.retryCount }}

@@ -113,7 +113,7 @@ jobs:
       unpinTerraform: false
       unpinTerraformProviders: false
 
-- job: 'Test pools'
+- job: 'test'
   condition: succeeded()
   dependsOn: 'provision'
   displayName: 'Test pool $(pool)'

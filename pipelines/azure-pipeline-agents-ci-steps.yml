@@ -262,22 +262,21 @@ steps:
         failOnStandardError: true
         workingDirectory: '$(scriptDirectory)'
 
-  - ${{ if parameters.deploy }}:
-    - task: AzureCLI@2
-      displayName: 'Terraform output'
-      name: terraform
-      retryCountOnTaskFailure: ${{ parameters.retryCount }}
-      inputs:
-        azureSubscription: '$(subscriptionConnection)'
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: |
-          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
-          ./deploy.ps1 -output
-        addSpnToEnvironment: true
-        useGlobalConfig: true
-        failOnStandardError: true
-        workingDirectory: '$(scriptDirectory)'
+  - task: AzureCLI@2
+    displayName: 'Terraform output'
+    name: terraform
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+        ./deploy.ps1 -output
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(scriptDirectory)'
 
   - ${{ if parameters.deploy }}:
     - task: AzureCLI@2

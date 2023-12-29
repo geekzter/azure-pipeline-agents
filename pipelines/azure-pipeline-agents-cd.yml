@@ -113,8 +113,12 @@ jobs:
       unpinTerraform: false
       unpinTerraformProviders: false
   - pwsh: |
-      Write-Host "Strategy:"
-      Write-Host $(terraform.azdo_pools_json)
+      Write-Host "Strategy1:"
+      Write-Host "${env:STRATEGY}"
+      Write-Host "Strategy2:"
+      Write-Host "$(terraform.azdo_pools_json)""
+    env:
+      STRATEGY: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
 
 
 - job: 'testOutput'
@@ -129,7 +133,7 @@ jobs:
   steps:
   - pwsh: |
       Write-Host "Strategy:"
-      Write-Host $env:STRATEGY
+      Write-Host "${env:STRATEGY}"
     env:
       STRATEGY: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
 

@@ -235,7 +235,7 @@ steps:
   - ${{ if parameters.deploy }}:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply'
-      name: apply
+      name: terraform
       retryCountOnTaskFailure: ${{ parameters.retryCount }}
       inputs:
         azureSubscription: '$(subscriptionConnection)'
@@ -319,7 +319,7 @@ steps:
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: succeededOrFailed()
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
-        condition: eq(variables['apply.priorResourcesExist'],'false')
+        condition: eq(variables['terraform.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: failed()
       ${{ elseif eq(parameters.destroy, 'On success') }}:
@@ -345,7 +345,7 @@ steps:
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: or(always(),canceled())
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
-        condition: eq(variables['apply.priorResourcesExist'],'false')
+        condition: eq(variables['terraform.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: not(eq(variables['provisioningResult.result'],'success'))
       ${{ elseif eq(parameters.destroy, 'On success') }}:
@@ -398,7 +398,7 @@ steps:
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: or(always(),canceled())
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
-        condition: eq(variables['apply.priorResourcesExist'],'false')
+        condition: eq(variables['terraform.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: not(eq(variables['provisioningResult.result'],'success'))
       ${{ elseif eq(parameters.destroy, 'On success') }}:

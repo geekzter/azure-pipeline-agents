@@ -72,7 +72,7 @@ variables:
 - template: azure-pipeline-agents-ci-variables.yml
 
 jobs:
-- job: 'Provision'
+- job: 'provision'
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
   ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
@@ -110,16 +110,18 @@ jobs:
       unpinTerraformProviders: false
 
 - job: 'Test'
-  dependsOn: 'Provision'
+  dependsOn: 'provision'
   condition: succeeded()
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
   pool:
     name: '$(pool)'
-    vmImage: $(vmImage)
+    demands:
+    - agent.os -equals $os)
 
   strategy:
-    matrix: {}
+    # matrix: {}
+    matrix: coalesce( $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ], {} )
     maxParallel: 1
 
   workspace:

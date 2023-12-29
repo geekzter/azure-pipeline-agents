@@ -21,6 +21,32 @@ locals {
   azdo_environment_name        = var.azdo_self_hosted_pool_type == "Environment" ? module.azdo_environment.0.name : null
   azdo_org_url                 = replace(var.azdo_org_url,"/\\/$/","")
   azdo_org                     = coalesce(values(regex("https://dev.azure.com/(?P<org1>[^/]+)|https://(?P<org2>[^/]+).visualstudio.com","https://ericvan.visualstudio.com"))...)
+  azdo_pools                   = merge(
+    can(module.linux_scale_set_pool.0.id) ? {
+      "${module.linux_scale_set_pool.0.name}" = {
+        os  = "Linux"
+        pool = module.linux_scale_set_pool.0.name
+      }
+    } : {},
+    can(module.windows_scale_set_pool.0.id) ? {
+      "${module.windows_scale_set_pool.0.name}" = {
+        os  = "Windows_NT"
+        pool = module.windows_scale_set_pool.0.name
+      }
+    } : {},
+    can(module.self_hosted_pool.0.id) && can(module.self_hosted_linux_agents.0.vm_id) ? {
+      "${module.self_hosted_pool.0.name}-linux" = {
+        os  = "Linux"
+        pool = module.self_hosted_pool.0.name
+      }
+    } : {},
+    can(module.self_hosted_pool.0.id) && can(module.self_hosted_windows_agents.0.vm_id) ? {
+      "${module.self_hosted_pool.0.name}-windows" = {
+        os  = "Windows_NT"
+        pool = module.self_hosted_pool.0.name
+      }
+    } : {},
+  )
   azdo_project_id              = local.azdo_project_name != null ? [for project in data.azuredevops_project.projects : project.id if project.name == local.azdo_project_name][0] : null
   azdo_project_ids             = [for project in data.azuredevops_project.projects : project.id]
   azdo_project_name            = length(var.azdo_project_names) > 0 ? var.azdo_project_names[0] : null

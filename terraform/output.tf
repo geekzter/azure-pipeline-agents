@@ -29,6 +29,16 @@ output azdo_linux_scale_set_pool_name {
 output azdo_linux_scale_set_pool_url {
   value                        = local.create_azdo_linux_scale_set_pool ? module.linux_scale_set_pool.0.url : null
 }
+
+output azdo_pool_names {
+  value                        = keys(local.azdo_pools)
+}
+output azdo_pools {
+  value                        = local.azdo_pools
+}
+output azdo_pools_json {
+  value                        = jsonencode(local.azdo_pools)
+}
 output azdo_project_id {
   value                        = local.azdo_project_id
 }

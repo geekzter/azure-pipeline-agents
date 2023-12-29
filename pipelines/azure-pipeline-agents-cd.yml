@@ -168,17 +168,18 @@ jobs:
     matrix: $[ variables['strategy'] ]
 
   steps:
-  - pwsh: Write-Host "Hello Agent"
-
+  - pwsh: |
+      Write-Host "Hello Agent"
+      Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+    name: provisioningResult
+    displayName: 'Indicate deployment success'
+    condition: succeeded()
 
 - ${{ if ne(parameters.destroy, 'Never') }}:
   - job: destroy
     dependsOn: 
       - provision
-      - ${{ if or(eq(parameters.containerEngine, 'Container App'),eq(parameters.containerEngine, 'Both')) }}:
-        - acaAgent
-      - ${{ if or(eq(parameters.containerEngine, 'Kubernetes'),eq(parameters.containerEngine, 'Both')) }}:
-        - aksAgent
+      - test
     ${{ if ne(variables['Build.Reason'],'Manual') }}:
       displayName: 'Destroy infrastructure (always on pr/schedule)'
       condition: succeededOrFailed()
@@ -190,20 +191,10 @@ jobs:
       condition: eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false')
     ${{ elseif eq(parameters.destroy, 'On failure') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      ${{ if eq(parameters.containerEngine, 'Container App') }}:
-        condition: or(ne(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'))
-      ${{ if eq(parameters.containerEngine, 'Kubernetes') }}:
-        condition: or(ne(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
-      ${{ if eq(parameters.containerEngine, 'Both') }}:
-        condition: or(ne(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),ne(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
+      condition: or(ne(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['linuxSelfHostedAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsSelfHostedAgents.provisioningResult.result'],'success'))
     ${{ elseif eq(parameters.destroy, 'On success') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      ${{ if eq(parameters.containerEngine, 'Container App') }}:
-        condition: and(eq(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'))
-      ${{ if eq(parameters.containerEngine, 'Kubernetes') }}:
-        condition: and(eq(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
-      ${{ if eq(parameters.containerEngine, 'Both') }}:
-        condition: and(eq(dependencies.acaAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.acaAgent.outputs['job3.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job1.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job2.provisioningResult.result'],'success'),eq(dependencies.aksAgent.outputs['job3.provisioningResult.result'],'success'))
+      condition: and(eq(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['linuxSelfHostedAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['windowsSelfHostedAgents.provisioningResult.result'],'success'))
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     pool:

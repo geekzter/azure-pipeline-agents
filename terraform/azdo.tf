@@ -23,25 +23,25 @@ locals {
   azdo_org                     = coalesce(values(regex("https://dev.azure.com/(?P<org1>[^/]+)|https://(?P<org2>[^/]+).visualstudio.com","https://ericvan.visualstudio.com"))...)
   azdo_pools                   = merge(
     can(module.linux_scale_set_pool.0.id) ? {
-      "${replace(module.linux_scale_set_pool.0.name,"/\\W+/","")}" = {
+      "linuxScaleSetAgents" = {
         os  = "Linux"
         pool = module.linux_scale_set_pool.0.name
       }
     } : {},
     can(module.windows_scale_set_pool.0.id) ? {
-      "${replace(module.windows_scale_set_pool.0.name,"/\\W+/","")}" = {
+      "windowsScaleSetAgents" = {
         os  = "Windows_NT"
         pool = module.windows_scale_set_pool.0.name
       }
     } : {},
     can(module.self_hosted_pool.0.id) && can(module.self_hosted_linux_agents.0.vm_id) ? {
-      "${replace(module.self_hosted_pool.0.name,"/\\W+/","")}l" = {
+      "linuxSelfHostedAgents" = {
         os  = "Linux"
         pool = module.self_hosted_pool.0.name
       }
     } : {},
     can(module.self_hosted_pool.0.id) && can(module.self_hosted_windows_agents.0.vm_id) ? {
-      "${replace(module.self_hosted_pool.0.name,"/\\W+/","")}w" = {
+      "windowsSelfHostedAgents" = {
         os  = "Windows_NT"
         pool = module.self_hosted_pool.0.name
       }

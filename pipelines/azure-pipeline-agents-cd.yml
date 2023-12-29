@@ -113,9 +113,26 @@ jobs:
       unpinTerraform: false
       unpinTerraformProviders: false
 
-- job: 'test'
+
+- job: 'testOutput'
   condition: succeeded()
   dependsOn: 'provision'
+  displayName: 'Debug strategy'
+  timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+  pool:
+    name: 'Azure Pipelines'
+
+  steps:
+  - pwsh: |
+      Write-Host "Strategy:`n${{ dependencies.provision.outputs['terraform.azdo_pools_json'] }}"
+
+
+- job: 'test'
+  condition: succeeded()
+  dependsOn: 
+    - 'provision'
+    - 'testOutput'
   displayName: 'Test pool $(pool)'
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
@@ -126,10 +143,6 @@ jobs:
 
   strategy:
     matrix: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-    maxParallel: 1
-
-  workspace:
-    clean: all
 
   steps:
   - pwsh: |

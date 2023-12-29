@@ -119,7 +119,7 @@ jobs:
     vmImage: $(vmImage)
 
   strategy:
-    matrix: '{}'
+    matrix: {}
     maxParallel: 1
 
   workspace:

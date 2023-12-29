@@ -26,9 +26,10 @@ parameters:
 - name: destroy
   displayName: Destroy Infrastructure
   type: string
-  default: Never
+  default: 'If no prior resources exist'
   values:
   - Always
+  - 'If no prior resources exist'
   - Never 
   - 'On failure'
   - 'On success'

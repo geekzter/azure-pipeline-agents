@@ -14,6 +14,7 @@ parameters:
   default: Always
   values:
   - Always
+  - 'If no prior resources exist'
   - Never 
   - 'On failure'
   - 'On success'
@@ -233,7 +234,7 @@ steps:
 
   - ${{ if parameters.deploy }}:
     - task: AzureCLI@2
-      displayName: 'Terraform plan & apply (deploy_firewall:$(TF_VAR_deploy_firewall))'
+      displayName: 'Terraform plan & apply'
       name: apply
       retryCountOnTaskFailure: ${{ parameters.retryCount }}
       inputs:
@@ -242,6 +243,19 @@ steps:
         scriptLocation: inlineScript
         inlineScript: |
           $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+
+          terraform -chdir='$(terraformDirectory)' show -json | ConvertFrom-Json -AsHashtable | Set-Variable tfState 
+          $priorResourcesExist = $tfState.ContainsKey('values')
+          if ($priorResourcesExist) {
+            Write-Warning "Prior resources exist in workspace '${env:TF_WORKSPACE}'"
+            Write-Host "##vso[task.logissue type=warning]Prior resources exist in workspace '${env:TF_WORKSPACE}'"
+          } else {
+            Write-Host "No prior resources exist in workspace '${env:TF_WORKSPACE}'"
+          }
+          Write-Host "##vso[task.setvariable variable=priorResourcesExist;isOutput=true]$($priorResourcesExist.ToString().ToLower())"
+
+          Write-Host ""
+
           ./deploy.ps1 -apply -force
         addSpnToEnvironment: true
         useGlobalConfig: true
@@ -304,9 +318,11 @@ steps:
       displayName: 'Terraform destroy (${{ lower(parameters.destroy) }})'
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: succeededOrFailed()
-      ${{ if eq(parameters.destroy, 'On failure') }}:
+      ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+        condition: eq(variables['apply.priorResourcesExist'],'false')
+      ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: failed()
-      ${{ if eq(parameters.destroy, 'On success') }}:
+      ${{ elseif eq(parameters.destroy, 'On success') }}:
         condition: succeeded()
       continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
       retryCountOnTaskFailure: ${{ parameters.retryCount }}
@@ -328,9 +344,11 @@ steps:
       displayName: 'Tear down remaining resources'
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: or(always(),canceled())
-      ${{ if eq(parameters.destroy, 'On failure') }}:
+      ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+        condition: eq(variables['apply.priorResourcesExist'],'false')
+      ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: not(eq(variables['provisioningResult.result'],'success'))
-      ${{ if eq(parameters.destroy, 'On success') }}:
+      ${{ elseif eq(parameters.destroy, 'On success') }}:
         condition: eq(variables['provisioningResult.result'],'success')
       inputs:
         azureSubscription: '$(subscriptionConnection)'
@@ -379,9 +397,11 @@ steps:
       displayName: 'Clean up Terraform state'
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: or(always(),canceled())
-      ${{ if eq(parameters.destroy, 'On failure') }}:
+      ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+        condition: eq(variables['apply.priorResourcesExist'],'false')
+      ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: not(eq(variables['provisioningResult.result'],'success'))
-      ${{ if eq(parameters.destroy, 'On success') }}:
+      ${{ elseif eq(parameters.destroy, 'On success') }}:
         condition: eq(variables['provisioningResult.result'],'success')
       inputs:
         azureSubscription: '$(subscriptionConnection)'

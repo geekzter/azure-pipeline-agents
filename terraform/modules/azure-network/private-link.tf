@@ -126,6 +126,12 @@ resource azurerm_subnet private_endpoint_subnet {
 resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
   network_security_group_id    = azurerm_network_security_group.default.id
+  
+  lifecycle {
+    ignore_changes             = [
+      network_security_group_id # Ignore policy changes
+    ]
+  }
 }
 
 resource azurerm_monitor_private_link_scope monitor {

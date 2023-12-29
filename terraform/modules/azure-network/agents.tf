@@ -75,6 +75,12 @@ resource azurerm_network_security_rule agent_rdp {
 resource azurerm_subnet_network_security_group_association scale_set_agents {
   subnet_id                    = azurerm_subnet.scale_set_agents.id
   network_security_group_id    = azurerm_network_security_group.agent_nsg.id
+
+  lifecycle {
+    ignore_changes             = [
+      network_security_group_id # Ignore policy changes
+    ]
+  }
 }
 
 resource azurerm_subnet_network_security_group_association self_hosted_agents {
@@ -84,4 +90,10 @@ resource azurerm_subnet_network_security_group_association self_hosted_agents {
   depends_on                   = [
     azurerm_subnet_network_security_group_association.scale_set_agents
   ]
+  
+  lifecycle {
+    ignore_changes             = [
+      network_security_group_id # Ignore policy changes
+    ]
+  }
 }

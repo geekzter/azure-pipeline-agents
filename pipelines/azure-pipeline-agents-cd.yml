@@ -126,7 +126,9 @@ jobs:
   steps:
   - pwsh: |
       Write-Host "Strategy:"
-      Write-Host $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+      Write-Host $env:STRATEGY
+    env:
+      STRATEGY: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
 
 
 - job: 'test'

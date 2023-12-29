@@ -23,25 +23,25 @@ locals {
   azdo_org                     = coalesce(values(regex("https://dev.azure.com/(?P<org1>[^/]+)|https://(?P<org2>[^/]+).visualstudio.com","https://ericvan.visualstudio.com"))...)
   azdo_pools                   = merge(
     can(module.linux_scale_set_pool.0.id) ? {
-      "${module.linux_scale_set_pool.0.name}" = {
+      "${replace(module.linux_scale_set_pool.0.name,"/\\W+/","")}" = {
         os  = "Linux"
         pool = module.linux_scale_set_pool.0.name
       }
     } : {},
     can(module.windows_scale_set_pool.0.id) ? {
-      "${module.windows_scale_set_pool.0.name}" = {
+      "${replace(module.windows_scale_set_pool.0.name,"/\\W+/","")}" = {
         os  = "Windows_NT"
         pool = module.windows_scale_set_pool.0.name
       }
     } : {},
     can(module.self_hosted_pool.0.id) && can(module.self_hosted_linux_agents.0.vm_id) ? {
-      "${module.self_hosted_pool.0.name}-linux" = {
+      "${replace(module.self_hosted_pool.0.name,"/\\W+/","")}l" = {
         os  = "Linux"
         pool = module.self_hosted_pool.0.name
       }
     } : {},
     can(module.self_hosted_pool.0.id) && can(module.self_hosted_windows_agents.0.vm_id) ? {
-      "${module.self_hosted_pool.0.name}-windows" = {
+      "${replace(module.self_hosted_pool.0.name,"/\\W+/","")}w" = {
         os  = "Windows_NT"
         pool = module.self_hosted_pool.0.name
       }

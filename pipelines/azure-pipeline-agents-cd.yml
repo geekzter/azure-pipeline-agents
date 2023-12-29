@@ -113,15 +113,16 @@ jobs:
       unpinTerraform: false
       unpinTerraformProviders: false
 
-- job: 'Test'
-  dependsOn: 'provision'
+- job: 'Test pools'
   condition: succeeded()
+  dependsOn: 'provision'
+  displayName: 'Test pool $(pool)'
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
   pool:
     name: '$(pool)'
     demands:
-    - agent.os -equals $os)
+    - agent.os -equals $(os)
 
   strategy:
     matrix: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]

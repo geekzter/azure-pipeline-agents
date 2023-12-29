@@ -135,7 +135,8 @@ jobs:
       Write-Host "Strategy:"
       Write-Host "${env:STRATEGY}"
     env:
-      STRATEGY: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+      # STRATEGY: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+      STRATEGY: $[ dependencies.provision['terraform.azdo_pools_json'] ]
 
 
 - job: 'test'

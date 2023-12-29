@@ -217,8 +217,8 @@ function Set-PipelineVariablesFromTerraform () {
             if ($value -notmatch "`n") {
                 $sensitive = $json[$outputVariable].sensitive.ToString().ToLower()
                 # Write variable output in the format a Pipeline can understand
-                "##vso[task.setvariable variable={0};isOutput=true;issecret={2}]{1}" -f $outputVariable, $value, $sensitive  | Write-Host
-                Write-Host "##vso[task.setvariable variable=${outputVariable};isOutput=true;issecret=]${value}"
+                "##vso[task.setvariable variable={0};isOutput=true;issecret={2}]{1}" -f $outputVariable, $value, $sensitive | Write-Host
+                # Write-Host "##vso[task.setvariable variable=${outputVariable};isOutput=true;issecret=]${value}"
             } else {
                 Write-Verbose "Ignoring multi-line output variable '${outputVariable}'"
             }

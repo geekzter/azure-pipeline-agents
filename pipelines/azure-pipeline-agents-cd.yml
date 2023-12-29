@@ -161,7 +161,7 @@ jobs:
 
   strategy:
     # matrix: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-    matrix: $(strategy)
+    matrix: $[ variables['strategy'] ]
 
   steps:
   - pwsh: |

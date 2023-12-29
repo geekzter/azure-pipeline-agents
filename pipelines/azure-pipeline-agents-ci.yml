@@ -168,7 +168,7 @@ jobs:
     clean: all
 
   steps:
-  - template: azure-pipeline-agents-ci-steps.yml
+  - template: azure-pipeline-agents-ci-deploy-steps.yml
     parameters:
       clear: ${{ parameters.clear }}
       deploy: ${{ parameters.deploy }}
@@ -177,3 +177,8 @@ jobs:
       testReentrance: ${{ parameters.testReentrance }}
       unpinTerraform: ${{ parameters.unpinTerraform }}
       unpinTerraformProviders: ${{ or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),not(eq(variables['Build.Reason'], 'Manual'))) }}
+
+  - template: azure-pipeline-agents-ci-destroy-steps.yml
+    parameters:
+      destroy: ${{ parameters.destroy }}
+      retryCount: ${{ parameters.retryCount }}

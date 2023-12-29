@@ -126,5 +126,5 @@ jobs:
     clean: all
 
   steps:
-    pwsh: |
+  - pwsh: |
       Write-Host "Hoi"

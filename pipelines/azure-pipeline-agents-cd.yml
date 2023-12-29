@@ -193,6 +193,7 @@ jobs:
       submodules: true
 
     - task: DownloadPipelineArtifact@2
+      displayName: 'Download initialized Terraform directory'
       inputs:
         artifact: $(terraformArtifactName)
         path: $(terraformDirectory)
@@ -207,6 +208,12 @@ jobs:
       displayName: 'Install Terraform'
       inputs:
         terraformVersion: '$(terraformVersion)'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download initialized SSH directory'
+      inputs:
+        artifact: $(sshArtifactName)
+        path: $(sshDirectory)
 
     - template: azure-pipeline-agents-ci-destroy-steps.yml
       parameters:

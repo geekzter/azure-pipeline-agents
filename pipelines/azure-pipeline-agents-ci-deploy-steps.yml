@@ -147,6 +147,10 @@ steps:
     displayName: 'Generate SSH key pair'
     workingDirectory: '$(terraformDirectory)'
 
+  - publish: $(sshDirectory)
+    displayName: 'Publish SSH key pair'
+    artifact: $(sshArtifactName)
+
   - task: AzureCLI@2
     name: terraformVariables
     displayName: 'Prepare Terraform variables'

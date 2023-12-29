@@ -73,6 +73,7 @@ variables:
 
 jobs:
 - job: 'Provision'
+  name: provision
   ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
   ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
@@ -108,3 +109,23 @@ jobs:
       testReentrance: false
       unpinTerraform: false
       unpinTerraformProviders: false
+
+- job: 'Test'
+  dependsOn: provision
+  condition: succeeded()
+  timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+  pool:
+    name: '$(pool)'
+    vmImage: $(vmImage)
+
+  strategy:
+    matrix: '{}'
+    maxParallel: 1
+
+  workspace:
+    clean: all
+
+  steps:
+    pwsh: |
+      Write-Host "Hoi"

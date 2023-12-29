@@ -123,7 +123,7 @@ jobs:
 
 - job: testOutput
   condition: succeeded()
-  dependsOn: 'provision'
+  dependsOn: provision
   displayName: 'Debug strategy'
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
@@ -146,9 +146,9 @@ jobs:
 - job: test
   condition: succeeded()
   dependsOn: 
-    - 'provision'
-    - 'testOutput'
-  displayName: 'Test pool $(pool)'
+    - provision
+    - testOutput
+  displayName: 'Test pool'
 
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
   variables:

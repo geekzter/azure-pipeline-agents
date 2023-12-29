@@ -112,7 +112,11 @@ jobs:
       testReentrance: false
       unpinTerraform: false
       unpinTerraformProviders: false
-
+  - pwsh: |
+      Write-Host "Strategy:"
+      Write-Host $env:STRATEGY
+    env:
+      STRATEGY: $[ variables['terraform.azdo_pools_json'] ]
 
 - job: 'testOutput'
   condition: succeeded()

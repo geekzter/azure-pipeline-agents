@@ -235,7 +235,7 @@ steps:
   - ${{ if parameters.deploy }}:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply'
-      name: terraform
+      name: apply
       retryCountOnTaskFailure: ${{ parameters.retryCount }}
       inputs:
         azureSubscription: '$(subscriptionConnection)'
@@ -257,6 +257,23 @@ steps:
           Write-Host ""
 
           ./deploy.ps1 -apply -force
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
+
+  - ${{ if parameters.deploy }}:
+    - task: AzureCLI@2
+      displayName: 'Terraform output'
+      name: terraform
+      retryCountOnTaskFailure: ${{ parameters.retryCount }}
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+          ./deploy.ps1 -output
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true
@@ -319,7 +336,7 @@ steps:
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: succeededOrFailed()
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
-        condition: eq(variables['terraform.priorResourcesExist'],'false')
+        condition: eq(variables['apply.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: failed()
       ${{ elseif eq(parameters.destroy, 'On success') }}:
@@ -345,7 +362,7 @@ steps:
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: or(always(),canceled())
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
-        condition: eq(variables['terraform.priorResourcesExist'],'false')
+        condition: eq(variables['apply.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: not(eq(variables['provisioningResult.result'],'success'))
       ${{ elseif eq(parameters.destroy, 'On success') }}:
@@ -398,7 +415,7 @@ steps:
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: or(always(),canceled())
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
-        condition: eq(variables['terraform.priorResourcesExist'],'false')
+        condition: eq(variables['apply.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
         condition: not(eq(variables['provisioningResult.result'],'success'))
       ${{ elseif eq(parameters.destroy, 'On success') }}:

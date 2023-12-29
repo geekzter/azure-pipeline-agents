@@ -172,14 +172,13 @@ jobs:
       condition: succeededOrFailed()
     ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
       displayName: 'Destroy infrastructure (${{ lower(parameters.destroy) }})'
-      condition: eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false')
+      condition: and(succeeded(),eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false'))
     ${{ elseif eq(parameters.destroy, 'On failure') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      # condition: or(ne(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['linuxSelfHostedAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsSelfHostedAgents.provisioningResult.result'],'success'))
-      condition: or(ne(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),ne(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'))
+      condition: failed()
     ${{ elseif eq(parameters.destroy, 'On success') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      condition: and(eq(dependencies.test.outputs['linuxScaleSetAgents.provisioningResult.result'],'success'),eq(dependencies.test.outputs['windowsScaleSetAgents.provisioningResult.result'],'success'))
+      condition: succeeded()
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     pool:

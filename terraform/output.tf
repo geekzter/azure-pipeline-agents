@@ -37,7 +37,8 @@ output azdo_pools {
   value                        = local.azdo_pools
 }
 output azdo_pools_json {
-  value                        = length(local.azdo_pools) > 0 ? jsonencode(local.azdo_pools) : null
+  value                        = jsonencode(local.azdo_pools)
+  # value                        = length(local.azdo_pools) > 0 ? jsonencode(local.azdo_pools) : null
 }
 output azdo_project_id {
   value                        = local.azdo_project_id

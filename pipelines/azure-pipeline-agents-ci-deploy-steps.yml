@@ -239,31 +239,30 @@ steps:
         useGlobalConfig: true
         workingDirectory: '$(scriptDirectory)'
 
-  - ${{ if eq(parameters.deploy,'Apply') }}:
-    - task: AzureCLI@2
-      displayName: 'Terraform plan & apply'
-      name: apply
-      retryCountOnTaskFailure: ${{ parameters.retryCount }}
-      inputs:
-        azureSubscription: '$(subscriptionConnection)'
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: |
-          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+  - task: AzureCLI@2
+    displayName: 'Terraform ${{ lower(parameters.deploy) }}'
+    name: apply
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
 
-          terraform -chdir='$(terraformDirectory)' show -json | ConvertFrom-Json -AsHashtable | Set-Variable tfState 
-          $priorResourcesExist = $tfState.ContainsKey('values')
-          if ($priorResourcesExist) {
-            Write-Warning "Prior resources exist in workspace '${env:TF_WORKSPACE}'"
-            Write-Host "##vso[task.logissue type=warning]Prior resources exist in workspace '${env:TF_WORKSPACE}'"
-          } else {
-            Write-Host "No prior resources exist in workspace '${env:TF_WORKSPACE}'"
-          }
-          Write-Host "##vso[task.setvariable variable=priorResourcesExist;isOutput=true]$($priorResourcesExist.ToString().ToLower())"
+        terraform -chdir='$(terraformDirectory)' show -json | ConvertFrom-Json -AsHashtable | Set-Variable tfState 
+        $priorResourcesExist = $tfState.ContainsKey('values')
+        if ($priorResourcesExist) {
+          Write-Warning "Prior resources exist in workspace '${env:TF_WORKSPACE}'"
+          Write-Host "##vso[task.logissue type=warning]Prior resources exist in workspace '${env:TF_WORKSPACE}'"
+        } else {
+          Write-Host "No prior resources exist in workspace '${env:TF_WORKSPACE}'"
+        }
+        Write-Host "##vso[task.setvariable variable=priorResourcesExist;isOutput=true]$($priorResourcesExist.ToString().ToLower())"
 
-          Write-Host ""
+        Write-Host ""
 
-          ./deploy.ps1 -apply -force
+        ./deploy.ps1 -${{ parameters.deploy }} -force
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true
@@ -321,7 +320,7 @@ steps:
         inlineScript: |
           $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
 
-          ./deploy.ps1 -${{ parameters.deploy }} -force
+          ./deploy.ps1 -apply -force
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true

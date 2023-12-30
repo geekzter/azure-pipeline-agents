@@ -101,7 +101,6 @@ jobs:
       unpinTerraformProviders: false
 
 # - ${{ if eq(parameters.deploy,'Apply') }}:
-# - ${{ if ne(variables['TF_VAR_azdo_self_hosted_pool_type'],'Environment') }}:
 - job: test
   condition: succeeded()
   continueOnError: $[ eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}') ]
@@ -135,9 +134,8 @@ jobs:
   - job: destroy
     dependsOn: 
       - provision
-      - test
-      # - ${{ if and(eq(parameters.deploy,'Apply'),ne(variables['TF_VAR_azdo_self_hosted_pool_type'],'Environment')) }}:
-      #   - test
+      - ${{ if eq(parameters.deploy,'Apply') }}:
+        - test
     ${{ if ne(variables['Build.Reason'],'Manual') }}:
       displayName: 'Destroy infrastructure (always on pr/schedule)'
       condition: succeededOrFailed()
@@ -166,34 +164,34 @@ jobs:
       WINDOWS_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_windows_scale_set_pool_name'],variables['TF_VAR_azdo_windows_scale_set_pool_name']) ]
       SELF_HOSTED_POOL_NAME: $[ dependencies.provision.outputs['terraform.azdo_self_hosted_pool_name'] ]
 
-  steps:
-  - checkout: self
-    submodules: true
+    steps:
+    - checkout: self
+      submodules: true
 
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download initialized Terraform directory'
-    inputs:
-      artifact: $(terraformArtifactName)
-      path: $(terraformDirectory)
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download initialized Terraform directory'
+      inputs:
+        artifact: $(terraformArtifactName)
+        path: $(terraformDirectory)
 
-  - bash: |
-      echo Marking Terraform provider binaries as executable...
-      find . | xargs chmod +x
-    displayName: 'Make Terraform providers executable'
-    workingDirectory: $(terraformDirectory)/.terraform/providers
+    - bash: |
+        echo Marking Terraform provider binaries as executable...
+        find . | xargs chmod +x
+      displayName: 'Make Terraform providers executable'
+      workingDirectory: $(terraformDirectory)/.terraform/providers
 
-  - task: TerraformInstaller@0
-    displayName: 'Install Terraform'
-    inputs:
-      terraformVersion: '$(terraformVersion)'
+    - task: TerraformInstaller@0
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: '$(terraformVersion)'
 
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download initialized SSH directory'
-    inputs:
-      artifact: $(sshArtifactName)
-      path: $(sshDirectory)
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download initialized SSH directory'
+      inputs:
+        artifact: $(sshArtifactName)
+        path: $(sshDirectory)
 
-  - template: azure-pipeline-agents-ci-destroy-steps.yml
-    parameters:
-      destroy: Always # Overridden by job-level condition
-      retryCount: ${{ parameters.retryCount }}
+    - template: azure-pipeline-agents-ci-destroy-steps.yml
+      parameters:
+        destroy: Always # Overridden by job-level condition
+        retryCount: ${{ parameters.retryCount }}

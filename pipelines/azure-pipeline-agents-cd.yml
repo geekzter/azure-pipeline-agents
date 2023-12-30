@@ -110,8 +110,8 @@ jobs:
 
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
   variables:
-    # strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-    strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{"surrogate": {"pool": "Azure Pipelines","os": "Linux"}}') ]
+    strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+    # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{"surrogate": {"pool": "Azure Pipelines","os": "Linux"}}') ]
     # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{\"surrogate\": {\"pool\": \"Azure Pipelines\",\"os\": \"Linux\"}}') ]
 
   pool:

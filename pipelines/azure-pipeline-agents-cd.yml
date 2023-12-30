@@ -97,37 +97,39 @@ jobs:
       unpinTerraform: false
       unpinTerraformProviders: false
 
-- job: test
-  condition: succeeded()
-  dependsOn: 
-    - provision
-  displayName: 'Test pool'
-
-  timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
-  variables:
-    strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-
-  pool:
-    name: '$(pool)'
-    demands:
-    - agent.os -equals $(os)
-
-  strategy:
-    matrix: $[ variables['strategy'] ]
-
-  steps:
-  - pwsh: |
-      Write-Host "Hello Agent"
-      Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
-    name: provisioningResult
-    displayName: 'Indicate deployment success'
+- ${{ if eq(parameters.deploy,'Apply') }}:
+  - job: test
     condition: succeeded()
+    dependsOn: 
+      - provision
+    displayName: 'Test pool'
+
+    timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+    variables:
+      strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+
+    pool:
+      name: '$(pool)'
+      demands:
+      - agent.os -equals $(os)
+
+    strategy:
+      matrix: $[ variables['strategy'] ]
+
+    steps:
+    - pwsh: |
+        Write-Host "Hello Agent"
+        Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+      name: provisioningResult
+      displayName: 'Indicate deployment success'
+      condition: succeeded()
 
 - ${{ if ne(parameters.destroy, 'Never') }}:
   - job: destroy
     dependsOn: 
       - provision
-      - test
+      - ${{ if eq(parameters.deploy,'Apply') }}:
+        - test
     ${{ if ne(variables['Build.Reason'],'Manual') }}:
       displayName: 'Destroy infrastructure (always on pr/schedule)'
       condition: succeededOrFailed()

@@ -111,9 +111,6 @@ jobs:
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
   variables:
     strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-    # strategy: $[ replace(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}','') ]
-    # strategy: $[ variables['doesNotExist'] ]
-    # strategy: {}
 
   pool:
     name: '$(pool)'

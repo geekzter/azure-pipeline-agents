@@ -263,10 +263,10 @@ steps:
         Write-Host ""
 
         ./deploy.ps1 -${{ parameters.deploy }} -force
-        addSpnToEnvironment: true
-        useGlobalConfig: true
-        failOnStandardError: true
-        workingDirectory: '$(scriptDirectory)'
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(scriptDirectory)'
 
   - task: AzureCLI@2
     displayName: 'Terraform output'

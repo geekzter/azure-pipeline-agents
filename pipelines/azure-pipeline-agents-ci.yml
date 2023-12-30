@@ -24,10 +24,10 @@ parameters:
 - name: deploy
   displayName: Deploy Agent Infrastructure
   type: string
-  default: Apply
+  default: 'Apply'
   values:
-  - Plan
-  - Apply
+  - 'Plan'
+  - 'Apply'
 - name: destroy
   displayName: Destroy Infrastructure
   type: string

@@ -100,7 +100,9 @@ jobs:
         $strategyHash.Add("primary",
           @{
             resourceGroup = '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}-$(Build.BuildId)'
+            sshArtifactName = 'sshPrimary$(System.PlanId)'
             sshArtifactPrefix = 'sshPrimary'
+            terraformArtifactName = 'terraformPrimary$(System.PlanId)'
             terraformArtifactPrefix = 'terraformPrimary'
             substituteAlternateVariables = $false
             TF_VAR_deploy_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
@@ -113,7 +115,9 @@ jobs:
         $strategyHash.Add("primary",
           @{
             resourceGroup = '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}a-$(Build.BuildId)'
+            sshArtifactName = 'sshPrimary$(System.PlanId)'
             sshArtifactPrefix = 'sshPrimary'
+            terraformArtifactName = 'terraformPrimary$(System.PlanId)'
             terraformArtifactPrefix = 'terraformPrimary'
             substituteAlternateVariables = $false
             TF_VAR_deploy_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
@@ -125,7 +129,9 @@ jobs:
         $strategyHash.Add("alternate",
           @{
             resourceGroup = '$(TF_VAR_resource_prefix)-${{ parameters.workspace }}b-$(Build.BuildId)'
+            sshArtifactName = 'sshAlternate$(System.PlanId)'
             sshArtifactPrefix = 'sshAlternate'
+            terraformArtifactName = 'terraformAlternate$(System.PlanId)'
             terraformArtifactPrefix = 'terraformAlternate'
             substituteAlternateVariables = $true
             TF_VAR_deploy_firewall = $${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}

@@ -152,7 +152,7 @@ steps:
 
   - publish: $(sshDirectory)
     displayName: 'Publish SSH key pair'
-    artifact: $(sshArtifactPrefix)$(System.PlanId)
+    artifact: $(sshArtifactName)
 
   - task: AzureCLI@2
     name: terraformVariables
@@ -211,8 +211,8 @@ steps:
 
   - publish: $(terraformDirectory)
     displayName: 'Publish Terraform workspace'
-    artifact: $(ter
-raformArtifactPrefix)$(System.PlanId)
+    artifact: $(terraformArtifactName)
+
   - ${{ if eq(parameters.deploy,'Apply') }}:
     - task: AzureCLI@2
       displayName: 'Disable Self-Hosted Agent(s)'

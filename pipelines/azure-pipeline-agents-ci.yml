@@ -23,8 +23,11 @@ parameters:
   - Strategy
 - name: deploy
   displayName: Deploy Agent Infrastructure
-  type: boolean
-  default: true
+  type: string
+  default: Apply
+  values:
+  - Plan
+  - Apply
 - name: destroy
   displayName: Destroy Infrastructure
   type: string
@@ -137,21 +140,21 @@ jobs:
 
 - job: 'Provision'
   dependsOn: createStrategy
-  ${{ if and(eq(parameters.destroy, 'Always'),parameters.deploy) }}:
+  ${{ if and(eq(parameters.destroy, 'Always'),eq(parameters.deploy,"Apply")) }}:
     displayName: 'Provision, Deploy, Test & Destroy'
-  ${{ if and(eq(parameters.destroy, 'Never'),parameters.deploy) }}:
+  ${{ if and(eq(parameters.destroy, 'Never'),eq(parameters.deploy,"Apply")) }}:
     displayName: 'Provision, Deploy & Test'
-  ${{ if and(eq(parameters.destroy, 'On failure'),parameters.deploy) }}:
+  ${{ if and(eq(parameters.destroy, 'On failure'),eq(parameters.deploy,"Apply")) }}:
     displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'On success'),parameters.deploy) }}:
+  ${{ if and(eq(parameters.destroy, 'On success'),eq(parameters.deploy,"Apply")) }}:
     displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'Always'),not(parameters.deploy)) }}:
+  ${{ if and(eq(parameters.destroy, 'Always'),ne(parameters.deploy,"Apply")) }}:
     displayName: 'Provision & Destroy'
-  ${{ if and(eq(parameters.destroy, 'Never'),not(parameters.deploy)) }}:
+  ${{ if and(eq(parameters.destroy, 'Never'),ne(parameters.deploy,"Apply")) }}:
     displayName: 'Provision'
-  ${{ if and(eq(parameters.destroy, 'On failure'),not(parameters.deploy)) }}:
+  ${{ if and(eq(parameters.destroy, 'On failure'),ne(parameters.deploy,"Apply")) }}:
     displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'On success'),not(parameters.deploy)) }}:
+  ${{ if and(eq(parameters.destroy, 'On success'),ne(parameters.deploy,"Apply")) }}:
     displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
   condition: succeeded()
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]

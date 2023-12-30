@@ -25,7 +25,8 @@ $requestHeaders = @{
     Authorization = "Bearer $authHeader ${env:AZURE_DEVOPS_EXT_PAT}"
     "Content-Type" = "application/json"
 }
-$requestUrl = "${OrganizationUrl}/_apis/distributedtask/pools?poolName=${AgentPoolName}&api-version=${apiVersion}"
+$restPoolName = [Uri]::EscapeUriString($AgentPoolName)
+$requestUrl = "${OrganizationUrl}/_apis/distributedtask/pools?poolName=${restPoolName}&api-version=${apiVersion}"
 Write-Verbose "REST API Url: $requestUrl"
 Invoke-WebRequest -Uri $requestUrl `
                   -Method Get `

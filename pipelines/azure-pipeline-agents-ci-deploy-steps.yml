@@ -6,8 +6,11 @@ parameters:
   default: false
 - name: deploy
   displayName: Deploy Agent Infrastructure
-  type: boolean
-  default: true
+  type: string
+  default: Apply
+  values:
+  - Plan
+  - Apply
 - name: destroy
   displayName: Destroy Infrastructure
   type: string
@@ -210,7 +213,7 @@ steps:
     displayName: 'Publish Terraform workspace'
     artifact: $(terraformArtifactName)
 
-  - ${{ if parameters.deploy }}:
+  - ${{ if eq(parameters.deploy,"Apply") }}:
     - task: AzureCLI@2
       displayName: 'Disable Self-Hosted Agent(s)'
       name: 'agentConfig'
@@ -236,7 +239,7 @@ steps:
         useGlobalConfig: true
         workingDirectory: '$(scriptDirectory)'
 
-  - ${{ if parameters.deploy }}:
+  - ${{ if eq(parameters.deploy,"Apply") }}:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply'
       name: apply
@@ -282,7 +285,7 @@ steps:
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
 
-  - ${{ if parameters.deploy }}:
+  - ${{ if eq(parameters.deploy,"Apply") }}:
     - task: AzureCLI@2
       displayName: 'Enable Self-Hosted Agent(s)'
       condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
@@ -307,7 +310,7 @@ steps:
         useGlobalConfig: true
         workingDirectory: '$(scriptDirectory)'      
 
-  - ${{ if and(parameters.deploy,parameters.testReentrance) }}:
+  - ${{ if and(eq(parameters.deploy,"Apply"),parameters.testReentrance) }}:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply (re-entrance test)'
       retryCountOnTaskFailure: ${{ parameters.retryCount }}
@@ -318,9 +321,7 @@ steps:
         inlineScript: |
           $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
 
-          # Swap NAT Gateway <-> Azure Firewall
-          # $env:TF_VAR_deploy_firewall = ($env:TF_VAR_deploy_firewall -ieq "true" ? "false" : "true")
-          ./deploy.ps1 -apply -force
+          ./deploy.ps1 -${{ parameters.deploy }} -force
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true

@@ -21,8 +21,11 @@ parameters:
   default: false
 - name: deploy
   displayName: Deploy Agent Infrastructure
-  type: boolean
-  default: true
+  type: string
+  default: Apply
+  values:
+  - Plan
+  - Apply
 - name: destroy
   displayName: Destroy Infrastructure
   type: string
@@ -38,7 +41,7 @@ parameters:
   type: number
   default: 1
 
-name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ parameters.workspace }}-$(Build.BuildId)
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.deploy) }}-${{ parameters.workspace }}-$(Build.BuildId)
 
 trigger: none
 
@@ -73,10 +76,7 @@ variables:
 
 jobs:
 - job: provision
-  ${{ if parameters.deploy }}:
-    displayName: 'Provision, Deploy'
-  ${{ else }}:
-    displayName: 'Provision'
+  displayName: '${{ parameters.deploy }}'
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
   pool:

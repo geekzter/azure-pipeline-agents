@@ -320,6 +320,11 @@ variable prepare_host {
   default                      = true
 }
 
+variable resource_middle_name {
+  description                  = "The middle part of resource names created"
+  default                      = "agents"
+}
+
 variable resource_prefix {
   description                  = "The prefix to put at the of resource names created"
   default                      = "pipelines"

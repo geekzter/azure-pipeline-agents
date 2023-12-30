@@ -112,9 +112,9 @@ steps:
         scriptLocation: inlineScript
         inlineScript: |
           $ErrorActionPreference = "Continue"
-          ./delete_agent_pool.ps1 "$(linuxScaleSetPoolName)"
-          ./delete_agent_pool.ps1 "$(windowsScaleSetPoolName)"
-          ./delete_agent_pool.ps1 "$(selfHostedPoolName)"
+          ./delete_agent_pool.ps1 "${env:LINUX_SCALE_SET_POOL_NAME}"
+          ./delete_agent_pool.ps1 "${env:WINDOWS_SCALE_SET_POOL_NAME}"
+          ./delete_agent_pool.ps1 "${env:SELF_HOSTED_POOL_NAME}"
         useGlobalConfig: true
         failOnStandardError: true
         workingDirectory: '$(scriptDirectory)'

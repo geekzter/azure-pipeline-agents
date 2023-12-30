@@ -153,9 +153,9 @@ jobs:
 
     variables:
       terraformVersion: $[ coalesce(dependencies.provision.outputs['terraformConfig.version'],'latest') ]
-      linuxScaleSetPoolName: $[ coalesce(dependencies.provision.outputs['terraform.azdo_linux_scale_set_pool_name'],variables['TF_VAR_azdo_linux_scale_set_pool_name']) ]
-      windowsScaleSetPoolName: $[ coalesce(dependencies.provision.outputs['terraform.azdo_windows_scale_set_pool_name'],variables['TF_VAR_azdo_windows_scale_set_pool_name']) ]
-      selfHostedPoolName: $[ dependencies.provision.outputs['terraform.azdo_self_hosted_pool_name'] ]
+      LINUX_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_linux_scale_set_pool_name'],variables['TF_VAR_azdo_linux_scale_set_pool_name']) ]
+      WINDOWS_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_windows_scale_set_pool_name'],variables['TF_VAR_azdo_windows_scale_set_pool_name']) ]
+      SELF_HOSTED_POOL_NAME: $[ dependencies.provision.outputs['terraform.azdo_self_hosted_pool_name'] ]
 
     steps:
     - checkout: self

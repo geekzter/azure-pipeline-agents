@@ -131,7 +131,7 @@ resource time_sleep script_wrapper_check {
 }
 
 resource azurerm_resource_group rg {
-  name                         = terraform.workspace == "default" ? "${var.resource_prefix}-${var.resource_middle_name}-${local.suffix}" : "${var.resource_prefix}-${var.resource_middle_name}-${terraform.workspace}-${local.suffix}"
+  name                         = terraform.workspace == "default" ? "${var.resource_prefix}-${var.resource_middle_name}-${local.suffix}" : "${var.resource_prefix}-${terraform.workspace}-${var.resource_middle_name}-${local.suffix}"
   location                     = var.azure_location
   tags                         = local.tags
 

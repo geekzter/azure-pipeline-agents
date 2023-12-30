@@ -110,7 +110,9 @@ jobs:
 
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
   variables:
-    strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+    # strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+    strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{"surrogate": {"pool": "Azure Pipelines","os": "Linux"}}') ]
+    # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{\"surrogate\": {\"pool\": \"Azure Pipelines\",\"os\": \"Linux\"}}') ]
 
   pool:
     name: '$(pool)'
@@ -149,6 +151,7 @@ jobs:
     ${{ elseif eq(parameters.destroy, 'On success') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
       condition: succeeded()
+      # condition: or(succeeded(),eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}'))
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     pool:

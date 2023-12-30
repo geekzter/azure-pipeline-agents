@@ -211,8 +211,8 @@ steps:
 
   - publish: $(terraformDirectory)
     displayName: 'Publish Terraform workspace'
-    artifact: $(terraformArtifactPrefix)$(System.PlanId)
-
+    artifact: $(ter
+raformArtifactPrefix)$(System.PlanId)
   - ${{ if eq(parameters.deploy,'Apply') }}:
     - task: AzureCLI@2
       displayName: 'Disable Self-Hosted Agent(s)'

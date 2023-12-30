@@ -171,7 +171,7 @@ jobs:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download initialized Terraform directory'
       inputs:
-        artifact: $(terraformArtifactName)
+        artifact: $(terraformArtifactPrefix)$(System.PlanId)
         path: $(terraformDirectory)
 
     - bash: |
@@ -188,7 +188,7 @@ jobs:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download initialized SSH directory'
       inputs:
-        artifact: $(sshArtifactName)
+        artifact: $(sshArtifactPrefix)$(System.PlanId)
         path: $(sshDirectory)
 
     - template: azure-pipeline-agents-ci-destroy-steps.yml

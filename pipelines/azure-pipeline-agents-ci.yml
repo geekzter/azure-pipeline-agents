@@ -148,13 +148,13 @@ jobs:
     displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
   ${{ if and(eq(parameters.destroy, 'On success'),eq(parameters.deploy,'Apply')) }}:
     displayName: 'Provision, Deploy, Test & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'Always'),ne(parameters.deploy,"Apply")) }}:
+  ${{ if and(eq(parameters.destroy, 'Always'),ne(parameters.deploy,'Apply')) }}:
     displayName: 'Provision & Destroy'
-  ${{ if and(eq(parameters.destroy, 'Never'),ne(parameters.deploy,"Apply")) }}:
+  ${{ if and(eq(parameters.destroy, 'Never'),ne(parameters.deploy,'Apply')) }}:
     displayName: 'Provision'
-  ${{ if and(eq(parameters.destroy, 'On failure'),ne(parameters.deploy,"Apply")) }}:
+  ${{ if and(eq(parameters.destroy, 'On failure'),ne(parameters.deploy,'Apply')) }}:
     displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
-  ${{ if and(eq(parameters.destroy, 'On success'),ne(parameters.deploy,"Apply")) }}:
+  ${{ if and(eq(parameters.destroy, 'On success'),ne(parameters.deploy,'Apply')) }}:
     displayName: 'Provision & Destroy (${{ lower(parameters.destroy) }})'
   condition: succeeded()
   timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]

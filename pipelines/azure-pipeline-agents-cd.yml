@@ -111,7 +111,7 @@ jobs:
   variables:
     # strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
     # strategy: $[ replace(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}','') ]
-    strategy: ${{ parameters.testStrategy }}
+    strategy: $[ variables['doesNotExist'] ]
   pool:
     name: '$(pool)'
     demands:

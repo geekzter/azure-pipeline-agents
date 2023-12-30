@@ -1,0 +1,21 @@
+
+trigger: none
+
+variables:
+- name: 'foo1'
+  value: 'bar1'
+- name: 'foo2'
+  value: 'bar2'
+
+jobs:
+- job: test
+  pool:
+    name: 'Azure Pipelines'
+  steps:
+  - pwsh: |
+      Get-ChildItem -Path Env: -Recurse -Include test_* | Sort-Object Name
+    env:
+      test_var1: $[ variables['foo1'] ]
+      test_var2: $[ variables['foo2'] ]
+      test_var: $[ coalesce(variables['foo1'], variables['foo2']) ]
+

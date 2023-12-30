@@ -213,7 +213,7 @@ steps:
     displayName: 'Publish Terraform workspace'
     artifact: $(terraformArtifactName)
 
-  - ${{ if eq(parameters.deploy,"Apply") }}:
+  - ${{ if eq(parameters.deploy,'Apply') }}:
     - task: AzureCLI@2
       displayName: 'Disable Self-Hosted Agent(s)'
       name: 'agentConfig'
@@ -239,7 +239,7 @@ steps:
         useGlobalConfig: true
         workingDirectory: '$(scriptDirectory)'
 
-  - ${{ if eq(parameters.deploy,"Apply") }}:
+  - ${{ if eq(parameters.deploy,'Apply') }}:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply'
       name: apply
@@ -285,7 +285,7 @@ steps:
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
 
-  - ${{ if eq(parameters.deploy,"Apply") }}:
+  - ${{ if eq(parameters.deploy,'Apply') }}:
     - task: AzureCLI@2
       displayName: 'Enable Self-Hosted Agent(s)'
       condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
@@ -310,7 +310,7 @@ steps:
         useGlobalConfig: true
         workingDirectory: '$(scriptDirectory)'      
 
-  - ${{ if and(eq(parameters.deploy,"Apply"),parameters.testReentrance) }}:
+  - ${{ if and(eq(parameters.deploy,'Apply'),parameters.testReentrance) }}:
     - task: AzureCLI@2
       displayName: 'Terraform plan & apply (re-entrance test)'
       retryCountOnTaskFailure: ${{ parameters.retryCount }}

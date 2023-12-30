@@ -101,68 +101,69 @@ jobs:
       unpinTerraformProviders: false
 
 # - ${{ if eq(parameters.deploy,'Apply') }}:
-- job: test
-  condition: succeeded()
-  continueOnError: $[ eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}') ]
-  dependsOn: 
-    - provision
-  displayName: 'Test pool'
-
-  timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
-  variables:
-    strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-    # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{"surrogate": {"pool": "Azure Pipelines","os": "Linux"}}') ]
-    # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{\"surrogate\": {\"pool\": \"Azure Pipelines\",\"os\": \"Linux\"}}') ]
-
-  pool:
-    name: '$(pool)'
-    demands:
-    - agent.os -equals $(os)
-
-  strategy:
-    matrix: $[ variables['strategy'] ]
-
-  steps:
-  - pwsh: |
-      Write-Host "Hello Agent"
-      Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
-    name: provisioningResult
-    displayName: 'Indicate deployment success'
+- ${{ if ne(variables['TF_VAR_azdo_self_hosted_pool_type'],'Environment') }}:
+  - job: test
     condition: succeeded()
-
-- ${{ if ne(parameters.destroy, 'Never') }}:
-  - job: destroy
+    continueOnError: $[ eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}') ]
     dependsOn: 
       - provision
-      - ${{ if eq(parameters.deploy,'Apply') }}:
-        - test
-    ${{ if ne(variables['Build.Reason'],'Manual') }}:
-      displayName: 'Destroy infrastructure (always on pr/schedule)'
-      condition: succeededOrFailed()
-    ${{ elseif eq(parameters.destroy, 'Always') }}:
-      displayName: 'Destroy infrastructure'
-      condition: succeededOrFailed()
-    ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
-      displayName: 'Destroy infrastructure (${{ lower(parameters.destroy) }})'
-      condition: and(succeeded(),eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false'))
-    ${{ elseif eq(parameters.destroy, 'On failure') }}:
-      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      condition: failed()
-    ${{ elseif eq(parameters.destroy, 'On success') }}:
-      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      condition: succeeded()
-      # condition: or(succeeded(),eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}'))
+    displayName: 'Test pool'
+
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+    variables:
+      strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+      # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{"surrogate": {"pool": "Azure Pipelines","os": "Linux"}}') ]
+      # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{\"surrogate\": {\"pool\": \"Azure Pipelines\",\"os\": \"Linux\"}}') ]
 
     pool:
       name: '$(pool)'
-      vmImage: $(vmImage)
+      demands:
+      - agent.os -equals $(os)
 
-    variables:
-      terraformVersion: $[ coalesce(dependencies.provision.outputs['terraformConfig.version'],'latest') ]
-      LINUX_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_linux_scale_set_pool_name'],variables['TF_VAR_azdo_linux_scale_set_pool_name']) ]
-      WINDOWS_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_windows_scale_set_pool_name'],variables['TF_VAR_azdo_windows_scale_set_pool_name']) ]
-      SELF_HOSTED_POOL_NAME: $[ dependencies.provision.outputs['terraform.azdo_self_hosted_pool_name'] ]
+    strategy:
+      matrix: $[ variables['strategy'] ]
+
+    steps:
+    - pwsh: |
+        Write-Host "Hello Agent"
+        Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+      name: provisioningResult
+      displayName: 'Indicate deployment success'
+      condition: succeeded()
+
+  - ${{ if ne(parameters.destroy, 'Never') }}:
+    - job: destroy
+      dependsOn: 
+        - provision
+        - ${{ if and(eq(parameters.deploy,'Apply'),ne(variables['TF_VAR_azdo_self_hosted_pool_type'],'Environment')) }}:
+          - test
+      ${{ if ne(variables['Build.Reason'],'Manual') }}:
+        displayName: 'Destroy infrastructure (always on pr/schedule)'
+        condition: succeededOrFailed()
+      ${{ elseif eq(parameters.destroy, 'Always') }}:
+        displayName: 'Destroy infrastructure'
+        condition: succeededOrFailed()
+      ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+        displayName: 'Destroy infrastructure (${{ lower(parameters.destroy) }})'
+        condition: and(succeeded(),eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false'))
+      ${{ elseif eq(parameters.destroy, 'On failure') }}:
+        displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+        condition: failed()
+      ${{ elseif eq(parameters.destroy, 'On success') }}:
+        displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+        condition: succeeded()
+        # condition: or(succeeded(),eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}'))
+      timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+      pool:
+        name: '$(pool)'
+        vmImage: $(vmImage)
+
+      variables:
+        terraformVersion: $[ coalesce(dependencies.provision.outputs['terraformConfig.version'],'latest') ]
+        LINUX_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_linux_scale_set_pool_name'],variables['TF_VAR_azdo_linux_scale_set_pool_name']) ]
+        WINDOWS_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_windows_scale_set_pool_name'],variables['TF_VAR_azdo_windows_scale_set_pool_name']) ]
+        SELF_HOSTED_POOL_NAME: $[ dependencies.provision.outputs['terraform.azdo_self_hosted_pool_name'] ]
 
     steps:
     - checkout: self

@@ -102,8 +102,8 @@ jobs:
 
 # - ${{ if eq(parameters.deploy,'Apply') }}:
 - job: test
-  # condition: succeeded()
-  condition: and(succeeded(),ne(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}'))
+  condition: succeeded()
+  continueOnError: eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}')
   dependsOn: 
     - provision
   displayName: 'Test pool'

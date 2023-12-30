@@ -43,8 +43,8 @@ steps:
 
   - ${{ if ne(parameters.destroy, 'Never') }}:
     - task: AzureCLI@2
-      name: teardown
-      displayName: 'Tear down remaining resources'
+      name: teardownAzure
+      displayName: 'Tear down remaining Azure resources'
       ${{ if eq(parameters.destroy, 'Always') }}:
         condition: or(always(),canceled())
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
@@ -60,7 +60,7 @@ steps:
         inlineScript: |
           $ErrorActionPreference = "Continue" # Continue to remove resources if remove by resource group fails
           # Build JMESPath expression
-          $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '$(TF_WORKSPACE)' && tags.runid == '$(Build.BuildId)' && properties.provisioningState != 'Deleting'].id"
+          $tagQuery = "[?tags.repository == '$(repository)' && tags.workspace == '$(TF_WORKSPACE)' && tags.owner == '$(TF_VAR_application_owner)' && properties.provisioningState != 'Deleting'].id"
           Write-Host "Removing resources identified by `"$tagQuery`"..."
 
           # Remove resource groups
@@ -90,6 +90,31 @@ steps:
           # Remove policy definition
           ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
         addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
+
+  - ${{ if ne(parameters.destroy, 'Never') }}:
+    - task: AzureCLI@2
+      name: teardownAzDO
+      displayName: 'Tear down remaining Azure DevOps resources'
+      ${{ if eq(parameters.destroy, 'Always') }}:
+        condition: or(always(),canceled())
+      ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+        condition: eq(variables['apply.priorResourcesExist'],'false')
+      ${{ elseif eq(parameters.destroy, 'On failure') }}:
+        condition: not(eq(variables['provisioningResult.result'],'success'))
+      ${{ elseif eq(parameters.destroy, 'On success') }}:
+        condition: eq(variables['provisioningResult.result'],'success')
+      inputs:
+        azureSubscription: '$(azdoConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $ErrorActionPreference = "Continue"
+          ./delete_agent_pool.ps1 "$(linuxScaleSetPoolName)"
+          ./delete_agent_pool.ps1 "$(windowsScaleSetPoolName)"
+          ./delete_agent_pool.ps1 "$(selfHostedPoolName)"
         useGlobalConfig: true
         failOnStandardError: true
         workingDirectory: '$(scriptDirectory)'

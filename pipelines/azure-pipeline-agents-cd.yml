@@ -19,6 +19,10 @@ parameters:
   displayName: Clear State
   type: boolean
   default: false
+- name: test
+  displayName: Test Pools
+  type: boolean
+  default: false
 - name: deploy
   displayName: Deploy Agent Infrastructure
   type: string
@@ -40,9 +44,6 @@ parameters:
   displayName: Terraform task retry count
   type: number
   default: 1
-# - name: testStrategy
-#   type: string
-#   default: '{}'
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.deploy) }}-${{ parameters.workspace }}-$(Build.BuildId)
 
@@ -100,8 +101,7 @@ jobs:
       unpinTerraform: false
       unpinTerraformProviders: false
 
-# - ${{ if eq(parameters.deploy,'Apply') }}:
-- ${{ if ne(variables['TF_VAR_azdo_self_hosted_pool_type'],'Environment') }}:
+- ${{ if parameters.test }}:
   - job: test
     condition: succeeded()
     continueOnError: $[ eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}') ]
@@ -112,8 +112,6 @@ jobs:
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
     variables:
       strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
-      # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{"surrogate": {"pool": "Azure Pipelines","os": "Linux"}}') ]
-      # strategy: $[ coalesce(dependencies.provision.outputs['terraform.azdo_pools_json'],'{\"surrogate\": {\"pool\": \"Azure Pipelines\",\"os\": \"Linux\"}}') ]
 
     pool:
       name: '$(pool)'
@@ -135,8 +133,7 @@ jobs:
   - job: destroy
     dependsOn: 
       - provision
-      # - ${{ if eq(parameters.deploy,'Apply') }}:
-      - ${{ if and(eq(parameters.deploy,'Apply'),ne(variables['TF_VAR_azdo_self_hosted_pool_type'],'Environment')) }}:
+      - ${{ if parameters.test }}:
         - test
     ${{ if ne(variables['Build.Reason'],'Manual') }}:
       displayName: 'Destroy infrastructure (always on pr/schedule)'

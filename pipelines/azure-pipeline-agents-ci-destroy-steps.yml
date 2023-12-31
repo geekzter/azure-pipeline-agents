@@ -88,7 +88,9 @@ steps:
           }
 
           # Remove policy definition
-          ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
+          if (($env:TF_VAR_configure_access_control ?? 'true') -ieq 'true') {
+            ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
+          }
         addSpnToEnvironment: true
         useGlobalConfig: true
         failOnStandardError: true

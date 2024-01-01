@@ -89,7 +89,7 @@ steps:
 
           # Remove policy definition
           if (($env:TF_VAR_configure_access_control ?? 'true') -ieq 'true') {
-            ./delete_policy.ps1 -Workspace $(TF_WORKSPACE)
+            ./delete_policy.ps1 -Workspace $(TF_WORKSPACE) -Suffix "$(TF_VAR_resource_suffix)"
           }
         addSpnToEnvironment: true
         useGlobalConfig: true

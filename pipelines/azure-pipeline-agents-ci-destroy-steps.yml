@@ -122,6 +122,9 @@ steps:
         useGlobalConfig: true
         failOnStandardError: true
         workingDirectory: '$(scriptDirectory)'
+      env:
+        TF_VAR_azdo_self_hosted_pool_name: '$(TF_VAR_azdo_self_hosted_pool_name)'
+
 
   - ${{ if ne(parameters.destroy, 'Never') }}:
     - task: AzureCLI@2

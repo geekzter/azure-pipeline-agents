@@ -6,15 +6,25 @@ parameters:
   default: cd
   values:
   - cd
+  - cd1
   - cd2
   - cd3
-  - cd3
   - depgrp
+  - depgrp1
+  - depgrp2
+  - depgrp3
   - env
+  - env1
+  - env2
+  - env3
   - test
   - test1
   - test2
   - test3
+  - vmss
+  - vmss1
+  - vmss2
+  - vmss3
 - name: clear
   displayName: Clear State
   type: boolean

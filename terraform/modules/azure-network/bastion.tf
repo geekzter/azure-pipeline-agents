@@ -156,6 +156,12 @@ resource azurerm_subnet_network_security_group_association bastion_nsg {
     azurerm_network_security_rule.bastion_host_communication_oubound,
     azurerm_network_security_rule.get_session_oubound,
   ]
+
+  lifecycle {
+    ignore_changes             = [
+      network_security_group_id # Ignore policy changes
+    ]
+  }
 }
 resource azurerm_public_ip bastion_ip {
   name                         = "${azurerm_virtual_network.pipeline_network.name}-bastion-ip"

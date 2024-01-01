@@ -48,6 +48,12 @@ resource azurerm_network_security_rule packer_rdp {
 resource azurerm_subnet_network_security_group_association packer {
   subnet_id                    = azurerm_subnet.packer.id
   network_security_group_id    = azurerm_network_security_group.packer_nsg.id
+  
+  lifecycle {
+    ignore_changes             = [
+      network_security_group_id # Ignore policy changes
+    ]
+  }
 }
 
 resource azurerm_subnet private_endpoint_subnet {
@@ -77,6 +83,12 @@ resource azurerm_subnet_network_security_group_association private_endpoint_subn
   depends_on                   = [
     azurerm_subnet_network_security_group_association.private_endpoint_subnet
   ]
+
+  lifecycle {
+    ignore_changes             = [
+      network_security_group_id # Ignore policy changes
+    ]
+  }
 }
 
 resource azurerm_virtual_network_peering packer_to_agents {

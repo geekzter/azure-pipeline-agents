@@ -5,22 +5,22 @@ module network {
   admin_cidr_ranges            = local.admin_cidr_ranges
   bastion_tags                 = var.azure_bastion_tags
   configuration_name           = local.configuration_bitmask
-  configure_cidr_allow_rules   = var.configure_cidr_allow_rules
-  configure_crl_oscp_rules     = var.configure_crl_oscp_rules
-  configure_wildcard_allow_rules= var.configure_wildcard_allow_rules
-  create_packer_infrastructure = var.create_packer_infrastructure
-  deploy_bastion               = var.deploy_bastion
-  deploy_firewall              = var.deploy_firewall
+  configure_cidr_allow_rules   = var.configure_azure_cidr_allow_rules
+  configure_crl_oscp_rules     = var.configure_azure_crl_oscp_rules
+  configure_wildcard_allow_rules= var.configure_azure_wildcard_allow_rules
+  create_packer_infrastructure = var.create_azure_packer_infrastructure
+  deploy_bastion               = var.deploy_azure_bastion
+  deploy_firewall              = var.deploy_azure_firewall
   destroy_wait_minutes         = var.destroy_wait_minutes
   azdo_org                     = local.azdo_org
   diagnostics_storage_id       = azurerm_storage_account.diagnostics.id
-  dns_host_suffix              = var.dns_host_suffix
-  enable_firewall_dns_proxy    = var.enable_firewall_dns_proxy
-  enable_public_access         = var.enable_public_access
+  dns_host_suffix              = var.azure_dns_host_suffix
+  enable_firewall_dns_proxy    = var.enable_azure_firewall_dns_proxy
+  enable_public_access         = var.enable_azure_public_access
   location                     = var.azure_location
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   packer_address_space         = var.packer_address_space
-  peer_virtual_network_id      = var.create_packer_infrastructure ? module.packer.0.virtual_network_id : null
+  peer_virtual_network_id      = var.create_azure_packer_infrastructure ? module.packer.0.virtual_network_id : null
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
 }
@@ -36,7 +36,7 @@ module packer {
   admin_cidr_ranges            = local.admin_cidr_ranges
   agent_address_range          = module.network.agent_address_range
   configure_policy             = var.configure_access_control
-  deploy_nat_gateway           = !var.deploy_firewall
+  deploy_nat_gateway           = !var.deploy_azure_firewall
   gateway_ip_address           = module.network.gateway_ip_address
   peer_virtual_network_id      = module.network.virtual_network_id
   location                     = var.azure_location
@@ -48,7 +48,7 @@ module packer {
     time_sleep.script_wrapper_check
   ]
 
-  count                        = var.create_packer_infrastructure ? 1 : 0
+  count                        = var.create_azure_packer_infrastructure ? 1 : 0
 }
 
 module gallery {
@@ -70,7 +70,7 @@ module gallery {
     module.packer
   ]
 
-  count                        = var.create_packer_infrastructure ? 1 : 0
+  count                        = var.create_azure_packer_infrastructure ? 1 : 0
 }
 
 module self_hosted_pool {
@@ -80,7 +80,7 @@ module self_hosted_pool {
   name                         = local.create_azdo_self_hosted_pool ? var.azdo_self_hosted_pool_name : "${azurerm_resource_group.rg.name}-agents"
   project_ids                  = local.azdo_project_ids
 
-  count                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "AgentPool" && var.deploy_self_hosted_vm_agents ? 1 : 0
+  count                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "AgentPool" && var.deploy_azdo_self_hosted_vm_agents ? 1 : 0
 }
 
 module azdo_environment {
@@ -90,7 +90,7 @@ module azdo_environment {
   name                         = coalesce(var.azdo_self_hosted_pool_name,"${azurerm_resource_group.rg.name}-agents")
   project_id                   = local.azdo_project_id
 
-  count                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "Environment" && var.deploy_self_hosted_vm_agents ? 1 : 0
+  count                        = local.create_azdo_resources && var.azdo_self_hosted_pool_type == "Environment" && var.deploy_azdo_self_hosted_vm_agents ? 1 : 0
 }
 
 module self_hosted_linux_agents {
@@ -98,10 +98,10 @@ module self_hosted_linux_agents {
 
   admin_cidr_ranges            = local.admin_cidr_ranges
 
-  create_public_ip_address     = !var.deploy_firewall
-  deploy_agent                 = var.azdo_org_url != null && var.deploy_self_hosted_vm_agents
-  deploy_files_share           = var.deploy_files_share
-  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+  create_public_ip_address     = !var.deploy_azure_firewall
+  deploy_agent                 = var.azdo_org_url != null && var.deploy_azdo_self_hosted_vm_agents
+  deploy_files_share           = var.deploy_azure_files_share
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_azure_vm_extensions
 
   azdo_deployment_group_name   = local.azdo_deployment_group_name
   azdo_environment_name        = local.azdo_environment_name
@@ -109,7 +109,7 @@ module self_hosted_linux_agents {
   azdo_pat                     = local.azdo_token
   azdo_pipeline_agent_name     = "${var.azure_linux_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = local.azdo_self_hosted_pool_name
-  azdo_pipeline_agent_version_id= var.pipeline_agent_version_id
+  azdo_pipeline_agent_version_id= var.azdo_pipeline_agent_version_id
   azdo_project                 = local.azdo_project_name
 
   diagnostics_smb_share        = local.diagnostics_smb_share
@@ -129,12 +129,12 @@ module self_hosted_linux_agents {
   storage_type                 = var.azure_linux_storage_type
   vm_size                      = var.azure_linux_vm_size
 
-  enable_public_access         = var.enable_public_access
+  enable_public_access         = var.enable_azure_public_access
   install_tools                = var.linux_tools
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
   resource_group_name          = azurerm_resource_group.rg.name
-  shutdown_time                = var.shutdown_time
+  shutdown_time                = var.azure_shutdown_time
   ssh_public_key               = var.ssh_public_key
   tags                         = local.tags
   timezone                     = var.timezone
@@ -145,7 +145,7 @@ module self_hosted_linux_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_self_hosted_vms ? var.azure_linux_self_hosted_agent_count : 0
+  count                        = var.deploy_azure_self_hosted_vms ? var.azure_linux_self_hosted_agent_count : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
@@ -161,18 +161,18 @@ module self_hosted_windows_agents {
 
   admin_cidr_ranges            = local.admin_cidr_ranges
 
-  create_public_ip_address     = !var.deploy_firewall
-  deploy_agent_vm_extension    = var.azdo_org_url != null && var.deploy_self_hosted_vm_agents
-  deploy_files_share           = var.deploy_files_share
-  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+  create_public_ip_address     = !var.deploy_azure_firewall
+  deploy_agent_vm_extension    = var.azdo_org_url != null && var.deploy_azdo_self_hosted_vm_agents
+  deploy_files_share           = var.deploy_azure_files_share
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_azure_vm_extensions
 
   azdo_deployment_group_name   = local.azdo_deployment_group_name
   azdo_environment_name        = local.azdo_environment_name
   azdo_org                     = local.azdo_org
   azdo_pat                     = local.azdo_token
-  azdo_pipeline_agent_name     = "${var.windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
+  azdo_pipeline_agent_name     = "${var.azure_windows_pipeline_agent_name_prefix}-${terraform.workspace}-${count.index+1}"
   azdo_pipeline_agent_pool     = local.azdo_self_hosted_pool_name
-  azdo_pipeline_agent_version_id= var.pipeline_agent_version_id
+  azdo_pipeline_agent_version_id= var.azdo_pipeline_agent_version_id
   azdo_project                 = local.azdo_project_name
 
   diagnostics_smb_share        = local.diagnostics_smb_share
@@ -191,10 +191,10 @@ module self_hosted_windows_agents {
   storage_type                 = var.azure_windows_storage_type
   vm_size                      = var.azure_windows_vm_size
 
-  enable_public_access         = var.enable_public_access
+  enable_public_access         = var.enable_azure_public_access
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
-  shutdown_time                = var.shutdown_time
+  shutdown_time                = var.azure_shutdown_time
   subnet_id                    = module.network.self_hosted_agents_subnet_id
   suffix                       = local.suffix
   timezone                     = var.timezone
@@ -203,7 +203,7 @@ module self_hosted_windows_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_self_hosted_vms ? var.azure_windows_self_hosted_agent_count : 0
+  count                        = var.deploy_azure_self_hosted_vms ? var.azure_windows_self_hosted_agent_count : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
@@ -218,8 +218,8 @@ module self_hosted_windows_agents {
 module scale_set_linux_agents {
   source                       = "./modules/azure-scale-set-linux"
 
-  deploy_files_share           = var.deploy_files_share
-  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+  deploy_files_share           = var.deploy_azure_files_share
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_azure_vm_extensions
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   diagnostics_smb_share_mount_point= local.diagnostics_smb_share_mount_point
@@ -250,7 +250,7 @@ module scale_set_linux_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_scale_set && var.azure_linux_scale_set_agent_count > 0 ? 1 : 0
+  count                        = var.deploy_azure_scale_set && var.azure_linux_scale_set_agent_count > 0 ? 1 : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,
@@ -264,8 +264,8 @@ module scale_set_linux_agents {
 module scale_set_windows_agents {
   source                       = "./modules/azure-scale-set-windows"
 
-  deploy_files_share           = var.deploy_files_share
-  deploy_non_essential_vm_extensions = var.deploy_non_essential_vm_extensions
+  deploy_files_share           = var.deploy_azure_files_share
+  deploy_non_essential_vm_extensions = var.deploy_non_essential_azure_vm_extensions
 
   diagnostics_smb_share        = local.diagnostics_smb_share
   environment_variables        = local.environment_variables
@@ -293,7 +293,7 @@ module scale_set_windows_agents {
   user_password                = local.password
   vm_accelerated_networking    = var.azure_vm_accelerated_networking
 
-  count                        = var.deploy_scale_set && var.azure_windows_scale_set_agent_count > 0 ? 1 : 0
+  count                        = var.deploy_azure_scale_set && var.azure_windows_scale_set_agent_count > 0 ? 1 : 0
   depends_on                   = [
     azurerm_private_endpoint.aut_blob_storage_endpoint,
     azurerm_private_endpoint.diag_blob_storage_endpoint,

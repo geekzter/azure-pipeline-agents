@@ -31,6 +31,15 @@ variable azdo_pat {
   description                  = "A Personal Access Token to access the Azure DevOps organization"
   default                      = null
 }
+variable azdo_pipeline_agent_diagnostics {
+  description                  = "Turn on diagnostics for the pipeline agent (Agent.Diagnostic)"
+  type                         = bool
+  default                      = false
+}
+variable azdo_pipeline_agent_version_id {
+  # https://api.github.com/repos/microsoft/azure-pipelines-agent/releases
+  default                      = "latest"
+}
 variable azdo_project_names {
   description                  = "The Azure DevOps projects where Scale Set pools should be enabled"
   default                      = [] # Empty list disables scale set pools
@@ -89,6 +98,9 @@ variable azure_bastion_tags {
 
   default                      = {}  
 } 
+variable azure_dns_host_suffix {
+  default                      = "mycicd"
+}
 variable azure_location {
   default                      = "centralus"
 }
@@ -116,9 +128,47 @@ variable azure_linux_scale_set_agent_count {
   default                      = 2
   type                         = number
 }
+variable azure_linux_pipeline_agent_name_prefix {
+  default                      = "ubuntu-agent"
+}
+variable azure_linux_self_hosted_agent_count {
+  default                      = 1
+  type                         = number
+}
+variable azure_linux_storage_type {
+  default                      = "Standard_LRS"
+}
+variable azure_linux_vm_size {
+  default                      = "Standard_D2s_v3"
+}
+variable azure_log_analytics_workspace_id {
+  description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
+  default                      = ""
+}
 variable azure_shared_image_gallery_id {
   description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
   default                      = null
+}
+variable azure_shutdown_time {
+  default                      = "" # Empty string doesn't triggers a shutdown
+  description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
+}
+variable azure_tags {
+  description                  = "A map of the tags to use for the resources that are deployed"
+  type                         = map
+
+  default = {
+    shutdown                   = "false"
+  }  
+} 
+variable azure_vhd_storage_account_tier {
+  default                      = "Standard"
+}
+variable azure_vm_accelerated_networking {
+  default                      = false
+}
+variable azure_windows_pipeline_agent_name_prefix {
+  default                      = "windows-agent"
 }
 variable azure_windows_os_image_id {
   default                      = null
@@ -145,27 +195,37 @@ variable azure_windows_scale_set_agent_count {
   default                      = 2
   type                         = number
 }
+variable azure_windows_self_hosted_agent_count {
+  default                      = 1
+  type                         = number
+}
+variable azure_windows_storage_type {
+  default                      = "Standard_LRS"
+}
+variable azure_windows_vm_size {
+  default                      = "Standard_D4s_v3"
+}
 
 variable configure_access_control {
-  description                  = "Assumes the Terraform user is an owner of the subscription."
+  description                  = "Assumes the Terraform user is an owner of the Azure subscription."
   default                      = false
   type                         = bool
 }
 
-variable configure_cidr_allow_rules {
+variable configure_azure_cidr_allow_rules {
   default                      = false
   type                         = bool
 }
-variable configure_crl_oscp_rules {
+variable configure_azure_crl_oscp_rules {
   default                      = true
   type                         = bool
 }
-variable configure_wildcard_allow_rules {
+variable configure_azure_wildcard_allow_rules {
   default                      = true
   type                         = bool
 }
 
-variable create_packer_infrastructure {
+variable create_azure_packer_infrastructure {
   default                      = true
   type                         = bool
 }
@@ -176,37 +236,36 @@ variable demo_viewers {
   type                         = list
 }
 
-variable deploy_bastion {
+variable deploy_azure_bastion {
   description                  = "Deploys managed bastion host"
   default                      = true
   type                         = bool
 }
-variable deploy_files_share {
+variable deploy_azure_files_share {
   description                  = "Deploys files share (e.g. for agent diagnostics)"
   default                      = false
   type                         = bool
 }
-variable deploy_firewall {
+variable deploy_azure_firewall {
   description                  = "Deploys NAT Gateway if set to false"
   default                      = false
   type                         = bool
 }
-variable deploy_non_essential_vm_extensions {
+variable deploy_non_essential_azure_vm_extensions {
   description                  = "Whether to deploy optional VM extensions"
   default                      = false
   type                         = bool
 }
-variable deploy_scale_set {
+variable deploy_azdo_self_hosted_vm_agents {
   default                      = true
   type                         = bool
 }
-variable deploy_self_hosted_vms {
+variable deploy_azure_scale_set {
+  default                      = true
+  type                         = bool
+}
+variable deploy_azure_self_hosted_vms {
   default                      = false
-  type                         = bool
-}
-variable deploy_self_hosted_vm_agents {
-  description                  = "Deploys Pipeline Agent on self-hosted VMs. Variables azdo_org and azdo_pat should also be specified."
-  default                      = true
   type                         = bool
 }
 
@@ -215,15 +274,11 @@ variable destroy_wait_minutes {
   type                         = number
 }
 
-variable dns_host_suffix {
-  default                      = "mycicd"
-}
-
-variable enable_firewall_dns_proxy {
+variable enable_azure_firewall_dns_proxy {
   type                         = bool
   default                      = false
 }
-variable enable_public_access {
+variable enable_azure_public_access {
   type                         = bool
   default                      = false
 }
@@ -238,41 +293,6 @@ variable environment_variables {
 variable linux_tools {
   default                      = false
   type                         = bool
-}
-
-variable azure_linux_pipeline_agent_name_prefix {
-  default                      = "ubuntu-agent"
-}
-
-variable azure_linux_self_hosted_agent_count {
-  default                      = 1
-  type                         = number
-}
-variable azure_linux_storage_type {
-  default                      = "Standard_LRS"
-}
-variable azure_linux_vm_size {
-  default                      = "Standard_D2s_v3"
-}
-variable azure_log_analytics_workspace_id {
-  description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
-  default                      = ""
-}
-variable azure_vhd_storage_account_tier {
-  default                      = "Standard"
-}
-variable azure_vm_accelerated_networking {
-  default                      = false
-}
-variable azure_windows_self_hosted_agent_count {
-  default                      = 1
-  type                         = number
-}
-variable azure_windows_storage_type {
-  default                      = "Standard_LRS"
-}
-variable azure_windows_vm_size {
-  default                      = "Standard_D4s_v3"
 }
 
 variable packer_client_id {
@@ -295,20 +315,14 @@ variable packer_tenant_id {
   default                      = null
 }
 
-variable pipeline_agent_diagnostics {
-  description                  = "Turn on diagnostics for the pipeline agent (Agent.Diagnostic)"
-  type                         = bool
-  default                      = false
-}
-
-variable pipeline_agent_version_id {
-  # https://api.github.com/repos/microsoft/azure-pipelines-agent/releases
-  default                      = "latest"
-}
-
 variable prepare_host {
   type                         = bool
   default                      = true
+}
+
+variable resource_middle_name {
+  description                  = "The middle part of resource names created"
+  default                      = "agents"
 }
 
 variable resource_prefix {
@@ -332,10 +346,6 @@ variable script_wrapper_check {
   default                      = false
 }
 
-variable shutdown_time {
-  default                      = "" # Empty string doesn't triggers a shutdown
-  description                  = "Time the self-hosyted will be stopped daily. Setting this to null or an empty string disables auto shutdown."
-}
 variable ssh_private_key {
   default                      = "~/.ssh/id_rsa"
 }
@@ -358,24 +368,10 @@ variable tenant_id {
   default                      = null
 }
 
-variable tags {
-  description                  = "A map of the tags to use for the resources that are deployed"
-  type                         = map
-
-  default = {
-    shutdown                   = "false"
-  }  
-} 
-
 variable timezone {
   default                      = "W. Europe Standard Time"
 }
 
 variable user_name {
   default                      = "devopsadmin"
-}
-
-
-variable windows_pipeline_agent_name_prefix {
-  default                      = "windows-agent"
 }

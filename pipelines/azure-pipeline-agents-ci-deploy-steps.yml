@@ -1,0 +1,334 @@
+# This pipeline is for CI/CD
+parameters:
+- name: clear
+  displayName: Clear State
+  type: boolean
+  default: false
+- name: deploy
+  displayName: Deploy Agent Infrastructure
+  type: string
+  default: Apply
+  values:
+  - Plan
+  - Apply
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: string
+  default: Always
+  values:
+  - Always
+  - 'If no prior resources exist'
+  - Never 
+  - 'On failure'
+  - 'On success'
+- name: retryCount
+  displayName: Terraform task retry count
+  type: number
+  default: 1
+- name: testReentrance
+  displayName: Test Terraform re-entrance (apply twice)
+  type: boolean
+  default: true
+- name: unpinTerraform
+  displayName: Unpin Terraform version
+  type: boolean
+  default: false
+- name: unpinTerraformProviders
+  displayName: Unpin Terraform provider versions
+  type: boolean
+  default: false
+
+steps:
+  - checkout: self
+    submodules: true
+
+  - ${{ if not(parameters.unpinTerraform) }}:
+    - pwsh: |
+        $terraformVersion = (Get-Content .terraform-version)
+        Write-Host "##vso[task.setvariable variable=version;isOutput=true]${terraformVersion}"
+        Copy-Item backend.tf.sample backend.tf
+      name: terraformConfig
+      displayName: 'Prepare Terraform config (pinned)'
+      workingDirectory: '$(terraformDirectory)'
+  - ${{ if parameters.unpinTerraform }}:
+    - pwsh: |
+        (Get-Content ./provider.tf) -replace "required_version *= `" *(~>|=) +",'required_version = ">= ' | Out-File provider.tf
+        Get-Content ./provider.tf
+        Write-Host "##vso[task.setvariable variable=version;isOutput=true]latest"
+        Copy-Item backend.tf.sample backend.tf
+      name: terraformConfig
+      displayName: 'Prepare Terraform config (unpinned/latest)'
+      workingDirectory: '$(terraformDirectory)'
+
+  - task: TerraformInstaller@0
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: '$(terraformConfig.version)'
+
+  - ${{ if parameters.unpinTerraformProviders }}:
+    # Unpin version e.g. "= 2.56" -> "~> 2.56"
+    - pwsh: |
+        (Get-Content ./provider.tf) -replace " = `" *= +",' = "~> ' | Out-File provider.tf
+        Get-Content ./provider.tf
+        if (Test-Path .terraform.lock.hcl) {
+          Remove-Item .terraform.lock.hcl -Force
+        }
+      displayName: 'Unpin Terraform provider versions'
+      # condition required as '- ${{ if ' template expression is not evaluated when using a strategy
+      condition: and(succeeded(), eq(variables['unpinTerraformProviders'],'true'))
+      workingDirectory: '$(terraformDirectory)'
+
+  - task: AzureCLI@2
+    displayName: 'Terraform init'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+        ./deploy.ps1 -Init
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(scriptDirectory)'
+
+  - ${{ if eq(parameters.clear, true) }}:
+    - task: AzureCLI@2
+      name: clear
+      displayName: 'Clear Terraform state'
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+
+          $terraformState = (terraform state pull | ConvertFrom-Json)
+          if ($terraformState.resources) {
+            Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
+            $terraformState.outputs = New-Object PSObject # Empty output
+            $terraformState.resources = @() # No resources
+            $terraformState.serial++
+            $terraformState | ConvertTo-Json | terraform state push -
+          } else {
+            Write-Host "No resources in Terraform state in workspace ${env:TF_WORKSPACE}..."
+          }
+          terraform state pull 
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(terraformDirectory)'
+
+  - ${{ if not(parameters.clear) }}:
+    - task: AzureCLI@2
+      displayName: 'Restore SSH key pair'
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+          ./get_ssh_key_pair.ps1 -Keyname $(TF_VAR_ssh_private_key) -Force
+          $keyDirectory = (Split-Path $(TF_VAR_ssh_private_key) -Parent)
+          if (Test-Path $keyDirectory) {
+            ls -al $keyDirectory
+          }
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
+
+  - bash: |
+      if [ -f "$(TF_VAR_ssh_private_key)" ]; then
+          echo "$(TF_VAR_ssh_private_key) already exists, skipping key pair generation"
+      else 
+          echo "$(TF_VAR_ssh_private_key) does not exist, generation key pair..."
+          mkdir -p $(dirname $(TF_VAR_ssh_private_key))
+          ssh-keygen -q -m PEM -N '' -f $(TF_VAR_ssh_private_key)
+      fi
+      ls -al $(dirname $(TF_VAR_ssh_private_key))
+    displayName: 'Generate SSH key pair'
+    workingDirectory: '$(terraformDirectory)'
+
+  - publish: $(sshDirectory)
+    displayName: 'Publish SSH key pair'
+    artifact: $(sshArtifactName)
+
+  - task: AzureCLI@2
+    name: terraformVariables
+    displayName: 'Prepare Terraform variables'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+
+        if ($${{ not(parameters.clear) }} -and (!((terraform output resource_suffix 2>&1) -match "Warning"))) {
+          $env:TF_VAR_RESOURCE_SUFFIX = $null
+          $env:TF_VAR_resource_suffix = "$(terraform output -raw resource_suffix 2>$null)"
+        }
+
+        # Re-use service connection
+        Get-ChildItem -Path Env: -Recurse -Include ENDPOINT_DATA_* | Select-Object -First 1 -ExpandProperty Name `
+                                                                   | ForEach-Object { $_.Split("_")[2] }
+                                                                   | Set-Item env:TF_VAR_azdo_service_connection_id
+
+        # Parse alternate strategy variables
+        if ($$(substituteAlternateVariables)) {
+          foreach ($alternateVar in $(Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_TF_VAR_*)) {
+            $primaryTerraformVariableName = $alternateVar.Name.Substring(17).ToLowerInvariant()
+            $primaryVariableName = "TF_VAR_${primaryTerraformVariableName}"
+            $variableValue = $alternateVar.Value
+
+            # Replace primary value with alternate
+            Get-ChildItem -path env: -Recurse -Include $primaryVariableName | Remove-Item
+            Set-Item env:${primaryVariableName} -Value $variableValue
+          } 
+        }
+
+        # List environment variables
+        Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,TF_* | Sort-Object -Property Name
+
+        # Convert uppercased Terraform environment variables to .auto.tfvars file
+        foreach ($tfvar in $(Get-ChildItem -Path Env: -Recurse -Include TF_VAR_*)) {
+          $terraformVariableName = $tfvar.Name.Substring(7).ToLowerInvariant()
+          $terraformVariableValue = $tfVar.Value
+
+          if ($terraformVariableValue -imatch "^\W*(true|false|\[[^\]]*\]|\{[^\}]*\})\W*$") {
+            # Boolean or List, write as-is
+            Write-Output "${terraformVariableName} = ${terraformVariableValue}" | Out-File ci.auto.tfvars -Append -Force
+          } else {
+            Write-Output "${terraformVariableName} = `"${terraformVariableValue}`"" | Out-File ci.auto.tfvars -Append -Force
+          }
+        } 
+        Write-Host "Contents of ci.auto.tfvars:"
+        Get-Content ci.auto.tfvars | Sort-Object        
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(terraformDirectory)'
+
+  - publish: $(terraformDirectory)
+    displayName: 'Publish Terraform workspace'
+    artifact: $(terraformArtifactName)
+
+  - ${{ if eq(parameters.deploy,'Apply') }}:
+    - task: AzureCLI@2
+      displayName: 'Disable Self-Hosted Agent(s)'
+      name: 'agentConfig'
+      condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
+      continueOnError: false
+      inputs:
+        azureSubscription: '$(azdoConnection)'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+            $DebugPreference       = "Continue"
+            $InformationPreference = "Continue"
+            $VerbosePreference     = "Continue"
+          }
+          ./update_agent_status.ps1 -Enabled:$false `
+                                    -AgentPoolName $(TF_VAR_azdo_self_hosted_pool_name) `
+                                    -AgentNamePrefix "$(TF_VAR_azure_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+          ./update_agent_status.ps1 -Enabled:$false `
+                                    -AgentPoolName $(TF_VAR_azdo_self_hosted_pool_name) `
+                                    -AgentNamePrefix "$(TF_VAR_azure_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        workingDirectory: '$(scriptDirectory)'
+
+  - task: AzureCLI@2
+    displayName: 'Terraform ${{ lower(parameters.deploy) }}'
+    name: apply
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+
+        terraform -chdir='$(terraformDirectory)' show -json | ConvertFrom-Json -AsHashtable | Set-Variable tfState 
+        $priorResourcesExist = $tfState.ContainsKey('values')
+        if ($priorResourcesExist) {
+          Write-Warning "Prior resources exist in workspace '${env:TF_WORKSPACE}'"
+          Write-Host "##vso[task.logissue type=warning]Prior resources exist in workspace '${env:TF_WORKSPACE}'"
+        } else {
+          Write-Host "No prior resources exist in workspace '${env:TF_WORKSPACE}'"
+        }
+        Write-Host "##vso[task.setvariable variable=priorResourcesExist;isOutput=true]$($priorResourcesExist.ToString().ToLower())"
+
+        Write-Host ""
+
+        ./deploy.ps1 -${{ parameters.deploy }} -force
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(scriptDirectory)'
+
+  - task: AzureCLI@2
+    displayName: 'Terraform output'
+    name: terraform
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+        ./deploy.ps1 -output
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: '$(scriptDirectory)'
+
+  - ${{ if eq(parameters.deploy,'Apply') }}:
+    - task: AzureCLI@2
+      displayName: 'Enable Self-Hosted Agent(s)'
+      condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
+      inputs:
+        azureSubscription: '$(azdoConnection)'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
+            $DebugPreference       = "Continue"
+            $InformationPreference = "Continue"
+            $VerbosePreference     = "Continue"
+          }
+          ./update_agent_status.ps1 -Enabled:$true `
+                                    -AgentPoolName $(TF_VAR_azdo_linux_pipeline_agent_pool) `
+                                    -AgentNamePrefix "$(TF_VAR_azure_linux_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+          ./update_agent_status.ps1 -Enabled:$true `
+                                    -AgentPoolName $(TF_VAR_azdo_windows_pipeline_agent_pool) `
+                                    -AgentNamePrefix "$(TF_VAR_azure_windows_pipeline_agent_name_prefix)-$(TF_WORKSPACE)-"
+
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        workingDirectory: '$(scriptDirectory)'      
+
+  - ${{ if and(eq(parameters.deploy,'Apply'),parameters.testReentrance) }}:
+    - task: AzureCLI@2
+      displayName: 'Terraform plan & apply (re-entrance test)'
+      retryCountOnTaskFailure: ${{ parameters.retryCount }}
+      inputs:
+        azureSubscription: '$(subscriptionConnection)'
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: |
+          $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
+
+          ./deploy.ps1 -apply -force
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+        failOnStandardError: true
+        workingDirectory: '$(scriptDirectory)'
+        
+  - ${{ if not(eq(parameters.destroy, 'Never')) }}:
+    - pwsh: |
+        Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+      name: provisioningResult
+      displayName: 'Indicate provisioning success'
+      condition: succeeded()

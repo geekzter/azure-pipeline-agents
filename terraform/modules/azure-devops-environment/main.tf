@@ -37,6 +37,7 @@ data azuredevops_environment environment {
 resource azuredevops_environment environment {
   project_id                   = var.create_environment ? var.project_id : null
   name                         = var.name
+  description                  = "Managed by Terraform"
 
   count                        = var.create_environment ? 1 : 0
 }

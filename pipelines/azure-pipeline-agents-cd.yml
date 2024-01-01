@@ -1,0 +1,206 @@
+# This pipeline is for CI/CD
+parameters:
+- name: workspace
+  displayName: Pipeline Environment / Terraform Workspace prefix
+  type: string
+  default: cd
+  values:
+  - cd
+  - cd1
+  - cd2
+  - cd3
+  - depgrp
+  - depgrp1
+  - depgrp2
+  - depgrp3
+  - env
+  - env1
+  - env2
+  - env3
+  - test
+  - test1
+  - test2
+  - test3
+  - vmss
+  - vmss1
+  - vmss2
+  - vmss3
+- name: clear
+  displayName: Clear State
+  type: boolean
+  default: false
+- name: test
+  displayName: Test Pools
+  type: boolean
+  default: false
+- name: deploy
+  displayName: Deploy Agent Infrastructure
+  type: string
+  default: 'Apply'
+  values:
+  - 'Plan'
+  - 'Apply'
+- name: destroy
+  displayName: Destroy Infrastructure
+  type: string
+  default: 'If no prior resources exist'
+  values:
+  - Always
+  - 'If no prior resources exist'
+  - Never 
+  - 'On failure'
+  - 'On success'
+- name: retryCount
+  displayName: Terraform task retry count
+  type: number
+  default: 1
+
+name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.deploy) }}-${{ parameters.workspace }}-$(Build.BuildId)
+
+trigger: none
+
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - '*'
+  drafts: false
+  paths:
+    exclude:
+    - '.devcontainer/**'  
+    - 'visuals/**'  
+    - '*.md'  
+
+variables:
+- group: 'pipeline-agents-common'
+- group: 'pipeline-agents-cd-${{ parameters.workspace }}'
+- name: 'resourceGroup' 
+  value: 'azure-pipelines-agents-$(TF_WORKSPACE)-$(TF_VAR_resource_suffix)'
+- name: 'substituteAlternateVariables'
+  value: 'false'
+- name: 'terraformArtifactPrefix'
+  value: 'terraform'
+- name: 'TF_VAR_resource_suffix'
+  value: '$(Build.BuildId)'
+- name: 'TF_WORKSPACE'
+  value: '${{ parameters.workspace }}'
+- name: 'unpinTerraformProviders'
+  value: 'false'
+- template: azure-pipeline-agents-ci-variables.yml
+
+jobs:
+- job: provision
+  displayName: '${{ parameters.deploy }}'
+  timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+  pool:
+    name: '$(pool)'
+    vmImage: $(vmImage)
+
+  workspace:
+    clean: all
+
+  steps:
+  - template: azure-pipeline-agents-ci-deploy-steps.yml
+    parameters:
+      clear: ${{ parameters.clear }}
+      deploy: ${{ parameters.deploy }}
+      destroy: ${{ parameters.destroy }}
+      retryCount: ${{ parameters.retryCount }}
+      testReentrance: false
+      unpinTerraform: false
+      unpinTerraformProviders: false
+
+- ${{ if parameters.test }}:
+  - job: test
+    condition: succeeded()
+    continueOnError: $[ eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}') ]
+    dependsOn: 
+      - provision
+    displayName: 'Test pool'
+
+    timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+    variables:
+      strategy: $[ dependencies.provision.outputs['terraform.azdo_pools_json'] ]
+
+    pool:
+      name: '$(pool)'
+      demands:
+      - agent.os -equals $(os)
+
+    strategy:
+      matrix: $[ variables['strategy'] ]
+
+    steps:
+    - pwsh: |
+        Write-Host "Hello Agent"
+        Write-Host "##vso[task.setvariable variable=result;isOutput=true]success"
+      name: provisioningResult
+      displayName: 'Indicate deployment success'
+      condition: succeeded()
+
+- ${{ if ne(parameters.destroy, 'Never') }}:
+  - job: destroy
+    dependsOn: 
+      - provision
+      - ${{ if parameters.test }}:
+        - test
+    ${{ if ne(variables['Build.Reason'],'Manual') }}:
+      displayName: 'Destroy infrastructure (always on pr/schedule)'
+      condition: succeededOrFailed()
+    ${{ elseif eq(parameters.destroy, 'Always') }}:
+      displayName: 'Destroy infrastructure'
+      condition: succeededOrFailed()
+    ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
+      displayName: 'Destroy infrastructure (${{ lower(parameters.destroy) }})'
+      condition: and(succeeded(),eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false'))
+    ${{ elseif eq(parameters.destroy, 'On failure') }}:
+      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+      condition: failed()
+    ${{ elseif eq(parameters.destroy, 'On success') }}:
+      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+      condition: succeeded()
+      # condition: or(succeeded(),eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}'))
+    timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
+
+    pool:
+      name: '$(pool)'
+      vmImage: $(vmImage)
+
+    variables:
+      terraformVersion: $[ coalesce(dependencies.provision.outputs['terraformConfig.version'],'latest') ]
+      LINUX_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_linux_scale_set_pool_name'],variables['TF_VAR_azdo_linux_scale_set_pool_name']) ]
+      WINDOWS_SCALE_SET_POOL_NAME: $[ coalesce(dependencies.provision.outputs['terraform.azdo_windows_scale_set_pool_name'],variables['TF_VAR_azdo_windows_scale_set_pool_name']) ]
+      SELF_HOSTED_POOL_NAME: $[ dependencies.provision.outputs['terraform.azdo_self_hosted_pool_name'] ]
+
+    steps:
+    - checkout: self
+      submodules: true
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download initialized Terraform directory'
+      inputs:
+        artifact: $(terraformArtifactName)
+        path: $(terraformDirectory)
+
+    - bash: |
+        echo Marking Terraform provider binaries as executable...
+        find . | xargs chmod +x
+      displayName: 'Make Terraform providers executable'
+      workingDirectory: $(terraformDirectory)/.terraform/providers
+
+    - task: TerraformInstaller@0
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: '$(terraformVersion)'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download initialized SSH directory'
+      inputs:
+        artifact: $(sshArtifactName)
+        path: $(sshDirectory)
+
+    - template: azure-pipeline-agents-ci-destroy-steps.yml
+      parameters:
+        destroy: Always # Overridden by job-level condition
+        retryCount: ${{ parameters.retryCount }}

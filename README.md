@@ -38,7 +38,7 @@ Tools used are:
 <img src="visuals/diagram.png" width="800">
 </p>
 
-This repo will provision an Azure Virtual Machine Scale Set in a Virtual Network. It will provision an egress device (Firewall or NAT Gateway) and remote access (Bastion). A choice can be made between a NAT Gateway (optimize cost) or Azure Firewall (optimize control) depending on the `deploy_firewall` Terraform variable. This also impacts the extend to which resources are connected via Private Endpoints.
+This repo will provision an Azure Virtual Machine Scale Set in a Virtual Network. It will provision an egress device (Firewall or NAT Gateway) and remote access (Bastion). A choice can be made between a NAT Gateway (optimize cost) or Azure Firewall (optimize control) depending on the `deploy_azure_firewall` Terraform variable. This also impacts the extend to which resources are connected via Private Endpoints.
 
 To enable Virtual Network integrated image builds with [build-image-isolated.yml](pipelines/build-image-isolated.yml), a separate Virtual Network (and resource group, optionally in a different subscription) to be used by Packer is created. For the image build VM's themselves yet another resource group is created. Policy is assigned to this resource group to prevent image build time VM extension installation which would render the image unusable (we want to install extensions at deploy time, not build time).
 
@@ -112,7 +112,7 @@ Set Terraform variable `deploy_self_hosted` to `true` to provision self-hosted a
 ## Scale Set Agents
 [Scale Set Agents](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/scale-set-agents?view=azure-devops) leverage Azure Virtual Machine Scale Sets. The lifecycle of individual agents is managed by Azure DevOps, therefore I recommend Scale Set Agents over Self-hosted agents. 
 
-Set Terraform variable `deploy_scale_set` to `true` to provision scale set agents. 
+Set Terraform variable `deploy_azure_scale_set` to `true` to provision scale set agents. 
 
 The software in the scale set (I use Ubuntu only), is installed using [cloud-init](cloudinit/cloud-config-userdata.yaml). 
 
@@ -122,19 +122,19 @@ Note this also sets up some environment variables on the agent e.g. `PIPELINE_DE
 Features toggles are declared in [`variables.tf`](./terraform/variables.tf) and can be overridden by creating a `.auto.tfvars` file (see [config.auto.tfvars.sample](terraform/config.auto.tfvars.sample)), or environemt variables e.g. `TF_VAR_deploy_self_hosted="true"`.
 |Terraform variable|Feature|
 |---|---|
-|`configure_cidr_allow_rules`|Configure allow rules for IP ranges documented [here](https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions). When enabled traffic allowed by this rule will not have FQDN's shown in the logs.|
-|`configure_crl_oscp_rules`|Allow traffic to [TLS recommended locations](https://docs.microsoft.com/en-us/azure/security/fundamentals/tls-certificate-changes#will-this-change-affect-me). This is plain HTTP (port 80) traffic used by Certificate Revocation List (CRL) download and/or Online Certificate Status Protocol (OCSP).|
-|`configure_wildcard_allow_rules`|Configure generic wildcard FQDN rules e.g. *.blob.core.windows.net.|
-|`deploy_bastion`|Deploy [managed bastion host](https://docs.microsoft.com/en-us/azure/bastion/).|
-|`deploy_files_share`|Deploy [SMB files share](https://docs.microsoft.com/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal), mount it on agents and configure Pipeline Agent diagnostics (_diag directory) to use it.|
-|`deploy_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it. Setting this value to `true` will also create private endpoints for storage used, Azure Monitor, etc.|
-|`deploy_non_essential_vm_extensions`|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |
-|`deploy_scale_set`|Deploy Scale Set agents.|
-|`deploy_self_hosted_vms`|Deploy Self-Hosted agent VMs.|
-|`deploy_self_hosted_vm_agents`|Deploy Self-Hosted agent VM extensions.|
+|`configure_azure_cidr_allow_rules`|Configure allow rules for IP ranges documented [here](https://docs.microsoft.com/en-us/azure/devops/organizations/security/allow-list-ip-url?view=azure-devops&tabs=IP-V4#ip-addresses-and-range-restrictions). When enabled traffic allowed by this rule will not have FQDN's shown in the logs.|
+|`configure_azure_crl_oscp_rules`|Allow traffic to [TLS recommended locations](https://docs.microsoft.com/en-us/azure/security/fundamentals/tls-certificate-changes#will-this-change-affect-me). This is plain HTTP (port 80) traffic used by Certificate Revocation List (CRL) download and/or Online Certificate Status Protocol (OCSP).|
+|`configure_azure_wildcard_allow_rules`|Configure generic wildcard FQDN rules e.g. *.blob.core.windows.net.|
+|`deploy_azure_bastion`|Deploy [managed bastion host](https://docs.microsoft.com/en-us/azure/bastion/).|
+|`deploy_azure_files_share`|Deploy [SMB files share](https://docs.microsoft.com/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal), mount it on agents and configure Pipeline Agent diagnostics (_diag directory) to use it.|
+|`deploy_azure_firewall`|Instead of [NAT Gateway](https://docs.microsoft.com/en-us/azure/virtual-network/nat-gateway/nat-overview), uses [Azure Firewall](https://docs.microsoft.com/en-us/azure/firewall/overview) for network egress traffic. This allows you to control outbound traffic e.g. by FQDN, as well as monitor it. Setting this value to `true` will also create private endpoints for storage used, Azure Monitor, etc.|
+|`deploy_non_essential_azure_vm_extensions`|Deploy monitoring extensions. These extensions generate their own network traffic. This variable allows you to turn them off. |
+|`deploy_azure_scale_set`|Deploy Scale Set agents.|
+|`deploy_azure_self_hosted_vms`|Deploy Self-Hosted agent VMs.|
+|`deploy_azdo_self_hosted_vm_agents`|Deploy Self-Hosted agent VM extensions.|
 |`linux_tools`|Uses [cloud-init](https://cloudinit.readthedocs.io/) to instal tools (e.g. AzCopy, Packer, PowerShell, PowerShell Azure modules). Should not be used when using a pre-baked image.|
 |`azure_linux_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Ubuntu2204/versions/latest|
-|`log_analytics_workspace_id`|Providing a value of an existing Log Analytics workspace allows you to retain logs after infrastructure is destroyed.|
+|`azure_log_analytics_workspace_id`|Providing a value of an existing Log Analytics workspace allows you to retain logs after infrastructure is destroyed.|
 |`azure_windows_os_image_id`|Use pre-baked image by specifying the resource id of a VM image e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared/providers/Microsoft.Compute/galleries/SharedImages/images/Windows2022/versions/latest|
 
 ## Pipeline use

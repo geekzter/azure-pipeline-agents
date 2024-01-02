@@ -111,9 +111,8 @@ resource azurerm_subnet private_endpoint_subnet {
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,5)]
-  private_endpoint_network_policies_enabled = true
+  private_endpoint_network_policies_enabled = false
 
-  # FIX: Resource is in Updating state and the last operation that updated/is updating the resource is PutSubnetOperation
   provisioner local-exec {
     command                    = "az resource wait --created --ids ${self.id}"
   }
@@ -165,11 +164,11 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
   private_dns_zone_group {
     name                       = "azure-monitor-zones"
     private_dns_zone_ids       = [
-      azurerm_private_dns_zone.monitor.0.id,
-      azurerm_private_dns_zone.oms.0.id,
-      azurerm_private_dns_zone.ods.0.id,
       azurerm_private_dns_zone.agentsvc.0.id,
       azurerm_private_dns_zone.blob.id,
+      azurerm_private_dns_zone.monitor.0.id,
+      azurerm_private_dns_zone.ods.0.id,
+      azurerm_private_dns_zone.oms.0.id,
     ]
   }
   
@@ -187,11 +186,11 @@ resource azurerm_private_endpoint diag_blob_storage_endpoint {
   tags                         = var.tags
   count                        = var.deploy_firewall ? 1 : 0
   depends_on                   = [
-    azurerm_private_dns_zone_virtual_network_link.monitor,
-    azurerm_private_dns_zone_virtual_network_link.oms,
-    azurerm_private_dns_zone_virtual_network_link.ods,
     azurerm_private_dns_zone_virtual_network_link.agentsvc,
     azurerm_private_dns_zone_virtual_network_link.blob,
+    azurerm_private_dns_zone_virtual_network_link.monitor,
+    azurerm_private_dns_zone_virtual_network_link.ods,
+    azurerm_private_dns_zone_virtual_network_link.oms,
     azurerm_subnet_network_security_group_association.private_endpoint_subnet
   ]
 }

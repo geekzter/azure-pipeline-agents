@@ -105,7 +105,7 @@ jobs:
             terraformArtifactName = 'terraformPrimary$(System.PlanId)'
             terraformArtifactPrefix = 'terraformPrimary'
             substituteAlternateVariables = $false
-            TF_VAR_deploy_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+            TF_VAR_deploy_azure_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
             TF_VAR_resource_suffix = '$(Build.BuildId)'
             TF_WORKSPACE = '${{ parameters.workspace }}'
             unpinTerraformProviders = $${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
@@ -120,7 +120,7 @@ jobs:
             terraformArtifactName = 'terraformPrimary$(System.PlanId)'
             terraformArtifactPrefix = 'terraformPrimary'
             substituteAlternateVariables = $false
-            TF_VAR_deploy_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
+            TF_VAR_deploy_azure_firewall = $${{ lower(eq(parameters.egressDevice, 'Firewall')) }}
             TF_VAR_resource_suffix = '$(Build.BuildId)'
             TF_WORKSPACE = '${{ parameters.workspace }}a'
             unpinTerraformProviders = $${{ lower(eq(parameters.unpinTerraformProviders, 'Yes')) }}
@@ -134,7 +134,7 @@ jobs:
             terraformArtifactName = 'terraformAlternate$(System.PlanId)'
             terraformArtifactPrefix = 'terraformAlternate'
             substituteAlternateVariables = $true
-            TF_VAR_deploy_firewall = $${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
+            TF_VAR_deploy_azure_firewall = $${{ lower(or(eq(parameters.egressDevice, 'Firewall'),eq(parameters.egressDevice, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}
             TF_VAR_resource_suffix = '$(Build.BuildId)'
             TF_WORKSPACE = '${{ parameters.workspace }}b'
             unpinTerraformProviders = $${{ lower(or(eq(parameters.unpinTerraformProviders, 'Yes'),eq(parameters.unpinTerraformProviders, 'Strategy'),ne(variables['Build.Reason'], 'Manual'))) }}

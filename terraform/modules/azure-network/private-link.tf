@@ -127,6 +127,10 @@ resource azurerm_subnet_network_security_group_association private_endpoint_subn
   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
   network_security_group_id    = azurerm_network_security_group.default.id
   
+  provisioner local-exec {
+    command                    = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+
   lifecycle {
     ignore_changes             = [
       network_security_group_id # Ignore policy changes

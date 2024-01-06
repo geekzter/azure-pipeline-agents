@@ -28,6 +28,10 @@ parameters:
   displayName: Number of image versions to keep
   type: number
   default: 2
+- name: imageRef
+  displayName: Image ref
+  type: string
+  default: 'refs/heads/main'
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -37,6 +41,7 @@ resources:
     type: github
     endpoint: github.com # Service Connection name
     name: actions/runner-images
+    ref: ${{ parameters.imageRef }}
     # trigger:
     #   branches:
     #     include:

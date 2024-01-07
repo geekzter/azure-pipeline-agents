@@ -2,10 +2,14 @@
 # This pipeline will create a storage account to temporarily store a VHD
 
 parameters:
+- name: imageRepoRef
+  displayName: Image ref
+  type: string
+  default: 'refs/heads/main'
 - name: image
   displayName: Image
   type: string
-  default: Ubuntu
+  default: Latest
   values:
   - All
   - Latest
@@ -27,11 +31,7 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 2
-- name: imageRef
-  displayName: Image ref
-  type: string
-  default: 'refs/heads/main'
+  default: 10
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -41,15 +41,7 @@ resources:
     type: github
     endpoint: github.com # Service Connection name
     name: actions/runner-images
-    ref: ${{ parameters.imageRef }}
-    # trigger:
-    #   branches:
-    #     include:
-    #     - main
-    #   paths:
-    #     include:
-    #     - 'images/linux/**'
-    #     - 'images/win/**'
+    ref: ${{ parameters.imageRepoRef }}
 
 trigger: none
 
@@ -78,6 +70,8 @@ variables:
   # PIPELINE_DEMO_PACKER_LOCATION
   # PIPELINE_DEMO_COMPUTE_GALLERY_NAME
   # PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
+  - name: imageRepoRef
+    value: ${{ parameters.imageRepoRef }}
 
 jobs:
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:

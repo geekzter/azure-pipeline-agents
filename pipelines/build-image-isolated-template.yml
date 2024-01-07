@@ -243,12 +243,13 @@ jobs:
           application = "${env:PIPELINE_DEMO_APPLICATION_NAME}"
           build = "$(Build.BuildId)"
           commit = "$(git rev-parse HEAD)"
-          qualifiedVersion = "$(githubRelease.qualifiedVersion)"
           image = "$(imageName)"
+          imageRepoRef = "$(imageRepoRef)"
           owner = "${env:PIPELINE_DEMO_APPLICATION_OWNER}"
           pipeline = "$(Build.DefinitionName)"
+          qualifiedVersion = "$(githubRelease.qualifiedVersion)"
           shutdown = "false"
-          versionlabel = "$(githubRelease.version)"
+          versionLabel = "$(githubRelease.version)"
         }
         if ($packerTemplateFileName -match "json") {
           # This only works for JSON
@@ -422,10 +423,10 @@ jobs:
           "provisioner=azure-cli",`
           "versionlabel=$(githubRelease.version)"`
         )
-        Write-Host "`nTags that will be applied to image version:"
-        $imageDefinitionVersionTags | Format-Table
 
         if (-not (az sig image-definition list --query "[?name=='$(imageDefinitionName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
+          Write-Host "`nTags that will be applied to image definition:"
+          $imageDefinitionVersionTags | Format-Table
           Write-Host "`nCreating image definition $(imageDefinitionName)..."
           az sig image-definition create --gallery-image-definition $(imageDefinitionName) `
                                          --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -529,11 +530,12 @@ jobs:
           $imageDefinitionVersionTags = @(`
             "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
             "build=$(Build.BuildId)",`
-            "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+            "buildLink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+            "imageRepoRef=$(imageRepoRef)",`
             "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
             "pipeline=$(Build.DefinitionName)",`
             "provisioner=azure-cli",`
-            "versionlabel=$(githubRelease.version)"`
+            "versionLabel=$(githubRelease.version)"`
           )
           az tag create --resource-id $imageVersion.id --tags $imageDefinitionVersionTags
 

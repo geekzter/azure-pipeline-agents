@@ -268,16 +268,16 @@ jobs:
         $imageDefinitionVersionTags = @(`
           "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
           "build=$(Build.BuildId)",`
-          "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+          "buildLink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
           "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
           "pipeline=$(Build.DefinitionName)",`
           "provisioner=azure-cli",`
-          "versionlabel=$(githubRelease.fullyQualifiedVersion)"`
+          "versionLabel=$(githubRelease.fullyQualifiedVersion)"`
         )
-        Write-Host "`nTags that will be applied to image version:"
-        $imageDefinitionVersionTags | Format-Table
 
         if (-not (az sig image-definition list --query "[?name=='$(imageName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
+          Write-Host "`nTags that will be applied to image definition:"
+          $imageDefinitionVersionTags | Format-Table
           Write-Host "`nCreating image definition $(imageName)..."
           az sig image-definition create --gallery-image-definition $(imageName) `
                                          --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -292,6 +292,9 @@ jobs:
           az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
         }
 
+        Write-Host "`nTags that will be applied to image version:"
+        $imageDefinitionVersionTags.Add("imageRepoRef=$(imageRepoRef)")
+        $imageDefinitionVersionTags | Format-Table
         Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
         az sig image-version create --exclude-from-latest $(excludeFromLatest) `
                                     --gallery-image-definition $(imageName) `
@@ -302,9 +305,9 @@ jobs:
                                     --managed-image $(managedImage.imageResourceId) `
                                     --query id -o tsv | Set-Variable imageVersionId
 
-          # BUG: https://github.com/Azure/azure-cli/issues/23194
-          # FIX: Set tag separately
-          # az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
+        # BUG: https://github.com/Azure/azure-cli/issues/23194
+        # FIX: Set tag separately
+        az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
       failOnStandardError: true
 
   - task: AzureCLI@2

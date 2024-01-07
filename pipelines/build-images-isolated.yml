@@ -2,6 +2,10 @@
 # This pipeline will create a storage account to temporarily store a VHD
 
 parameters:
+- name: imageRepoRef
+  displayName: Image ref
+  type: string
+  default: 'refs/heads/main'
 - name: image
   displayName: Image
   type: string
@@ -43,10 +47,6 @@ parameters:
   displayName: Add minor version if major version exists
   type: boolean
   default: false
-- name: imageRef
-  displayName: Image ref
-  type: string
-  default: 'refs/heads/main'
 - name: waitForReplication
   displayName: Wait for image replication to finish
   type: boolean
@@ -60,15 +60,7 @@ resources:
     type: github
     endpoint: github.com # Service Connection name
     name: actions/runner-images
-    ref: ${{ parameters.imageRef }}
-    # trigger:
-    #   branches:
-    #     include:
-    #     - main
-    #   paths:
-    #     include:
-    #     - 'images/linux/**'
-    #     - 'images/win/**'
+    ref: ${{ parameters.imageRepoRef }}
 
 trigger: none
 
@@ -93,6 +85,8 @@ schedules:
 
 variables:
   - group: 'build-images-isolated'
+  - name: imageRepoRef
+    value: ${{ parameters.imageRepoRef }}
 
 jobs:
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:

@@ -18,6 +18,9 @@ parameters:
 # https://api.github.com/repos/actions/runner-images/releases
   displayName: Image Release Name
   type: string
+- name: includePreRelease
+  displayName: Include pre-releases
+  type: boolean
 - name: imageResourcePrefix
   displayName: Image Resource Prefix
   type: string
@@ -179,7 +182,8 @@ jobs:
         $(scriptDirectory)/configure_pwsh_trace.ps1
       
         (Invoke-RestMethod -Uri https://api.github.com/repos/actions/runner-images/releases) | Where-Object {$_.tag_name -match "$(imageReleaseName)" -and !$_.draft} `
-                                                                                             | Sort-Object -Property @{Expression = "created_at"; Descending = $true}, @{Expression = "prerelease"; Ascending = $true}
+                                                                                             | Where-Object {${{ parameters.includePreRelease }} -or !$_.prerelease} `
+                                                                                             | Sort-Object -Property @{Expression = "created_at"; Descending = $true} `
                                                                                              | Select-Object -First 1 `
                                                                                              | Set-Variable release
         if (!$release) {

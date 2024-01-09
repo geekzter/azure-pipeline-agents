@@ -20,6 +20,10 @@ parameters:
   - Windows
   - Windows2019
   - Windows2022
+- name: includePreRelease
+  displayName: Include pre-releases
+  type: boolean
+  default: false
 - name: hyperVGeneration
   displayName: VM generation
   type: string
@@ -98,6 +102,7 @@ jobs:
       hyperVGeneration: ${{ parameters.hyperVGeneration }}
       imageReleaseName: ubuntu20
       imageResourcePrefix: 'packer$(Build.BuildId)u20'
+      includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/ubuntu/templates'
       packerTemplateFile: 'ubuntu-20.04.pkr.hcl'
@@ -114,6 +119,7 @@ jobs:
       image: Ubuntu2204
       imageReleaseName: ubuntu22
       imageResourcePrefix: 'packer$(Build.BuildId)u22'
+      includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/ubuntu/templates'
       packerTemplateFile: 'ubuntu-22.04.pkr.hcl'
@@ -130,6 +136,7 @@ jobs:
       image: Windows2019
       imageReleaseName: win19
       imageResourcePrefix: 'packer$(Build.BuildId)w19'
+      includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/windows/templates'
       packerTemplateFile: 'windows-2019.pkr.hcl'
@@ -146,6 +153,7 @@ jobs:
       image: Windows2022
       imageReleaseName: win22
       imageResourcePrefix: 'packer$(Build.BuildId)w22'
+      includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/windows/templates'
       packerTemplateFile: 'windows-2022.pkr.hcl'

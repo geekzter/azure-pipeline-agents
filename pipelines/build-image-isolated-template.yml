@@ -221,6 +221,7 @@ jobs:
         $createImage = ($addMinorImageVersion -or !$imageVersion)
         if ($createImage) {
           Write-Host "##vso[task.setvariable variable=commit;isoutput=true]$($release.target_commitish)"
+          Write-Host "##vso[task.setvariable variable=prerelease;isoutput=true]$($release.prerelease)"
           Write-Host "##vso[task.setvariable variable=qualifiedVersion;isoutput=true]$threePartVersionString"
           Write-Host "##vso[task.setvariable variable=version;isoutput=true]$releaseVersion"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
@@ -538,6 +539,7 @@ jobs:
             "imageRepoRef=$(imageRepoRef)",`
             "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
             "pipeline=$(Build.DefinitionName)",`
+            "prerelease=$(githubRelease.prerelease)",`
             "provisioner=azure-cli",`
             "versionLabel=$(githubRelease.version)"`
           )

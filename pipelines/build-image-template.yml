@@ -209,7 +209,7 @@ jobs:
         $(scriptDirectory)/configure_pwsh_trace.ps1
       
         # Patch GenerateResourcesAndImage.ps1 to decrease build time
-        (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
+        # (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
 
         # Required for GenerateResourcesAndImage
         $PSNativeCommandArgumentPassing = 'Standard'

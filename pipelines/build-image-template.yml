@@ -286,7 +286,7 @@ jobs:
                                          
           # BUG: https://github.com/Azure/azure-cli/issues/23194
           # FIX: Set tag separately
-          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
+          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags.ToArray()
         }
 
         Write-Host "`nTags that will be applied to image version:"
@@ -304,7 +304,7 @@ jobs:
 
         # BUG: https://github.com/Azure/azure-cli/issues/23194
         # FIX: Set tag separately
-        az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
+        az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags.ToArray()
       failOnStandardError: true
 
   - task: AzureCLI@2

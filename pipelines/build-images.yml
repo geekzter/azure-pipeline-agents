@@ -32,6 +32,10 @@ parameters:
   displayName: Number of image versions to keep
   type: number
   default: 10
+- name: addMinorImageVersion
+  displayName: Create minor version of major version exists
+  type: boolean
+  default: false
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -77,6 +81,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Ubuntu2004
@@ -87,6 +92,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Ubuntu2204
@@ -97,6 +103,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Windows2019
@@ -107,6 +114,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Windows2022

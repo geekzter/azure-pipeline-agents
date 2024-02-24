@@ -83,6 +83,8 @@ jobs:
     value: $[replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))]
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
+  - name: 'PACKER_CONFIG_DIR' 
+    value: '~/.config/packer'
   - name: 'scriptDirectory'
     value: '$(agentRepository)/scripts'
 

@@ -38,8 +38,10 @@ jobs:
 - job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'
   pool:
-    name: 'Azure Pipelines'
-    vmImage: ubuntu-latest
+    name: '$(pool)'
+    vmImage: $(vmImage)
+    # name: 'Azure Pipelines'
+    # vmImage: ubuntu-latest
   timeoutInMinutes: 360
 
   variables:

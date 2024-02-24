@@ -69,6 +69,7 @@ schedules:
     - master
 
 variables:
+  - group: 'build-images-isolated'
   - group: 'build-images'
   # Variable group should set these variables:
   # PIPELINE_DEMO_PACKER_LOCATION

@@ -244,7 +244,7 @@ jobs:
                                   -AzureClientId $(servicePrincipal.clientId) `
                                   -AzureClientSecret "$(servicePrincipal.clientSecret)" `
                                   -AzureTenantId $(servicePrincipal.tenantId) `
-                                  -RestrictToAgentIpAddress
+                                  -RestrictToAgentIpAddress:([string]::IsNullOrEmpty($env:VNET_NAME))
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true

@@ -42,7 +42,7 @@ jobs:
     vmImage: $(vmImage)
     # name: 'Azure Pipelines'
     # vmImage: ubuntu-latest
-  timeoutInMinutes: 360
+  timeoutInMinutes: 1430
 
   variables:
   - name: 'addMinorImageVersion'

@@ -190,7 +190,7 @@ jobs:
 
         $createImage = ($addMinorImageVersion -or !$imageVersion)
         if ($createImage) {
-          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$threePartVersionString"
+          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]${qualifiedReleaseVersionString}"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
         } else {
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"

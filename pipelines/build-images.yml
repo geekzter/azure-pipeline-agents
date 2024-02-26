@@ -33,7 +33,7 @@ parameters:
   type: number
   default: 10
 - name: addMinorImageVersion
-  displayName: Create minor version of major version exists
+  displayName: Create minor version if major version exists
   type: boolean
   default: false
 

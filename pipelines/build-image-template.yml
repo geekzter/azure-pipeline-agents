@@ -302,11 +302,8 @@ jobs:
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
                                          --os-type $(imageOSType) --os-state Generalized `
-                                         --query id -o tsv | Set-Variable imageDefinitionId
-                                         
-          # BUG: https://github.com/Azure/azure-cli/issues/23194
-          # FIX: Set tag separately
-          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags.ToArray()
+                                         --query id -o tsv `
+                                         --tags $imageDefinitionVersionTags.ToArray()
         }
 
         Write-Host "`nTags that will be applied to image version:"
@@ -320,11 +317,8 @@ jobs:
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --managed-image $(managedImage.imageResourceId) `
-                                    --query id -o tsv | Set-Variable imageVersionId
-
-        # BUG: https://github.com/Azure/azure-cli/issues/23194
-        # FIX: Set tag separately
-        az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags.ToArray()
+                                    --query id -o tsv `
+                                    --tags $imageDefinitionVersionTags.ToArray()
       failOnStandardError: true
 
   - task: AzureCLI@2

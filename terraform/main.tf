@@ -76,7 +76,7 @@ locals {
       SYSTEM_DEBUG                                              = tostring(var.azdo_pipeline_agent_diagnostics)
 
       # https://github.com/actions/runner-images/blob/main/docs/create-image-and-azure-resources.md#network-security
-      VNET_RESOURCE_GROUP                                       = var.create_azure_packer_infrastructure ? split("/",module.packer.0.build_resource_group_id)[4] : ""
+      VNET_RESOURCE_GROUP                                       = var.create_azure_packer_infrastructure ? split("/",module.packer.0.virtual_network_id)[4] : ""
       VNET_NAME                                                 = var.create_azure_packer_infrastructure ? split("/",module.packer.0.virtual_network_id)[8] : ""
       VNET_SUBNET                                               = var.create_azure_packer_infrastructure ? module.packer.0.packer_subnet_name : ""
 

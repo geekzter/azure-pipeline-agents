@@ -105,6 +105,10 @@ jobs:
           $fail = $true
         }
       }
+
+      # List environment variables
+      Get-ChildItem -Path Env: -Recurse -Include ALTERNATE_*,ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,VNET_* | Sort-Object -Property Name
+
       if ($fail) {
         Write-Error "Some variables have not been set, set them in variable group 'build-images'"
       }
@@ -226,10 +230,6 @@ jobs:
       
         # Required for GenerateResourcesAndImage
         $PSNativeCommandArgumentPassing = 'Standard'
-
-        $env:VNET_RESOURCE_GROUP = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
-        $env:VNET_NAME           = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME
-        $env:VNET_SUBNET         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
 
         # Build
         Import-Module ./GenerateResourcesAndImage.ps1

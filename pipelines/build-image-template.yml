@@ -310,6 +310,8 @@ jobs:
         $imageDefinitionVersionTags.Add("imageRepoRef=$(imageRepoRef)") | Out-Null
         $imageDefinitionVersionTags | Format-Table
         Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
+        Write-Host "az sig image-version create --exclude-from-latest $(excludeFromLatest) --gallery-image-definition $(imageName) --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --gallery-image-version $(githubRelease.fullyQualifiedVersion) --no-wait --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME --managed-image $(managedImage.imageResourceId) --query id -o tsv --tags $($imageDefinitionVersionTags.ToArray())"
+
         az sig image-version create --exclude-from-latest $(excludeFromLatest) `
                                     --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `

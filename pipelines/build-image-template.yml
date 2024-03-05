@@ -306,16 +306,29 @@ jobs:
                                          --tags $imageDefinitionVersionTags.ToArray()
         }
 
+        # Check whether version exists. If so, increment build number.
+        $fullyQualifiedVersionString = "$(githubRelease.fullyQualifiedVersion)"
+        $fullyQualifiedVersion = [version]$fullyQualifiedVersionString
+        az sig image-version list --gallery-image-definition $(imageName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "max_by([?starts_with(name,'$($fullyQualifiedVersion.ToString(2))')],&name).name" `
+                                  -o tsv | Set-Variable existingVersionString
+        if ($existingVersionString) {
+          $existingVersion = [version]$existingVersionString
+          $fullyQualifiedVersionString = ("{0}.{1}" -f $existingVersion.ToString(2), ($existingVersion.Build+1))
+        }
+
         Write-Host "`nTags that will be applied to image version:"
         $imageDefinitionVersionTags.Add("imageRepoRef=$(imageRepoRef)") | Out-Null
         $imageDefinitionVersionTags | Format-Table
-        Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
-        Write-Host "az sig image-version create --exclude-from-latest $(excludeFromLatest) --gallery-image-definition $(imageName) --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --gallery-image-version $(githubRelease.fullyQualifiedVersion) --no-wait --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME --managed-image $(managedImage.imageResourceId) --query id -o tsv --tags $($imageDefinitionVersionTags.ToArray())"
+        Write-Host "`nCreating image version $(imageName) ${fullyQualifiedVersionString}..."
+        Write-Host "az sig image-version create --exclude-from-latest $(excludeFromLatest) --gallery-image-definition $(imageName) --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --gallery-image-version $fullyQualifiedVersionString --no-wait --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME --managed-image $(managedImage.imageResourceId) --query id -o tsv --tags $($imageDefinitionVersionTags.ToArray())"
 
         az sig image-version create --exclude-from-latest $(excludeFromLatest) `
                                     --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                                    --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
+                                    --gallery-image-version $fullyQualifiedVersionString `
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --managed-image $(managedImage.imageResourceId) `

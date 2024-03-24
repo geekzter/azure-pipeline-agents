@@ -220,11 +220,11 @@ steps:
       condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
       continueOnError: false
       inputs:
-        azureSubscription: '$(azdoConnection)'
+        azureSubscription: '$(subscriptionConnection)'
         scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          Write-Host "Using service connection '$(azdoConnection)'"
+          Write-Host "Using service connection '$(subscriptionConnection)'"
 
           if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
             $DebugPreference       = "Continue"
@@ -293,7 +293,7 @@ steps:
       displayName: 'Enable Self-Hosted Agent(s)'
       condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),succeeded())
       inputs:
-        azureSubscription: '$(azdoConnection)'
+        azureSubscription: '$(subscriptionConnection)'
         scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         inlineScript: |

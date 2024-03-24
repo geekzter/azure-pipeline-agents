@@ -200,7 +200,8 @@ function Login-AzDO (
         az account show -o json | ConvertFrom-Json | Set-Variable account
         if ($account.user.type -eq 'user') {
             # Assume Terraform azuredevops module will use Entra ID AuthN directly for non-users
-            $env:AZDO_PERSONAL_ACCESS_TOKEN = $aadToken # Terraform azuredevops provider
+            $env:AZDO_PERSONAL_ACCESS_TOKEN ??= $aadToken # Terraform azuredevops provider
+            $env:TF_VAR_devops_pat ??= $aadToken # Terraform azuredevops provider
         }
         $env:AZURE_DEVOPS_EXT_PAT = $aadToken # Azure DevOps CLI azuredevops extension
     } else {

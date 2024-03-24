@@ -19,7 +19,6 @@ terraform {
 # Azure DevOps provider
 provider azuredevops {
   org_service_url              = local.azdo_org_url
-  # personal_access_token        = local.azdo_token
   use_oidc                     = true
 }
 

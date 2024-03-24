@@ -224,6 +224,8 @@ steps:
         scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         inlineScript: |
+          Write-Host "Using service connection '$(azdoConnection)'"
+
           if ((${env:system.debug} -eq "true") -or ($env:system_debug -eq "true") -or ($env:SYSTEM_DEBUG -eq "true")) {
             $DebugPreference       = "Continue"
             $InformationPreference = "Continue"
@@ -248,6 +250,8 @@ steps:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
+        Write-Host "Using service connection '$(subscriptionConnection)' to deploy to workspace '${env:TF_WORKSPACE}'"
+
         $(identityScriptDirectory)/set_terraform_azurerm_vars.ps1
 
         terraform -chdir='$(terraformDirectory)' show -json | ConvertFrom-Json -AsHashtable | Set-Variable tfState 

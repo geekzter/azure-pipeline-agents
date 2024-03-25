@@ -76,7 +76,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        $env:ARM_OIDC_TOKEN        = $idToken
+        $env:ARM_OIDC_TOKEN        = $env:idToken
         ./deploy.ps1 -apply -force
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
@@ -105,7 +105,7 @@ jobs:
       scriptType: pscore
       scriptLocation: inlineScript
       inlineScript: |
-        $env:ARM_OIDC_TOKEN        = $idToken
+        $env:ARM_OIDC_TOKEN        = $env:idToken
         ./deploy.ps1 -destroy -force
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'

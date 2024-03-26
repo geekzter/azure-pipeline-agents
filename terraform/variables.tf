@@ -109,14 +109,14 @@ variable azure_linux_os_image_id {
 }
 # az vm image list-offers -l centralus -p "Canonical" -o table
 variable azure_linux_os_offer {
-  default                      = "0001-com-ubuntu-server-focal"
+  default                      = "0001-com-ubuntu-server-jammy"
 }
 variable azure_linux_os_publisher {
   default                      = "Canonical"
 }
 # az vm image list-skus -l centralus -f "0001-com-ubuntu-server-focal" -p "Canonical" -o table
 variable azure_linux_os_sku {
-  default                      = "20_04-lts"
+  default                      = "22_04-lts"
 }
 variable azure_linux_os_version {
   default                      = "latest"

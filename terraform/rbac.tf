@@ -16,6 +16,13 @@ resource azurerm_role_assignment agent_storage_contributors {
 
   for_each                     = var.configure_access_control ? toset(local.storage_contributors) : toset([])
 }
+resource azurerm_role_assignment agent_file_storage_contributors {
+  scope                        = azurerm_resource_group.rg.id
+  role_definition_name         = "Storage File Data Privileged Contributor"
+  principal_id                 = each.value
+
+  for_each                     = var.configure_access_control && var.deploy_azure_files_share ? toset(local.storage_contributors) : toset([])
+}
 resource azurerm_role_assignment packer_storage_contributors {
   scope                        = module.packer.0.network_resource_group_id
   role_definition_name         = "Storage Blob Data Contributor"

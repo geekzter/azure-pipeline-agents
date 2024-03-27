@@ -220,6 +220,7 @@ resource azurerm_private_endpoint diagnostics_share {
 
   count                        = var.deploy_azure_files_share ? 1 : 0
 }
+# BUG?: Requires 'Storage File Data Privileged Contributor' role
 resource azurerm_storage_share_file sync_windows_vm_logs_cmd {
   name                         = "sync_windows_vm_logs.cmd"
   storage_share_id             = azurerm_storage_share.diagnostics_smb_share.0.id

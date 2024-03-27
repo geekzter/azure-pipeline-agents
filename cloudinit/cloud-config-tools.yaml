@@ -6,7 +6,7 @@ bootcmd:
   # - while ( fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ); do sleep 5; done;
   # Get apt repository signing keys
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
-  - sudo apt-add-repository https://cli.github.com/packages
+  # - sudo apt-add-repository https://cli.github.com/packages
   - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -           # Hashicorp
   - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
   # - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
@@ -14,7 +14,7 @@ bootcmd:
   #   gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
   #   echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | \
   #   tee /etc/apt/sources.list.d/kubernetes.list
-  # - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
   # - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - # Microsoft
   - curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null # Microsoft
   # Remove outdated version of Azure CLI from universe repository
@@ -29,8 +29,8 @@ apt:
     helm-stable-debian.list:
       source: "deb https://baltocdn.com/helm/stable/debian/ all main"
     # BUG: repo does not exist  
-    # kubernetes.list:
-    #   source: "deb https://pkgs.k8s.io/core:/stable:/v1.29/deb/ all main"
+    kubernetes.list:
+      source: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
     microsoft-prod.list:
       source: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main"
 
@@ -56,7 +56,7 @@ packages:
   # - gh
   # Kubernetes
   - helm
-  # - kubectl
+  - kubectl
   # Microsoft
   # - azure-cli
   - azure-functions-core-tools

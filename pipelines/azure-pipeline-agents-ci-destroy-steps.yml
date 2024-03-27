@@ -109,7 +109,7 @@ steps:
       ${{ elseif eq(parameters.destroy, 'On success') }}:
         condition: eq(variables['provisioningResult.result'],'success')
       inputs:
-        azureSubscription: '$(azdoConnection)'
+        azureSubscription: '$(subscriptionConnection)'
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |

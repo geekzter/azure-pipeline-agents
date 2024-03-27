@@ -87,6 +87,9 @@ output build_resource_ids {
 output diagnostics_storage_account {
   value                        = azurerm_storage_account.diagnostics.name
 }
+output diagnostics_storage_share_url {
+  value                        = var.deploy_azure_files_share ? azurerm_storage_share.diagnostics_smb_share.0.url : null
+}
 output diagnostics_storage_sas {
   sensitive                    = true
   value                        = data.azurerm_storage_account_sas.diagnostics.sas

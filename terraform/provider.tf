@@ -3,7 +3,7 @@ terraform {
     azuread                    = "~> 2.35"
     azuredevops                = {
       source                   = "microsoft/azuredevops"
-      version                  = "~> 0.10"
+      version                  = "~> 1.0"
     }
     azurerm                    = "~> 3.18"
     cloudinit                  = "~> 2.2"
@@ -19,7 +19,7 @@ terraform {
 # Azure DevOps provider
 provider azuredevops {
   org_service_url              = local.azdo_org_url
-  personal_access_token        = local.azdo_token
+  use_oidc                     = true
 }
 
 # Microsoft Azure Resource Manager Provider
@@ -41,7 +41,6 @@ provider azurerm {
   }
 
   storage_use_azuread          = true
-
   use_oidc                     = true
 
 # Requires admin consent:

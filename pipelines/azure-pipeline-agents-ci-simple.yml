@@ -71,10 +71,13 @@ jobs:
     displayName: 'Terraform plan & apply'
     name: apply
     inputs:
+      addSpnToEnvironment: true
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
-      inlineScript: ./deploy.ps1 -apply -force
+      inlineScript: |
+        $env:ARM_OIDC_TOKEN        = $env:idToken
+        ./deploy.ps1 -apply -force
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
     env: # Maintain casing of Terraform variable names
@@ -97,10 +100,13 @@ jobs:
     condition: succeededOrFailed()
     continueOnError: true # Treat failure as warning during destroy, we will clean up anyway
     inputs:
+      addSpnToEnvironment: true
       azureSubscription: '$(subscriptionConnection)'
       scriptType: pscore
       scriptLocation: inlineScript
-      inlineScript: ./deploy.ps1 -destroy -force
+      inlineScript: |
+        $env:ARM_OIDC_TOKEN        = $env:idToken
+        ./deploy.ps1 -destroy -force
       failOnStandardError: true
       workingDirectory: '$(scriptDirectory)'
     env: # Maintain casing of Terraform variable names

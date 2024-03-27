@@ -99,7 +99,7 @@ module self_hosted_linux_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_azure_firewall
-  deploy_agent                 = var.azdo_org_url != null && var.deploy_azdo_self_hosted_vm_agents
+  deploy_agent                 = var.azdo_org_url != null && var.deploy_azdo_self_hosted_vm_agents && local.azdo_self_hosted_pool_name != null
   deploy_files_share           = var.deploy_azure_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_azure_vm_extensions
 
@@ -162,7 +162,7 @@ module self_hosted_windows_agents {
   admin_cidr_ranges            = local.admin_cidr_ranges
 
   create_public_ip_address     = !var.deploy_azure_firewall
-  deploy_agent_vm_extension    = var.azdo_org_url != null && var.deploy_azdo_self_hosted_vm_agents
+  deploy_agent_vm_extension    = var.azdo_org_url != null && var.deploy_azdo_self_hosted_vm_agents && local.azdo_self_hosted_pool_name != null
   deploy_files_share           = var.deploy_azure_files_share
   deploy_non_essential_vm_extensions = var.deploy_non_essential_azure_vm_extensions
 

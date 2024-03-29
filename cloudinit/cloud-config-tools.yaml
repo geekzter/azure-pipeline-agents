@@ -62,7 +62,7 @@ packages:
   - azure-functions-core-tools
   # - blobfuse
   - dotnet-sdk-6.0
-  - dotnet-sdk-8.0
+  # - dotnet-sdk-8.0
   - powershell
 
 runcmd:

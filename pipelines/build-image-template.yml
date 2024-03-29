@@ -40,7 +40,7 @@ jobs:
   pool:
     name: $[ coalesce(variables.pool,'Azure Pipelines') ]
     vmImage: $[ coalesce(variables.vmImage,'ubuntu-latest') ]
-  timeoutInMinutes: 720
+  timeoutInMinutes: 1430
 
   variables:
   - name: 'addMinorImageVersion'

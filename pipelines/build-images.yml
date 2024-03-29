@@ -2,10 +2,14 @@
 # This pipeline will create a storage account to temporarily store a VHD
 
 parameters:
+- name: imageRepoRef
+  displayName: Image ref
+  type: string
+  default: 'refs/heads/main'
 - name: image
   displayName: Image
   type: string
-  default: Ubuntu
+  default: Latest
   values:
   - All
   - Latest
@@ -27,7 +31,11 @@ parameters:
 - name: numberOfVersionsToKeep
   displayName: Number of image versions to keep
   type: number
-  default: 2
+  default: 10
+- name: addMinorImageVersion
+  displayName: Create minor version if major version exists
+  type: boolean
+  default: false
 
 name: $(Date:yyyyMMdd)$(Rev:.r)-$(Build.DefinitionVersion)-$(SourceBranchName)-${{ lower(parameters.image) }}-$(Build.BuildId)
 
@@ -37,14 +45,7 @@ resources:
     type: github
     endpoint: github.com # Service Connection name
     name: actions/runner-images
-    # trigger:
-    #   branches:
-    #     include:
-    #     - main
-    #   paths:
-    #     include:
-    #     - 'images/linux/**'
-    #     - 'images/win/**'
+    ref: ${{ parameters.imageRepoRef }}
 
 trigger: none
 
@@ -60,7 +61,7 @@ pr:
     - '*.md'  
 
 schedules:
-- cron: '0 12 * * Fri'
+- cron: '0 12 * * *'
   displayName: 'Weekly build (UTC)'
   always: 'true' # Run if there are no changes
   branches:
@@ -68,16 +69,20 @@ schedules:
     - master
 
 variables:
-  - group: 'build-images'
+  - group: 'build-images-isolated'
+  # - group: 'build-images'
   # Variable group should set these variables:
   # PIPELINE_DEMO_PACKER_LOCATION
   # PIPELINE_DEMO_COMPUTE_GALLERY_NAME
   # PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME
+  - name: imageRepoRef
+    value: ${{ parameters.imageRepoRef }}
 
 jobs:
 - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Ubuntu2004
@@ -88,6 +93,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Ubuntu2204
@@ -98,6 +104,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Windows2019
@@ -108,6 +115,7 @@ jobs:
 - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
   - template: build-image-template.yml
     parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
       destroy: ${{ parameters.destroy }}
       excludeFromLatest: ${{ parameters.excludeFromLatest }}
       image: Windows2022

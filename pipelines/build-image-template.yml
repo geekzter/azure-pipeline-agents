@@ -29,16 +29,22 @@ parameters:
   displayName: Number of image versions to keep
   type: number
   default: 4
+- name: addMinorImageVersion
+  displayName: Create minor version if major version exists
+  type: boolean
+  default: false
 
 jobs:
 - job: '${{ parameters.image }}'
   displayName: 'Build & publish ${{ parameters.image }}'
   pool:
-    name: 'Azure Pipelines'
-    vmImage: ubuntu-latest
-  timeoutInMinutes: 360
+    name: $[ coalesce(variables.pool,'Azure Pipelines') ]
+    vmImage: $[ coalesce(variables.vmImage,'ubuntu-latest') ]
+  timeoutInMinutes: 1430
 
   variables:
+  - name: 'addMinorImageVersion'
+    value: ${{ lower(or(parameters.addMinorImageVersion,eq(variables['Build.Reason'], 'Schedule'))) }}
   - name: 'agentRepository'
     value: '$(Build.SourcesDirectory)/azure-pipeline-agents'
   - name: AZURE_CORE_ONLY_SHOW_ERRORS
@@ -75,6 +81,8 @@ jobs:
     value: $[replace('${{ parameters.imageResourceGroup }}','pipeline-',format('{0}-',coalesce(variables['PIPELINE_DEMO_RESOURCE_PREFIX'],'pipeline')))]
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
+  - name: 'PACKER_CONFIG_DIR' 
+    value: '~/.config/packer'
   - name: 'scriptDirectory'
     value: '$(agentRepository)/scripts'
 
@@ -97,6 +105,10 @@ jobs:
           $fail = $true
         }
       }
+
+      # List environment variables
+      Get-ChildItem -Path Env: -Recurse -Include ARM_*,AZURE_*,PIPELINE_DEMO_*,SYSTEM_*,VNET_* | Sort-Object -Property Name
+
       if ($fail) {
         Write-Error "Some variables have not been set, set them in variable group 'build-images'"
       }
@@ -168,16 +180,24 @@ jobs:
                                   --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                   --query "[?name=='${qualifiedReleaseVersionString}' && (provisioningState=='Creating' || provisioningState=='Succeeded')]" `
                                   | ConvertFrom-Json | Set-Variable imageVersion
-        
+
+        $addMinorImageVersion = $$(addMinorImageVersion)
         if ($imageVersion) {
           Write-Host "Image Definition '$(imageName)' with version '$qualifiedReleaseVersionString' already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}:"
+          if ($addMinorImageVersion) {
+            Write-Host "Adding new minor image version to existing major image version"
+          }
           $imageVersion | Format-List
-          Write-Warning "Build & publish of '$releaseVersion' will be skipped as it already exists in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         } else {
           Write-Warning "Image Definition '$(imageName)' with version '$qualifiedReleaseVersionString' doesn't exist yet in gallery ${env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME}"
-          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$qualifiedReleaseVersionString"
+        }
+
+        $createImage = ($addMinorImageVersion -or !$imageVersion)
+        if ($createImage) {
+          Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]${qualifiedReleaseVersionString}"
           Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]true"
+        } else {
+          Write-Host "##vso[task.setvariable variable=newImageVersion;isoutput=true]false"
         }
       failOnStandardError: true
 
@@ -208,9 +228,6 @@ jobs:
       inline: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
       
-        # Patch GenerateResourcesAndImage.ps1 to decrease build time
-        (Get-Content -Raw ./GenerateResourcesAndImage.ps1) -replace "Standard_LRS","Premium_LRS" | Set-Content ./GenerateResourcesAndImage.ps1
-
         # Required for GenerateResourcesAndImage
         $PSNativeCommandArgumentPassing = 'Standard'
 
@@ -225,7 +242,7 @@ jobs:
                                   -AzureClientId $(servicePrincipal.clientId) `
                                   -AzureClientSecret "$(servicePrincipal.clientSecret)" `
                                   -AzureTenantId $(servicePrincipal.tenantId) `
-                                  -RestrictToAgentIpAddress
+                                  -RestrictToAgentIpAddress:([string]::IsNullOrEmpty($env:VNET_NAME))
       azurePowerShellVersion: 'latestVersion'
       pwsh: true
       failOnStandardError: true
@@ -265,19 +282,19 @@ jobs:
       inlineScript: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
       
-        $imageDefinitionVersionTags = @(`
+        [System.Collections.ArrayList]$imageDefinitionVersionTags = @(`
           "application=${env:PIPELINE_DEMO_APPLICATION_NAME}",`
           "build=$(Build.BuildId)",`
-          "buildlink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
+          "buildLink=${env:SYSTEM_TASKDEFINITIONSURI}${env:SYSTEM_TEAMPROJECT}/_build/results?buildId=${env:BUILD_BUILDID}&view=logs&j=${env:SYSTEM_JOBID}&t=${env:SYSTEM_TASKINSTANCEID}",`
           "owner=${env:PIPELINE_DEMO_APPLICATION_OWNER}",`
           "pipeline=$(Build.DefinitionName)",`
           "provisioner=azure-cli",`
-          "versionlabel=$(githubRelease.fullyQualifiedVersion)"`
+          "versionLabel=$(githubRelease.fullyQualifiedVersion)"`
         )
-        Write-Host "`nTags that will be applied to image version:"
-        $imageDefinitionVersionTags | Format-Table
 
         if (-not (az sig image-definition list --query "[?name=='$(imageName)']"  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME -o tsv)) {
+          Write-Host "`nTags that will be applied to image definition:"
+          $imageDefinitionVersionTags | Format-Table
           Write-Host "`nCreating image definition $(imageName)..."
           az sig image-definition create --gallery-image-definition $(imageName) `
                                          --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
@@ -285,26 +302,38 @@ jobs:
                                          --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                          --publisher $(imagePublisher) --offer $(imageOffer) --sku $(imageSKU) `
                                          --os-type $(imageOSType) --os-state Generalized `
-                                         --query id -o tsv | Set-Variable imageDefinitionId
-                                         
-          # BUG: https://github.com/Azure/azure-cli/issues/23194
-          # FIX: Set tag separately
-          az tag create --resource-id $imageDefinitionId --tags $imageDefinitionVersionTags
+                                         --query id -o tsv `
+                                         --tags $imageDefinitionVersionTags.ToArray()
         }
 
-        Write-Host "`nCreating image version $(imageName) $(githubRelease.fullyQualifiedVersion)..."
+        # Check whether version exists. If so, increment build number.
+        $fullyQualifiedVersionString = "$(githubRelease.fullyQualifiedVersion)"
+        $fullyQualifiedVersion = [version]$fullyQualifiedVersionString
+        az sig image-version list --gallery-image-definition $(imageName) `
+                                  --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
+                                  --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
+                                  --query "max_by([?starts_with(name,'$($fullyQualifiedVersion.ToString(2))')],&name).name" `
+                                  -o tsv | Set-Variable existingVersionString
+        if ($existingVersionString) {
+          $existingVersion = [version]$existingVersionString
+          $fullyQualifiedVersionString = ("{0}.{1}" -f $existingVersion.ToString(2), ($existingVersion.Build+1))
+        }
+
+        Write-Host "`nTags that will be applied to image version:"
+        $imageDefinitionVersionTags.Add("imageRepoRef=$(imageRepoRef)") | Out-Null
+        $imageDefinitionVersionTags | Format-Table
+        Write-Host "`nCreating image version $(imageName) ${fullyQualifiedVersionString}..."
+        Write-Host "az sig image-version create --exclude-from-latest $(excludeFromLatest) --gallery-image-definition $(imageName) --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME --gallery-image-version $fullyQualifiedVersionString --no-wait --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME --managed-image $(managedImage.imageResourceId) --query id -o tsv --tags $($imageDefinitionVersionTags.ToArray())"
+
         az sig image-version create --exclude-from-latest $(excludeFromLatest) `
                                     --gallery-image-definition $(imageName) `
                                     --gallery-name $env:PIPELINE_DEMO_COMPUTE_GALLERY_NAME `
-                                    --gallery-image-version $(githubRelease.fullyQualifiedVersion) `
+                                    --gallery-image-version $fullyQualifiedVersionString `
                                     --no-wait `
                                     --resource-group $env:PIPELINE_DEMO_COMPUTE_GALLERY_RESOURCE_GROUP_NAME `
                                     --managed-image $(managedImage.imageResourceId) `
-                                    --query id -o tsv | Set-Variable imageVersionId
-
-          # BUG: https://github.com/Azure/azure-cli/issues/23194
-          # FIX: Set tag separately
-          # az tag create --resource-id $imageVersionId --tags $imageDefinitionVersionTags
+                                    --query id -o tsv `
+                                    --tags $imageDefinitionVersionTags.ToArray()
       failOnStandardError: true
 
   - task: AzureCLI@2

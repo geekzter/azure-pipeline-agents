@@ -174,7 +174,7 @@ jobs:
 
   strategy:
     matrix: $[ dependencies.createStrategy.outputs['pwsh.strategy'] ]
-    maxParallel: 1
+    maxParallel: 2
 
   workspace:
     clean: all

@@ -148,7 +148,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
 
   lifecycle {
     ignore_changes             = [
-      custom_data,
+      # custom_data,
       extension,
       instances,
       tags["__AzureDevOpsElasticPool"],

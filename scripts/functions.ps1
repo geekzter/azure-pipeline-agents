@@ -184,19 +184,26 @@ function Login-Az (
 }
 
 function Login-AzDO (
-    [parameter(Mandatory=$true)][string]$OrganizationUrl=($env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI)
+    [parameter(Mandatory=$false)][string]$OrganizationUrl=($env:AZDO_ORG_SERVICE_URL ?? $env:SYSTEM_COLLECTIONURI),
+    [parameter(Mandatory=$false)][switch]$DisplayMessages=$false
 )
 {
-    $resource="499b84ac-1321-427f-aa17-267ca6975798"
+    Login-Az -DisplayMessages:$DisplayMessages
 
-    Login-Az
+    $resource="499b84ac-1321-427f-aa17-267ca6975798"
     az account get-access-token --resource $resource `
                                 --query "accessToken" `
                                 --output tsv `
                                 | Set-Variable aadToken
     if ($aadToken) {
         Write-Debug "Obtained AAD token with 'az account get-access-token'"
-        $env:AZURE_DEVOPS_EXT_PAT = $aadToken
+        az account show -o json | ConvertFrom-Json | Set-Variable account
+        if ($account.user.type -eq 'user') {
+            # Assume Terraform azuredevops module will use Entra ID AuthN directly for non-users
+            $env:AZDO_PERSONAL_ACCESS_TOKEN = $aadToken # Terraform azuredevops provider
+            $env:TF_VAR_devops_pat = $aadToken # Terraform azuredevops provider
+        }
+        $env:AZURE_DEVOPS_EXT_PAT = $aadToken # Azure DevOps CLI azuredevops extension
     } else {
         Write-Error "Unable to get AAD token"
     }
@@ -205,8 +212,11 @@ function Login-AzDO (
         Write-Host "Adding Azure CLI extension 'azure-devops'..."
         az extension add -n azure-devops -y
     }
-    $aadToken | az devops login --organization $OrganizationUrl
-    az devops configure --defaults organization="$OrganizationUrl"
+    if ($DisplayMessages) {
+        Write-Verbose "Using Azure DevOps organization '$OrganizationUrl'"
+        $aadToken | az devops login --organization $OrganizationUrl
+        az devops configure --defaults organization="$OrganizationUrl"
+    }
 }
 
 function Set-PipelineVariablesFromTerraform () {

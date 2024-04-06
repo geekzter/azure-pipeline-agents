@@ -3,3 +3,5 @@ runcmd:
 - echo Post generation
 - sudo su -c whoami ${user_name}
 - '[ -d /opt/post-generation ] && sudo su -c "find /opt/post-generation -mindepth 1 -maxdepth 1 -type f -name *.sh -exec bash {} \;"'
+- '[ -d /opt/post-generation ] && sudo usermod -aG docker ${user_name}'
+# - '[ -d /opt/post-generation ] && sudo chgrp -hR docker /run/docker.sock /var/run/docker.sock'

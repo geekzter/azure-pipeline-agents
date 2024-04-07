@@ -128,6 +128,8 @@ jobs:
     value: ${{ parameters.packerTemplateFile }}
   - name: 'imageTemplateDirectory'
     value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
+  - name: 'imageTemplatePatchFileName'
+    value: '$(agentRepository)/scripts/packer/oidc-patch.pkr.hcl'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'PACKER_CONFIG_DIR' 
@@ -242,6 +244,7 @@ jobs:
         $(scriptDirectory)/configure_pwsh_trace.ps1
 
         $packerTemplateFileName = "$(imageTemplateFileName)"
+        $packerTemplatePatchFileName = "$(imageTemplatePatchFileName)"
 
         # Update template to override configuration not accessible as variables
         $azureTags = @{
@@ -278,14 +281,9 @@ jobs:
         # replace client_secret with client_jwt value in .pkr.hcl
         if ($env:idToken) {
           # Patch template to accept idToken as client_jwt
-          @'
-          variable "client_jwt" {
-            type      = string
-            default   = "${env("idToken")}"
-            sensitive = true
-          }'@ | Set-Content $packerTemplateFileName -Force
           (Get-Content $packerTemplateFileName) -replace "client_secret\W*=.*$","client_jwt = `"`${var.client_jwt}`"" `
                                                 | Tee-Object -Variable packerTemplateContent
+          Copy-Item -Path $packerTemplatePatchFileName -Destination $packerTemplateFileName -Force
           Add-Content $packerTemplateFileName -Value $packerTemplateContent -Force
         }
 

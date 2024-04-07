@@ -128,6 +128,8 @@ jobs:
     value: ${{ parameters.packerTemplateFile }}
   - name: 'imageTemplateDirectory'
     value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
+  - name: 'imageTemplatePatchFileName'
+    value: '$(agentRepository)/packer/oidc-patch.pkr.hcl'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'PACKER_CONFIG_DIR' 
@@ -242,6 +244,7 @@ jobs:
         $(scriptDirectory)/configure_pwsh_trace.ps1
 
         $packerTemplateFileName = "$(imageTemplateFileName)"
+        $packerTemplatePatchFileName = "$(imageTemplatePatchFileName)"
 
         # Update template to override configuration not accessible as variables
         $azureTags = @{
@@ -256,40 +259,35 @@ jobs:
           shutdown = "false"
           versionLabel = "$(githubRelease.version)"
         }
-        if ($packerTemplateFileName -match "json") {
-          # This only works for JSON
-          Get-Content $packerTemplateFileName | ConvertFrom-Json -AsHashtable | Set-Variable packerTemplate
-          $packerTemplate.builders[0]["azure_tags"] = $azureTags
-          Write-Host "`nTags that will be applied to build resources:"
-          $packerTemplate.builders[0]["azure_tags"] | Format-Table
-          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
-            $packerTemplate.builders[0]["image_sku"] = "$(baseImageSKU)"
-          }
-          Write-Host "`nPacker template:"
-          $packerTemplate | ConvertTo-Json -Depth 5
-          $packerTemplate | ConvertTo-Json -Depth 5 | Set-Content $packerTemplateFileName
-          $packerTemplateArgument = $packerTemplateFileName
-        } else {
-          # HCL
-          $packerHCLVarsContent="azure_tag = {"
-          foreach ($key in $azureTags.Keys) {
-            $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
-          }
-          $packerHCLVarsContent += "`n}"
-          $packerHCLVarsContent += "`n"
-          $packerHCLVarsFile = "overrides.auto.pkrvars.hcl"
-          $packerHCLVarsContent | Set-Content $packerHCLVarsFile
-          Get-Content $packerHCLVarsFile
 
-          # replace image_sku value in .pkr.hcl
-          if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
-            (Get-Content $packerTemplateFileName) -replace "image_sku\W*=.*$","image_sku = `"$(baseImageSKU)`"" `
-                                                  | Tee-Object -Variable packerTemplateContent
-            Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
-          }
-
-          $packerTemplateArgument = "."
+        # HCL
+        $packerHCLVarsContent="azure_tag = {"
+        foreach ($key in $azureTags.Keys) {
+          $packerHCLVarsContent += "`n$key=`"$($azureTags[$key])`""
         }
+        $packerHCLVarsContent += "`n}"
+        $packerHCLVarsContent += "`n"
+        $packerHCLVarsFile = "overrides.auto.pkrvars.hcl"
+        $packerHCLVarsContent | Set-Content $packerHCLVarsFile
+        Get-Content $packerHCLVarsFile
+
+        # replace image_sku value in .pkr.hcl
+        if ($${{ eq(parameters.hyperVGeneration,'V2') }}) {
+          (Get-Content $packerTemplateFileName) -replace "image_sku\W*=.*$","image_sku = `"$(baseImageSKU)`"" `
+                                                | Tee-Object -Variable packerTemplateContent
+          Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
+        }
+
+        # replace client_secret with client_jwt value in .pkr.hcl
+        if ($env:idToken) {
+          # Patch template to accept idToken as client_jwt
+          (Get-Content $packerTemplateFileName) -replace "client_secret\W*=.*$","client_jwt = `"`${var.client_jwt}`"" `
+                                                | Tee-Object -Variable packerTemplateContent
+          Copy-Item -Path $packerTemplatePatchFileName -Destination $packerTemplateFileName -Force
+          Add-Content $packerTemplateFileName -Value $packerTemplateContent -Force
+        }
+
+        $packerTemplateArgument = "."
 
         # Remove HCL files from other image templates residing in the same directory
         Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
@@ -325,17 +323,6 @@ jobs:
       addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
-
-  # Does not support HCL files and therefore Ubuntu 22.04
-  - task: PackerBuild@1
-    displayName: 'Packer build (JSON)'
-    condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'), endsWith(variables['imageTemplate'],'json'))
-    retryCountOnTaskFailure: ${{ parameters.retryCount }}
-    inputs:
-      templateType: 'custom'
-      customTemplateLocation: '$(imageTemplate)'
-      customTemplateParameters: '$(packerConfig.packerTemplateParametersJson)'
-      connectedServiceName: '$(packerSubscriptionConnection)'
 
   - task: AzureCLI@2
     displayName: 'Packer build (HCL)'

@@ -129,7 +129,7 @@ jobs:
   - name: 'imageTemplateDirectory'
     value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
   - name: 'imageTemplatePatchFileName'
-    value: '$(agentRepository)/scripts/packer/oidc-patch.pkr.hcl'
+    value: '$(agentRepository)/packer/oidc-patch.pkr.hcl'
   - name: 'numberOfVersionsToKeep' 
     value: ${{ parameters.numberOfVersionsToKeep }}
   - name: 'PACKER_CONFIG_DIR' 

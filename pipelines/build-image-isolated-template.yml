@@ -277,11 +277,16 @@ jobs:
 
         # replace client_secret with client_jwt value in .pkr.hcl
         if ($env:idToken) {
-          # (Get-Content $packerTemplateFileName) -replace "client_secret\W*=.*$","client_jwt = `"${env:idToken}`"" `
-          #                                       | Tee-Object -Variable packerTemplateContent
-          (Get-Content $packerTemplateFileName) -replace "client_secret\W*=.*$","client_jwt = `"`${env(`"idToken`")}`"" `
+          # Patch template to accept idToken as client_jwt
+          @'
+          variable "client_jwt" {
+            type      = string
+            default   = "${env("idToken")}"
+            sensitive = true
+          }'@ | Set-Content $packerTemplateFileName -Force
+          (Get-Content $packerTemplateFileName) -replace "client_secret\W*=.*$","client_jwt = `"`${var.client_jwt}`"" `
                                                 | Tee-Object -Variable packerTemplateContent
-          Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
+          Add-Content $packerTemplateFileName -Value $packerTemplateContent -Force
         }
 
         $packerTemplateArgument = "."

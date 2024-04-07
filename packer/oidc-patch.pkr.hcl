@@ -3,3 +3,4 @@ variable "client_jwt" {
     default   = "${env("idToken")}"
     sensitive = true
 }
+

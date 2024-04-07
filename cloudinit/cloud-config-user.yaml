@@ -1,8 +1,19 @@
 users:
   - default
   - name: ${user}
-    groups: sudo
+    groups: 
+      - adm
+      - sudo
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh-authorized-keys:
       - ${public_key}
+  - name: AzDevOps # Scale-set agents user
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+
+runcmd:
+  # Scale-set agents default user 
+  - chown -R AzDevOps:AzDevOps /home/AzDevOps
+  - '[ -x "$(command -v dockerd)" ] && sudo usermod -aG docker AzDevOps'

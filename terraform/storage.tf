@@ -18,6 +18,8 @@ resource time_offset sas_expiry {
 resource time_offset sas_start {
   offset_days                  = -1
 }
+
+# Requires https://github.com/hashicorp/terraform-provider-azurerm/issues/23727
 data azurerm_storage_account_sas diagnostics {
   connection_string            = azurerm_storage_account.diagnostics.primary_connection_string
   https_only                   = true

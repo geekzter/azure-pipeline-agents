@@ -111,7 +111,7 @@ resource azurerm_subnet private_endpoint_subnet {
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,5)]
-  private_endpoint_network_policies_enabled = false
+  private_endpoint_network_policies = "Disabled"
 
   provisioner local-exec {
     command                    = "az resource wait --created --ids ${self.id}"

@@ -7,8 +7,8 @@ resource azurerm_storage_account diagnostics {
   account_replication_type     = "LRS"
   allow_nested_items_to_be_public = false
   default_to_oauth_authentication = true
-  enable_https_traffic_only    = true
-  shared_access_key_enabled    = true
+  enable_https_traffic_only    = false
+  shared_access_key_enabled    = false
 
   tags                         = local.tags
 }
@@ -179,7 +179,7 @@ resource azurerm_storage_account share {
   account_replication_type     = "LRS"
   default_to_oauth_authentication = true
   enable_https_traffic_only    = false # Needs to be off for NFS
-  shared_access_key_enabled    = true # Azire Files Share does not support Entra ID AuthN yet
+  shared_access_key_enabled    = true # Azure Files Share does not support Entra ID AuthN yet
 
   tags                         = local.tags
 

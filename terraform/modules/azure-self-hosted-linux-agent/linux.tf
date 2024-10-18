@@ -228,27 +228,20 @@ resource azurerm_virtual_machine_extension cloud_config_status {
   }  
 }
 
-# BUG: https://github.com/Azure/azure-linux-extensions/issues/1116
-resource azurerm_virtual_machine_extension linux_log_analytics {
-  name                         = "OmsAgentForMe"
+resource azurerm_virtual_machine_extension linux_monitor {
+  name                         = "AzureMonitorLinuxAgent"
   virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
-  publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
-  type                         = "OmsAgentForLinux"
-  type_handler_version         = "1.7"
+  publisher                    = "Microsoft.Azure.Monitor"
+  type                         = "AzureMonitorLinuxAgent"
+  type_handler_version         = "1.33"
   auto_upgrade_minor_version   = true
 
-  settings                     = jsonencode({
-    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
-  })
-  protected_settings           = jsonencode({
-    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-  })
-
+  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   tags                         = var.tags
 
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [azurerm_virtual_machine_extension.cloud_config_status]
 }
+
 resource azurerm_virtual_machine_extension linux_dependency_monitor {
   name                         = "DAExtension"
   virtual_machine_id           = azurerm_linux_virtual_machine.linux_agent.id
@@ -269,7 +262,7 @@ resource azurerm_virtual_machine_extension linux_dependency_monitor {
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [
     azurerm_virtual_machine_extension.cloud_config_status,
-    azurerm_virtual_machine_extension.linux_log_analytics
+    azurerm_virtual_machine_extension.linux_monitor
   ]
 }
 resource azurerm_virtual_machine_extension linux_watcher {
@@ -285,7 +278,7 @@ resource azurerm_virtual_machine_extension linux_watcher {
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [
     azurerm_virtual_machine_extension.cloud_config_status,
-    azurerm_virtual_machine_extension.linux_log_analytics
+    azurerm_virtual_machine_extension.linux_monitor
   ]
 }
 resource azurerm_virtual_machine_extension policy {
@@ -301,7 +294,7 @@ resource azurerm_virtual_machine_extension policy {
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [
     azurerm_virtual_machine_extension.cloud_config_status,
-    azurerm_virtual_machine_extension.linux_log_analytics
+    azurerm_virtual_machine_extension.linux_monitor
   ]
 }
 

@@ -143,18 +143,11 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   dynamic "extension" {
     for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
     content {
-      name                     = "OmsAgentForLinux"
-      publisher                = "Microsoft.EnterpriseCloud.Monitoring"
-      type                     = "OmsAgentForLinux"
-      type_handler_version     = "1.7"
+      name                     = "AzureMonitorLinuxAgent"
+      publisher                = "Microsoft.Azure.Monitor"
+      type                     = "AzureMonitorLinuxAgent"
+      type_handler_version     = "1.33"
       auto_upgrade_minor_version= true
-
-      settings                 = jsonencode({
-        "workspaceId"          = data.azurerm_log_analytics_workspace.monitor.workspace_id
-      })
-      protected_settings       = jsonencode({
-        "workspaceKey"         = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-      })
 
       provision_after_extensions= [
         # Wait for cloud-init to complete before provisioning extensions
@@ -209,33 +202,6 @@ resource azurerm_linux_virtual_machine_scale_set linux_agents {
   }
   tags                         = var.tags
 }
-
-# # TODO: Replace with Azure Monitoring Agent, does not work properly with Python 3
-# # https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/diagnostics-linux?tabs=azcli#python-requirement
-# resource azurerm_virtual_machine_scale_set_extension diagnostics {
-#   name                         = "LinuxDiagnostic"
-#   virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-#   publisher                    = "Microsoft.Azure.Diagnostics"
-#   type                         = "LinuxDiagnostic"
-#   type_handler_version         = "3.0" # 4.0 doesn't support Python 3
-#   auto_upgrade_minor_version   = true
-
-#   settings                     = templatefile("${path.module}/linuxdiagnostics.json", { 
-#     storage_account_name       = data.azurerm_storage_account.diagnostics.name, 
-#     virtual_machine_id         = azurerm_linux_virtual_machine_scale_set.linux_agents.id
-#   })
-#   protected_settings           = jsonencode({
-#     "storageAccountName"       = data.azurerm_storage_account.diagnostics.name
-#     "storageAccountSasToken"   = trimprefix(var.diagnostics_storage_sas,"?")
-#   })
-
-#   provision_after_extensions   = [
-#     "CloudConfigStatusScript",
-#     "OmsAgentForLinux"
-#   ]
-
-#   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-# }
 
 resource azurerm_monitor_diagnostic_setting linux_agents {
   name                         = "${azurerm_linux_virtual_machine_scale_set.linux_agents.name}-logs"

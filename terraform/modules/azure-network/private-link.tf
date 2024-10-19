@@ -121,6 +121,11 @@ resource azurerm_subnet private_endpoint_subnet {
     azurerm_network_security_group.default
   ]
 }
+# FIX: https://github.com/hashicorp/terraform-provider-azurerm/issues/21293
+resource time_sleep wait_for_private_endpoint_subnet {
+  create_duration              = "60s"
+  depends_on                   = [azurerm_subnet.private_endpoint_subnet]
+}
 
 resource azurerm_subnet_network_security_group_association private_endpoint_subnet {
   subnet_id                    = azurerm_subnet.private_endpoint_subnet.id

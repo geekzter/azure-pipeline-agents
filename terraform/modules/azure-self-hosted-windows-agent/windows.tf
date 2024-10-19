@@ -142,7 +142,7 @@ resource azurerm_virtual_machine_extension azure_monitor {
   virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent.id
   publisher                    = "Microsoft.Azure.Monitor"
   type                         = "AzureMonitorWindowsAgent"
-  type_handler_version         = "1.0"
+  type_handler_version         = "1.30"
   auto_upgrade_minor_version   = true
 
   tags                         = var.tags
@@ -159,28 +159,6 @@ resource null_resource prepare_log_analytics {
   }
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-}
-resource azurerm_virtual_machine_extension windows_log_analytics {
-  name                         = "OmsAgentForMe"
-  virtual_machine_id           = azurerm_windows_virtual_machine.windows_agent.id
-  publisher                    = "Microsoft.EnterpriseCloud.Monitoring"
-  type                         = "MicrosoftMonitoringAgent"
-  type_handler_version         = "1.0"
-  auto_upgrade_minor_version   = true
-
-  settings                     = jsonencode({
-    "workspaceId"              = data.azurerm_log_analytics_workspace.monitor.workspace_id
-    "azureResourceId"          = azurerm_windows_virtual_machine.windows_agent.id
-    "stopOnMultipleConnections"= "true"
-  })
-  protected_settings           = jsonencode({
-    "workspaceKey"             = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-  })
-
-  tags                         = var.tags
-
-  count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
-  depends_on                   = [null_resource.prepare_log_analytics]  
 }
 
 resource azurerm_virtual_machine_extension windows_dependency_monitor {
@@ -202,8 +180,7 @@ resource azurerm_virtual_machine_extension windows_dependency_monitor {
 
   count                        = var.deploy_non_essential_vm_extensions ? 1 : 0
   depends_on                   = [
-                                  azurerm_virtual_machine_extension.azure_monitor,
-                                  # azurerm_virtual_machine_extension.windows_log_analytics
+                                  azurerm_virtual_machine_extension.azure_monitor
   ] 
 }
 resource azurerm_virtual_machine_extension windows_watcher {
@@ -259,7 +236,7 @@ resource azurerm_virtual_machine_extension pipeline_agent {
 
   count                        = var.deploy_agent_vm_extension ? 1 : 0
   depends_on                   = [
-    azurerm_virtual_machine_extension.windows_log_analytics,
+    azurerm_virtual_machine_extension.azure_monitor,
     azurerm_virtual_machine_extension.windows_dependency_monitor,
     azurerm_virtual_machine_extension.windows_watcher,
   ]

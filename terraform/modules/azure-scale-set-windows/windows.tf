@@ -70,19 +70,11 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
   dynamic "extension" {
     for_each = range(var.deploy_non_essential_vm_extensions ? 1 : 0)
     content {
-      name                     = "MMAExtension"
-      publisher                = "Microsoft.EnterpriseCloud.Monitoring"
-      type                     = "MicrosoftMonitoringAgent"
-      type_handler_version     = "1.0"
+      name                     = "AzureMonitorWindowsAgent"
+      publisher                = "Microsoft.Azure.Monitor"
+      type                     = "AzureMonitorWindowsAgent"
+      type_handler_version     = "1.30"
       auto_upgrade_minor_version= true
-
-      settings                 = jsonencode({
-        "workspaceId"          = data.azurerm_log_analytics_workspace.monitor.workspace_id
-        "stopOnMultipleConnections"= "true"
-      })
-      protected_settings       = jsonencode({
-        "workspaceKey"         = data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-      })
     }
   }    
   dynamic "extension" {
@@ -102,7 +94,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
       })
 
       provision_after_extensions= [
-        "MMAExtension"
+        "AzureMonitorWindowsAgent"
       ]
     }
   }    
@@ -116,7 +108,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
       auto_upgrade_minor_version= true
 
       provision_after_extensions= [
-        "MMAExtension"
+        "AzureMonitorWindowsAgent"
       ]
     }
   }    
@@ -139,7 +131,7 @@ resource azurerm_windows_virtual_machine_scale_set windows_agents {
       })
 
       provision_after_extensions= var.deploy_non_essential_vm_extensions ? [
-        "MMAExtension",
+        "AzureMonitorWindowsAgent",
         "DAExtension",
         "AzureNetworkWatcherExtension"
       ] : null

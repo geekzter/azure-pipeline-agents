@@ -4,6 +4,9 @@ output agent_address_range {
 
 output private_endpoint_subnet_id {
   value                        = azurerm_subnet.private_endpoint_subnet.id
+  depends_on                   = [
+    time_sleep.wait_for_private_endpoint_subnet
+  ]
 }
 output azurerm_private_dns_zone_blob_id {
   value                        = azurerm_private_dns_zone.blob.id

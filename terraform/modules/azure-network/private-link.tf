@@ -123,7 +123,7 @@ resource azurerm_subnet private_endpoint_subnet {
 }
 # FIX: https://github.com/hashicorp/terraform-provider-azurerm/issues/21293
 resource time_sleep wait_for_private_endpoint_subnet {
-  create_duration              = "60s"
+  create_duration              = "180s"
   depends_on                   = [azurerm_subnet.private_endpoint_subnet]
 }
 

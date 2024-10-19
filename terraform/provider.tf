@@ -5,7 +5,7 @@ terraform {
       source                   = "microsoft/azuredevops"
       version                  = "~> 1.0"
     }
-    azurerm                    = "~> 3.18"
+    azurerm                    = "~> 4.6"
     cloudinit                  = "~> 2.2"
     http                       = "~> 3.4"
     local                      = "~> 2.1"

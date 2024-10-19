@@ -50,7 +50,7 @@ resource azurerm_network_interface windows_nic {
       private_ip_address_allocation = "Dynamic"
     }
   }  
-  enable_accelerated_networking = var.vm_accelerated_networking
+  accelerated_networking_enabled = var.vm_accelerated_networking
 
   tags                         = var.tags
 }

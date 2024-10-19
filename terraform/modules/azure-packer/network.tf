@@ -10,7 +10,7 @@ resource azurerm_subnet packer {
   name                         = "Packer"
   resource_group_name          = azurerm_virtual_network.packer.resource_group_name
   virtual_network_name         = azurerm_virtual_network.packer.name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.packer.address_space[0],4,12)]
+  address_prefixes             = [cidrsubnet(tolist(azurerm_virtual_network.packer.address_space)[0],4,12)]
 }
 resource azurerm_network_security_group packer_nsg {
   name                         = "${azurerm_virtual_network.packer.name}-packer-nsg"
@@ -60,7 +60,7 @@ resource azurerm_subnet private_endpoint_subnet {
   name                         = "PrivateEndpointSubnet"
   virtual_network_name         = azurerm_virtual_network.packer.name
   resource_group_name          = azurerm_virtual_network.packer.resource_group_name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.packer.address_space[0],4,5)]
+  address_prefixes             = [cidrsubnet(tolist(azurerm_virtual_network.packer.address_space)[0],4,5)]
   private_endpoint_network_policies = "Disabled"
 
   depends_on                   = [

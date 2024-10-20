@@ -110,7 +110,7 @@ resource azurerm_subnet private_endpoint_subnet {
   name                         = "PrivateEndpointSubnet"
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
-  address_prefixes             = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,5)]
+  address_prefixes             = [cidrsubnet(tolist(azurerm_virtual_network.pipeline_network.address_space)[0],4,5)]
   private_endpoint_network_policies = "Disabled"
 
   provisioner local-exec {

@@ -1,6 +1,6 @@
 locals {
-  scale_set_agent_address_prefixes = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,8)]  
-  self_hosted_agent_address_prefixes = [cidrsubnet(azurerm_virtual_network.pipeline_network.address_space[0],4,9)]  
+  scale_set_agent_address_prefixes = [cidrsubnet(tolist(azurerm_virtual_network.pipeline_network.address_space)[0],4,8)]  
+  self_hosted_agent_address_prefixes = [cidrsubnet(tolist(azurerm_virtual_network.pipeline_network.address_space)[0],4,9)]  
 }
 
 

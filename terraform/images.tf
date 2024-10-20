@@ -19,6 +19,7 @@ resource azurerm_image linux_vhd {
     os_state                   = "Generalized"
     blob_uri                   = var.azure_linux_os_vhd_url
     size_gb                    = 100
+    storage_type               = var.azure_linux_storage_type
   }
 
   count                        = local.use_linux_vhd ? 1 : 0
@@ -34,6 +35,7 @@ resource azurerm_image windows_vhd {
     os_state                   = "Generalized"
     blob_uri                   = var.azure_windows_os_vhd_url
     size_gb                    = 256
+    storage_type               = var.azure_windows_storage_type
   }
 
   count                        = local.use_windows_vhd ? 1 : 0

@@ -119,7 +119,7 @@ resource azurerm_network_interface linux_nic {
     }
   }  
 
-  enable_accelerated_networking = var.vm_accelerated_networking
+  accelerated_networking_enabled = var.vm_accelerated_networking
 
   tags                         = var.tags
 }

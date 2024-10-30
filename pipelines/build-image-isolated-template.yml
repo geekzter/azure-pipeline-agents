@@ -345,6 +345,7 @@ jobs:
         # Init
         packer init $(imageTemplateFileName)
         packer version
+        packer plugins installed
 
         # Build
         packer build -force `

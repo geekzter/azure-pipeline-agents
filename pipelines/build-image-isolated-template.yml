@@ -340,8 +340,6 @@ jobs:
         # https://github.com/actions/runner-images/discussions/4362
         # We assume main branch is the latest released version
 
-        # TODO: Secret-free authentication
-
         # Init
         packer init $(imageTemplateFileName)
         packer version

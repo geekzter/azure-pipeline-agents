@@ -7,6 +7,6 @@ if ($env:SYSTEM_DEBUG -eq "true") {
     $VerbosePreference = "Continue"
     $DebugPreference = "Continue"
 
-    $env:PACKER_LOG = 1
-    $env:TF_LOG     = "DEBUG"
+    # $env:PACKER_LOG = 1
+    # $env:TF_LOG     = "DEBUG"
 }

@@ -2,10 +2,11 @@ parameters:
 - name: image
   displayName: Image
   type: string
-  default: Ubuntu2004
+  default: Ubuntu2204
   values:
   - Ubuntu2004
   - Ubuntu2204
+  - Ubuntu2404
   - Windows2019
   - Windows2022
 - name: imageReleaseName

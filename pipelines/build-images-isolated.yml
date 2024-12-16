@@ -17,6 +17,7 @@ parameters:
   - Ubuntu
   - Ubuntu2004
   - Ubuntu2204
+  - Ubuntu2404
   - Windows
   - Windows2019
   - Windows2022
@@ -127,6 +128,23 @@ jobs:
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
+- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2404') }}:
+  - template: build-image-isolated-template.yml
+    parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
+      destroy: ${{ parameters.destroy }}
+      hyperVGeneration: ${{ parameters.hyperVGeneration }}
+      image: Ubuntu2404
+      imageReleaseName: ubuntu24
+      imageResourcePrefix: 'packer$(Build.BuildId)u24'
+      includePreRelease: ${{ parameters.includePreRelease }}
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      packerTemplateDirectory: 'images/ubuntu/templates'
+      packerTemplateFile: 'ubuntu-24.04.pkr.hcl'
+      retryCount: ${{ parameters.retryCount }}
+      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
+      waitForReplication: ${{ parameters.waitForReplication }}
+
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
   - template: build-image-isolated-template.yml
     parameters:
@@ -168,6 +186,8 @@ jobs:
         - Ubuntu2004
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
         - Ubuntu2204
+      - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2404') }}:
+        - Ubuntu2404
       - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:
         - Windows2019
       - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:

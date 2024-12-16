@@ -5,6 +5,7 @@ parameters:
   values:
   - Ubuntu2004
   - Ubuntu2204
+  - Ubuntu2404
   - Windows2019
   - Windows2022
 - name: hyperVGeneration
@@ -98,6 +99,9 @@ jobs:
     - ${{ elseif eq(parameters.image,'Ubuntu2204') }}:
       - name: 'baseImageSKU'
         value: '22_04-lts-gen2'
+    - ${{ elseif eq(parameters.image,'Ubuntu2404') }}:
+      - name: 'baseImageSKU'
+        value: '24_04-lts-gen2'
   - ${{ if contains(parameters.image,'buntu') }}:
     - name: 'imageOffer'
       value: 'Ubuntu'

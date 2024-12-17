@@ -17,6 +17,7 @@ parameters:
   - Ubuntu
   - Ubuntu2004
   - Ubuntu2204
+  - Ubuntu2404
   - Windows
   - Windows2019
   - Windows2022
@@ -99,6 +100,17 @@ jobs:
       image: Ubuntu2204
       imageReleaseName: ubuntu22
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u22'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+
+- ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2404') }}:
+  - template: build-image-template.yml
+    parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
+      destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
+      image: Ubuntu2404
+      imageReleaseName: ubuntu24
+      imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u24'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
 
 - ${{ if in(parameters.image,'All','Stable','Windows','Windows2019') }}:

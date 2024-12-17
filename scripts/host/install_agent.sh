@@ -81,7 +81,7 @@ fi
 
 # Get desired release version from GitHub
 AGENT_VERSION=$(curl https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/${AGENT_VERSION_ID} | jq ".name" | sed -E 's/.*"v([^"]+)".*/\1/')
-AGENT_PACKAGE="vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz"
+AGENT_PACKAGE="pipelines-agent-linux-x64-${AGENT_VERSION}.tar.gz"
 AGENT_URL="https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/${AGENT_PACKAGE}"
 
 # Setting up directories

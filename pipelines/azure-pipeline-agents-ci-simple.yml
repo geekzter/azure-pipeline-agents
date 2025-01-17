@@ -33,8 +33,8 @@ jobs:
   timeoutInMinutes: 120
 
   pool:
-    name: 'Azure Pipelines'
-    vmImage: ubuntu-latest
+    name: $[ coalesce(variables.pool,'Azure Pipelines') ]
+    vmImage: $[ coalesce(variables.vmImage,'ubuntu-latest') ]
 
   variables:
     ARM_USE_CLI: true

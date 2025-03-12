@@ -108,7 +108,7 @@ if (Test-Path (Join-Path $pipelineDirectory .agent)) {
 "https://api.github.com/repos/microsoft/azure-pipelines-agent/releases/{0}" -f $AgentVersionId | Set-Variable agentReleaseUrl
 $agentVersion = $(Invoke-Webrequest -Uri $agentReleaseUrl -UseBasicParsing | ConvertFrom-Json | Select-Object -ExpandProperty name) -replace "v",""
 "vsts-agent-win-x64-{0}.zip" -f $agentVersion | Set-Variable agentPackage
-"https://vstsagentpackage.azureedge.net/agent/{0}/{1}" -f $agentVersion, $agentPackage | Set-Variable agentUrl
+"https://download.agent.dev.azure.com/agent/{0}/{1}" -f $agentVersion, $agentPackage | Set-Variable agentUrl
 
 if (!(Test-Path $pipelineDirectory)) {
     New-Item -ItemType directory -Path $pipelineDirectory

@@ -435,7 +435,7 @@ resource azurerm_firewall_application_rule_collection agent_app_rules {
       "api.github.com",
       "app.vssps.visualstudio.com",
       "dev.azure.com",
-      "download.dev.azure.com",
+      "download.agent.dev.azure.com",
       "login.microsoftonline.com",
       "visualstudio-devdiv-c2s.msedge.net",
       "vssps.dev.azure.com",

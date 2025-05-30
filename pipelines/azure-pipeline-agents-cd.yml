@@ -159,8 +159,7 @@ jobs:
       condition: failed()
     ${{ elseif eq(parameters.destroy, 'On success') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      condition: succeeded()
-      # condition: or(succeeded(),eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}'))
+      condition: and(succeeded(),or(not(parameters.test), eq(dependencies.test.outputs['provisioningResult.result'],'success')))
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     pool:

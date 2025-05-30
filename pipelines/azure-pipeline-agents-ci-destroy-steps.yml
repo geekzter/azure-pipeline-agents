@@ -50,9 +50,9 @@ steps:
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
         condition: eq(variables['apply.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
-        condition: or(ne(variables['provisioningResult.result'],'success'),and(parameters.test, ne(dependencies.test.outputs['provisioningResult.result'],'success')))
+        condition: ne(variables['provisioningResult.result'],'success')
       ${{ elseif eq(parameters.destroy, 'On success') }}:
-        condition: and(eq(variables['provisioningResult.result'],'success'),or(not(parameters.test), eq(dependencies.test.outputs['provisioningResult.result'],'success')))
+        condition: eq(variables['provisioningResult.result'],'success')
       inputs:
         azureSubscription: '$(subscriptionConnection)'
         scriptType: pscore

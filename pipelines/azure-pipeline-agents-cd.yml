@@ -150,7 +150,7 @@ jobs:
       condition: succeededOrFailed()
     ${{ elseif eq(parameters.destroy, 'Always') }}:
       displayName: 'Destroy infrastructure'
-      condition: succeededOrFailed()
+      condition: always()
     ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
       displayName: 'Destroy infrastructure (${{ lower(parameters.destroy) }})'
       condition: and(succeeded(),eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false'))

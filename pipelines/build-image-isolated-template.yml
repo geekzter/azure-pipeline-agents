@@ -7,6 +7,7 @@ parameters:
   - Ubuntu2404
   - Windows2019
   - Windows2022
+  - Windows2025
 - name: hyperVGeneration
   displayName: VM generation
   type: string
@@ -92,6 +93,9 @@ jobs:
     - ${{ elseif eq(parameters.image,'Windows2022') }}:
       - name: 'baseImageSKU'
         value: '2022-datacenter-azure-edition'
+    - ${{ elseif eq(parameters.image,'Windows2025') }}:
+      - name: 'baseImageSKU'
+        value: '2025-datacenter-azure-edition'
     - ${{ elseif eq(parameters.image,'Ubuntu2204') }}:
       - name: 'baseImageSKU'
         value: '22_04-lts-gen2'

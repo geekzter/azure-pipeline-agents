@@ -20,6 +20,7 @@ parameters:
   - Windows
   - Windows2019
   - Windows2022
+  - Windows2025
 - name: includePreRelease
   displayName: Include pre-releases
   type: boolean
@@ -144,7 +145,7 @@ jobs:
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
-- ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
+- ${{ if in(parameters.image,'All','Windows','Windows2022') }}:
   - template: build-image-isolated-template.yml
     parameters:
       addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
@@ -161,6 +162,23 @@ jobs:
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
+- ${{ if in(parameters.image,'All','Latest','Windows','Windows2025') }}:
+  - template: build-image-isolated-template.yml
+    parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
+      destroy: ${{ parameters.destroy }}
+      hyperVGeneration: ${{ parameters.hyperVGeneration }}
+      image: Windows2025
+      imageReleaseName: win25
+      imageResourcePrefix: 'packer$(Build.BuildId)w25'
+      includePreRelease: ${{ parameters.includePreRelease }}
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      packerTemplateDirectory: 'images/windows/templates'
+      packerTemplateFile: 'windows-2025.pkr.hcl'
+      retryCount: ${{ parameters.retryCount }}
+      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
+      waitForReplication: ${{ parameters.waitForReplication }}
+
 - ${{ if parameters.destroy }}:
   - job: 'CleanUp'
     dependsOn:
@@ -172,6 +190,8 @@ jobs:
         - Windows2019
       - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
         - Windows2022
+      - ${{ if in(parameters.image,'All','Latest','Windows','Windows2025') }}:
+        - Windows2025
     displayName: 'Clean Up'
     condition: or(always(),canceled())
 

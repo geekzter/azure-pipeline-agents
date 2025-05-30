@@ -8,6 +8,7 @@ parameters:
   - Ubuntu2404
   - Windows2019
   - Windows2022
+  - Windows2025
 - name: imageReleaseName
 # Image Release Name as defined in GitHUb release feed
 # https://api.github.com/repos/actions/runner-images/releases

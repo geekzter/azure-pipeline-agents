@@ -92,9 +92,6 @@ jobs:
     - ${{ elseif eq(parameters.image,'Windows2022') }}:
       - name: 'baseImageSKU'
         value: '2022-datacenter-azure-edition'
-    - ${{ elseif eq(parameters.image,'Ubuntu2004') }}:
-      - name: 'baseImageSKU'
-        value: '20_04-lts-gen2'
     - ${{ elseif eq(parameters.image,'Ubuntu2204') }}:
       - name: 'baseImageSKU'
         value: '22_04-lts-gen2'

@@ -157,9 +157,12 @@ jobs:
     ${{ elseif eq(parameters.destroy, 'On failure') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
       condition: failed()
-    ${{ elseif eq(parameters.destroy, 'On success') }}:
+    ${{ elseif and(eq(parameters.destroy, 'On success'),not(parameters.test)) }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
-      condition: and(succeeded(),or(not(parameters.test), eq(dependencies.test.outputs['provisioningResult.result'],'success')))
+      condition: succeeded()
+    ${{ elseif and(eq(parameters.destroy, 'On success'),parameters.test) }}:
+      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+      condition: and(succeeded(),eq(dependencies.test.outputs['provisioningResult.result'],'success'))
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     pool:

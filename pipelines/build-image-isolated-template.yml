@@ -377,6 +377,7 @@ jobs:
         }
       addSpnToEnvironment: true
       failOnStandardError: true
+      retryCountOnTaskFailure: 1
       workingDirectory: $(imageTemplateDirectory)
     env:
       PACKER_LOG: 1

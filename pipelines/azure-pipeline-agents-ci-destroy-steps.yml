@@ -148,6 +148,7 @@ steps:
           $terraformState = (terraform state pull | ConvertFrom-Json)
           if ($terraformState.resources) {
             Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
+            $terraformState.check_results = $null
             $terraformState.outputs = New-Object PSObject # Empty output
             $terraformState.resources = @() # No resources
             $terraformState.serial++

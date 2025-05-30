@@ -223,6 +223,7 @@ jobs:
     name: imageBuild
     displayName: 'Build image'
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+    retryCountOnTaskFailure: 1
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
@@ -251,7 +252,6 @@ jobs:
       pwsh: true
       failOnStandardError: true
       workingDirectory: '$(Build.SourcesDirectory)/runner-images/helpers'
-      retryCountOnTaskFailure: 1
 
   - task: AzureCLI@2
     name: managedImage

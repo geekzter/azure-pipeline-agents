@@ -43,7 +43,7 @@ parameters:
 - name: retryCount
   displayName: Build task retry count
   type: number
-  default: 1
+  default: 2
 - name: upgradeAzureCLI
   displayName: Upgrade Azure CLI to latest version
   type: boolean

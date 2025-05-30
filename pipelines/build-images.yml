@@ -15,7 +15,6 @@ parameters:
   - Latest
   - Stable
   - Ubuntu
-  - Ubuntu2004
   - Ubuntu2204
   - Ubuntu2404
   - Windows
@@ -80,17 +79,6 @@ variables:
     value: ${{ parameters.imageRepoRef }}
 
 jobs:
-- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
-  - template: build-image-template.yml
-    parameters:
-      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
-      destroy: ${{ parameters.destroy }}
-      excludeFromLatest: ${{ parameters.excludeFromLatest }}
-      image: Ubuntu2004
-      imageReleaseName: ubuntu20
-      imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u20'
-      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-template.yml
     parameters:

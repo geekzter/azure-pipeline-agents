@@ -15,7 +15,6 @@ parameters:
   - Latest
   - Stable
   - Ubuntu
-  - Ubuntu2004
   - Ubuntu2204
   - Ubuntu2404
   - Windows
@@ -94,23 +93,6 @@ variables:
     value: ${{ parameters.imageRepoRef }}
 
 jobs:
-- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
-  - template: build-image-isolated-template.yml
-    parameters:
-      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
-      destroy: ${{ parameters.destroy }}
-      image: Ubuntu2004
-      hyperVGeneration: ${{ parameters.hyperVGeneration }}
-      imageReleaseName: ubuntu20
-      imageResourcePrefix: 'packer$(Build.BuildId)u20'
-      includePreRelease: ${{ parameters.includePreRelease }}
-      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-      packerTemplateDirectory: 'images/ubuntu/templates'
-      packerTemplateFile: 'ubuntu-20.04.pkr.hcl'
-      retryCount: ${{ parameters.retryCount }}
-      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
-      waitForReplication: ${{ parameters.waitForReplication }}
-
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-isolated-template.yml
     parameters:

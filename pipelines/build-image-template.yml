@@ -4,7 +4,6 @@ parameters:
   type: string
   default: Ubuntu2204
   values:
-  - Ubuntu2004
   - Ubuntu2204
   - Ubuntu2404
   - Windows2019

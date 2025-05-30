@@ -322,6 +322,9 @@ jobs:
         $packerTemplateParameters | Format-Table
         $packerTemplateParameters | ConvertTo-Json | Write-Host
 
+        # Install Azure plugin
+        packer plugins install github.com/hashicorp/azure
+
         Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
       addSpnToEnvironment: true

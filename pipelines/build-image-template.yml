@@ -229,6 +229,9 @@ jobs:
       inline: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
       
+        # Install Azure plugin
+        packer plugins install github.com/hashicorp/azure
+
         # Required for GenerateResourcesAndImage
         $PSNativeCommandArgumentPassing = 'Standard'
 

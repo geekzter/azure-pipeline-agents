@@ -113,7 +113,7 @@ jobs:
 
 - ${{ if parameters.test }}:
   - job: test
-    condition: succeeded()
+    condition: and(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),eq(variables['TF_VAR_deploy_azure_scale_set'],'true'),succeeded())
     continueOnError: $[ eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}') ]
     dependsOn: 
       - provision

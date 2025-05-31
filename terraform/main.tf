@@ -262,7 +262,7 @@ resource azurerm_monitor_diagnostic_setting key_vault {
     category                   = "AuditEvent"
   }
 
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 }

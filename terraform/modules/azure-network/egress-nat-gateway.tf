@@ -36,7 +36,7 @@ resource azurerm_monitor_diagnostic_setting nat_egress {
     category                   = "DDoSMitigationReports"
   }  
 
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 

@@ -1012,7 +1012,7 @@ resource azurerm_monitor_diagnostic_setting firewall_ip_logs {
     category                   = "DDoSMitigationReports"
   }
 
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 
@@ -1038,7 +1038,7 @@ resource azurerm_monitor_diagnostic_setting firewall_logs {
     category                   = "AzureFirewallNetworkRule"
   }
   
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 

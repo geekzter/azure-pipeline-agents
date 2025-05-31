@@ -11,6 +11,7 @@ resource azurerm_subnet packer {
   resource_group_name          = azurerm_virtual_network.packer.resource_group_name
   virtual_network_name         = azurerm_virtual_network.packer.name
   address_prefixes             = [cidrsubnet(tolist(azurerm_virtual_network.packer.address_space)[0],4,12)]
+  default_outbound_access_enabled = false
 }
 resource azurerm_network_security_group packer_nsg {
   name                         = "${azurerm_virtual_network.packer.name}-packer-nsg"

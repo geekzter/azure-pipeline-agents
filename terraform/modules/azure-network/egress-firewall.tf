@@ -3,6 +3,7 @@ resource azurerm_subnet fw_subnet {
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(tolist(azurerm_virtual_network.pipeline_network.address_space)[0],4,0)]
+  default_outbound_access_enabled = false
 
   count                        = var.deploy_firewall ? 1 : 0
 }

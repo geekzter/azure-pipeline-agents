@@ -50,7 +50,7 @@ steps:
       ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
         condition: eq(variables['apply.priorResourcesExist'],'false')
       ${{ elseif eq(parameters.destroy, 'On failure') }}:
-        condition: not(eq(variables['provisioningResult.result'],'success'))
+        condition: ne(variables['provisioningResult.result'],'success')
       ${{ elseif eq(parameters.destroy, 'On success') }}:
         condition: eq(variables['provisioningResult.result'],'success')
       inputs:
@@ -148,6 +148,7 @@ steps:
           $terraformState = (terraform state pull | ConvertFrom-Json)
           if ($terraformState.resources) {
             Write-Host "Clearing Terraform state in workspace ${env:TF_WORKSPACE}..."
+            $terraformState.check_results = $null
             $terraformState.outputs = New-Object PSObject # Empty output
             $terraformState.resources = @() # No resources
             $terraformState.serial++

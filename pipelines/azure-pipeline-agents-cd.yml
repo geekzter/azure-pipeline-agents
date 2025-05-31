@@ -113,7 +113,7 @@ jobs:
 
 - ${{ if parameters.test }}:
   - job: test
-    condition: succeeded()
+    condition: and(or(eq(variables['TF_VAR_deploy_self_hosted_vms'],'true'),eq(variables['TF_VAR_deploy_azure_scale_set'],'true')),succeeded())
     continueOnError: $[ eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}') ]
     dependsOn: 
       - provision
@@ -150,17 +150,19 @@ jobs:
       condition: succeededOrFailed()
     ${{ elseif eq(parameters.destroy, 'Always') }}:
       displayName: 'Destroy infrastructure'
-      condition: succeededOrFailed()
+      condition: always()
     ${{ elseif eq(parameters.destroy, 'If no prior resources exist') }}:
       displayName: 'Destroy infrastructure (${{ lower(parameters.destroy) }})'
       condition: and(succeeded(),eq(dependencies.provision.outputs['apply.priorResourcesExist'],'false'))
     ${{ elseif eq(parameters.destroy, 'On failure') }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
       condition: failed()
-    ${{ elseif eq(parameters.destroy, 'On success') }}:
+    ${{ elseif and(eq(parameters.destroy, 'On success'),not(parameters.test)) }}:
       displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
       condition: succeeded()
-      # condition: or(succeeded(),eq(dependencies.provision.outputs['terraform.azdo_pools_json'],'{}'))
+    ${{ elseif and(eq(parameters.destroy, 'On success'),parameters.test) }}:
+      displayName: 'Destroy (${{ lower(parameters.destroy) }}) infrastructure'
+      condition: and(succeeded(),eq(dependencies.test.outputs['provisioningResult.result'],'success'))
     timeoutInMinutes: $[ variables['jobTimeOutMinutes'] ]
 
     pool:

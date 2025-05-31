@@ -15,12 +15,12 @@ parameters:
   - Latest
   - Stable
   - Ubuntu
-  - Ubuntu2004
   - Ubuntu2204
   - Ubuntu2404
   - Windows
   - Windows2019
   - Windows2022
+  - Windows2025
 - name: includePreRelease
   displayName: Include pre-releases
   type: boolean
@@ -43,7 +43,7 @@ parameters:
 - name: retryCount
   displayName: Build task retry count
   type: number
-  default: 1
+  default: 2
 - name: upgradeAzureCLI
   displayName: Upgrade Azure CLI to latest version
   type: boolean
@@ -94,23 +94,6 @@ variables:
     value: ${{ parameters.imageRepoRef }}
 
 jobs:
-- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
-  - template: build-image-isolated-template.yml
-    parameters:
-      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
-      destroy: ${{ parameters.destroy }}
-      image: Ubuntu2004
-      hyperVGeneration: ${{ parameters.hyperVGeneration }}
-      imageReleaseName: ubuntu20
-      imageResourcePrefix: 'packer$(Build.BuildId)u20'
-      includePreRelease: ${{ parameters.includePreRelease }}
-      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-      packerTemplateDirectory: 'images/ubuntu/templates'
-      packerTemplateFile: 'ubuntu-20.04.pkr.hcl'
-      retryCount: ${{ parameters.retryCount }}
-      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
-      waitForReplication: ${{ parameters.waitForReplication }}
-
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-isolated-template.yml
     parameters:
@@ -162,7 +145,7 @@ jobs:
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
-- ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
+- ${{ if in(parameters.image,'All','Windows','Windows2022') }}:
   - template: build-image-isolated-template.yml
     parameters:
       addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
@@ -179,11 +162,26 @@ jobs:
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
 
+- ${{ if in(parameters.image,'All','Latest','Windows','Windows2025') }}:
+  - template: build-image-isolated-template.yml
+    parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
+      destroy: ${{ parameters.destroy }}
+      hyperVGeneration: ${{ parameters.hyperVGeneration }}
+      image: Windows2025
+      imageReleaseName: win25
+      imageResourcePrefix: 'packer$(Build.BuildId)w25'
+      includePreRelease: ${{ parameters.includePreRelease }}
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+      packerTemplateDirectory: 'images/windows/templates'
+      packerTemplateFile: 'windows-2025.pkr.hcl'
+      retryCount: ${{ parameters.retryCount }}
+      upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
+      waitForReplication: ${{ parameters.waitForReplication }}
+
 - ${{ if parameters.destroy }}:
   - job: 'CleanUp'
     dependsOn:
-      - ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
-        - Ubuntu2004
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
         - Ubuntu2204
       - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2404') }}:
@@ -192,6 +190,8 @@ jobs:
         - Windows2019
       - ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
         - Windows2022
+      - ${{ if in(parameters.image,'All','Latest','Windows','Windows2025') }}:
+        - Windows2025
     displayName: 'Clean Up'
     condition: or(always(),canceled())
 

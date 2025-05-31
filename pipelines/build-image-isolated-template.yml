@@ -3,11 +3,11 @@ parameters:
   displayName: Image
   type: string
   values:
-  - Ubuntu2004
   - Ubuntu2204
   - Ubuntu2404
   - Windows2019
   - Windows2022
+  - Windows2025
 - name: hyperVGeneration
   displayName: VM generation
   type: string
@@ -42,7 +42,7 @@ parameters:
 - name: retryCount
   displayName: Build task retry count
   type: number
-  default: 1
+  default: 2
 - name: upgradeAzureCLI
   displayName: Upgrade Azure CLI to latest version
   type: boolean
@@ -93,9 +93,9 @@ jobs:
     - ${{ elseif eq(parameters.image,'Windows2022') }}:
       - name: 'baseImageSKU'
         value: '2022-datacenter-azure-edition'
-    - ${{ elseif eq(parameters.image,'Ubuntu2004') }}:
+    - ${{ elseif eq(parameters.image,'Windows2025') }}:
       - name: 'baseImageSKU'
-        value: '20_04-lts-gen2'
+        value: '2025-datacenter-azure-edition'
     - ${{ elseif eq(parameters.image,'Ubuntu2204') }}:
       - name: 'baseImageSKU'
         value: '22_04-lts-gen2'
@@ -321,6 +321,9 @@ jobs:
         $packerTemplateParameters['install_password'] = '***'
         $packerTemplateParameters | Format-Table
         $packerTemplateParameters | ConvertTo-Json | Write-Host
+
+        # Install Azure plugin
+        packer plugins install github.com/hashicorp/azure
 
         Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"

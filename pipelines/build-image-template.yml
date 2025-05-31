@@ -4,11 +4,11 @@ parameters:
   type: string
   default: Ubuntu2204
   values:
-  - Ubuntu2004
   - Ubuntu2204
   - Ubuntu2404
   - Windows2019
   - Windows2022
+  - Windows2025
 - name: imageReleaseName
 # Image Release Name as defined in GitHUb release feed
 # https://api.github.com/repos/actions/runner-images/releases
@@ -223,12 +223,16 @@ jobs:
     name: imageBuild
     displayName: 'Build image'
     condition: and(succeeded(), ne(coalesce(variables['githubRelease.newImageVersion'],'false'),'false'))
+    retryCountOnTaskFailure: 1
     inputs:
       azureSubscription: '$(packerSubscriptionConnection)'
       scriptType: inlineScript
       inline: |
         $(scriptDirectory)/configure_pwsh_trace.ps1
       
+        # Install Azure plugin
+        packer plugins install github.com/hashicorp/azure
+
         # Required for GenerateResourcesAndImage
         $PSNativeCommandArgumentPassing = 'Standard'
 

@@ -15,12 +15,12 @@ parameters:
   - Latest
   - Stable
   - Ubuntu
-  - Ubuntu2004
   - Ubuntu2204
   - Ubuntu2404
   - Windows
   - Windows2019
   - Windows2022
+  - Windows2025
 - name: destroy
   displayName: Destroy Infrastructure
   type: boolean
@@ -80,17 +80,6 @@ variables:
     value: ${{ parameters.imageRepoRef }}
 
 jobs:
-- ${{ if in(parameters.image,'All','Stable','Ubuntu','Ubuntu2004') }}:
-  - template: build-image-template.yml
-    parameters:
-      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
-      destroy: ${{ parameters.destroy }}
-      excludeFromLatest: ${{ parameters.excludeFromLatest }}
-      image: Ubuntu2004
-      imageReleaseName: ubuntu20
-      imageResourceGroup: 'pipeline-image-$(Build.BuildId)-u20'
-      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
-
 - ${{ if in(parameters.image,'All','Latest','Ubuntu','Ubuntu2204') }}:
   - template: build-image-template.yml
     parameters:
@@ -124,7 +113,7 @@ jobs:
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w19'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
 
-- ${{ if in(parameters.image,'All','Latest','Windows','Windows2022') }}:
+- ${{ if in(parameters.image,'All','Windows','Windows2022') }}:
   - template: build-image-template.yml
     parameters:
       addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
@@ -133,4 +122,15 @@ jobs:
       image: Windows2022
       imageReleaseName: win22
       imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w22'
+      numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
+
+- ${{ if in(parameters.image,'All','Latest','Windows','Windows2025') }}:
+  - template: build-image-template.yml
+    parameters:
+      addMinorImageVersion: ${{ parameters.addMinorImageVersion }}
+      destroy: ${{ parameters.destroy }}
+      excludeFromLatest: ${{ parameters.excludeFromLatest }}
+      image: Windows2025
+      imageReleaseName: win25
+      imageResourceGroup: 'pipeline-image-$(Build.BuildId)-w25'
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}

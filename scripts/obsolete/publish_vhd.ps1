@@ -13,7 +13,7 @@
 .EXAMPLE
     ./publish_vhd.ps1 -SourceVHDUrl "https://packer12345.blob.core.windows.net/system/Microsoft.Compute/Images/images/packer-osDisk.00000000-0000-0000-0000-000000000000.vhd?se=2022-02-07&sp=racwdl&sv=2018-11-09&sr=c&skoid=00000000-0000-0000-0000-000000000000&sktid=00000000-0000-0000-0000-000000000000&skt=2022-01-31T10%3A39%3A58Z&ske=2022-02-07T00%3A00%3A00Z&sks=b&skv=2018-11-09&sig=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX3D" `
                       -GalleryResourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Shared" 
-                      -GalleryName OurGallery -ImageDefinitionName Ubuntu2004 -Publisher PrivatePipelineImages -Offer Ubuntu -SKU 2004 -OsType linux
+                      -GalleryName OurGallery -ImageDefinitionName Ubuntu2404 -Publisher PrivatePipelineImages -Offer Ubuntu -SKU 2004 -OsType linux
 #> 
 #Requires -Version 7
 

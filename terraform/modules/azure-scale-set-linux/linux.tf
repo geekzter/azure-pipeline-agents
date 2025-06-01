@@ -208,7 +208,7 @@ resource azurerm_monitor_diagnostic_setting linux_agents {
   target_resource_id           = azurerm_linux_virtual_machine_scale_set.linux_agents.id
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
 
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 } 

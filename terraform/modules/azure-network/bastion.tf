@@ -7,7 +7,7 @@ resource azurerm_subnet bastion_subnet {
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = [cidrsubnet(tolist(azurerm_virtual_network.pipeline_network.address_space)[0],4,1)]
-
+  default_outbound_access_enabled = false
 }
 
 # https://docs.microsoft.com/en-us/azure/bastion/bastion-nsg
@@ -190,7 +190,7 @@ resource azurerm_monitor_diagnostic_setting bastion_ip {
     category                   = "DDoSMitigationReports"
   }  
 
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 

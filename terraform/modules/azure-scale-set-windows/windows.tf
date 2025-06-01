@@ -155,7 +155,7 @@ resource azurerm_monitor_diagnostic_setting windows_agents {
   target_resource_id           = azurerm_windows_virtual_machine_scale_set.windows_agents.id
   log_analytics_workspace_id   = var.log_analytics_workspace_resource_id
 
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 } 

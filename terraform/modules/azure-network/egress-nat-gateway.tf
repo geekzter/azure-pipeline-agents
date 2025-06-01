@@ -36,7 +36,7 @@ resource azurerm_monitor_diagnostic_setting nat_egress {
     category                   = "DDoSMitigationReports"
   }  
 
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
 
@@ -50,6 +50,28 @@ resource azurerm_nat_gateway_public_ip_association egress {
   count                        = var.deploy_firewall ? 0 : 1
 }
 
+resource azurerm_subnet_nat_gateway_association bastion_subnet {
+  subnet_id                    = azurerm_subnet.bastion_subnet.id
+  nat_gateway_id               = azurerm_nat_gateway.egress.0.id
+
+  depends_on                   = [
+    azurerm_nat_gateway_public_ip_association.egress,
+    azurerm_subnet_network_security_group_association.bastion_nsg
+  ]
+
+  count                        = var.deploy_firewall ? 0 : 1
+}
+resource azurerm_subnet_nat_gateway_association private_endpoint_subnet {
+  subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
+  nat_gateway_id               = azurerm_nat_gateway.egress.0.id
+
+  depends_on                   = [
+    azurerm_nat_gateway_public_ip_association.egress,
+    azurerm_subnet_network_security_group_association.private_endpoint_subnet
+  ]
+
+  count                        = var.deploy_firewall ? 0 : 1
+}
 resource azurerm_subnet_nat_gateway_association scale_set_agents {
   subnet_id                    = azurerm_subnet.scale_set_agents.id
   nat_gateway_id               = azurerm_nat_gateway.egress.0.id

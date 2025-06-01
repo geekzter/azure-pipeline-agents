@@ -9,6 +9,7 @@ resource azurerm_subnet scale_set_agents {
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = local.scale_set_agent_address_prefixes
+  default_outbound_access_enabled = false
   depends_on                   = [
     azurerm_network_security_rule.agent_rdp,
     azurerm_network_security_rule.agent_ssh,
@@ -23,6 +24,7 @@ resource azurerm_subnet self_hosted_agents {
   virtual_network_name         = azurerm_virtual_network.pipeline_network.name
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   address_prefixes             = local.self_hosted_agent_address_prefixes
+  default_outbound_access_enabled = false
   depends_on                   = [
     azurerm_network_security_rule.agent_rdp,
     azurerm_network_security_rule.agent_ssh,

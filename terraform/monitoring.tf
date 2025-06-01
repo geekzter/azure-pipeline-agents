@@ -22,7 +22,7 @@ resource azurerm_monitor_diagnostic_setting monitor {
   enabled_log {
     category                   = "Audit"
   }
-  metric {
+  enabled_metric {
     category                   = "AllMetrics"
   }
   count                        = var.azure_log_analytics_workspace_id != "" && var.azure_log_analytics_workspace_id != null ? 0 : 1

@@ -37,6 +37,15 @@ resource azurerm_subnet_nat_gateway_association packer {
   count                        = var.deploy_nat_gateway ? 1 : 0
 }
 
+resource azurerm_subnet_nat_gateway_association private_endpoint_subnet {
+  subnet_id                    = azurerm_subnet.private_endpoint_subnet.id
+  nat_gateway_id               = azurerm_nat_gateway.egress.0.id
+
+  depends_on                   = [azurerm_nat_gateway_public_ip_association.egress]
+
+  count                        = var.deploy_nat_gateway ? 1 : 0
+}
+
 resource azurerm_route_table route_table {
   name                         = "${azurerm_virtual_network.packer.name}-routes"
   location                     = var.location

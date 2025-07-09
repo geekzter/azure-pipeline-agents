@@ -175,9 +175,11 @@ variable azure_windows_os_image_id {
 }
 # az vm image list-offers -l westeurope -p "microsoftvisualstudio" -o table
 # az vm image list-skus -l westeurope -f "visualstudioserverplustools" -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l westeurope -f "visualstudiowsplustools" -p "microsoftvisualstudio" -o table
 # az vm image list -l westeurope -f "visualstudioserverplustools" -p "microsoftvisualstudio" -s "vs-2022-ent-ws2025-datacenter-azure-gen2" -o table --all
+# az vm image list -l westeurope -f "visualstudiowsplustools" -p "microsoftvisualstudio" -s "vs-2022-ent-ws2025-datacenter-azure-gen2" -o table --all
 variable azure_windows_os_offer {
-  default                      = "visualstudioserverplustools"
+  default                      = "visualstudiowsplustools"
 }
 variable azure_windows_os_publisher {
   default                      = "microsoftvisualstudio"

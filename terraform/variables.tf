@@ -173,17 +173,17 @@ variable azure_windows_pipeline_agent_name_prefix {
 variable azure_windows_os_image_id {
   default                      = null
 }
-# az vm image list-skus -l centralus -f "visualstudio2019latest" -p "microsoftvisualstudio" -o table
-# az vm image list-skus -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -o table
-# az vm image list -l centralus -f "visualstudio2022" -p "microsoftvisualstudio" -s "vs-2022-comm-latest-ws2022" -o table --all
+# az vm image list-offers -l westeurope -p "microsoftvisualstudio" -o table
+# az vm image list-skus -l westeurope -f "visualstudioserverplustools" -p "microsoftvisualstudio" -o table
+# az vm image list -l westeurope -f "visualstudioserverplustools" -p "microsoftvisualstudio" -s "vs-2022-ent-ws2025-datacenter-azure-gen2" -o table --all
 variable azure_windows_os_offer {
-  default                      = "visualstudio2022"
+  default                      = "visualstudioserverplustools"
 }
 variable azure_windows_os_publisher {
   default                      = "microsoftvisualstudio"
 }
 variable azure_windows_os_sku {
-  default                      = "vs-2022-ent-latest-ws2022"
+  default                      = "vs-2022-ent-ws2025-datacenter-azure-gen2"
 }
 variable azure_windows_os_version {
   default                      = "latest"

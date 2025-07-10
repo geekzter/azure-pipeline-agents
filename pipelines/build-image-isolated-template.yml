@@ -331,7 +331,7 @@ jobs:
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
       addSpnToEnvironment: true
       failOnStandardError: true
-      workingDirectory: $(imageTemplateDirectory)
+      workingDirectory: $()
 
   - task: AzureCLI@2
     displayName: 'Packer build (HCL)'
@@ -352,7 +352,8 @@ jobs:
         # TODO: Secret-free authentication
 
         # Init
-        dir .
+        Write-Host "Templates in $(imageTemplateDirectory):"
+        Get-ChildItem -Path $(imageTemplateDirectory) -Filter *.hcl | Format-Table
         # packer init $(imageTemplateFileName)
 
         # Build

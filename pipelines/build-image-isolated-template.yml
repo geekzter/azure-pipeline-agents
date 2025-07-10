@@ -352,6 +352,7 @@ jobs:
         # TODO: Secret-free authentication
 
         # Init
+        dir .
         # packer init $(imageTemplateFileName)
 
         # Build

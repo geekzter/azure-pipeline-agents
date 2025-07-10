@@ -352,7 +352,7 @@ jobs:
         # TODO: Secret-free authentication
 
         # Init
-        packer init $(imageTemplateFileName)
+        # packer init $(imageTemplateFileName)
 
         # Build
         Write-Host "`nRunning 'packer build -force -only $(imageTemplateName)* [-var ...] ... $(imageTemplateFileName)'..."

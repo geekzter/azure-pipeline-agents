@@ -127,11 +127,11 @@ jobs:
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageTemplate'
-    value: '$(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}/build.${{ parameters.packerTemplateFile }}.pkr.hcl'
+    value: '$(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}/build.${{ parameters.packerTemplateName }}.pkr.hcl'
   - name: 'imageTemplateFileName'
-    value: build.${{ parameters.packerTemplateFile }}.pkr.hcl
+    value: build.${{ parameters.packerTemplateName }}.pkr.hcl
   - name: 'imageTemplateName'
-    value: ${{ parameters.packerTemplateFile }}
+    value: ${{ parameters.packerTemplateName }}
   - name: 'imageTemplateDirectory'
     value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
   - name: 'imageTemplatePatchFileName'

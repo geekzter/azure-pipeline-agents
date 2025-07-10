@@ -106,7 +106,7 @@ jobs:
       includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/ubuntu/templates'
-      packerTemplateFile: 'ubuntu-22.04.pkr.hcl'
+      packerTemplateFile: 'build.ubuntu-22_04.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -123,7 +123,7 @@ jobs:
       includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/ubuntu/templates'
-      packerTemplateFile: 'ubuntu-24.04.pkr.hcl'
+      packerTemplateFile: 'build.ubuntu-24_04.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -140,7 +140,7 @@ jobs:
       includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/windows/templates'
-      packerTemplateFile: 'windows-2019.pkr.hcl'
+      packerTemplateFile: 'build.windows-2019.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -157,7 +157,7 @@ jobs:
       includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/windows/templates'
-      packerTemplateFile: 'windows-2022.pkr.hcl'
+      packerTemplateFile: 'build.windows-2022.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}
@@ -174,7 +174,7 @@ jobs:
       includePreRelease: ${{ parameters.includePreRelease }}
       numberOfVersionsToKeep: ${{ parameters.numberOfVersionsToKeep }}
       packerTemplateDirectory: 'images/windows/templates'
-      packerTemplateFile: 'windows-2025.pkr.hcl'
+      packerTemplateFile: 'build.windows-2025.pkr.hcl'
       retryCount: ${{ parameters.retryCount }}
       upgradeAzureCLI: ${{ parameters.upgradeAzureCLI }}
       waitForReplication: ${{ parameters.waitForReplication }}

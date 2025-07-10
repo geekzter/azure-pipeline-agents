@@ -328,7 +328,7 @@ jobs:
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
       addSpnToEnvironment: true
       failOnStandardError: true
-      workingDirectory: $()
+      workingDirectory: $(imageTemplateDirectory)
 
   - task: AzureCLI@2
     displayName: 'Packer build (HCL)'

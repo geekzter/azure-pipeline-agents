@@ -182,6 +182,7 @@ jobs:
   - task: AzureCLI@2
     name: githubRelease
     displayName: 'Get release for $(imageName)'
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore

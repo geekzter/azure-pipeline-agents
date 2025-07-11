@@ -325,7 +325,6 @@ jobs:
 
         Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
-      addSpnToEnvironment: false
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
 
@@ -376,7 +375,6 @@ jobs:
           Write-Host "##vso[task.logissue type=error]'packer build' exited with status $exitCode"
           throw "'packer build' exited with status $exitCode"
         }
-      addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
     env:
@@ -466,7 +464,6 @@ jobs:
                                     --query id -o tsv | Set-Variable imageVersionId
 
         Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedVersionString"
-      addSpnToEnvironment: true
       failOnStandardError: true
 
   - task: AzureCLI@2

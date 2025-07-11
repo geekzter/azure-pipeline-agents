@@ -347,7 +347,6 @@ jobs:
         # Init
         Write-Host "Templates in $(imageTemplateDirectory):"
         Get-ChildItem -Path $(imageTemplateDirectory) -Filter *.hcl | Format-Table
-        # packer init $(imageTemplateFileName)
         packer validate -syntax-only -only "$(imageTemplateName)*" .
 
         # Build

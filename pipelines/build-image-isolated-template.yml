@@ -351,7 +351,7 @@ jobs:
         packer validate -syntax-only -only "$(imageTemplateName)*" .
 
         # Build
-        Write-Host "`nRunning 'packer build -force -only $(imageTemplateName)* -var \"build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}\" -var \"client_id=${env:servicePrincipalId}\" -var \"client_secret=${env:servicePrincipalKey}\" -var \"image_os=$(imageReleaseName)\" -var \"install_password=$([system.guid]::NewGuid().ToString().ToUpper()))\" -var \"managed_image_name=$(imageName)-$(githubRelease.fullyQualifiedVersion)\" -var \"managed_image_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}\" -var \"subscription_id=$(az account show --query id -o tsv)\" -var \"tenant_id=${env:tenantId}\" -var \"virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}\" -var \"virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}\" -var \"virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}\" ... $(imageTemplateFileName)'..."
+        Write-Host "`nRunning 'packer build -force -only $(imageTemplateName)* [vars] ... $(imageTemplateFileName)'..."
         packer build -force `
                      -only "$(imageTemplateName)*" `
                      -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `

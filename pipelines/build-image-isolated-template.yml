@@ -36,8 +36,8 @@ parameters:
 - name: packerTemplateDirectory
   displayName: Packer template directory # relative path
   type: string
-- name: packerTemplateFile
-  displayName: Packer template file
+- name: packerTemplateName
+  displayName: Packer template name (build.<name>.pkr.hcl)
   type: string
 - name: retryCount
   displayName: Build task retry count
@@ -127,9 +127,11 @@ jobs:
   - name: 'imageResourcePrefix' 
     value: '${{ parameters.imageResourcePrefix }}'
   - name: 'imageTemplate'
-    value: '$(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}/${{ parameters.packerTemplateFile }}'
+    value: '$(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}/build.${{ parameters.packerTemplateName }}.pkr.hcl'
   - name: 'imageTemplateFileName'
-    value: ${{ parameters.packerTemplateFile }}
+    value: build.${{ parameters.packerTemplateName }}.pkr.hcl
+  - name: 'imageTemplateName'
+    value: ${{ parameters.packerTemplateName }}
   - name: 'imageTemplateDirectory'
     value: $(Build.SourcesDirectory)/runner-images/${{ parameters.packerTemplateDirectory }}
   - name: 'imageTemplatePatchFileName'
@@ -180,6 +182,7 @@ jobs:
   - task: AzureCLI@2
     name: githubRelease
     displayName: 'Get release for $(imageName)'
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
     inputs:
       azureSubscription: '$(gallerySubscriptionConnection)'
       scriptType: pscore
@@ -282,19 +285,16 @@ jobs:
           Set-Content $packerTemplateFileName -Value $packerTemplateContent -Force
         }
 
-        # replace client_secret with client_jwt value in .pkr.hcl
-        if ($env:idToken) {
-          # Patch template to accept idToken as client_jwt
-          (Get-Content $packerTemplateFileName) -replace "client_secret\W*=.*$","client_jwt = `"`${var.client_jwt}`"" `
-                                                | Tee-Object -Variable packerTemplateContent
-          Copy-Item -Path $packerTemplatePatchFileName -Destination $packerTemplateFileName -Force
-          Add-Content $packerTemplateFileName -Value $packerTemplateContent -Force
-        }
+        # # replace client_secret with client_jwt value in .pkr.hcl
+        # if ($env:idToken) {
+        #   # Patch template to accept idToken as client_jwt
+        #   (Get-Content $packerTemplateFileName) -replace "client_secret\W*=.*$","client_jwt = `"`${var.client_jwt}`"" `
+        #                                         | Tee-Object -Variable packerTemplateContent
+        #   Copy-Item -Path $packerTemplatePatchFileName -Destination $packerTemplateFileName -Force
+        #   Add-Content $packerTemplateFileName -Value $packerTemplateContent -Force
+        # }
 
         $packerTemplateArgument = "."
-
-        # Remove HCL files from other image templates residing in the same directory
-        Remove-Item *.hcl -Exclude $packerTemplateFileName, $packerHCLVarsFile
 
         # Test Packer configuration, listing variables
         packer inspect $packerTemplateArgument
@@ -303,13 +303,12 @@ jobs:
         $imageVMPassword = [system.guid]::NewGuid().ToString().ToUpper()
         $packerTemplateParameters = @{
           build_resource_group_name           = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
-          client_id                           = $env:servicePrincipalId
-          client_secret                       = $env:servicePrincipalKey
           install_password                    = $imageVMPassword
           managed_image_name                  = "$(imageName)-$(githubRelease.fullyQualifiedVersion)"
           managed_image_resource_group_name   = $env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME
           subscription_id                     = $(az account show --query id -o tsv)
-          tenant_id                           = $env:tenantId
+          tenant_id                           = $(az account show --query tenantId -o tsv)
+          use_azure_cli_auth                  = "true"
           virtual_network_name                = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME
           virtual_network_resource_group_name = $env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME
           virtual_network_subnet_name         = $env:PIPELINE_DEMO_PACKER_SUBNET_NAME
@@ -327,7 +326,6 @@ jobs:
 
         Write-Host "##vso[task.setvariable variable=templateArgument;isoutput=true]$packerTemplateArgument"
         Write-Host "##vso[task.setvariable variable=packerTemplateParametersJson;isoutput=true;issecret=true]$packerTemplateParametersJson"
-      addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
 
@@ -347,21 +345,23 @@ jobs:
         # https://github.com/actions/runner-images/discussions/4362
         # We assume main branch is the latest released version
 
-        # TODO: Secret-free authentication
-
         # Init
-        packer init $(imageTemplateFileName)
+        Write-Host "Templates in $(imageTemplateDirectory):"
+        Get-ChildItem -Path $(imageTemplateDirectory) -Filter *.hcl | Format-Table
+        packer validate -syntax-only -only "$(imageTemplateName)*" .
 
         # Build
+        Write-Host "`nRunning 'packer build -force -only $(imageTemplateName)* [vars] ... $(imageTemplateFileName)'..."
         packer build -force `
+                     -only "$(imageTemplateName)*" `
                      -var "build_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
-                     -var "client_id=${env:servicePrincipalId}" `
-                     -var "client_secret=${env:servicePrincipalKey}" `
+                     -var "use_azure_cli_auth=true" `
+                     -var "image_os=$(imageReleaseName)" `
                      -var "install_password=$([system.guid]::NewGuid().ToString().ToUpper()))" `
                      -var "managed_image_name=$(imageName)-$(githubRelease.fullyQualifiedVersion)" `
                      -var "managed_image_resource_group_name=${env:PIPELINE_DEMO_PACKER_BUILD_RESOURCE_GROUP_NAME}" `
                      -var "subscription_id=$(az account show --query id -o tsv)" `
-                     -var "tenant_id=${env:tenantId}" `
+                     -var "tenant_id=$(az account show --query tenantId -o tsv)" `
                      -var "virtual_network_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_NAME}" `
                      -var "virtual_network_resource_group_name=${env:PIPELINE_DEMO_PACKER_VIRTUAL_NETWORK_RESOURCE_GROUP_NAME}" `
                      -var "virtual_network_subnet_name=${env:PIPELINE_DEMO_PACKER_SUBNET_NAME}" `
@@ -375,7 +375,6 @@ jobs:
           Write-Host "##vso[task.logissue type=error]'packer build' exited with status $exitCode"
           throw "'packer build' exited with status $exitCode"
         }
-      addSpnToEnvironment: true
       failOnStandardError: true
       workingDirectory: $(imageTemplateDirectory)
     env:
@@ -465,7 +464,6 @@ jobs:
                                     --query id -o tsv | Set-Variable imageVersionId
 
         Write-Host "##vso[task.setvariable variable=fullyQualifiedVersion;isoutput=true]$fullyQualifiedVersionString"
-      addSpnToEnvironment: true
       failOnStandardError: true
 
   - task: AzureCLI@2

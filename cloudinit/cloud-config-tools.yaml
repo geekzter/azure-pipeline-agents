@@ -8,7 +8,7 @@ bootcmd:
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0    # GitHub
   # - sudo apt-add-repository https://cli.github.com/packages
   - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -           # Hashicorp
-  - curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -                  # Helm
+  - curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null # Helm
   # - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add # Kubernetes
   # - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | \
   #   gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
@@ -27,8 +27,7 @@ apt:
     hashicorp:
       source: "deb [trusted=yes] https://apt.releases.hashicorp.com focal main"
     helm-stable-debian.list:
-      source: "deb https://baltocdn.com/helm/stable/debian/ all main"
-    # BUG: repo does not exist  
+      source: "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main"
     kubernetes.list:
       source: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
     microsoft-prod.list:

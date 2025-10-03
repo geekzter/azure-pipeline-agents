@@ -49,6 +49,10 @@ variable os_image_id {
   default                      = null
 }
 
+variable public_ip_tags {
+  type                         = map
+} 
+
 variable storage_type {}
 variable vm_size {}
 

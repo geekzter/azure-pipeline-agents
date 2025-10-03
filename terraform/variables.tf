@@ -145,6 +145,12 @@ variable azure_log_analytics_workspace_id {
   description                  = "Specify a pre-existing Log Analytics workspace. The workspace needs to have the Security, SecurityCenterFree, ServiceMap, Updates, VMInsights solutions provisioned"
   default                      = ""
 }
+variable azure_public_ip_tags {
+  description                  = "A map of the ip_tags to use for public ip addresses"
+  type                         = map
+
+  default                      = {}  
+} 
 variable azure_shared_image_gallery_id {
   description                  = "Bring your own Azure Compute Gallery. If not, one will be created."
   default                      = null
@@ -157,7 +163,7 @@ variable azure_tags {
   description                  = "A map of the tags to use for the resources that are deployed"
   type                         = map
 
-  default = {
+  default                      = {
     shutdown                   = "false"
   }  
 } 

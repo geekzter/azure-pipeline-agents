@@ -55,6 +55,9 @@ variable vm_size {}
 
 variable location {}
 variable log_analytics_workspace_resource_id {}
+variable public_ip_tags {
+  type                         = map
+} 
 variable resource_group_name {}
 variable shutdown_time {}
 variable subnet_id {}

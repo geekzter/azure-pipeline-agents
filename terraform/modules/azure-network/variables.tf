@@ -44,6 +44,9 @@ variable location {}
 variable log_analytics_workspace_resource_id {}
 variable packer_address_space {}
 variable peer_virtual_network_id {}
+variable public_ip_tags {
+  type                         = map
+} 
 variable resource_group_name {}
 variable tags {
   type                         = map

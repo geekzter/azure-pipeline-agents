@@ -168,6 +168,7 @@ resource azurerm_public_ip bastion_ip {
   location                     = var.location
   resource_group_name          = azurerm_virtual_network.pipeline_network.resource_group_name
   allocation_method            = "Static"
+  ip_tags                      = var.public_ip_tags
   sku                          = "Standard"
 
   tags                         = var.tags

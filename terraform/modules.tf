@@ -21,6 +21,7 @@ module network {
   log_analytics_workspace_resource_id = local.log_analytics_workspace_id
   packer_address_space         = var.packer_address_space
   peer_virtual_network_id      = var.create_azure_packer_infrastructure ? module.packer.0.virtual_network_id : null
+  public_ip_tags               = var.azure_public_ip_tags
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
 }
@@ -41,6 +42,7 @@ module packer {
   peer_virtual_network_id      = module.network.virtual_network_id
   location                     = var.azure_location
   prefix                       = var.resource_prefix
+  public_ip_tags               = var.azure_public_ip_tags
   suffix                       = local.suffix
   tags                         = local.tags
 
@@ -133,6 +135,7 @@ module self_hosted_linux_agents {
   install_tools                = var.linux_tools
   outbound_ip_address          = module.network.outbound_ip_address
   prepare_host                 = var.prepare_host
+  public_ip_tags               = var.azure_public_ip_tags
   resource_group_name          = azurerm_resource_group.rg.name
   shutdown_time                = var.azure_shutdown_time
   ssh_public_key               = var.ssh_public_key
@@ -192,6 +195,7 @@ module self_hosted_windows_agents {
   vm_size                      = var.azure_windows_vm_size
 
   enable_public_access         = var.enable_azure_public_access
+  public_ip_tags               = var.azure_public_ip_tags
   resource_group_name          = azurerm_resource_group.rg.name
   tags                         = local.tags
   shutdown_time                = var.azure_shutdown_time
